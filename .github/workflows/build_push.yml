@@ -6,7 +6,9 @@ permissions:
 on:
   push:
     branches:
-      - '*'
+      # '**' rather than '*' so branch names containing a slash (feature/x, claude/y) also build —
+      # '*' stops at the separator and silently skips them.
+      - '**'
     tags:
       - v*
   workflow_dispatch:
