@@ -109,9 +109,24 @@ to resolve.
 | 2c | `:anime:data` — the anime database and its repositories | done |
 | 3 | `:animato:ui-kit` — generalised components re-homed | started |
 | 3a | components needing player preferences move with the player instead | phase 4 |
-| 4 | `:anime:player` | |
-| 5 | `:anime:ui` and a home screen combining both tab sets | |
-| 6 | Importer for Aniyomi backups | |
+| 4 | `:anime:services` — extensions, downloads, library update, torrent | |
+| 5 | `:anime:player` | |
+| 6 | `:anime:ui` and a home screen combining both tab sets | |
+| 7 | Importer for Aniyomi backups | |
+
+### Why the player is not next
+
+The plan had the player before the UI, on the assumption that it was self-contained. Measuring its
+imports says otherwise: it reaches the anime download manager, the anime extension manager, the
+library update job and the torrent service — 27 files and 6,400 lines that sit above `:anime:data`
+and below both the player and the screens.
+
+So the player is near the top of the dependency chain, not the bottom, and the layer underneath it
+has to exist first. That layer is `:anime:services`.
+
+What the player needs from Mihon, by contrast, is nearly all still there: `NetworkHelper` and
+`SecurityPreferences` only moved into `core/common`, and the notification, work-manager and
+clipboard helpers are unchanged. The obstacle is our own unported code, not upstream drift.
 
 The old branch stays green and buildable throughout. It is the donor, not the product.
 
