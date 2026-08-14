@@ -1,0 +1,49 @@
+name: Quick check
+
+# Fast feedback while iterating: formatting and compilation only.
+#
+# The full CI workflow builds five ABI splits through R8 and takes roughly half an hour, which is
+# far more than is needed to find out whether a change compiles. This lane skips packaging,
+# shrinking and splitting entirely, so a mistake surfaces in minutes instead. The full build still
+# runs before anything ships — see build_push.yml, which runs on tags.
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Format and compile
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Set up gradle
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+
+      - name: Check code format
+        run: ./gradlew spotlessCheck
+
+      # Compiling the app compiles every module it depends on, which is all of them.
+      - name: Compile
+        run: ./gradlew :app:compileReleaseKotlin
+
+      - name: Run unit tests
+        run: ./gradlew testReleaseUnitTest

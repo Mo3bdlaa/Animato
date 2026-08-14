@@ -3,12 +3,12 @@ name: CI
 permissions:
   contents: write
 
+# Full release build: every ABI split, R8, signing, release creation. It takes around half an
+# hour, so it deliberately does not run on every push — quick_check.yml covers formatting,
+# compilation and tests on each push in a few minutes. This runs when a build has to be real: on a
+# release tag, or on demand.
 on:
   push:
-    branches:
-      # '**' rather than '*' so branch names containing a slash (feature/x, claude/y) also build —
-      # '*' stops at the separator and silently skips them.
-      - '**'
     tags:
       - v*
   workflow_dispatch:
