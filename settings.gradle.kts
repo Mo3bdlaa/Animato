@@ -28,9 +28,10 @@ dependencyResolutionManagement {
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "Mihon"
+rootProject.name = "Animato"
 include(":app")
-include(":baseline-profile")
+// probe: the baseline profile module consumes :app as an application
+// include(":baseline-profile")
 include(":core-metadata")
 include(":core:archive")
 include(":core:common")
@@ -43,3 +44,4 @@ include(":presentation-widget")
 include(":source-api")
 include(":source-local")
 include(":telemetry")
+include(":animato-app")

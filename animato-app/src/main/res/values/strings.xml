@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The application module wins resource merging over its library dependencies, so naming the app
+      here overrides Mihon's value without touching Mihon's own resources.
+    -->
+    <string name="app_name" translatable="false">Animato</string>
+</resources>

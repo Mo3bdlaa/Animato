@@ -8,7 +8,7 @@ import java.util.Properties
 import kotlin.io.encoding.Base64
 
 plugins {
-    alias(mihonx.plugins.android.application)
+    alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
 
@@ -30,10 +30,9 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "app.mihon"
-
-        versionCode = 29
-        versionName = "0.20.4"
+        buildConfigField("String", "APPLICATION_ID", "\"app.mihon\"")
+        buildConfigField("int", "VERSION_CODE", "29")
+        buildConfigField("String", "VERSION_NAME", "\"0.20.4\"")
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
@@ -44,46 +43,12 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    if (System.getenv("MIHON_GITHUB_RELEASE").toBoolean()) {
-        val tempStoreFile = file(System.getenv("RUNNER_TEMP")).resolve("antsy.keystore")
-
-        val storeFileBytes = System.getenv("storeFileBase64").let(Base64::decode)
-        tempStoreFile.outputStream().use { it.write(storeFileBytes) }
-
-        signingConfigs {
-            named("debug") {
-                storeFile = tempStoreFile
-                storePassword = System.getenv("storePassword")
-                keyAlias = System.getenv("keyAlias")
-                keyPassword = System.getenv("keyPassword")
-            }
-        }
-    } else if (keystorePropertiesFile.exists()) {
-        val keystoreProperties = FileInputStream(keystorePropertiesFile).use { Properties().apply { load(it) } }
-
-        signingConfigs {
-            named("debug") {
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-            }
-        }
-    }
-
     buildTypes {
         val debug = getByName("debug") {
-            applicationIdSuffix = ".dev"
-            versionNameSuffix = "-${getLatestCommitCount()}"
             isPseudoLocalesEnabled = true
         }
         val release = getByName("release") {
             isMinifyEnabled = true
-            isShrinkResources = true
-
-            signingConfig = debug.signingConfig
-
-            isProfileable = true
 
             proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
 
@@ -95,16 +60,10 @@ android {
         create("foss") {
             initWith(release)
 
-            applicationIdSuffix = ".foss"
-
             matchingFallbacks.addAll(commonMatchingFallbacks)
         }
         create("preview") {
             initWith(release)
-
-            applicationIdSuffix = ".debug"
-
-            versionNameSuffix = debug.versionNameSuffix
 
             matchingFallbacks.addAll(commonMatchingFallbacks)
 
@@ -113,9 +72,6 @@ android {
         create("benchmark") {
             initWith(release)
 
-            versionNameSuffix = "-benchmark"
-            applicationIdSuffix = ".benchmark"
-
             matchingFallbacks.addAll(commonMatchingFallbacks)
         }
     }
@@ -123,15 +79,6 @@ android {
     sourceSets {
         getByName("preview").res.directories.add("src/debug/res")
         getByName("benchmark").res.directories.add("src/debug/res")
-    }
-
-    splits {
-        abi {
-            isEnable = true
-            isUniversalApk = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-        }
     }
 
     packaging {
@@ -160,11 +107,6 @@ android {
                 "META-INF/README.md",
             )
         }
-    }
-
-    dependenciesInfo {
-        includeInApk = Config.includeDependencyInfo
-        includeInBundle = Config.includeDependencyInfo
     }
 
     buildFeatures {
@@ -198,14 +140,7 @@ kotlin {
     }
 }
 
-baselineProfile {
-    baselineProfileOutputDir = "baselineProfiles"
-    mergeIntoMain = true
-}
-
 dependencies {
-    baselineProfile(projects.baselineProfile)
-
     implementation(projects.i18n)
     implementation(projects.core.archive)
     implementation(projects.core.common)
@@ -342,7 +277,7 @@ androidComponents {
         val replaceShortcutsPlaceholderTask = tasks.register<ReplaceShortcutsPlaceholderTask>(
             "replace${variantName}ShortcutPlaceholder",
         ) {
-            applicationId.set(variant.applicationId)
+            applicationId.set("app.mihon")
             shortcutsFile.set(projectDir.resolve("src/main/shortcuts.xml"))
         }
         resSource.addGeneratedSourceDirectory(replaceShortcutsPlaceholderTask) { it.outputDir }

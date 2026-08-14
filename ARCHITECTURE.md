@@ -1,0 +1,110 @@
+# Animato architecture
+
+Animato is an anime and manga app built **on top of** [Mihon](https://github.com/mihonapp/mihon),
+not forked from it.
+
+This branch starts from Mihon's own history. That is not bookkeeping — it is the update mechanism.
+Git computes conflicts from the merge base, so a branch descended from Mihon today conflicts with
+tomorrow's Mihon only in the files we changed.
+
+Measured, on the same repository, merging the same upstream:
+
+| Branch | Descends from | Conflicting files |
+| --- | --- | --- |
+| `claude/aniyomi-revival-upgrade-n0c0zp` | Aniyomi (forked Jan 2024) | **776** |
+| this one | Mihon `77e88a21` | **2** |
+
+## The rule
+
+> **Never open a file that belongs to Mihon.**
+
+Not to fix a bug, not to add a parameter, not for one line. Every change we would have made inside
+Mihon's code is re-expressed as one of:
+
+1. a **new file we own** — copy the component, adapt it, keep theirs untouched
+2. an **extension point Mihon already offers** — dependency injection, public composables, interfaces
+3. a **wrapper** around Mihon's public API
+
+Aniyomi took the fourth option — editing in place — and produced 13,862 lines of edits spread
+across 248 upstream files. It then went two years without an upstream sync, because it could not.
+
+## Layers
+
+```
+:animato:app     assembly — Application, MainActivity, home, settings structure, theme, branding
+:animato:ui-kit  our generalised components (ItemCover, EntryToolbar, …) — adapted copies
+:anime:*         anime: source-api, domain, data, player, ui
+──────────────── nothing above edits anything below ────────────────
+mihon (:app as a library, :domain, :data, :core, …)   consumed, never edited
+```
+
+Mihon's `:app` is consumed as an Android **library**. Its `App` and `MainActivity` reach our APK
+through manifest merging; our application module needs no source of its own to boot it.
+
+## Theming instead of rewriting
+
+Mihon's screens carry **4** hard-coded colours in 186 presentation files; everything else reads
+`MaterialTheme`. Wrapping the app in our own theme restyles all of Mihon's screens with no edits.
+
+So we rewrite a Mihon screen **only when unification demands it** — the library, which must show
+both content types. Manga download settings do not need rewriting to look like ours; they already
+will.
+
+Every Mihon screen we replace is a permanent maintenance cost, because it grows the surface below.
+
+## The metric
+
+> **Number of distinct Mihon symbols our code references.**
+
+After this design an upstream update produces no merge conflicts at all — it produces compile
+errors in our files, bounded by this number. It was **339** in the Aniyomi codebase. Track it; make
+it fall.
+
+## Files we own that live at Mihon's paths
+
+Every entry here is a file we must reconcile by hand when Mihon changes it. Adding to this list is
+a deliberate decision, not a convenience. Keep it under ten.
+
+| File | Why |
+| --- | --- |
+| `app/build.gradle.kts` | application → library; app id and version become build config fields |
+| `settings.gradle.kts` | registers our modules |
+| `.github/workflows/*` | Mihon's target their repository, releases and website |
+
+`sync_mihon.yml` merges upstream into a branch and opens a pull request every Monday. A
+conflict outside the table above is a signal that the boundary has been crossed, not a merge
+to resolve.
+
+## Working rules
+
+- **Never edit Mihon code.** Add a seam or copy the file into a module we own.
+- **Never change `:anime:source-api` signatures.** Every anime extension compiles against them.
+- **Never merge the anime and manga databases.** Mihon migrates its schema constantly; merging
+  forfeits every future migration.
+- **Prefer duplication over coupling** across the line. A copy that drifts is cheaper than a shared
+  abstraction that breaks on every upstream release.
+- **Move code, don't rewrite it** — except in the UI, where Aniyomi's generalisations must be
+  re-homed in `:animato:ui-kit` rather than pushed back into Mihon's files.
+
+## Migration state
+
+| Phase | | State |
+| --- | --- | --- |
+| 0 | Mihon as a library, booting under our application id | done |
+| 1 | Animato identity, CI, release pipeline | in progress |
+| 2 | `:anime:source-api`, `:anime:domain`, `:anime:data` | ready to port |
+| 3 | `:animato:ui-kit` — generalised components re-homed | |
+| 4 | `:anime:player` | |
+| 5 | `:anime:ui` and a home screen combining both tab sets | |
+| 6 | Importer for Aniyomi backups | |
+
+The old branch stays green and buildable throughout. It is the donor, not the product.
+
+## Why users must not upgrade in place from Aniyomi
+
+Mihon squashed its migration history: its chain is 13 migrations, Aniyomi's is 32, and they differ
+from migration 1. An Aniyomi database reports a schema version Mihon's chain cannot service.
+
+Animato has never published a release, so no installed base is affected. The first release must be
+this base. Users coming from Aniyomi arrive through a backup import (phase 6), never by upgrading
+over their existing install.
