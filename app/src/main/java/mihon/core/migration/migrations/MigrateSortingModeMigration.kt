@@ -3,6 +3,7 @@ package mihon.core.migration.migrations
 import android.app.Application
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -14,6 +15,7 @@ class MigrateSortingModeMigration : Migration {
     override suspend fun invoke(migrationContext: MigrationContext): Boolean {
         val context = migrationContext.get<Application>() ?: return false
         val libraryPreferences = migrationContext.get<LibraryPreferences>() ?: return false
+        val animePreferences = migrationContext.get<AnimeLibraryPreferences>() ?: return false
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
         val oldMangaSortingMode = prefs.getInt(
@@ -21,7 +23,7 @@ class MigrateSortingModeMigration : Migration {
             0,
         )
         val oldAnimeSortingMode = prefs.getInt(
-            libraryPreferences.animeSortingMode().key(),
+            animePreferences.animeSortingMode().key(),
             0,
         )
         val oldSortingDirection = prefs.getBoolean("library_sorting_ascending", true)
@@ -57,13 +59,13 @@ class MigrateSortingModeMigration : Migration {
 
         prefs.edit(commit = true) {
             remove(libraryPreferences.mangaSortingMode().key())
-            remove(libraryPreferences.animeSortingMode().key())
+            remove(animePreferences.animeSortingMode().key())
             remove("library_sorting_ascending")
         }
 
         prefs.edit {
             putString(libraryPreferences.mangaSortingMode().key(), newMangaSortingMode)
-            putString(libraryPreferences.animeSortingMode().key(), newAnimeSortingMode)
+            putString(animePreferences.animeSortingMode().key(), newAnimeSortingMode)
             putString("library_sorting_ascending", newSortingDirection)
         }
 

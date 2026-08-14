@@ -11,6 +11,7 @@ import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.core.common.torrent.TorrentServerUtils
 import aniyomi.domain.anime.SeasonAnime
 import aniyomi.domain.anime.SeasonDisplayMode
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.util.addOrRemove
@@ -115,6 +116,7 @@ class AnimeScreenModel(
     private val isFromSource: Boolean,
     private val downloadPreferences: DownloadPreferences = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val trackPreferences: TrackPreferences = Injekt.get(),
     internal val playerPreferences: PlayerPreferences = Injekt.get(),
     internal val gesturePreferences: GesturePreferences = Injekt.get(),
@@ -161,8 +163,8 @@ class AnimeScreenModel(
     private val processedEpisodes: List<EpisodeList.Item>?
         get() = successState?.processedEpisodes
 
-    val episodeSwipeStartAction = libraryPreferences.swipeEpisodeEndAction().get()
-    val episodeSwipeEndAction = libraryPreferences.swipeEpisodeStartAction().get()
+    val episodeSwipeStartAction = animeLibraryPreferences.swipeEpisodeEndAction().get()
+    val episodeSwipeEndAction = animeLibraryPreferences.swipeEpisodeStartAction().get()
     var autoTrackState = trackPreferences.autoUpdateTrackOnMarkRead().get()
 
     val showNextEpisodeAirTime = trackPreferences.showNextEpisodeAiringTime().get()
@@ -321,7 +323,7 @@ class AnimeScreenModel(
                         )
                             .getOrThrow()
 
-                        if (libraryPreferences.updateSeasonOnRefresh().get()) {
+                        if (animeLibraryPreferences.updateSeasonOnRefresh().get()) {
                             fetchEpisodesFromSeasons(update.newSeasons, manualFetch)
                         }
                     }
@@ -406,7 +408,7 @@ class AnimeScreenModel(
 
                 // Now check if user previously set categories, when available
                 val categories = getCategories()
-                val defaultCategoryId = libraryPreferences.defaultAnimeCategory().get().toLong()
+                val defaultCategoryId = animeLibraryPreferences.defaultAnimeCategory().get().toLong()
                 val defaultCategory = categories.find { it.id == defaultCategoryId }
                 when {
                     // Default category set
@@ -686,33 +688,33 @@ class AnimeScreenModel(
     }
 
     /**
-     * @throws IllegalStateException if the swipe action is [LibraryPreferences.EpisodeSwipeAction.Disabled]
+     * @throws IllegalStateException if the swipe action is [AnimeLibraryPreferences.EpisodeSwipeAction.Disabled]
      */
-    fun episodeSwipe(episodeItem: EpisodeList.Item, swipeAction: LibraryPreferences.EpisodeSwipeAction) {
+    fun episodeSwipe(episodeItem: EpisodeList.Item, swipeAction: AnimeLibraryPreferences.EpisodeSwipeAction) {
         screenModelScope.launch {
             executeEpisodeSwipeAction(episodeItem, swipeAction)
         }
     }
 
     /**
-     * @throws IllegalStateException if the swipe action is [LibraryPreferences.EpisodeSwipeAction.Disabled]
+     * @throws IllegalStateException if the swipe action is [AnimeLibraryPreferences.EpisodeSwipeAction.Disabled]
      */
     private fun executeEpisodeSwipeAction(
         episodeItem: EpisodeList.Item,
-        swipeAction: LibraryPreferences.EpisodeSwipeAction,
+        swipeAction: AnimeLibraryPreferences.EpisodeSwipeAction,
     ) {
         val episode = episodeItem.episode
         when (swipeAction) {
-            LibraryPreferences.EpisodeSwipeAction.ToggleSeen -> {
+            AnimeLibraryPreferences.EpisodeSwipeAction.ToggleSeen -> {
                 markEpisodesSeen(listOf(episode), !episode.seen)
             }
-            LibraryPreferences.EpisodeSwipeAction.ToggleBookmark -> {
+            AnimeLibraryPreferences.EpisodeSwipeAction.ToggleBookmark -> {
                 bookmarkEpisodes(listOf(episode), !episode.bookmark)
             }
-            LibraryPreferences.EpisodeSwipeAction.ToggleFillermark -> {
+            AnimeLibraryPreferences.EpisodeSwipeAction.ToggleFillermark -> {
                 fillermarkEpisodes(listOf(episode), !episode.fillermark)
             }
-            LibraryPreferences.EpisodeSwipeAction.Download -> {
+            AnimeLibraryPreferences.EpisodeSwipeAction.Download -> {
                 val downloadAction: EpisodeDownloadAction = when (episodeItem.downloadState) {
                     AnimeDownload.State.ERROR,
                     AnimeDownload.State.NOT_DOWNLOADED,
@@ -727,7 +729,7 @@ class AnimeScreenModel(
                     action = downloadAction,
                 )
             }
-            LibraryPreferences.EpisodeSwipeAction.Disabled -> throw IllegalStateException()
+            AnimeLibraryPreferences.EpisodeSwipeAction.Disabled -> throw IllegalStateException()
         }
     }
 
@@ -1110,7 +1112,7 @@ class AnimeScreenModel(
     fun setCurrentSettingsAsDefault(applyToExisting: Boolean) {
         val anime = successState?.anime ?: return
         screenModelScope.launchNonCancellable {
-            libraryPreferences.setEpisodeSettingsDefault(anime)
+            animeLibraryPreferences.setEpisodeSettingsDefault(anime)
             if (applyToExisting) {
                 setAnimeDefaultEpisodeFlags.awaitAll()
             }
@@ -1340,7 +1342,7 @@ class AnimeScreenModel(
         val anime = successState?.anime ?: return
 
         screenModelScope.launchNonCancellable {
-            libraryPreferences.setSeasonSettingsDefault(anime)
+            animeLibraryPreferences.setSeasonSettingsDefault(anime)
             if (applyToExisting) {
                 setAnimeDefaultSeasonFlags.awaitAll()
             }

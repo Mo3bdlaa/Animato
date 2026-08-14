@@ -57,6 +57,7 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
 import aniyomi.domain.anime.SeasonAnime
 import aniyomi.domain.anime.SeasonDisplayMode
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.entries.anime.model.episodesFiltered
@@ -90,7 +91,6 @@ import kotlinx.coroutines.delay
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.service.missingEntriesCount
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.model.StubAnimeSource
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
@@ -111,8 +111,8 @@ fun AnimeScreen(
     snackbarHostState: SnackbarHostState,
     nextUpdate: Instant?,
     isTabletUi: Boolean,
-    episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
-    episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeStartAction: AnimeLibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeEndAction: AnimeLibraryPreferences.EpisodeSwipeAction,
     showNextEpisodeAirTime: Boolean,
     alwaysUseExternalPlayer: Boolean,
     navigateUp: () -> Unit,
@@ -150,7 +150,7 @@ fun AnimeScreen(
     onMultiDeleteClicked: (List<Episode>) -> Unit,
 
     // For episode swipe
-    onEpisodeSwipe: (EpisodeList.Item, LibraryPreferences.EpisodeSwipeAction) -> Unit,
+    onEpisodeSwipe: (EpisodeList.Item, AnimeLibraryPreferences.EpisodeSwipeAction) -> Unit,
 
     // Episode selection
     onEpisodeSelected: (EpisodeList.Item, Boolean, Boolean, Boolean) -> Unit,
@@ -266,8 +266,8 @@ private fun AnimeScreenSmallImpl(
     state: AnimeScreenModel.State.Success,
     snackbarHostState: SnackbarHostState,
     nextUpdate: Instant?,
-    episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
-    episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeStartAction: AnimeLibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeEndAction: AnimeLibraryPreferences.EpisodeSwipeAction,
     showNextEpisodeAirTime: Boolean,
     alwaysUseExternalPlayer: Boolean,
     navigateUp: () -> Unit,
@@ -307,7 +307,7 @@ private fun AnimeScreenSmallImpl(
     onMultiDeleteClicked: (List<Episode>) -> Unit,
 
     // For episode swipe
-    onEpisodeSwipe: (EpisodeList.Item, LibraryPreferences.EpisodeSwipeAction) -> Unit,
+    onEpisodeSwipe: (EpisodeList.Item, AnimeLibraryPreferences.EpisodeSwipeAction) -> Unit,
 
     // Episode selection
     onEpisodeSelected: (EpisodeList.Item, Boolean, Boolean, Boolean) -> Unit,
@@ -611,8 +611,8 @@ fun AnimeScreenLargeImpl(
     state: AnimeScreenModel.State.Success,
     snackbarHostState: SnackbarHostState,
     nextUpdate: Instant?,
-    episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
-    episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeStartAction: AnimeLibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeEndAction: AnimeLibraryPreferences.EpisodeSwipeAction,
     showNextEpisodeAirTime: Boolean,
     alwaysUseExternalPlayer: Boolean,
     navigateUp: () -> Unit,
@@ -652,7 +652,7 @@ fun AnimeScreenLargeImpl(
     onMultiDeleteClicked: (List<Episode>) -> Unit,
 
     // For swipe actions
-    onEpisodeSwipe: (EpisodeList.Item, LibraryPreferences.EpisodeSwipeAction) -> Unit,
+    onEpisodeSwipe: (EpisodeList.Item, AnimeLibraryPreferences.EpisodeSwipeAction) -> Unit,
 
     // Episode selection
     onEpisodeSelected: (EpisodeList.Item, Boolean, Boolean, Boolean) -> Unit,
@@ -1019,12 +1019,12 @@ private fun LazyGridScope.sharedEpisodeItems(
     isAnyEpisodeSelected: Boolean,
     showSummaries: Boolean,
     showPreviews: Boolean,
-    episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
-    episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeStartAction: AnimeLibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeEndAction: AnimeLibraryPreferences.EpisodeSwipeAction,
     onEpisodeClicked: (Episode, Boolean) -> Unit,
     onDownloadEpisode: ((List<EpisodeList.Item>, EpisodeDownloadAction) -> Unit)?,
     onEpisodeSelected: (EpisodeList.Item, Boolean, Boolean, Boolean) -> Unit,
-    onEpisodeSwipe: (EpisodeList.Item, LibraryPreferences.EpisodeSwipeAction) -> Unit,
+    onEpisodeSwipe: (EpisodeList.Item, AnimeLibraryPreferences.EpisodeSwipeAction) -> Unit,
     itemModifier: Modifier = Modifier,
 ) {
     items(

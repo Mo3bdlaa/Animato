@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.history.anime
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.util.insertSeparators
@@ -42,7 +43,6 @@ import tachiyomi.domain.history.anime.interactor.GetNextEpisodes
 import tachiyomi.domain.history.anime.interactor.RemoveAnimeHistory
 import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
 import tachiyomi.domain.items.episode.model.Episode
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -54,7 +54,7 @@ class AnimeHistoryScreenModel(
     private val getHistory: GetAnimeHistory = Injekt.get(),
     private val getAnime: GetAnime = Injekt.get(),
     private val getNextEpisodes: GetNextEpisodes = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val libraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val removeHistory: RemoveAnimeHistory = Injekt.get(),
     private val setAnimeCategories: SetAnimeCategories = Injekt.get(),
     private val updateAnime: UpdateAnime = Injekt.get(),

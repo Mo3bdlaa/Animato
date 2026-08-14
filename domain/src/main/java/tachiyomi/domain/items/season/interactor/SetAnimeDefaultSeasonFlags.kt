@@ -1,14 +1,14 @@
 package tachiyomi.domain.items.season.interactor
 
 import aniyomi.domain.anime.SeasonDisplayMode
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
 import tachiyomi.domain.entries.anime.interactor.SetAnimeSeasonFlags
 import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.library.service.LibraryPreferences
 
 class SetAnimeDefaultSeasonFlags(
-    private val libraryPreferences: LibraryPreferences,
+    private val libraryPreferences: AnimeLibraryPreferences,
     private val setAnimeSeasonFlags: SetAnimeSeasonFlags,
     private val getAnimeFavorites: GetAnimeFavorites,
 ) {

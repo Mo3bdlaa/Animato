@@ -8,6 +8,7 @@ import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapNotNull
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.PreferenceMutableState
@@ -92,6 +93,7 @@ class AnimeLibraryScreenModel(
     private val setAnimeCategories: SetAnimeCategories = Injekt.get(),
     private val preferences: BasePreferences = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val coverCache: AnimeCoverCache = Injekt.get(),
     private val backgroundCache: AnimeBackgroundCache = Injekt.get(),
     private val sourceManager: AnimeSourceManager = Injekt.get(),
@@ -100,7 +102,7 @@ class AnimeLibraryScreenModel(
     private val trackerManager: TrackerManager = Injekt.get(),
 ) : StateScreenModel<AnimeLibraryScreenModel.State>(State()) {
 
-    var activeCategoryIndex: Int by libraryPreferences.lastUsedAnimeCategory().asState(
+    var activeCategoryIndex: Int by animeLibraryPreferences.lastUsedAnimeCategory().asState(
         screenModelScope,
     )
 
@@ -327,7 +329,7 @@ class AnimeLibraryScreenModel(
 
         return mapValues { (key, value) ->
             if (key.sort.type == AnimeLibrarySort.Type.Random) {
-                return@mapValues value.shuffled(Random(libraryPreferences.randomAnimeSortSeed().get()))
+                return@mapValues value.shuffled(Random(animeLibraryPreferences.randomAnimeSortSeed().get()))
             }
 
             val comparator = key.sort.comparator()
@@ -347,11 +349,11 @@ class AnimeLibraryScreenModel(
             libraryPreferences.autoUpdateItemRestrictions().changes(),
 
             preferences.downloadedOnly().changes(),
-            libraryPreferences.filterDownloadedAnime().changes(),
-            libraryPreferences.filterUnseen().changes(),
-            libraryPreferences.filterStartedAnime().changes(),
-            libraryPreferences.filterBookmarkedAnime().changes(),
-            libraryPreferences.filterCompletedAnime().changes(),
+            animeLibraryPreferences.filterDownloadedAnime().changes(),
+            animeLibraryPreferences.filterUnseen().changes(),
+            animeLibraryPreferences.filterStartedAnime().changes(),
+            animeLibraryPreferences.filterBookmarkedAnime().changes(),
+            animeLibraryPreferences.filterCompletedAnime().changes(),
             libraryPreferences.filterIntervalCustom().changes(),
             transform = {
                 ItemPreferences(
@@ -424,7 +426,7 @@ class AnimeLibraryScreenModel(
             if (loggedInTrackers.isEmpty()) return@flatMapLatest flowOf(emptyMap())
 
             val prefFlows = loggedInTrackers.map { tracker ->
-                libraryPreferences.filterTrackedAnime(tracker.id.toInt()).changes()
+                animeLibraryPreferences.filterTrackedAnime(tracker.id.toInt()).changes()
             }
             combine(prefFlows) {
                 loggedInTrackers
@@ -583,9 +585,9 @@ class AnimeLibraryScreenModel(
     fun getColumnsPreferenceForCurrentOrientation(isLandscape: Boolean): PreferenceMutableState<Int> {
         return (
             if (isLandscape) {
-                libraryPreferences.animeLandscapeColumns()
+                animeLibraryPreferences.animeLandscapeColumns()
             } else {
-                libraryPreferences.animePortraitColumns()
+                animeLibraryPreferences.animePortraitColumns()
             }
             ).asState(
             screenModelScope,

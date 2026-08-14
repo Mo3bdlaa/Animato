@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.util.fastForEach
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
@@ -265,8 +266,9 @@ object HomeScreen : Screen() {
                     UpdatesTab::class.isInstance(tab) -> {
                         val count by produceState(initialValue = 0) {
                             val pref = Injekt.get<LibraryPreferences>()
+                            val animePref = Injekt.get<AnimeLibraryPreferences>()
                             combine(
-                                pref.newAnimeUpdatesCount().changes(),
+                                animePref.newAnimeUpdatesCount().changes(),
                                 pref.newMangaUpdatesCount().changes(),
                             ) { countAnime, countManga -> countAnime + countManga }
                                 .collectLatest { value = if (pref.newShowUpdatesCount().get()) it else 0 }

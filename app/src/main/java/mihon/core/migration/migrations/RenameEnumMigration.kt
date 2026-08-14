@@ -3,6 +3,7 @@ package mihon.core.migration.migrations
 import android.app.Application
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -14,6 +15,7 @@ class RenameEnumMigration : Migration {
     override suspend fun invoke(migrationContext: MigrationContext): Boolean {
         val context = migrationContext.get<Application>() ?: return false
         val libraryPreferences = migrationContext.get<LibraryPreferences>() ?: return false
+        val animePreferences = migrationContext.get<AnimeLibraryPreferences>() ?: return false
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
         prefs.edit {
@@ -30,7 +32,7 @@ class RenameEnumMigration : Migration {
             }
             val newAnimeSortingMode = when (
                 val oldSortingMode = prefs.getString(
-                    libraryPreferences.animeSortingMode().key(),
+                    animePreferences.animeSortingMode().key(),
                     "ALPHABETICAL",
                 )
             ) {
@@ -40,7 +42,7 @@ class RenameEnumMigration : Migration {
                 else -> oldSortingMode
             }
             putString(libraryPreferences.mangaSortingMode().key(), newMangaSortingMode)
-            putString(libraryPreferences.animeSortingMode().key(), newAnimeSortingMode)
+            putString(animePreferences.animeSortingMode().key(), newAnimeSortingMode)
         }
 
         return true

@@ -3,6 +3,7 @@ package mihon.core.migration.migrations
 import android.app.Application
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -14,6 +15,7 @@ class MoveChapterPreferencesMigration : Migration {
     override suspend fun invoke(migrationContext: MigrationContext): Boolean {
         val context = migrationContext.get<Application>() ?: return false
         val libraryPreferences = migrationContext.get<LibraryPreferences>() ?: return false
+        val animePreferences = migrationContext.get<AnimeLibraryPreferences>() ?: return false
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
         val preferences = listOf(
@@ -23,12 +25,12 @@ class MoveChapterPreferencesMigration : Migration {
             libraryPreferences.sortChapterBySourceOrNumber(),
             libraryPreferences.displayChapterByNameOrNumber(),
             libraryPreferences.sortChapterByAscendingOrDescending(),
-            libraryPreferences.filterEpisodeBySeen(),
-            libraryPreferences.filterEpisodeByDownloaded(),
-            libraryPreferences.filterEpisodeByBookmarked(),
-            libraryPreferences.sortEpisodeBySourceOrNumber(),
-            libraryPreferences.displayEpisodeByNameOrNumber(),
-            libraryPreferences.sortEpisodeByAscendingOrDescending(),
+            animePreferences.filterEpisodeBySeen(),
+            animePreferences.filterEpisodeByDownloaded(),
+            animePreferences.filterEpisodeByBookmarked(),
+            animePreferences.sortEpisodeBySourceOrNumber(),
+            animePreferences.displayEpisodeByNameOrNumber(),
+            animePreferences.sortEpisodeByAscendingOrDescending(),
         )
 
         prefs.edit {

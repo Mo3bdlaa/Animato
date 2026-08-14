@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
@@ -58,6 +59,7 @@ class AnimeUpdatesScreenModel(
     private val getAnime: GetAnime = Injekt.get(),
     private val getEpisode: GetEpisode = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
     downloadPreferences: DownloadPreferences = Injekt.get(),
 ) : StateScreenModel<AnimeUpdatesScreenModel.State>(State()) {
@@ -390,7 +392,7 @@ class AnimeUpdatesScreenModel(
     }
 
     fun resetNewUpdatesCount() {
-        libraryPreferences.newAnimeUpdatesCount().set(0)
+        animeLibraryPreferences.newAnimeUpdatesCount().set(0)
     }
 
     @Immutable

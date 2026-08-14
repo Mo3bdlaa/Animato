@@ -1,5 +1,6 @@
 package eu.kanade.domain.items.episode.interactor
 
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.toSAnime
 import eu.kanade.domain.items.episode.model.copyFromSEpisode
@@ -19,7 +20,6 @@ import tachiyomi.domain.items.episode.model.NoEpisodesException
 import tachiyomi.domain.items.episode.model.toEpisodeUpdate
 import tachiyomi.domain.items.episode.repository.EpisodeRepository
 import tachiyomi.domain.items.episode.service.EpisodeRecognition
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.source.local.entries.anime.isLocal
 import java.lang.Long.max
 import java.time.ZonedDateTime
@@ -33,7 +33,7 @@ class SyncEpisodesWithSource(
     private val updateAnime: UpdateAnime,
     private val updateEpisode: UpdateEpisode,
     private val getEpisodesByAnimeId: GetEpisodesByAnimeId,
-    private val libraryPreferences: LibraryPreferences,
+    private val libraryPreferences: AnimeLibraryPreferences,
 ) {
 
     /**
@@ -188,7 +188,7 @@ class SyncEpisodesWithSource(
             .associate { it.episodeNumber to it.dateFetch }
 
         val markDuplicateAsRead = libraryPreferences.markDuplicateSeenEpisodeAsSeen().get()
-            .contains(LibraryPreferences.MARK_DUPLICATE_EPISODE_SEEN_NEW)
+            .contains(AnimeLibraryPreferences.MARK_DUPLICATE_EPISODE_SEEN_NEW)
 
         // Date fetch is set in such a way that the upper ones will have bigger value than the lower ones
         // Sources MUST return the episodes from most to less recent, which is common.

@@ -1,16 +1,16 @@
 package tachiyomi.domain.category.anime.interactor
 
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.domain.category.model.CategoryUpdate
 import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.library.service.LibraryPreferences
 
 class DeleteAnimeCategory(
     private val categoryRepository: AnimeCategoryRepository,
-    private val libraryPreferences: LibraryPreferences,
+    private val libraryPreferences: AnimeLibraryPreferences,
     private val downloadPreferences: DownloadPreferences,
 ) {
 

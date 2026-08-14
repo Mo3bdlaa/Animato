@@ -12,6 +12,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.util.fastMap
 import androidx.core.content.ContextCompat
+import aniyomi.domain.library.service.AnimeLibraryPreferences
+import aniyomi.domain.library.service.AnimeLibraryPreferences.Companion.MARK_DUPLICATE_EPISODE_SEEN_EXISTING
+import aniyomi.domain.library.service.AnimeLibraryPreferences.Companion.MARK_DUPLICATE_EPISODE_SEEN_NEW
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -40,8 +43,6 @@ import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_V
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_OUTSIDE_RELEASE_PERIOD
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_CHAPTER_READ_EXISTING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_CHAPTER_READ_NEW
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_EPISODE_SEEN_EXISTING
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_EPISODE_SEEN_NEW
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -63,6 +64,7 @@ object SettingsLibraryScreen : SearchableSettings {
         val getAnimeCategories = remember { Injekt.get<GetAnimeCategories>() }
         val allAnimeCategories by getAnimeCategories.subscribe().collectAsState(initial = emptyList())
         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
+        val animeLibraryPreferences = remember { Injekt.get<AnimeLibraryPreferences>() }
 
         return listOf(
             getCategoriesGroup(
@@ -70,10 +72,11 @@ object SettingsLibraryScreen : SearchableSettings {
                 allCategories,
                 allAnimeCategories,
                 libraryPreferences,
+                animeLibraryPreferences,
             ),
-            getGlobalUpdateGroup(allCategories, allAnimeCategories, libraryPreferences),
-            getSeasonBehaviorGroup(libraryPreferences),
-            getAnimeBehaviorGroup(libraryPreferences),
+            getGlobalUpdateGroup(allCategories, allAnimeCategories, libraryPreferences, animeLibraryPreferences),
+            getSeasonBehaviorGroup(animeLibraryPreferences),
+            getAnimeBehaviorGroup(animeLibraryPreferences),
             getBehaviorGroup(libraryPreferences),
         )
     }
@@ -84,6 +87,7 @@ object SettingsLibraryScreen : SearchableSettings {
         allCategories: List<Category>,
         allAnimeCategories: List<Category>,
         libraryPreferences: LibraryPreferences,
+        animeLibraryPreferences: AnimeLibraryPreferences,
     ): Preference.PreferenceGroup {
         val scope = rememberCoroutineScope()
         val userCategoriesCount = allCategories.filterNot(Category::isSystemCategory).size
@@ -92,7 +96,7 @@ object SettingsLibraryScreen : SearchableSettings {
         // For default category
         val mangaIds = listOf(libraryPreferences.defaultMangaCategory().defaultValue()) +
             allCategories.fastMap { it.id.toInt() }
-        val animeIds = listOf(libraryPreferences.defaultAnimeCategory().defaultValue()) +
+        val animeIds = listOf(animeLibraryPreferences.defaultAnimeCategory().defaultValue()) +
             allAnimeCategories.fastMap { it.id.toInt() }
 
         val mangaLabels = listOf(stringResource(MR.strings.default_category_summary)) +
@@ -113,7 +117,7 @@ object SettingsLibraryScreen : SearchableSettings {
                     onClick = { navigator.push(CategoriesTab) },
                 ),
                 Preference.PreferenceItem.ListPreference(
-                    preference = libraryPreferences.defaultAnimeCategory(),
+                    preference = animeLibraryPreferences.defaultAnimeCategory(),
                     entries = animeIds.zip(animeLabels).toMap().toImmutableMap(),
                     title = stringResource(AYMR.strings.default_anime_category),
                 ),
@@ -159,15 +163,16 @@ object SettingsLibraryScreen : SearchableSettings {
         allMangaCategories: List<Category>,
         allAnimeCategories: List<Category>,
         libraryPreferences: LibraryPreferences,
+        animeLibraryPreferences: AnimeLibraryPreferences,
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
 
         val autoUpdateIntervalPref = libraryPreferences.autoUpdateInterval()
         val autoUpdateInterval by autoUpdateIntervalPref.collectAsState()
 
-        val animeAutoUpdateCategoriesPref = libraryPreferences.animeUpdateCategories()
+        val animeAutoUpdateCategoriesPref = animeLibraryPreferences.animeUpdateCategories()
         val animeAutoUpdateCategoriesExcludePref =
-            libraryPreferences.animeUpdateCategoriesExclude()
+            animeLibraryPreferences.animeUpdateCategoriesExclude()
 
         val includedAnime by animeAutoUpdateCategoriesPref.collectAsState()
         val excludedAnime by animeAutoUpdateCategoriesExcludePref.collectAsState()
@@ -301,7 +306,7 @@ object SettingsLibraryScreen : SearchableSettings {
 
     @Composable
     private fun getSeasonBehaviorGroup(
-        libraryPreferences: LibraryPreferences,
+        libraryPreferences: AnimeLibraryPreferences,
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(AYMR.strings.pref_library_season),
@@ -369,7 +374,7 @@ object SettingsLibraryScreen : SearchableSettings {
 
     @Composable
     private fun getAnimeBehaviorGroup(
-        libraryPreferences: LibraryPreferences,
+        libraryPreferences: AnimeLibraryPreferences,
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(AYMR.strings.pref_behavior_episode),
@@ -377,15 +382,15 @@ object SettingsLibraryScreen : SearchableSettings {
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.swipeEpisodeStartAction(),
                     entries = persistentMapOf(
-                        LibraryPreferences.EpisodeSwipeAction.Disabled to
+                        AnimeLibraryPreferences.EpisodeSwipeAction.Disabled to
                             stringResource(MR.strings.disabled),
-                        LibraryPreferences.EpisodeSwipeAction.ToggleBookmark to
+                        AnimeLibraryPreferences.EpisodeSwipeAction.ToggleBookmark to
                             stringResource(AYMR.strings.action_bookmark_episode),
-                        LibraryPreferences.EpisodeSwipeAction.ToggleFillermark to
+                        AnimeLibraryPreferences.EpisodeSwipeAction.ToggleFillermark to
                             stringResource(AYMR.strings.action_fillermark_episode),
-                        LibraryPreferences.EpisodeSwipeAction.ToggleSeen to
+                        AnimeLibraryPreferences.EpisodeSwipeAction.ToggleSeen to
                             stringResource(AYMR.strings.action_mark_as_seen),
-                        LibraryPreferences.EpisodeSwipeAction.Download to
+                        AnimeLibraryPreferences.EpisodeSwipeAction.Download to
                             stringResource(MR.strings.action_download),
                     ),
                     title = stringResource(AYMR.strings.pref_episode_swipe_start),
@@ -393,15 +398,15 @@ object SettingsLibraryScreen : SearchableSettings {
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.swipeEpisodeEndAction(),
                     entries = persistentMapOf(
-                        LibraryPreferences.EpisodeSwipeAction.Disabled to
+                        AnimeLibraryPreferences.EpisodeSwipeAction.Disabled to
                             stringResource(MR.strings.disabled),
-                        LibraryPreferences.EpisodeSwipeAction.ToggleBookmark to
+                        AnimeLibraryPreferences.EpisodeSwipeAction.ToggleBookmark to
                             stringResource(AYMR.strings.action_bookmark_episode),
-                        LibraryPreferences.EpisodeSwipeAction.ToggleFillermark to
+                        AnimeLibraryPreferences.EpisodeSwipeAction.ToggleFillermark to
                             stringResource(AYMR.strings.action_fillermark_episode),
-                        LibraryPreferences.EpisodeSwipeAction.ToggleSeen to
+                        AnimeLibraryPreferences.EpisodeSwipeAction.ToggleSeen to
                             stringResource(AYMR.strings.action_mark_as_seen),
-                        LibraryPreferences.EpisodeSwipeAction.Download to
+                        AnimeLibraryPreferences.EpisodeSwipeAction.Download to
                             stringResource(MR.strings.action_download),
                     ),
                     title = stringResource(AYMR.strings.pref_episode_swipe_end),

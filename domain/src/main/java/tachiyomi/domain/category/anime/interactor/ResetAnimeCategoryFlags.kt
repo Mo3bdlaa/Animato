@@ -1,11 +1,11 @@
 package tachiyomi.domain.category.anime.interactor
 
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.domain.library.model.plus
-import tachiyomi.domain.library.service.LibraryPreferences
 
 class ResetAnimeCategoryFlags(
-    private val preferences: LibraryPreferences,
+    private val preferences: AnimeLibraryPreferences,
     private val categoryRepository: AnimeCategoryRepository,
 ) {
 

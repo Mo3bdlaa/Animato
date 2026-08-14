@@ -22,6 +22,8 @@
 
 package eu.kanade.tachiyomi.ui.player
 
+import `is`.xyz.mpv.MPVLib
+import `is`.xyz.mpv.Utils
 import android.app.Application
 import android.content.Context
 import android.content.pm.ActivityInfo
@@ -41,6 +43,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
@@ -91,8 +94,6 @@ import eu.kanade.tachiyomi.util.lang.takeBytes
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import eu.kanade.tachiyomi.util.system.toast
-import `is`.xyz.mpv.MPVLib
-import `is`.xyz.mpv.Utils
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -127,7 +128,6 @@ import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.items.episode.interactor.UpdateEpisode
 import tachiyomi.domain.items.episode.model.EpisodeUpdate
 import tachiyomi.domain.items.episode.service.getEpisodeSort
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.i18n.MR
@@ -173,7 +173,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private val getCustomButtons: GetCustomButtons = Injekt.get(),
     private val trackSelect: TrackSelect = Injekt.get(),
     private val getIncognitoState: GetAnimeIncognitoState = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val libraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     uiPreferences: UiPreferences = Injekt.get(),
 ) : ViewModel() {
 
@@ -1728,7 +1728,7 @@ class PlayerViewModel @JvmOverloads constructor(
         deleteEpisodeIfNeeded(currentEp)
 
         val markDuplicateAsSeen = libraryPreferences.markDuplicateSeenEpisodeAsSeen().get()
-            .contains(LibraryPreferences.MARK_DUPLICATE_EPISODE_SEEN_EXISTING)
+            .contains(AnimeLibraryPreferences.MARK_DUPLICATE_EPISODE_SEEN_EXISTING)
         if (!markDuplicateAsSeen) return
 
         val duplicateUnseenEpisodes = currentPlaylist.value

@@ -47,13 +47,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import eu.kanade.presentation.entries.components.DotSeparatorText
 import eu.kanade.presentation.entries.components.ItemCover
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import me.saket.swipe.SwipeableActionsBox
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
@@ -78,12 +78,12 @@ fun AnimeEpisodeListItem(
     downloadIndicatorEnabled: Boolean,
     downloadStateProvider: () -> AnimeDownload.State,
     downloadProgressProvider: () -> Int,
-    episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
-    episodeSwipeEndAction: LibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeStartAction: AnimeLibraryPreferences.EpisodeSwipeAction,
+    episodeSwipeEndAction: AnimeLibraryPreferences.EpisodeSwipeAction,
     onLongClick: () -> Unit,
     onClick: () -> Unit,
     onDownloadClick: ((EpisodeDownloadAction) -> Unit)?,
-    onEpisodeSwipe: (LibraryPreferences.EpisodeSwipeAction) -> Unit,
+    onEpisodeSwipe: (AnimeLibraryPreferences.EpisodeSwipeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val start = getSwipeAction(
@@ -256,7 +256,7 @@ private fun RowScope.SimpleEpisodeListItemImpl(
 }
 
 private fun getSwipeAction(
-    action: LibraryPreferences.EpisodeSwipeAction,
+    action: AnimeLibraryPreferences.EpisodeSwipeAction,
     seen: Boolean,
     bookmark: Boolean,
     fillermark: Boolean,
@@ -265,25 +265,25 @@ private fun getSwipeAction(
     onSwipe: () -> Unit,
 ): me.saket.swipe.SwipeAction? {
     return when (action) {
-        LibraryPreferences.EpisodeSwipeAction.ToggleSeen -> swipeAction(
+        AnimeLibraryPreferences.EpisodeSwipeAction.ToggleSeen -> swipeAction(
             icon = if (!seen) Icons.Outlined.Done else Icons.Outlined.RemoveDone,
             background = background,
             isUndo = seen,
             onSwipe = onSwipe,
         )
-        LibraryPreferences.EpisodeSwipeAction.ToggleBookmark -> swipeAction(
+        AnimeLibraryPreferences.EpisodeSwipeAction.ToggleBookmark -> swipeAction(
             icon = if (!bookmark) Icons.Outlined.BookmarkAdd else Icons.Outlined.BookmarkRemove,
             background = background,
             isUndo = bookmark,
             onSwipe = onSwipe,
         )
-        LibraryPreferences.EpisodeSwipeAction.ToggleFillermark -> swipeAction(
+        AnimeLibraryPreferences.EpisodeSwipeAction.ToggleFillermark -> swipeAction(
             icon = if (!fillermark) Icons.Outlined.NewLabel else Icons.AutoMirrored.Outlined.LabelOff,
             background = background,
             isUndo = fillermark,
             onSwipe = onSwipe,
         )
-        LibraryPreferences.EpisodeSwipeAction.Download -> swipeAction(
+        AnimeLibraryPreferences.EpisodeSwipeAction.Download -> swipeAction(
             icon = when (downloadState) {
                 AnimeDownload.State.NOT_DOWNLOADED, AnimeDownload.State.ERROR -> Icons.Outlined.Download
                 AnimeDownload.State.QUEUE, AnimeDownload.State.DOWNLOADING -> Icons.Outlined.FileDownloadOff
@@ -292,7 +292,7 @@ private fun getSwipeAction(
             background = background,
             onSwipe = onSwipe,
         )
-        LibraryPreferences.EpisodeSwipeAction.Disabled -> null
+        AnimeLibraryPreferences.EpisodeSwipeAction.Disabled -> null
     }
 }
 
@@ -510,8 +510,8 @@ fun AnimeEpisodeListItemPreview() {
         downloadIndicatorEnabled = true,
         downloadStateProvider = { AnimeDownload.State.NOT_DOWNLOADED },
         downloadProgressProvider = { 0 },
-        episodeSwipeStartAction = LibraryPreferences.EpisodeSwipeAction.Disabled,
-        episodeSwipeEndAction = LibraryPreferences.EpisodeSwipeAction.Disabled,
+        episodeSwipeStartAction = AnimeLibraryPreferences.EpisodeSwipeAction.Disabled,
+        episodeSwipeEndAction = AnimeLibraryPreferences.EpisodeSwipeAction.Disabled,
         onLongClick = {},
         onClick = {},
         onDownloadClick = {},

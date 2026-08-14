@@ -18,6 +18,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -78,6 +79,7 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
 
     private val sourceManager: AnimeSourceManager = Injekt.get()
     private val libraryPreferences: LibraryPreferences = Injekt.get()
+    private val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get()
     private val downloadManager: AnimeDownloadManager = Injekt.get()
     private val getLibraryAnime: GetLibraryAnime = Injekt.get()
     private val getAnime: GetAnime = Injekt.get()
@@ -155,14 +157,14 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
         val listToUpdate = if (categoryId != -1L) {
             libraryAnime.filter { it.category == categoryId }
         } else {
-            val categoriesToUpdate = libraryPreferences.animeUpdateCategories().get().map { it.toLong() }
+            val categoriesToUpdate = animeLibraryPreferences.animeUpdateCategories().get().map { it.toLong() }
             val includedAnime = if (categoriesToUpdate.isNotEmpty()) {
                 libraryAnime.filter { it.category in categoriesToUpdate }
             } else {
                 libraryAnime
             }
 
-            val categoriesToExclude = libraryPreferences.animeUpdateCategoriesExclude().get().map { it.toLong() }
+            val categoriesToExclude = animeLibraryPreferences.animeUpdateCategoriesExclude().get().map { it.toLong() }
             val excludedAnimeIds = if (categoriesToExclude.isNotEmpty()) {
                 libraryAnime.filter { it.category in categoriesToExclude }.map { it.anime.id }
             } else {
@@ -174,7 +176,7 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
                 .distinctBy { it.anime.id }
         }
 
-        val includeSeasons = libraryPreferences.updateSeasonOnLibraryUpdate().get()
+        val includeSeasons = animeLibraryPreferences.updateSeasonOnLibraryUpdate().get()
         val lastToUpdateWithSeasons = listToUpdate.flatMap { libAnime ->
             when (libAnime.anime.fetchType) {
                 FetchType.Seasons -> {
@@ -299,7 +301,7 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
                                                 hasDownloads.set(true)
                                             }
 
-                                            libraryPreferences.newAnimeUpdatesCount()
+                                            animeLibraryPreferences.newAnimeUpdatesCount()
                                                 .getAndSet { it + newEpisodes.size }
 
                                             // Convert to the anime that contains new episodes

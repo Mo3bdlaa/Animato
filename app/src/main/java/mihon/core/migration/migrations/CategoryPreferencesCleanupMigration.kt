@@ -1,5 +1,6 @@
 package mihon.core.migration.migrations
 
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 import tachiyomi.core.common.util.lang.withIOContext
@@ -13,6 +14,7 @@ class CategoryPreferencesCleanupMigration : Migration {
 
     override suspend fun invoke(migrationContext: MigrationContext): Boolean = withIOContext {
         val libraryPreferences = migrationContext.get<LibraryPreferences>() ?: return@withIOContext false
+        val animePreferences = migrationContext.get<AnimeLibraryPreferences>() ?: return@withIOContext false
         val downloadPreferences = migrationContext.get<DownloadPreferences>() ?: return@withIOContext false
 
         val getAnimeCategories = migrationContext.get<GetAnimeCategories>() ?: return@withIOContext false
@@ -20,9 +22,9 @@ class CategoryPreferencesCleanupMigration : Migration {
         val allAnimeCategories = getAnimeCategories.await().map { it.id.toString() }.toSet()
         val allMangaCategories = getMangaCategories.await().map { it.id.toString() }.toSet()
 
-        val defaultAnimeCategory = libraryPreferences.defaultAnimeCategory().get()
+        val defaultAnimeCategory = animePreferences.defaultAnimeCategory().get()
         if (defaultAnimeCategory.toString() !in allAnimeCategories) {
-            libraryPreferences.defaultAnimeCategory().delete()
+            animePreferences.defaultAnimeCategory().delete()
         }
         val defaultMangaCategory = libraryPreferences.defaultMangaCategory().get()
         if (defaultMangaCategory.toString() !in allMangaCategories) {
@@ -30,9 +32,9 @@ class CategoryPreferencesCleanupMigration : Migration {
         }
 
         val categoryPreferences = listOf(
-            libraryPreferences.animeUpdateCategories(),
+            animePreferences.animeUpdateCategories(),
             libraryPreferences.mangaUpdateCategories(),
-            libraryPreferences.animeUpdateCategoriesExclude(),
+            animePreferences.animeUpdateCategoriesExclude(),
             libraryPreferences.mangaUpdateCategoriesExclude(),
             downloadPreferences.removeExcludeCategories(),
             downloadPreferences.removeExcludeAnimeCategories(),

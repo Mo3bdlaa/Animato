@@ -1,15 +1,15 @@
 package tachiyomi.domain.category.anime.interactor
 
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.domain.category.model.Category
-import tachiyomi.domain.library.service.LibraryPreferences
 
 class CreateAnimeCategoryWithName(
     private val categoryRepository: AnimeCategoryRepository,
-    private val preferences: LibraryPreferences,
+    private val preferences: AnimeLibraryPreferences,
 ) {
 
     private val initialFlags: Long

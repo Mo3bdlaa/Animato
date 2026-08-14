@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibrarySettingsScreenModel
@@ -79,7 +80,7 @@ fun AnimeLibrarySettingsDialog(
 private fun ColumnScope.FilterPage(
     screenModel: AnimeLibrarySettingsScreenModel,
 ) {
-    val filterDownloaded by screenModel.libraryPreferences.filterDownloadedAnime().collectAsState()
+    val filterDownloaded by screenModel.animeLibraryPreferences.filterDownloadedAnime().collectAsState()
     val downloadedOnly by screenModel.preferences.downloadedOnly().collectAsState()
     val autoUpdateAnimeRestrictions by screenModel.libraryPreferences.autoUpdateItemRestrictions().collectAsState()
 
@@ -91,31 +92,31 @@ private fun ColumnScope.FilterPage(
             filterDownloaded
         },
         enabled = !downloadedOnly,
-        onClick = { screenModel.toggleFilter(LibraryPreferences::filterDownloadedAnime) },
+        onClick = { screenModel.toggleAnimeFilter(AnimeLibraryPreferences::filterDownloadedAnime) },
     )
-    val filterUnseen by screenModel.libraryPreferences.filterUnseen().collectAsState()
+    val filterUnseen by screenModel.animeLibraryPreferences.filterUnseen().collectAsState()
     TriStateItem(
         label = stringResource(AYMR.strings.action_filter_unseen),
         state = filterUnseen,
-        onClick = { screenModel.toggleFilter(LibraryPreferences::filterUnseen) },
+        onClick = { screenModel.toggleAnimeFilter(AnimeLibraryPreferences::filterUnseen) },
     )
-    val filterStarted by screenModel.libraryPreferences.filterStartedAnime().collectAsState()
+    val filterStarted by screenModel.animeLibraryPreferences.filterStartedAnime().collectAsState()
     TriStateItem(
         label = stringResource(MR.strings.label_started),
         state = filterStarted,
-        onClick = { screenModel.toggleFilter(LibraryPreferences::filterStartedAnime) },
+        onClick = { screenModel.toggleAnimeFilter(AnimeLibraryPreferences::filterStartedAnime) },
     )
-    val filterBookmarked by screenModel.libraryPreferences.filterBookmarkedAnime().collectAsState()
+    val filterBookmarked by screenModel.animeLibraryPreferences.filterBookmarkedAnime().collectAsState()
     TriStateItem(
         label = stringResource(MR.strings.action_filter_bookmarked),
         state = filterBookmarked,
-        onClick = { screenModel.toggleFilter(LibraryPreferences::filterBookmarkedAnime) },
+        onClick = { screenModel.toggleAnimeFilter(AnimeLibraryPreferences::filterBookmarkedAnime) },
     )
-    val filterCompleted by screenModel.libraryPreferences.filterCompletedAnime().collectAsState()
+    val filterCompleted by screenModel.animeLibraryPreferences.filterCompletedAnime().collectAsState()
     TriStateItem(
         label = stringResource(MR.strings.completed),
         state = filterCompleted,
-        onClick = { screenModel.toggleFilter(LibraryPreferences::filterCompletedAnime) },
+        onClick = { screenModel.toggleAnimeFilter(AnimeLibraryPreferences::filterCompletedAnime) },
     )
     // TODO: re-enable when custom intervals are ready for stable
     if ((!isReleaseBuildType) && LibraryPreferences.ENTRY_OUTSIDE_RELEASE_PERIOD in autoUpdateAnimeRestrictions) {
@@ -134,7 +135,7 @@ private fun ColumnScope.FilterPage(
         }
         1 -> {
             val service = trackers[0]
-            val filterTracker by screenModel.libraryPreferences.filterTrackedAnime(
+            val filterTracker by screenModel.animeLibraryPreferences.filterTrackedAnime(
                 service.id.toInt(),
             ).collectAsState()
             TriStateItem(
@@ -146,7 +147,7 @@ private fun ColumnScope.FilterPage(
         else -> {
             HeadingItem(MR.strings.action_filter_tracked)
             trackers.map { service ->
-                val filterTracker by screenModel.libraryPreferences.filterTrackedAnime(
+                val filterTracker by screenModel.animeLibraryPreferences.filterTrackedAnime(
                     service.id.toInt(),
                 ).collectAsState()
                 TriStateItem(
@@ -249,9 +250,9 @@ private fun ColumnScope.DisplayPage(
     val configuration = LocalConfiguration.current
     val columnPreference = remember {
         if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            screenModel.libraryPreferences.animeLandscapeColumns()
+            screenModel.animeLibraryPreferences.animeLandscapeColumns()
         } else {
-            screenModel.libraryPreferences.animePortraitColumns()
+            screenModel.animeLibraryPreferences.animePortraitColumns()
         }
     }
 

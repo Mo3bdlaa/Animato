@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.stats.anime
 import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMapNotNull
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.util.fastCountNot
@@ -34,6 +35,7 @@ class AnimeStatsScreenModel(
     private val getEpisodesByAnimeId: GetEpisodesByAnimeId = Injekt.get(),
     private val getTracks: GetAnimeTracks = Injekt.get(),
     private val preferences: LibraryPreferences = Injekt.get(),
+    private val animePreferences: AnimeLibraryPreferences = Injekt.get(),
     private val trackerManager: TrackerManager = Injekt.get(),
 ) : StateScreenModel<StatsScreenState>(StatsScreenState.Loading) {
 
@@ -88,14 +90,14 @@ class AnimeStatsScreenModel(
     }
 
     private fun getGlobalUpdateItemCount(libraryAnime: List<LibraryAnime>): Int {
-        val includedCategories = preferences.animeUpdateCategories().get().map { it.toLong() }
+        val includedCategories = animePreferences.animeUpdateCategories().get().map { it.toLong() }
         val includedAnime = if (includedCategories.isNotEmpty()) {
             libraryAnime.filter { it.category in includedCategories }
         } else {
             libraryAnime
         }
 
-        val excludedCategories = preferences.animeUpdateCategoriesExclude().get().map { it.toLong() }
+        val excludedCategories = animePreferences.animeUpdateCategoriesExclude().get().map { it.toLong() }
         val excludedMangaIds = if (excludedCategories.isNotEmpty()) {
             libraryAnime.fastMapNotNull { anime ->
                 anime.id.takeIf { anime.category in excludedCategories }

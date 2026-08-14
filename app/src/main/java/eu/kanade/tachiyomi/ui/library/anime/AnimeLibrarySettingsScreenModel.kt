@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.library.anime
 
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.base.BasePreferences
@@ -23,6 +24,7 @@ import kotlin.time.Duration.Companion.seconds
 class AnimeLibrarySettingsScreenModel(
     val preferences: BasePreferences = Injekt.get(),
     val libraryPreferences: LibraryPreferences = Injekt.get(),
+    val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val setAnimeDisplayMode: SetAnimeDisplayMode = Injekt.get(),
     private val setSortModeForCategory: SetSortModeForAnimeCategory = Injekt.get(),
     trackerManager: TrackerManager = Injekt.get(),
@@ -41,8 +43,14 @@ class AnimeLibrarySettingsScreenModel(
         }
     }
 
+    fun toggleAnimeFilter(preference: (AnimeLibraryPreferences) -> Preference<TriState>) {
+        preference(animeLibraryPreferences).getAndSet {
+            it.next()
+        }
+    }
+
     fun toggleTracker(id: Int) {
-        toggleFilter { libraryPreferences.filterTrackedAnime(id) }
+        toggleAnimeFilter { it.filterTrackedAnime(id) }
     }
 
     fun setDisplayMode(mode: LibraryDisplayMode) {

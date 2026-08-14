@@ -13,6 +13,7 @@ import androidx.paging.PagingState
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
@@ -32,7 +33,6 @@ import mihon.domain.source.interactor.UpdateAnimeFromRemote
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.NetworkToLocalAnime
 import tachiyomi.domain.entries.anime.model.Anime
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -41,7 +41,7 @@ class MigrateSeasonSelectScreenModel(
     private val anime: Anime,
     sourceManager: AnimeSourceManager = Injekt.get(),
     sourcePreferences: SourcePreferences = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val libraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val getAnime: GetAnime = Injekt.get(),
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
     private val updateAnimeFromRemote: UpdateAnimeFromRemote = Injekt.get(),

@@ -11,6 +11,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
@@ -62,6 +63,7 @@ class BrowseAnimeSourceScreenModel(
     sourceManager: AnimeSourceManager = Injekt.get(),
     sourcePreferences: SourcePreferences = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val coverCache: AnimeCoverCache = Injekt.get(),
     private val backgroundCache: AnimeBackgroundCache = Injekt.get(),
     private val getRemoteAnime: GetRemoteAnime = Injekt.get(),
@@ -127,9 +129,9 @@ class BrowseAnimeSourceScreenModel(
     fun getColumnsPreference(orientation: Int): GridCells {
         val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
         val columns = if (isLandscape) {
-            libraryPreferences.animeLandscapeColumns()
+            animeLibraryPreferences.animeLandscapeColumns()
         } else {
-            libraryPreferences.animePortraitColumns()
+            animeLibraryPreferences.animePortraitColumns()
         }.get()
         return if (columns == 0) GridCells.Adaptive(128.dp) else GridCells.Fixed(columns)
     }
@@ -138,9 +140,9 @@ class BrowseAnimeSourceScreenModel(
     fun getColumnsPreferenceForCurrentOrientation(orientation: Int): Int {
         val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
         return if (isLandscape) {
-            libraryPreferences.animeLandscapeColumns()
+            animeLibraryPreferences.animeLandscapeColumns()
         } else {
-            libraryPreferences.animePortraitColumns()
+            animeLibraryPreferences.animePortraitColumns()
         }.get()
     }
 
@@ -247,7 +249,7 @@ class BrowseAnimeSourceScreenModel(
     fun addFavorite(anime: Anime) {
         screenModelScope.launch {
             val categories = getCategories()
-            val defaultCategoryId = libraryPreferences.defaultAnimeCategory().get()
+            val defaultCategoryId = animeLibraryPreferences.defaultAnimeCategory().get()
             val defaultCategory = categories.find { it.id == defaultCategoryId.toLong() }
 
             when {

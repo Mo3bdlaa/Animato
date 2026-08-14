@@ -210,7 +210,7 @@ class DomainModule : InjektModule {
         addFactory { GetVisibleAnimeCategories(get()) }
         addFactory { ResetAnimeCategoryFlags(get(), get()) }
         addFactory { SetAnimeDisplayMode(get()) }
-        addFactory { SetSortModeForAnimeCategory(get(), get()) }
+        addFactory { SetSortModeForAnimeCategory(get(), get(), get()) }
         addFactory { CreateAnimeCategoryWithName(get(), get()) }
         addFactory { RenameAnimeCategory(get()) }
         addFactory { ReorderAnimeCategory(get()) }
