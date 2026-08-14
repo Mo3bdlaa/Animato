@@ -10,6 +10,9 @@ pluginManagement {
 
 dependencyResolutionManagement {
     versionCatalogs {
+        create("animato") {
+            from(files("gradle/animato.versions.toml"))
+        }
         create("mihonx") {
             from(files("gradle/mihon.versions.toml"))
         }
@@ -29,6 +32,8 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "Animato"
+include(":anime:domain")
+include(":anime:source-api")
 include(":app")
 // probe: the baseline profile module consumes :app as an application
 // include(":baseline-profile")

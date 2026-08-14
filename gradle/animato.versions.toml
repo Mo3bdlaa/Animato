@@ -1,0 +1,7 @@
+# Dependencies that belong to Animato rather than Mihon. Keeping them in their own catalog means
+# Mihon's catalogs stay byte-identical to upstream and never conflict on a sync.
+[versions]
+nanohttpd = "2.3.1"
+
+[libraries]
+nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }

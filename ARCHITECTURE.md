@@ -60,6 +60,17 @@ After this design an upstream update produces no merge conflicts at all — it p
 errors in our files, bounded by this number. It was **339** in the Aniyomi codebase. Track it; make
 it fall.
 
+Porting `:anime:domain` onto Mihon 0.20.4 broke in six places, which is what that number buys: a
+short, specific list instead of a merge. Mihon had renamed `getObject` to `getObjectFromString`,
+turned its preferences from functions into properties, deleted `CategoryUpdate`, and moved
+`GetLibraryManga`. Each was a compile error naming a file and a line.
+
+Two of the six were not upstream changes at all but boundary violations inherited from Aniyomi:
+`EntryCover` and `Category.hidden` were fields Aniyomi had added *inside* Mihon's files. They are
+now `animato.domain.entries.EntryCover` and `animato.domain.category.AnimeCategory` — ours, in our
+packages. Anime categories were always a separate table with a separate id space; sharing Mihon's
+model was the thing that made the field necessary in the first place.
+
 ## Files we own that live at Mihon's paths
 
 Every entry here is a file we must reconcile by hand when Mihon changes it. Adding to this list is
@@ -93,7 +104,9 @@ to resolve.
 | --- | --- | --- |
 | 0 | Mihon as a library, booting under our application id | done |
 | 1 | Animato identity, CI, release pipeline | in progress |
-| 2 | `:anime:source-api`, `:anime:domain`, `:anime:data` | ready to port |
+| 2a | `:anime:source-api` — 26 files, the frozen extension contract | done |
+| 2b | `:anime:domain` — 104 files | done |
+| 2c | `:anime:data` — the anime database and its repositories | next |
 | 3 | `:animato:ui-kit` — generalised components re-homed | |
 | 4 | `:anime:player` | |
 | 5 | `:anime:ui` and a home screen combining both tab sets | |
