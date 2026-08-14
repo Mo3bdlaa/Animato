@@ -70,6 +70,7 @@ a deliberate decision, not a convenience. Keep it under ten.
 | `app/build.gradle.kts` | application → library; app id and version become build config fields |
 | `settings.gradle.kts` | registers our modules |
 | `.github/workflows/*` | Mihon's target their repository, releases and website |
+| `.gitignore` | Mihon's does not exclude keystores; a leaked signing key is unrecoverable |
 
 `sync_mihon.yml` merges upstream into a branch and opens a pull request every Monday. A
 conflict outside the table above is a signal that the boundary has been crossed, not a merge

@@ -11,6 +11,14 @@ build
 
 # Configuration files
 keystore.properties
+
+# Signing material. A leaked app signing key cannot be recalled: anyone holding it can publish an
+# update that Android accepts as genuine. Losing it is nearly as bad — see ARCHITECTURE.md.
+*.jks
+*.keystore
+*.jks.base64
+*.p12
+signing.properties
 local.properties
 
 # macOS specific files
