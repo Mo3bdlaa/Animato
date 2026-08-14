@@ -1,5 +1,6 @@
 package eu.kanade.domain
 
+import animato.domain.content.interactor.GetUnifiedLibrary
 import eu.kanade.domain.download.anime.interactor.DeleteEpisodeDownload
 import eu.kanade.domain.download.manga.interactor.DeleteChapterDownload
 import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
@@ -234,6 +235,7 @@ class DomainModule : InjektModule {
         addFactory { GetDuplicateLibraryAnime(get()) }
         addFactory { GetAnimeFavorites(get()) }
         addFactory { GetLibraryAnime(get()) }
+        addFactory { GetUnifiedLibrary(get(), get()) }
         addFactory { GetAnimeWithEpisodesAndSeasons(get(), get()) }
         addFactory { GetAnimeByUrlAndSourceId(get()) }
         addFactory { GetAnime(get()) }
