@@ -2,6 +2,9 @@
 # Mihon's catalogs stay byte-identical to upstream and never conflict on a sync.
 [versions]
 nanohttpd = "2.3.1"
+# Mihon dropped immutable collections; the components we carry over still use them.
+kotlinxImmutables = "0.4.0"
 
 [libraries]
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
+kotlinx-immutables = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxImmutables" }
