@@ -38,13 +38,17 @@ seam (see below) rather than the edit.
 
 Everything anime, in its own modules:
 
-| Module | Holds |
-| --- | --- |
-| `:anime:source-api` | The extension contract. **Frozen** — see below. |
-| `:anime:domain` | `Anime`, `Episode`, `Season`, interactors |
-| `:anime:data` | The anime database (already separate from manga's) |
-| `:anime:player` | mpv, hosters, subtitles, AniSkip, PiP, torrent |
-| `:anime:ui` | Anime library, browse, history, tracking screens |
+| Module | Holds | State |
+| --- | --- | --- |
+| `:anime:source-api` | The extension contract. **Frozen** — see below. | extracted |
+| `:anime:domain` | `Anime`, `Episode`, `Season`, interactors, anime preferences | extracted |
+| `:anime:data` | The anime database (already separate from manga's) | still in `:data` |
+| `:anime:player` | mpv, hosters, subtitles, AniSkip, PiP, torrent | still in `:app` |
+| `:anime:ui` | Anime library, browse, history, tracking screens | still in `:app` |
+
+The modules come out bottom-up, because each one can only leave `:app` once everything it depends
+on has already left. The player, for instance, reaches into the download manager, the trackers and
+the torrent service — so it cannot move before those do.
 
 This layer has no upstream, so it is free to be reshaped whenever that serves us. That freedom is
 the whole reason the anime/manga split is drawn where it is.

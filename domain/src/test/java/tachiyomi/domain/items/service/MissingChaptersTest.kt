@@ -7,11 +7,9 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import tachiyomi.domain.items.chapter.model.Chapter
 import tachiyomi.domain.items.chapter.service.calculateChapterGap
 import tachiyomi.domain.items.chapter.service.missingChaptersCount
-import tachiyomi.domain.items.episode.model.Episode
-import tachiyomi.domain.items.episode.service.calculateEpisodeGap
 
 @Execution(ExecutionMode.CONCURRENT)
-class MissingItemsTest {
+class MissingChaptersTest {
 
     @Test
     fun `missingChaptersCount returns 0 when empty list`() {
@@ -57,31 +55,5 @@ class MissingItemsTest {
 
     private fun chapter(number: Double) = Chapter.create().copy(
         chapterNumber = number,
-    )
-
-    @Test
-    fun `calculateEpisodeGap returns difference`() {
-        calculateEpisodeGap(episode(10.0), episode(9.0)) shouldBe 0f
-        calculateEpisodeGap(episode(10.0), episode(8.0)) shouldBe 1f
-        calculateEpisodeGap(episode(10.0), episode(8.5)) shouldBe 1f
-        calculateEpisodeGap(episode(10.0), episode(1.1)) shouldBe 8f
-
-        calculateEpisodeGap(10.0, 9.0) shouldBe 0f
-        calculateEpisodeGap(10.0, 8.0) shouldBe 1f
-        calculateEpisodeGap(10.0, 8.5) shouldBe 1f
-        calculateEpisodeGap(10.0, 1.1) shouldBe 8f
-    }
-
-    @Test
-    fun `calculateEpisodeGap returns 0 if either are not valid episode numbers`() {
-        calculateEpisodeGap(episode(-1.0), episode(10.0)) shouldBe 0
-        calculateEpisodeGap(episode(99.0), episode(-1.0)) shouldBe 0
-
-        calculateEpisodeGap(-1.0, 10.0) shouldBe 0
-        calculateEpisodeGap(99.0, -1.0) shouldBe 0
-    }
-
-    private fun episode(number: Double) = Episode.create().copy(
-        episodeNumber = number,
     )
 }

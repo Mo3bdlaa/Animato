@@ -15,6 +15,7 @@ android {
 
 dependencies {
     implementation(projects.core.common)
+    implementation(projects.anime.domain)
     implementation(projects.domain)
     implementation(projects.presentationCore)
     api(projects.i18n)

@@ -5,11 +5,10 @@ plugins {
 }
 
 android {
-    namespace = "tachiyomi.domain"
+    namespace = "aniyomi.domain"
 
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
     }
 }
 
@@ -20,14 +19,16 @@ kotlin {
 }
 
 dependencies {
-    implementation(projects.sourceApi)
+    // Anime domain types expose shared domain types (categories, tracks, display modes) in their
+    // public signatures, so consumers need them too.
+    api(projects.domain)
+
+    implementation(projects.anime.sourceApi)
     implementation(projects.core.common)
 
     implementation(platform(kotlinx.coroutines.bom))
     implementation(kotlinx.bundles.coroutines)
     implementation(kotlinx.bundles.serialization)
-
-    implementation(libs.unifile)
 
     api(libs.sqldelight.android.paging)
 

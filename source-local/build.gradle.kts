@@ -25,6 +25,7 @@ kotlin {
                 implementation(projects.coreMetadata)
 
                 // Move ChapterRecognition to separate module?
+                implementation(projects.anime.domain)
                 implementation(projects.domain)
 
                 implementation(kotlinx.bundles.serialization)

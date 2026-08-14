@@ -22,8 +22,6 @@
 
 package eu.kanade.tachiyomi.ui.player
 
-import `is`.xyz.mpv.MPVLib
-import `is`.xyz.mpv.Utils
 import android.app.Application
 import android.content.Context
 import android.content.pm.ActivityInfo
@@ -94,6 +92,8 @@ import eu.kanade.tachiyomi.util.lang.takeBytes
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import eu.kanade.tachiyomi.util.system.toast
+import `is`.xyz.mpv.MPVLib
+import `is`.xyz.mpv.Utils
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
