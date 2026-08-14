@@ -109,7 +109,7 @@ to resolve.
 | 2c | `:anime:data` — the anime database and its repositories | done |
 | 3 | `:animato:ui-kit` — generalised components re-homed | started |
 | 3a | components needing player preferences move with the player instead | phase 4 |
-| 4 | `:anime:services` — extensions, downloads, library update, torrent | |
+| 4 | `:anime:services` — extensions, downloads, library update, torrent | started, see its README |
 | 5 | `:anime:player` | |
 | 6 | `:anime:ui` and a home screen combining both tab sets | |
 | 7 | Importer for Aniyomi backups | |

@@ -5,6 +5,14 @@ nanohttpd = "2.3.1"
 # Mihon dropped immutable collections; the components we carry over still use them.
 kotlinxImmutables = "0.4.0"
 
+# Anime playback and downloading. None of this exists in Mihon, which reads manga.
+ffmpegKit = "1.18"
+arthenicaSmartExceptions = "0.2.1"
+torrserver = "0.1.0"
+
 [libraries]
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 kotlinx-immutables = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxImmutables" }
+ffmpeg-kit = { module = "com.github.jmir1:ffmpeg-kit", version.ref = "ffmpegKit" }
+arthenica-smartexceptions = { module = "com.arthenica:smart-exception-java", version.ref = "arthenicaSmartExceptions" }
+torrserver = { module = "io.github.secozzi:torrserver", version.ref = "torrserver" }
