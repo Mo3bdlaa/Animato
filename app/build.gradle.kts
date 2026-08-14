@@ -189,6 +189,7 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.coreMetadata)
     implementation(projects.sourceApi)
+    implementation(projects.anime.sourceApi)
     implementation(projects.sourceLocal)
     implementation(projects.data)
     implementation(projects.domain)

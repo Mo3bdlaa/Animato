@@ -44,8 +44,9 @@ plugins {
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "Aniyomi"
+rootProject.name = "Animato"
 include(":app")
+include(":anime:source-api")
 include(":core-metadata")
 include(":core:archive")
 include(":core:common")

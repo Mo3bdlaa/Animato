@@ -38,6 +38,7 @@ kotlin {
 
 dependencies {
     implementation(projects.sourceApi)
+    implementation(projects.anime.sourceApi)
     implementation(projects.domain)
     implementation(projects.core.common)
 

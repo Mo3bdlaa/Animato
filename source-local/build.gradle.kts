@@ -11,6 +11,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(projects.sourceApi)
+                implementation(projects.anime.sourceApi)
                 api(projects.i18n)
                 api(projects.i18nAniyomi)
 
