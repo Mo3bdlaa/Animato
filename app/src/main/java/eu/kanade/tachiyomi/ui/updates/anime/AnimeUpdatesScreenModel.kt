@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -36,7 +37,6 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.items.episode.interactor.GetEpisode
 import tachiyomi.domain.items.episode.interactor.UpdateEpisode
@@ -61,7 +61,7 @@ class AnimeUpdatesScreenModel(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-    downloadPreferences: DownloadPreferences = Injekt.get(),
+    downloadPreferences: AnimeDownloadPreferences = Injekt.get(),
 ) : StateScreenModel<AnimeUpdatesScreenModel.State>(State()) {
 
     private val _events: Channel<Event> = Channel(Int.MAX_VALUE)

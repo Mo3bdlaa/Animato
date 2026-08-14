@@ -1,5 +1,6 @@
 package mihon.core.migration.migrations
 
+import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
@@ -16,6 +17,8 @@ class CategoryPreferencesCleanupMigration : Migration {
         val libraryPreferences = migrationContext.get<LibraryPreferences>() ?: return@withIOContext false
         val animePreferences = migrationContext.get<AnimeLibraryPreferences>() ?: return@withIOContext false
         val downloadPreferences = migrationContext.get<DownloadPreferences>() ?: return@withIOContext false
+        val animeDownloadPreferences =
+            migrationContext.get<AnimeDownloadPreferences>() ?: return@withIOContext false
 
         val getAnimeCategories = migrationContext.get<GetAnimeCategories>() ?: return@withIOContext false
         val getMangaCategories = migrationContext.get<GetMangaCategories>() ?: return@withIOContext false
@@ -37,11 +40,11 @@ class CategoryPreferencesCleanupMigration : Migration {
             animePreferences.animeUpdateCategoriesExclude(),
             libraryPreferences.mangaUpdateCategoriesExclude(),
             downloadPreferences.removeExcludeCategories(),
-            downloadPreferences.removeExcludeAnimeCategories(),
+            animeDownloadPreferences.removeExcludeAnimeCategories(),
             downloadPreferences.downloadNewChapterCategories(),
-            downloadPreferences.downloadNewEpisodeCategories(),
+            animeDownloadPreferences.downloadNewEpisodeCategories(),
             downloadPreferences.downloadNewChapterCategoriesExclude(),
-            downloadPreferences.downloadNewEpisodeCategoriesExclude(),
+            animeDownloadPreferences.downloadNewEpisodeCategoriesExclude(),
         )
         categoryPreferences.forEach { preference ->
             val ids = preference.get()

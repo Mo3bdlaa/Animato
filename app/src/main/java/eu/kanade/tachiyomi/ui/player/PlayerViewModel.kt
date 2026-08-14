@@ -41,6 +41,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.base.BasePreferences
@@ -157,6 +158,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val imageSaver: ImageSaver = Injekt.get(),
     private val downloadPreferences: DownloadPreferences = Injekt.get(),
+    private val animeDownloadPreferences: AnimeDownloadPreferences = Injekt.get(),
     private val trackPreferences: TrackPreferences = Injekt.get(),
     private val trackEpisode: TrackEpisode = Injekt.get(),
     private val getAnime: GetAnime = Injekt.get(),
@@ -1109,7 +1111,7 @@ class PlayerViewModel @JvmOverloads constructor(
     val eventFlow = eventChannel.receiveAsFlow()
 
     private val incognitoMode: Boolean by lazy { getIncognitoState.await(currentAnime.value?.source) }
-    private val downloadAheadAmount = downloadPreferences.autoDownloadWhileWatching().get()
+    private val downloadAheadAmount = animeDownloadPreferences.autoDownloadWhileWatching().get()
 
     internal val relativeTime = uiPreferences.relativeTime().get()
     internal val dateFormat = UiPreferences.dateFormat(uiPreferences.dateFormat().get())

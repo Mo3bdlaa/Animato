@@ -11,7 +11,7 @@ import tachiyomi.domain.library.model.LibraryDisplayMode
 /**
  * Library preferences shared by both halves of the app, plus the manga-specific ones.
  *
- * Anime-only preferences live in [aniyomi.domain.library.service.AnimeLibraryPreferences].
+ * Anime-only preferences live in AnimeLibraryPreferences, over in :anime:domain.
  */
 class LibraryPreferences(
     private val preferenceStore: PreferenceStore,

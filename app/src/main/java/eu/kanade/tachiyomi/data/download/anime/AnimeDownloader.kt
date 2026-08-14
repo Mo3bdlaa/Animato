@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.core.common.torrent.TorrentServerApi
 import aniyomi.core.common.torrent.TorrentServerUtils
+import aniyomi.domain.download.service.AnimeDownloadPreferences
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.FFmpegKitConfig
 import com.arthenica.ffmpegkit.FFprobeKit
@@ -60,7 +61,6 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
@@ -118,7 +118,7 @@ class AnimeDownloader(
     /**
      * Preference for user's choice of external downloader
      */
-    private val preferences: DownloadPreferences by injectLazy()
+    private val preferences: AnimeDownloadPreferences by injectLazy()
 
     /**
      * Whether the downloader is running.

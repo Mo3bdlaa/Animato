@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import android.content.Context
 import android.util.Log
+import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
@@ -136,7 +137,8 @@ class PreferenceRestorer(
     ): Boolean {
         val categoryPreferences = LibraryPreferences.categoryPreferenceKeys +
             AnimeLibraryPreferences.categoryPreferenceKeys +
-            DownloadPreferences.categoryPreferenceKeys
+            DownloadPreferences.categoryPreferenceKeys +
+            AnimeDownloadPreferences.categoryPreferenceKeys
         if (key !in categoryPreferences) return false
 
         val ids = value.flatMap {

@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastMap
+import aniyomi.domain.download.service.AnimeDownloadPreferences
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
@@ -58,6 +59,7 @@ object SettingsDownloadScreen : SearchableSettings {
         val getAnimeCategories = remember { Injekt.get<GetAnimeCategories>() }
         val allAnimeCategories by getAnimeCategories.subscribe().collectAsState(initial = emptyList())
         val downloadPreferences = remember { Injekt.get<DownloadPreferences>() }
+        val animeDownloadPreferences = remember { Injekt.get<AnimeDownloadPreferences>() }
         val basePreferences = remember { Injekt.get<BasePreferences>() }
         val speedLimit by downloadPreferences.downloadSpeedLimit().collectAsState()
         var currentSpeedLimit by remember { mutableIntStateOf(speedLimit) }
@@ -106,17 +108,22 @@ object SettingsDownloadScreen : SearchableSettings {
             Preference.PreferenceItem.InfoPreference(stringResource(AYMR.strings.download_slots_info)),
             getDeleteChaptersGroup(
                 downloadPreferences = downloadPreferences,
+                animeDownloadPreferences = animeDownloadPreferences,
                 animeCategories = allAnimeCategories.toImmutableList(),
                 mangaCategories = allMangaCategories.toImmutableList(),
             ),
             getAutoDownloadGroup(
                 downloadPreferences = downloadPreferences,
+                animeDownloadPreferences = animeDownloadPreferences,
                 allAnimeCategories = allAnimeCategories.toImmutableList(),
                 allMangaCategories = allMangaCategories.toImmutableList(),
             ),
-            getDownloadAheadGroup(downloadPreferences = downloadPreferences),
-            getExternalDownloaderGroup(
+            getDownloadAheadGroup(
                 downloadPreferences = downloadPreferences,
+                animeDownloadPreferences = animeDownloadPreferences,
+            ),
+            getExternalDownloaderGroup(
+                downloadPreferences = animeDownloadPreferences,
                 basePreferences = basePreferences,
             ),
         )
@@ -125,6 +132,7 @@ object SettingsDownloadScreen : SearchableSettings {
     @Composable
     private fun getDeleteChaptersGroup(
         downloadPreferences: DownloadPreferences,
+        animeDownloadPreferences: AnimeDownloadPreferences,
         animeCategories: ImmutableList<Category>,
         mangaCategories: ImmutableList<Category>,
     ): Preference.PreferenceGroup {
@@ -152,11 +160,11 @@ object SettingsDownloadScreen : SearchableSettings {
                     title = stringResource(AYMR.strings.pref_remove_bookmarked_chapters),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = downloadPreferences.downloadFillermarkedItems(),
+                    preference = animeDownloadPreferences.downloadFillermarkedItems(),
                     title = stringResource(AYMR.strings.pref_download_fillermarked_items),
                 ),
                 getExcludedAnimeCategoriesPreference(
-                    downloadPreferences = downloadPreferences,
+                    downloadPreferences = animeDownloadPreferences,
                     categories = { animeCategories },
                 ),
                 getExcludedCategoriesPreference(
@@ -183,7 +191,7 @@ object SettingsDownloadScreen : SearchableSettings {
 
     @Composable
     private fun getExcludedAnimeCategoriesPreference(
-        downloadPreferences: DownloadPreferences,
+        downloadPreferences: AnimeDownloadPreferences,
         categories: () -> List<Category>,
     ): Preference.PreferenceItem.MultiSelectListPreference {
         return Preference.PreferenceItem.MultiSelectListPreference(
@@ -198,13 +206,14 @@ object SettingsDownloadScreen : SearchableSettings {
     @Composable
     private fun getAutoDownloadGroup(
         downloadPreferences: DownloadPreferences,
+        animeDownloadPreferences: AnimeDownloadPreferences,
         allAnimeCategories: ImmutableList<Category>,
         allMangaCategories: ImmutableList<Category>,
     ): Preference.PreferenceGroup {
-        val downloadNewEpisodesPref = downloadPreferences.downloadNewEpisodes()
-        val downloadNewUnseenEpisodesOnlyPref = downloadPreferences.downloadNewUnseenEpisodesOnly()
-        val downloadNewEpisodeCategoriesPref = downloadPreferences.downloadNewEpisodeCategories()
-        val downloadNewEpisodeCategoriesExcludePref = downloadPreferences.downloadNewEpisodeCategoriesExclude()
+        val downloadNewEpisodesPref = animeDownloadPreferences.downloadNewEpisodes()
+        val downloadNewUnseenEpisodesOnlyPref = animeDownloadPreferences.downloadNewUnseenEpisodesOnly()
+        val downloadNewEpisodeCategoriesPref = animeDownloadPreferences.downloadNewEpisodeCategories()
+        val downloadNewEpisodeCategoriesExcludePref = animeDownloadPreferences.downloadNewEpisodeCategoriesExclude()
 
         val downloadNewEpisodes by downloadNewEpisodesPref.collectAsState()
 
@@ -311,12 +320,13 @@ object SettingsDownloadScreen : SearchableSettings {
     @Composable
     private fun getDownloadAheadGroup(
         downloadPreferences: DownloadPreferences,
+        animeDownloadPreferences: AnimeDownloadPreferences,
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.download_ahead),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.ListPreference(
-                    preference = downloadPreferences.autoDownloadWhileWatching(),
+                    preference = animeDownloadPreferences.autoDownloadWhileWatching(),
                     entries = listOf(0, 2, 3, 5, 10)
                         .associateWith {
                             if (it == 0) {
@@ -350,7 +360,7 @@ object SettingsDownloadScreen : SearchableSettings {
 
     @Composable
     private fun getExternalDownloaderGroup(
-        downloadPreferences: DownloadPreferences,
+        downloadPreferences: AnimeDownloadPreferences,
         basePreferences: BasePreferences,
     ): Preference.PreferenceGroup {
         val useExternalDownloader = downloadPreferences.useExternalDownloader()

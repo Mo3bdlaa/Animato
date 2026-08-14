@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.download.anime
 
 import android.content.Context
+import aniyomi.domain.download.service.AnimeDownloadPreferences
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
@@ -44,6 +45,7 @@ class AnimeDownloadManager(
     private val getCategories: GetAnimeCategories = Injekt.get(),
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val downloadPreferences: DownloadPreferences = Injekt.get(),
+    private val animeDownloadPreferences: AnimeDownloadPreferences = Injekt.get(),
 ) {
 
     /**
@@ -408,7 +410,7 @@ class AnimeDownloadManager(
     private suspend fun getEpisodesToDelete(episodes: List<Episode>, anime: Anime): List<Episode> {
         // Retrieve the categories that are set to exclude from being deleted on read
         val categoriesToExclude =
-            downloadPreferences.removeExcludeAnimeCategories().get().map(String::toLong)
+            animeDownloadPreferences.removeExcludeAnimeCategories().get().map(String::toLong)
 
         val categoriesForAnime = getCategories.await(anime.id)
             .map { it.id }
@@ -427,7 +429,7 @@ class AnimeDownloadManager(
     }
 
     private fun getEpisodesToDownload(episodes: List<Episode>): List<Episode> {
-        return if (!downloadPreferences.downloadFillermarkedItems().get()) {
+        return if (!animeDownloadPreferences.downloadFillermarkedItems().get()) {
             episodes.filterNot { it.fillermark }
         } else {
             episodes
