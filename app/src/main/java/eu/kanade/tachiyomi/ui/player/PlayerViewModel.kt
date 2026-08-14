@@ -1529,6 +1529,43 @@ class PlayerViewModel @JvmOverloads constructor(
         _currentVideo.update { _ -> video }
     }
 
+    /**
+     * Fall back to the next best video after the current one fails during playback.
+     *
+     * [loadVideo] already retries while it is resolving a video, but a stream that resolves fine
+     * can still die once mpv is playing it — an expired token, a dead mirror, a hoster that returns
+     * an error body. Without this the player just surfaces the error and stops, even when other
+     * hosters for the same episode are sitting there ready.
+     *
+     * @return true if another video was found and loading started.
+     */
+    suspend fun failoverToNextVideo(): Boolean {
+        val (hosterIndex, videoIndex) = _selectedHosterVideoIndex.value
+        if (hosterIndex == -1 || videoIndex == -1) return false
+
+        val failedHosterState = _hosterState.value.getOrNull(hosterIndex) as? HosterState.Ready ?: return false
+        val failedVideo = failedHosterState.videoList.getOrNull(videoIndex) ?: return false
+
+        _hosterState.updateAt(
+            hosterIndex,
+            failedHosterState.getChangedAt(videoIndex, failedVideo, Video.State.ERROR),
+        )
+
+        val (newHosterIndex, newVideoIndex) = HosterLoader.selectBestVideo(_hosterState.value)
+        if (newHosterIndex == -1) return false
+
+        val newVideo = (_hosterState.value[newHosterIndex] as HosterState.Ready)
+            .videoList
+            .getOrNull(newVideoIndex)
+            ?: return false
+
+        // Clear the current video so loadVideo treats this as a fresh selection and keeps walking
+        // the remaining candidates if this one fails too.
+        _currentVideo.update { _ -> null }
+
+        return loadVideo(currentSource.value, newVideo, newHosterIndex, newVideoIndex)
+    }
+
     fun onVideoClicked(hosterIndex: Int, videoIndex: Int) {
         val hosterState = _hosterState.value[hosterIndex] as? HosterState.Ready
         val video = hosterState?.videoList

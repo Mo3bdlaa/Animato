@@ -43,6 +43,7 @@ import android.util.Rational
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.ui.Modifier
@@ -750,6 +751,29 @@ class PlayerActivity : BaseActivity() {
         }
     }
 
+    /**
+     * Handle a file ending in an error, by trying the next available video before giving up.
+     *
+     * A stream that resolved successfully can still fail once it is playing — expired tokens, dead
+     * mirrors, hosters that answer with an error body. Reporting that to the viewer is only the
+     * right move once nothing else is left to try.
+     */
+    internal fun onPlaybackError(errorMessage: String) {
+        val position = player.timePos ?: 0
+        val duration = player.duration ?: 0
+        val endedNormally = duration > 0 && position >= duration - END_OF_FILE_THRESHOLD_SECONDS
+        if (player.isExiting || endedNormally) {
+            toast(errorMessage, Toast.LENGTH_LONG)
+            return
+        }
+
+        viewModel.viewModelScope.launchIO {
+            if (!viewModel.failoverToNextVideo()) {
+                withUIContext { toast(errorMessage, Toast.LENGTH_LONG) }
+            }
+        }
+    }
+
     internal fun event(eventId: Int) {
         if (player.isExiting) return
         when (eventId) {
@@ -1411,3 +1435,9 @@ class PlayerActivity : BaseActivity() {
         }
     }
 }
+
+/**
+ * How close to the end of a video counts as having finished it rather than having failed, so that
+ * an episode reaching its end is never mistaken for a dead stream worth failing over.
+ */
+private const val END_OF_FILE_THRESHOLD_SECONDS = 5
