@@ -393,7 +393,7 @@ object SettingsDataScreen : SearchableSettings {
                 options = exportOptions,
                 onConfirm = { options ->
                     exportOptions = options
-                    saveFileLauncher.launch("aniyomi_library.csv")
+                    saveFileLauncher.launch("animato_library.csv")
                 },
                 onDismissRequest = { showDialog = false },
             )

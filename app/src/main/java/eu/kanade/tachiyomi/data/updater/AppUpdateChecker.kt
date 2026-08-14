@@ -40,13 +40,9 @@ class AppUpdateChecker {
     }
 }
 
-val GITHUB_REPO: String by lazy {
-    if (isPreviewBuildType) {
-        "aniyomiorg/aniyomi-preview"
-    } else {
-        "aniyomiorg/aniyomi"
-    }
-}
+// Preview builds share the stable repo until a dedicated preview repo exists; they look for
+// "r<commit count>" tags there, so publishing preview releases means tagging that way.
+val GITHUB_REPO: String by lazy { "Mo3bdlaa/Animato" }
 
 val RELEASE_TAG: String by lazy {
     if (isPreviewBuildType) {

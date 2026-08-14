@@ -14,3 +14,10 @@ local.properties
 
 # macOS specific files
 .DS_Store
+
+# Signing keys — never commit these
+*.jks
+*.keystore
+*.jks.base64
+keystore.properties
+signing.properties
