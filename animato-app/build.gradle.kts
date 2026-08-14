@@ -25,4 +25,8 @@ android {
 dependencies {
     // Mihon, consumed as a library. Nothing in this module edits it.
     implementation(projects.app)
+
+    implementation(projects.anime.data)
+    implementation(projects.anime.domain)
+    implementation(projects.anime.sourceApi)
 }

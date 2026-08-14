@@ -32,6 +32,7 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "Animato"
+include(":anime:data")
 include(":anime:domain")
 include(":anime:source-api")
 include(":app")

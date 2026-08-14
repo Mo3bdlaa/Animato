@@ -106,7 +106,7 @@ to resolve.
 | 1 | Animato identity, CI, release pipeline | in progress |
 | 2a | `:anime:source-api` — 26 files, the frozen extension contract | done |
 | 2b | `:anime:domain` — 104 files | done |
-| 2c | `:anime:data` — the anime database and its repositories | next |
+| 2c | `:anime:data` — the anime database and its repositories | done |
 | 3 | `:animato:ui-kit` — generalised components re-homed | |
 | 4 | `:anime:player` | |
 | 5 | `:anime:ui` and a home screen combining both tab sets | |
