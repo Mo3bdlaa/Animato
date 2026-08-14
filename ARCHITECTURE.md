@@ -42,7 +42,7 @@ Everything anime, in its own modules:
 | --- | --- | --- |
 | `:anime:source-api` | The extension contract. **Frozen** — see below. | extracted |
 | `:anime:domain` | `Anime`, `Episode`, `Season`, interactors, anime preferences | extracted |
-| `:anime:data` | The anime database (already separate from manga's) | still in `:data` |
+| `:anime:data` | The anime database (already separate from manga's) | extracted |
 | `:anime:player` | mpv, hosters, subtitles, AniSkip, PiP, torrent | still in `:app` |
 | `:anime:ui` | Anime library, browse, history, tracking screens | still in `:app` |
 

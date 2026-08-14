@@ -46,6 +46,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "Animato"
 include(":app")
+include(":anime:data")
 include(":anime:domain")
 include(":anime:source-api")
 include(":core-metadata")

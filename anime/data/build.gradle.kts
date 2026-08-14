@@ -6,19 +6,17 @@ plugins {
 }
 
 android {
-    namespace = "tachiyomi.data"
-
-    defaultConfig {
-        consumerProguardFiles("consumer-rules.pro")
-    }
+    namespace = "aniyomi.data"
 
     sqldelight {
         databases {
-            create("Database") {
-                packageName.set("tachiyomi.data")
+            // The generated package is unchanged, so every existing import of AnimeDatabase and
+            // its queries still resolves after the move out of :data.
+            create("AnimeDatabase") {
+                packageName.set("tachiyomi.mi.data")
                 dialect(libs.sqldelight.dialects.sql)
-                schemaOutputDirectory.set(project.file("./src/main/sqldelight"))
-                srcDirs.from(project.file("./src/main/sqldelight"))
+                schemaOutputDirectory.set(project.file("./src/main/sqldelightanime"))
+                srcDirs.from(project.file("./src/main/sqldelightanime"))
             }
         }
     }
@@ -31,7 +29,11 @@ kotlin {
 }
 
 dependencies {
-    implementation(projects.sourceApi)
+    // The anime repositories share the column adapters and paging helpers that live in :data.
+    api(projects.data)
+
+    implementation(projects.anime.sourceApi)
+    implementation(projects.anime.domain)
     implementation(projects.domain)
     implementation(projects.core.common)
 

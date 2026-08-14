@@ -192,6 +192,7 @@ dependencies {
     implementation(projects.anime.sourceApi)
     implementation(projects.sourceLocal)
     implementation(projects.data)
+    implementation(projects.anime.data)
     implementation(projects.anime.domain)
     implementation(projects.domain)
     implementation(projects.presentationCore)
