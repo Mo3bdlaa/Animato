@@ -138,8 +138,8 @@ class AnimeLibraryScreenModel(
         }
 
         combine(
-            libraryPreferences.categoryTabs().changes(),
-            libraryPreferences.categoryNumberOfItems().changes(),
+            libraryPreferences.categoryTabs.changes(),
+            libraryPreferences.categoryNumberOfItems.changes(),
             libraryPreferences.showContinueViewingButton().changes(),
         ) { a, b, c -> arrayOf(a, b, c) }
             .onEach { (showCategoryTabs, showAnimeCount, showAnimeContinueButton) ->
@@ -343,10 +343,10 @@ class AnimeLibraryScreenModel(
 
     private fun getAnimelibItemPreferencesFlow(): Flow<ItemPreferences> {
         return combine(
-            libraryPreferences.downloadBadge().changes(),
-            libraryPreferences.unreadBadge().changes(),
-            libraryPreferences.localBadge().changes(),
-            libraryPreferences.languageBadge().changes(),
+            libraryPreferences.downloadBadge.changes(),
+            libraryPreferences.unreadBadge.changes(),
+            libraryPreferences.localBadge.changes(),
+            libraryPreferences.languageBadge.changes(),
             libraryPreferences.autoUpdateItemRestrictions().changes(),
 
             preferences.downloadedOnly.changes(),
@@ -355,7 +355,7 @@ class AnimeLibraryScreenModel(
             animeLibraryPreferences.filterStartedAnime().changes(),
             animeLibraryPreferences.filterBookmarkedAnime().changes(),
             animeLibraryPreferences.filterCompletedAnime().changes(),
-            libraryPreferences.filterIntervalCustom().changes(),
+            libraryPreferences.filterIntervalCustom.changes(),
             transform = {
                 ItemPreferences(
                     downloadBadge = it[0] as Boolean,
@@ -580,7 +580,7 @@ class AnimeLibraryScreenModel(
     }
 
     fun getDisplayMode(): PreferenceMutableState<LibraryDisplayMode> {
-        return libraryPreferences.displayMode().asState(viewModelScope)
+        return libraryPreferences.displayMode.asState(viewModelScope)
     }
 
     fun getColumnsPreferenceForCurrentOrientation(isLandscape: Boolean): PreferenceMutableState<Int> {

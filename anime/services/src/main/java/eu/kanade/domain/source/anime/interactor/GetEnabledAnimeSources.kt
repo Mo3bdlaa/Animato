@@ -20,10 +20,10 @@ class GetEnabledAnimeSources(
 
     fun subscribe(): Flow<List<AnimeSource>> {
         return combine(
-            preferences.pinnedAnimeSources().changes(),
+            preferences.pinnedAnimeSources.changes(),
             sharedPreferences.enabledLanguages.changes(),
-            preferences.disabledAnimeSources().changes(),
-            preferences.lastUsedAnimeSource().changes(),
+            preferences.disabledAnimeSources.changes(),
+            preferences.lastUsedAnimeSource.changes(),
             repository.getAnimeSources(),
         ) { pinnedSourceIds, enabledLanguages, disabledSources, lastUsedSource, sources ->
             sources

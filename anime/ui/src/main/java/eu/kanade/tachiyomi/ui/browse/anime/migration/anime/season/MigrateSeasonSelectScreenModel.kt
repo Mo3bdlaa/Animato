@@ -47,7 +47,7 @@ class MigrateSeasonSelectScreenModel(
     private val updateAnimeFromRemote: UpdateAnimeFromRemote = Injekt.get(),
 ) : StateViewModel<MigrateSeasonSelectScreenModel.State>(State()) {
 
-    var displayMode by sourcePreferences.sourceDisplayMode().asState(viewModelScope)
+    var displayMode by sourcePreferences.sourceDisplayMode.asState(viewModelScope)
     val source = sourceManager.getOrStub(anime.source)
 
     fun getColumnsPreference(orientation: Int): GridCells {
@@ -60,7 +60,7 @@ class MigrateSeasonSelectScreenModel(
         return if (columns == 0) GridCells.Adaptive(128.dp) else GridCells.Fixed(columns)
     }
 
-    private val hideInLibraryItems = sourcePreferences.hideInAnimeLibraryItems().get()
+    private val hideInLibraryItems = sourcePreferences.hideInAnimeLibraryItems.get()
     val seasonPagerFlowFlow = flow { emit(anime) }
         .map { anime ->
             Pager(

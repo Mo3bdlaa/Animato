@@ -78,7 +78,7 @@ class BrowseAnimeSourceScreenModel(
     private val getIncognitoState: GetAnimeIncognitoState = Injekt.get(),
 ) : StateViewModel<BrowseAnimeSourceScreenModel.State>(State(Listing.valueOf(listingQuery))) {
 
-    var displayMode by sourcePreferences.sourceDisplayMode().asState(viewModelScope)
+    var displayMode by sourcePreferences.sourceDisplayMode.asState(viewModelScope)
 
     val source = sourceManager.getOrStub(sourceId)
 
@@ -100,14 +100,14 @@ class BrowseAnimeSourceScreenModel(
         }
 
         if (!getIncognitoState.await(source.id)) {
-            sourcePreferences.lastUsedAnimeSource().set(source.id)
+            sourcePreferences.lastUsedAnimeSource.set(source.id)
         }
     }
 
     /**
      * Flow of Pager flow tied to [State.listing]
      */
-    private val hideInLibraryItems = sourcePreferences.hideInAnimeLibraryItems().get()
+    private val hideInLibraryItems = sourcePreferences.hideInAnimeLibraryItems.get()
     val animePagerFlowFlow = state.map { it.listing }
         .distinctUntilChanged()
         .map { listing ->

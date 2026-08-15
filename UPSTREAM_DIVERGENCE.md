@@ -156,6 +156,32 @@ in the launcher.
 
 ## Open
 
+### Our preferences are functions; Mihon's are now properties
+
+Mihon has moved its preference accessors from functions to properties:
+
+```kotlin
+preferences.enabledLanguages()        // Aniyomi, and every anime module here
+preferences.enabledLanguages          // Mihon 0.20.4
+```
+
+Ours did not move with them. **158 accessors across 11 classes** — `AnimeLibraryPreferences` (47),
+`PlayerPreferences` (36), `SubtitlePreferences` (21), `GesturePreferences` (13), and the rest — are
+still functions, so the codebase reads both ways depending on which side of the line a preference
+came from.
+
+This is cosmetic, which is exactly why it is easy to leave and easy to trip over. Nothing fails to
+compile, so it will not announce itself; someone writing an anime screen will simply guess wrong
+about half the time, and the guess is silent until they build.
+
+Converting is mechanical — `fun x() = store.getBoolean(...)` becomes `val x: Preference<Boolean> =
+store.getBoolean(...)` — but it touches every call site in `:anime:ui`, `:anime:player` and
+`:anime:services`. Doing it while `:anime:ui` still has hundreds of compile errors would mix a
+rename into a port and make both harder to review.
+
+*To do: after 6b compiles, convert our preference classes to properties in one pass. Do it as its
+own commit, touching nothing else, so the diff is reviewable as a rename.*
+
 ### `:app` must not minify itself — `isMinifyEnabled` is `false` here
 
 Upstream sets `isMinifyEnabled = true` on `:app`'s release build type. That is right for an

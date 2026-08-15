@@ -67,7 +67,7 @@ class AnimeUpdatesScreenModel(
     private val _events: Channel<Event> = Channel(Int.MAX_VALUE)
     val events: Flow<Event> = _events.receiveAsFlow()
 
-    val lastUpdated by libraryPreferences.lastUpdatedTimestamp().asState(viewModelScope)
+    val lastUpdated by libraryPreferences.lastUpdatedTimestamp.asState(viewModelScope)
 
     val useExternalDownloader = downloadPreferences.useExternalDownloader().get()
 

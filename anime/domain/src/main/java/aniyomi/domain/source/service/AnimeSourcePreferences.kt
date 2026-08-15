@@ -13,22 +13,28 @@ import tachiyomi.core.common.preference.getEnum
  * count of manga ones.
  *
  * Preference keys are unchanged, so existing installs keep their state.
+ *
+ * These are properties rather than functions because several of their names — migrationSortingMode
+ * and migrationSortingDirection — also exist on Mihon's SourcePreferences, and a name that means
+ * the same thing on both sides should not be called two different ways depending on which one you
+ * happen to have. The rest of our preference classes are still functions; see
+ * UPSTREAM_DIVERGENCE.md.
  */
 class AnimeSourcePreferences(
     private val preferenceStore: PreferenceStore,
 ) {
 
-    fun animeExtensionUpdatesCount() = preferenceStore.getInt("animeext_updates_count", 0)
+    val animeExtensionUpdatesCount = preferenceStore.getInt("animeext_updates_count", 0)
 
-    fun incognitoAnimeExtensions() = preferenceStore.getStringSet("incognito_anime_extensions", emptySet())
+    val incognitoAnimeExtensions = preferenceStore.getStringSet("incognito_anime_extensions", emptySet())
 
-    fun disabledAnimeSources() = preferenceStore.getStringSet("hidden_anime_catalogues", emptySet())
+    val disabledAnimeSources = preferenceStore.getStringSet("hidden_anime_catalogues", emptySet())
 
-    fun pinnedAnimeSources() = preferenceStore.getStringSet("pinned_anime_catalogues", emptySet())
+    val pinnedAnimeSources = preferenceStore.getStringSet("pinned_anime_catalogues", emptySet())
 
-    fun lastUsedAnimeSource() = preferenceStore.getLong("last_anime_catalogue_source", -1)
+    val lastUsedAnimeSource = preferenceStore.getLong("last_anime_catalogue_source", -1)
 
-    fun hideInAnimeLibraryItems() = preferenceStore.getBoolean("browse_hide_in_anime_library_items", false)
+    val hideInAnimeLibraryItems = preferenceStore.getBoolean("browse_hide_in_anime_library_items", false)
 
     /**
      * Sorting for the anime migration source list.
@@ -37,12 +43,12 @@ class AnimeSourcePreferences(
      * ones because the two lists are sorted independently — a user who orders manga sources by
      * favourite count has said nothing about how they want anime sources ordered.
      */
-    fun migrationSortingMode() = preferenceStore.getEnum(
+    val migrationSortingMode = preferenceStore.getEnum(
         "animelib_migration_sorting_mode",
         SetAnimeMigrateSorting.Mode.ALPHABETICAL,
     )
 
-    fun migrationSortingDirection() = preferenceStore.getEnum(
+    val migrationSortingDirection = preferenceStore.getEnum(
         "animelib_migration_sorting_direction",
         SetAnimeMigrateSorting.Direction.ASCENDING,
     )

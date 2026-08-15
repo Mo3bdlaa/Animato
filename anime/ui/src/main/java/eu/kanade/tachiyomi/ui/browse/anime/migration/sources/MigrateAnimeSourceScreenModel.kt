@@ -5,7 +5,7 @@ import mihon.core.viewmodel.StateViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.source.anime.interactor.GetAnimeSourcesWithFavoriteCount
 import eu.kanade.domain.source.interactor.SetMigrateSorting
-import eu.kanade.domain.source.service.SourcePreferences
+import aniyomi.domain.source.service.AnimeSourcePreferences
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -24,7 +24,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class MigrateAnimeSourceScreenModel(
-    preferences: SourcePreferences = Injekt.get(),
+    preferences: AnimeSourcePreferences = Injekt.get(),
     private val getSourcesWithFavoriteCount: GetAnimeSourcesWithFavoriteCount = Injekt.get(),
     private val setMigrateSorting: SetMigrateSorting = Injekt.get(),
 ) : StateViewModel<MigrateAnimeSourceScreenModel.State>(State()) {
@@ -49,11 +49,11 @@ class MigrateAnimeSourceScreenModel(
                 }
         }
 
-        preferences.migrationSortingDirection().changes()
+        preferences.migrationSortingDirection.changes()
             .onEach { mutableState.update { state -> state.copy(sortingDirection = it) } }
             .launchIn(viewModelScope)
 
-        preferences.migrationSortingMode().changes()
+        preferences.migrationSortingMode.changes()
             .onEach { mutableState.update { state -> state.copy(sortingMode = it) } }
             .launchIn(viewModelScope)
     }
