@@ -1,0 +1,82 @@
+name: Check signing secrets
+
+# Answers one question — "are the four signing secrets right?" — without building or publishing
+# anything. The real signing in build_push.yml only runs on a release tag, so without this the
+# cheapest way to test a secret would be to cut a release and see what happened.
+#
+# It prints the certificate fingerprint and the aliases the keystore contains. It never prints a
+# password, and never writes the keystore anywhere but the runner's own temp directory.
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check secrets
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -e
+
+          missing=""
+          [ -z "$SIGNING_KEY" ] && missing="$missing SIGNING_KEY"
+          [ -z "$ALIAS" ] && missing="$missing ALIAS"
+          [ -z "$KEY_STORE_PASSWORD" ] && missing="$missing KEY_STORE_PASSWORD"
+          [ -z "$KEY_PASSWORD" ] && missing="$missing KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            echo "See .github/RELEASING.md for what each one is."
+            exit 1
+          fi
+          echo "All four secrets are set."
+
+          if ! echo "$SIGNING_KEY" | base64 -d > "$RUNNER_TEMP/check.ks" 2>/dev/null; then
+            echo "::error::SIGNING_KEY is not valid base64."
+            echo "Re-encode the keystore and paste the whole thing as one line, with no line breaks."
+            exit 1
+          fi
+          echo "SIGNING_KEY decoded: $(stat -c%s "$RUNNER_TEMP/check.ks") bytes."
+
+          if ! keytool -list -keystore "$RUNNER_TEMP/check.ks" \
+                -storepass "$KEY_STORE_PASSWORD" > "$RUNNER_TEMP/list.txt" 2>/dev/null; then
+            echo "::error::Could not open the keystore. KEY_STORE_PASSWORD is probably wrong,"
+            echo "or SIGNING_KEY is base64 of something that is not a keystore."
+            exit 1
+          fi
+
+          aliases=$(grep -i 'PrivateKeyEntry' "$RUNNER_TEMP/list.txt" | cut -d, -f1)
+          if [ -z "$aliases" ]; then
+            echo "::error::The keystore opened but holds no private key."
+            exit 1
+          fi
+
+          if ! printf '%s\n' "$aliases" | grep -qix "$ALIAS"; then
+            echo "::error::ALIAS is '$ALIAS' but this keystore contains: $(printf '%s ' $aliases)"
+            echo "Set the ALIAS secret to one of those."
+            exit 1
+          fi
+          echo "Alias '$ALIAS' found."
+
+          # The key can carry its own password. This is the check that catches the PowerShell path,
+          # where a PFX has one password for both and KEY_PASSWORD must equal KEY_STORE_PASSWORD.
+          if ! keytool -exportcert -keystore "$RUNNER_TEMP/check.ks" \
+                -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" > /dev/null 2>&1; then
+            echo "::error::Could not read the key '$ALIAS'. KEY_PASSWORD is probably wrong."
+            exit 1
+          fi
+
+          echo
+          echo "Certificate:"
+          grep -iE 'Owner|Valid from|SHA-256' "$RUNNER_TEMP/list.txt" -A1 | head -20 || true
+          keytool -list -v -keystore "$RUNNER_TEMP/check.ks" -storepass "$KEY_STORE_PASSWORD" \
+            -alias "$ALIAS" 2>/dev/null | grep -iE 'Owner:|Valid from:|SHA256:' || true
+
+          rm -f "$RUNNER_TEMP/check.ks" "$RUNNER_TEMP/list.txt"
+          echo
+          echo "All four secrets are correct. A tag will produce a signed release."

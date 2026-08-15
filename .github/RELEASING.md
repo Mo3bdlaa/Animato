@@ -77,14 +77,54 @@ it lets someone else publish an update your users' phones will accept.
 
 ## The four secrets
 
-Repository → Settings → Secrets and variables → Actions → *New repository secret*:
+On GitHub: **your repository → Settings → Secrets and variables → Actions → New repository secret**.
+Add each one by name — the names are exact and case-sensitive.
 
 | Secret | Value |
 | --- | --- |
-| `SIGNING_KEY` | the contents of `animato.jks.base64`, one line, no trailing newline |
+| `SIGNING_KEY` | the whole contents of `animato.jks.base64`, as one line |
 | `ALIAS` | `animato` — the `-alias`, or the `-FriendlyName`, you used |
 | `KEY_STORE_PASSWORD` | the keystore password |
 | `KEY_PASSWORD` | the key password. On the PowerShell path a PFX has **one** password for both, so set this to the same value; `keytool` only differs if you deliberately gave the key its own |
+
+The one that goes wrong is `SIGNING_KEY`, because it is a few thousand characters and selecting it
+by hand invites a missing character or a stray line break. Put it on the clipboard instead of
+reading it off the screen:
+
+```powershell
+# PowerShell
+Get-Content "$HOME\animato.jks.base64" -Raw | Set-Clipboard
+```
+
+```sh
+# macOS
+pbcopy < animato.jks.base64
+# Linux
+xclip -selection clipboard < animato.jks.base64
+```
+
+Then paste into the secret's value box. GitHub trims trailing whitespace, so a newline at the end is
+harmless; line breaks *inside* the value are not, which is why the encoding step uses `-w0` /
+`-NoNewline`.
+
+Secrets cannot be read back once saved — GitHub only lets you overwrite them. That is expected; if
+you are unsure a value is right, replace it rather than trying to check it.
+
+## Checking they are right, without publishing anything
+
+The signing in `build_push.yml` only runs on a release tag, so the obvious way to test a secret
+would be to cut a real release. Do not do that. There is a workflow that answers the question on its
+own:
+
+**Actions → Check signing secrets → Run workflow.**
+
+It takes about thirty seconds and builds nothing. It reports, in order: whether all four secrets are
+set, whether `SIGNING_KEY` decodes, whether the store password opens the keystore, whether `ALIAS`
+matches — printing the aliases the keystore actually contains if it does not — and whether
+`KEY_PASSWORD` reads the key. On success it prints the certificate's owner and fingerprint, which is
+worth keeping a note of: it is what identifies your app to Android for the rest of its life.
+
+It never prints a password.
 
 ## Cutting a release
 
