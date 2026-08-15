@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.entries.anime
 
+import animato.anime.player.PlayerLauncher
 import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -413,7 +414,7 @@ class AnimeScreen(
 
     private suspend fun openEpisode(context: Context, episode: Episode, useExternalPlayer: Boolean) {
         withIOContext {
-            MainActivity.startPlayerActivity(
+            PlayerLauncher.startPlayerActivity(
                 context,
                 episode.animeId,
                 episode.id,

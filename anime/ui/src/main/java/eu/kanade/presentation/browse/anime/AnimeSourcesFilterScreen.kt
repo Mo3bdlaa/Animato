@@ -10,7 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.browse.anime.components.BaseAnimeSourceItem
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
-import eu.kanade.presentation.util.animateItemFastScroll
+import animato.ui.components.animateItemFastScroll
 import eu.kanade.tachiyomi.ui.browse.anime.source.AnimeSourcesFilterScreenModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import tachiyomi.domain.source.anime.model.AnimeSource

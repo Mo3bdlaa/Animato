@@ -1,5 +1,6 @@
 package eu.kanade.presentation.entries.anime
 
+import animato.anime.player.PlayerLauncher
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.slideInHorizontally
@@ -522,14 +523,14 @@ private fun VideoList(
                         clipboardManager.setText(AnnotatedString(currentVideo.videoUrl))
                         scope.launch {
                             if (currentVideo.usesHttpServer()) {
-                                MainActivity.startHttpServerService(context, anime.source)
+                                PlayerLauncher.startHttpServerService(context, anime.source)
                             }
                             context.toast(copiedString)
                         }
                     },
                     onExtPlayerClicked = {
                         scope.launch {
-                            MainActivity.startPlayerActivity(
+                            PlayerLauncher.startPlayerActivity(
                                 context,
                                 anime.id,
                                 episode.id,
@@ -541,7 +542,7 @@ private fun VideoList(
                     },
                     onIntPlayerClicked = {
                         scope.launch {
-                            MainActivity.startPlayerActivity(
+                            PlayerLauncher.startPlayerActivity(
                                 context,
                                 anime.id,
                                 episode.id,

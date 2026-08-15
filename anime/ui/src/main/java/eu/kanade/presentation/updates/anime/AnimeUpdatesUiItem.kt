@@ -38,7 +38,7 @@ import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadIndicator
 import eu.kanade.presentation.manga.components.DotSeparatorText
 import animato.ui.entries.ItemCover
-import eu.kanade.presentation.util.animateItemFastScroll
+import animato.ui.components.animateItemFastScroll
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.ui.updates.anime.AnimeUpdatesItem

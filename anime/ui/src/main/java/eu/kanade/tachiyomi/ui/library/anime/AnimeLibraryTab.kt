@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.library.anime
 
+import animato.anime.player.PlayerLauncher
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
@@ -114,7 +115,7 @@ data object AnimeLibraryTab : Tab {
         suspend fun openEpisode(episode: Episode) {
             val playerPreferences: PlayerPreferences by injectLazy()
             val extPlayer = playerPreferences.alwaysUseExternalPlayer().get()
-            MainActivity.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
+            PlayerLauncher.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
         }
 
         val defaultTitle = stringResource(AYMR.strings.label_anime_library)

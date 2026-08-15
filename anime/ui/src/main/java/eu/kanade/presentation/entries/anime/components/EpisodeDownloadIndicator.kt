@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.ArrowModifier
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.IndicatorModifier
-import eu.kanade.presentation.components.IndicatorSize
+import animato.ui.components.IndicatorSize
 import eu.kanade.presentation.components.IndicatorStrokeWidth
 import eu.kanade.presentation.components.commonClickable
 import eu.kanade.tachiyomi.R

@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.history.anime
 
+import animato.anime.player.PlayerLauncher
 import android.content.Context
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteSweep
@@ -58,7 +59,7 @@ fun Screen.animeHistoryTab(
         val playerPreferences: PlayerPreferences by injectLazy()
         val extPlayer = playerPreferences.alwaysUseExternalPlayer().get()
         if (episode != null) {
-            MainActivity.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
+            PlayerLauncher.startPlayerActivity(context, episode.animeId, episode.id, extPlayer)
         } else {
             snackbarHostState.showSnackbar(context.stringResource(AYMR.strings.no_next_episode))
         }

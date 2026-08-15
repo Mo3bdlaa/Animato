@@ -30,7 +30,7 @@ import mihon.core.viewmodel.StateViewModel
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.hasCustomBackground
 import eu.kanade.domain.entries.anime.model.hasCustomCover
-import eu.kanade.presentation.components.IndicatorSize
+import animato.ui.components.IndicatorSize
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.data.cache.AnimeBackgroundCache

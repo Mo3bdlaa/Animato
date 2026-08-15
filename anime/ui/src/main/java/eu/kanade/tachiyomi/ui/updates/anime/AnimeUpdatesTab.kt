@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.updates.anime
 
+import animato.anime.player.PlayerLauncher
 import android.content.Context
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -63,7 +64,7 @@ fun Screen.animeUpdatesTab(
         val playerPreferences: PlayerPreferences by injectLazy()
         val update = updateItem.update
         val extPlayer = playerPreferences.alwaysUseExternalPlayer().get() != altPlayer
-        MainActivity.startPlayerActivity(context, update.animeId, update.episodeId, extPlayer, update.sourceId)
+        PlayerLauncher.startPlayerActivity(context, update.animeId, update.episodeId, extPlayer, update.sourceId)
     }
 
     return TabContent(
