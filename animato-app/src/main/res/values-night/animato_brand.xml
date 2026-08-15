@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mihon gives `splash` a night value of its own, and a resource override replaces one configuration
+  at a time — overriding the default alone would leave the dark-mode launch screen on Mihon's grey.
+-->
+<resources>
+    <color name="splash">@color/animato_ink_black</color>
+</resources>

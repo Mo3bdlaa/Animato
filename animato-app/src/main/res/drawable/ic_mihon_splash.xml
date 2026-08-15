@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mihon's splash theme points at @drawable/ic_mihon_splash. Redefining that name here swaps the
+  launch icon for ours; the theme itself is Mihon's and stays untouched.
+
+  The name is theirs, which is why this file is worth a comment: it is an override, not a new
+  resource, and it disappears the moment we own the splash theme.
+
+  The splash screen renders a 288dp icon with the inner 192dp as content — the same 2:3 ratio the
+  adaptive foreground is drawn at, so it is reused verbatim.
+-->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:gravity="fill"
+    android:src="@drawable/animato_icon_foreground" />

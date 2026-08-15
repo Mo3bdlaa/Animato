@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Animato palette, as XML resources for the places Compose cannot reach: the launcher icon
+  background, the splash window, and any platform-drawn chrome.
+
+  The Compose side of the theme reads the same values from animato.ui.theme.AnimatoColors; these
+  two must stay in step. See docs/BRANDING.md.
+-->
+<resources>
+
+    <color name="animato_accent_red">#E5392F</color>
+    <color name="animato_ink_black">#08080C</color>
+    <color name="animato_surface">#151516</color>
+    <color name="animato_paper">#F2EEE5</color>
+    <color name="animato_muted">#9A9690</color>
+
+    <!--
+      Mihon's splash window is blue. Overriding the colour it points at re-skins the launch screen
+      without touching its theme.
+    -->
+    <color name="splash">@color/animato_ink_black</color>
+
+</resources>

@@ -52,6 +52,13 @@ will.
 
 Every Mihon screen we replace is a permanent maintenance cost, because it grows the surface below.
 
+What the theme has to express, and which screens genuinely need replacing, is specified in
+[docs/BRANDING.md](docs/BRANDING.md) — palette, components, and the nine screens read off the
+brand sheet. The navigation section there is the one part that is not restyling: Animato's tab
+bar is Home / Library / Discover / Updates / Downloads against Mihon's Library / Updates / History
+/ Browse / More, so **Home and Downloads are new destinations we own** and settings leave the tab
+bar for the overflow menu.
+
 ## The metric
 
 > **Number of distinct Mihon symbols our code references.**
@@ -82,6 +89,30 @@ a deliberate decision, not a convenience. Keep it under ten.
 | `settings.gradle.kts` | registers our modules |
 | `.github/workflows/*` | Mihon's target their repository, releases and website |
 | `.gitignore` | Mihon's does not exclude keystores; a leaked signing key is unrecoverable |
+| `README.md` | the repository's front page cannot be another project's |
+
+## Branding without editing anything
+
+Everything visible that identifies the app is done by **overriding a resource name**, not by
+editing a file. An application module wins resource merging over its library dependencies, so
+defining a name in `animato-app` replaces Mihon's definition of it while Mihon's own file stays
+byte-identical — and Mihon's manifest, which still points at `@mipmap/ic_launcher`, resolves to
+ours without a `tools:replace`.
+
+| Name we redefine | Mihon's | Effect |
+| --- | --- | --- |
+| `string/app_name` | "Mihon" | the app is called Animato |
+| `mipmap/ic_launcher` | their adaptive icon | our launcher icon, monochrome layer included |
+| `color/splash` | `@color/accent_blue` | the launch window is ink black |
+| `drawable/ic_mihon_splash` | their splash mark | our logo on the launch screen |
+
+An override replaces **one configuration** at a time. `color/splash` has a `night` value upstream,
+so overriding the default alone left dark mode on Mihon's grey; both had to be redefined. Check
+`aapt2 dump resources` on the built APK rather than assuming — it lists every configuration of a
+name and shows which one won.
+
+These four are the cheapest kind of divergence we have: they cost nothing at merge time, because
+the files they override are still untouched.
 
 `sync_mihon.yml` merges upstream into a branch and opens a pull request every Monday. A
 conflict outside the table above is a signal that the boundary has been crossed, not a merge

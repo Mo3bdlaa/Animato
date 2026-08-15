@@ -1,74 +1,91 @@
 <div align="center">
 
-<a href="https://mihon.app">
-    <img src="./.github/assets/logo.png" alt="Mihon logo" title="Mihon logo" width="80"/>
-</a>
+<img src="./docs/branding/icon-dark.png" alt="Animato" width="120"/>
 
-# Mihon [App](#)
+# Animato
 
-### Full-featured reader
-Discover and read manga, webtoons, comics, and more – easier than ever on your Android device.
+### Your anime & manga universe, unified.
 
-[![Discord server](https://img.shields.io/discord/1195734228319617024.svg?label=&labelColor=6A7EC2&color=7389D8&logo=discord&logoColor=FFFFFF)](https://discord.gg/mihon)
-[![GitHub downloads](https://img.shields.io/github/downloads/mihonapp/mihon/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://mihon.app/download)
+One library for both. Built **on top of** [Mihon](https://github.com/mihonapp/mihon) rather than
+forked from it, so every upstream release is a merge instead of a rewrite.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/mihonapp/mihon/build.yml?labelColor=27303D)](https://github.com/mihonapp/mihon/actions/workflows/build_push.yml)
-[![License: Apache-2.0](https://img.shields.io/github/license/mihonapp/mihon?labelColor=27303D&color=0877d2)](/LICENSE)
-[![Translation status](https://img.shields.io/weblate/progress/mihon?labelColor=27303D&color=946300)](https://hosted.weblate.org/engage/mihon/)
-
-## Download
-
-[![Mihon Stable](https://img.shields.io/github/release/mihonapp/mihon.svg?maxAge=3600&label=Stable&labelColor=06599d&color=043b69)](https://mihon.app/download)
-[![Mihon Beta](https://img.shields.io/github/v/release/mihonapp/mihon-preview.svg?maxAge=3600&label=Beta&labelColor=2c2c47&color=1c1c39)](https://mihon.app/download)
-
-*Requires Android 8.0 or higher.*
-
-## Features
-
-<div align="left">
-
-* Local reading of content.
-* A configurable reader with multiple viewers, reading directions and other settings.
-* Tracker support: [MangaBaka](https://mangabaka.org), [MyAnimeList](https://myanimelist.net/), [AniList](https://anilist.co/), [Kitsu](https://kitsu.app/), [MangaUpdates](https://mangaupdates.com), [Shikimori](https://shikimori.one), [Bangumi](https://bgm.tv/), and [Hikka](https://hikka.io/) support.
-* Categories to organize your library.
-* Light and dark themes.
-* Schedule updating your library for new chapters.
-* Create backups locally to read offline or to your desired cloud service.
-* Plus much more...
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue?labelColor=27303D)](/LICENSE)
+![Status: pre-release](https://img.shields.io/badge/status-pre--release-E5392F?labelColor=27303D)
 
 </div>
 
-## Contributing
+---
 
-[Code of conduct](./CODE_OF_CONDUCT.md) · [Contributing guide](./CONTRIBUTING.md)
+> **Not released yet.** There is no installable build, and the database schema is not frozen.
+> Animato does **not** upgrade in place over an existing Aniyomi install — migration is by backup
+> import. See [ARCHITECTURE.md](ARCHITECTURE.md#why-users-must-not-upgrade-in-place-from-aniyomi).
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+## What it is
 
-Before reporting a new issue, take a look at the [FAQ](https://mihon.app/docs/faq/general), the [changelog](https://mihon.app/changelogs/) and the already opened [issues](https://github.com/mihonapp/mihon/issues); if you got any questions, join our [Discord server](https://discord.gg/mihon).
+Mihon reads manga. Aniyomi added anime to it, and then went two years without an upstream sync,
+because a fork that edits 248 upstream files cannot merge one.
 
+Animato takes the anime half and rebuilds it as modules **beside** Mihon instead of inside it.
+Mihon's `:app` is consumed as an Android library; our application module supplies the identity, the
+theme and the anime side, and never opens a Mihon file.
 
-### Repositories
+The measurement that drives the whole design — merging the same upstream into the same repository:
 
-[![mihonapp/website - GitHub](https://github-stats-extended.vercel.app/api/pin/?username=mihonapp&repo=website&bg_color=161B22&text_color=c9d1d9&title_color=0877d2&icon_color=0877d2&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/mihonapp/website/)
-[![mihonapp/bitmap.kt - GitHub](https://github-stats-extended.vercel.app/api/pin/?username=mihonapp&repo=bitmap.kt&bg_color=161B22&text_color=c9d1d9&title_color=0877d2&icon_color=0877d2&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/mihonapp/bitmap.kt/)
+| Branch | Descends from | Conflicting files |
+| --- | --- | --- |
+| Aniyomi-descended | Aniyomi, forked Jan 2024 | **776** |
+| this one | Mihon `77e88a21` | **2** |
 
-### Credits
+Upstream breakage arrives as compile errors in files we own — a short, specific list — rather than
+as a merge conflict in files we do not.
 
-Thank you to all the people who have contributed!
+## Design
 
-<a href="https://github.com/mihonapp/mihon/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=mihonapp/mihon" alt="Mihon app contributors" title="Mihon app contributors" width="800"/>
-</a>
+![Animato brand sheet](docs/branding/brand-sheet.jpg)
 
-### Disclaimer
+Palette, typography, component rules and a screen-by-screen specification live in
+[docs/BRANDING.md](docs/BRANDING.md).
 
-The developer(s) of this application does not have any affiliation with the content providers available, and this application hosts zero content.
+## Building
 
-### License
+```
+./gradlew :animato-app:assembleRelease
+```
+
+Requires the Android SDK with API 37 and NDK `29.0.14206865`. Minimum supported device is
+Android 8.0 (API 26).
+
+## Documentation
+
+| | |
+| --- | --- |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | the layering, the rule about never editing Mihon, migration phases |
+| [docs/BRANDING.md](docs/BRANDING.md) | brand and interface specification |
+| [UPSTREAM_DIVERGENCE.md](UPSTREAM_DIVERGENCE.md) | what Mihon changed under us, and whether to adopt it |
+
+## Credit
+
+Animato is built on the work of others, and depends on that work continuing:
+
+- **[Mihon](https://github.com/mihonapp/mihon)** — the manga app this is built on, and the upstream
+  it tracks. Apache-2.0.
+- **[Aniyomi](https://github.com/aniyomiorg/aniyomi)** — the origin of the anime half. Apache-2.0.
+- **[Tachiyomi](https://github.com/tachiyomiorg)** — where both began.
+
+Animato is an independent project. It is not affiliated with, endorsed by, or supported by the
+Mihon or Aniyomi teams, and problems with it should not be reported to them.
+
+## Disclaimer
+
+Animato hosts zero content. It reads and plays what the user's own configured sources provide, and
+the developers have no affiliation with those sources.
+
+## License
 
 <pre>
 Copyright © 2015 Javier Tomás
 Copyright © 2024 Mihon Open Source Project
+Copyright © 2025 Animato Open Source Project
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -82,5 +99,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 </pre>
-
-</div>

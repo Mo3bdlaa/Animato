@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Overrides Mihon's launcher icon by resource name. The application module wins resource merging
+  over its library dependencies, so this replaces theirs without touching a file of theirs, and
+  without a tools:replace on the manifest — Mihon's manifest still points at @mipmap/ic_launcher,
+  which now resolves here.
+
+  The foreground square spans the inner 72dp of the 108dp canvas. A 72dp square fully contains the
+  72dp mask circle, so the whole visible area is artwork whatever shape the launcher applies, and
+  the rounding comes from the launcher rather than from a radius baked into the PNG.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/animato_ink_black" />
+    <foreground android:drawable="@drawable/animato_icon_foreground" />
+    <monochrome android:drawable="@drawable/animato_icon_monochrome" />
+</adaptive-icon>
