@@ -1,9 +1,9 @@
 package eu.kanade.domain.track.anime.interactor
 
+import animato.anime.track.AnimeTrackerManager
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.track.anime.model.toDomainTrack
 import eu.kanade.tachiyomi.data.track.Tracker
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.animeService
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -13,7 +13,7 @@ import tachiyomi.domain.track.anime.interactor.InsertAnimeTrack
 
 class RefreshAnimeTracks(
     private val getTracks: GetAnimeTracks,
-    private val trackerManager: TrackerManager,
+    private val trackerManager: AnimeTrackerManager,
     private val insertTrack: InsertAnimeTrack,
     private val syncEpisodeProgressWithTrack: SyncEpisodeProgressWithTrack,
 ) {
@@ -31,7 +31,7 @@ class RefreshAnimeTracks(
                 .map { (track, service) ->
                     async {
                         return@async try {
-                            val updatedTrack = service!!.animeService.refresh(track.toDbTrack()).toDomainTrack()!!
+                            val updatedTrack = service!!.refresh(track.toDbTrack()).toDomainTrack()!!
                             insertTrack.await(updatedTrack)
                             syncEpisodeProgressWithTrack.await(animeId, updatedTrack, service.animeService)
                             null

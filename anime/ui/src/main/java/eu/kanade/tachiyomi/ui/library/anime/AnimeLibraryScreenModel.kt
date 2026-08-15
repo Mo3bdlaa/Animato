@@ -11,6 +11,7 @@ import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.services.SEARCH_DEBOUNCE_MILLIS
+import animato.anime.track.AnimeTrackerManager
 import animato.anime.util.removeBackgrounds
 import animato.anime.util.removeCovers
 import animato.domain.category.AnimeCategory
@@ -30,7 +31,6 @@ import eu.kanade.tachiyomi.data.cache.AnimeBackgroundCache
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.animeService
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
 import kotlinx.collections.immutable.ImmutableList
@@ -102,7 +102,7 @@ class AnimeLibraryScreenModel(
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val downloadCache: AnimeDownloadCache = Injekt.get(),
-    private val trackerManager: TrackerManager = Injekt.get(),
+    private val trackerManager: AnimeTrackerManager = Injekt.get(),
 ) : ViewModel() {
 
     val state: StateFlow<AnimeLibraryScreenModel.State>

@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.sqlite.db.SupportSQLiteDatabase
 import animato.anime.player.PlayerEpisodeVideoResolver
 import animato.anime.services.download.EpisodeVideoResolver
+import animato.anime.track.AnimeTrackerManager
 import animato.data.AnimeUpdateStrategyColumnAdapter
 import animato.data.FetchTypeColumnAdapter
 import aniyomi.core.common.torrent.TorrentServerApi
@@ -103,6 +104,11 @@ class AnimeAppModule(val app: Application) : InjektModule {
 
         addSingletonFactory<AnimeSourceManager> { AndroidAnimeSourceManager(app, get(), get()) }
         addSingletonFactory { AnimeExtensionManager(app) }
+
+        // The anime half of the trackers. Each wraps the Mihon tracker of the same id and shares
+        // its credentials, so Mihon's own manager has to exist first — which it does, since Mihon
+        // registers it in its own module and this one runs after.
+        addSingletonFactory { AnimeTrackerManager(get()) }
 
         addSingletonFactory { AnimeDownloadProvider(app) }
         addSingletonFactory { AnimeDownloadManager(app) }

@@ -174,6 +174,31 @@ The second is one navigation step after a manga migration and needs no workaroun
 when the migrate flow becomes ours, and until then the coroutine is cancelled with the screen.
 
 
+### Anime tracking needs its own trackers, not Mihon's
+
+Mihon's `TrackerManager` is a final class holding a fixed list, and its trackers implement `Tracker`
+for manga only. So for a long while `AnimeTracker` had no implementations at all: the database, the
+tracking sheet, the backup and `SyncEpisodeProgressWithTrack` were all in place, and
+`loggedInTrackers().filter { it is AnimeTracker }` returned an empty list every time. Opening an
+anime and tapping tracking showed nothing.
+
+`AnimeTrackerManager` stands beside Mihon's rather than replacing it, and each entry wraps the Mihon
+tracker of the same id:
+
+```kotlin
+class AnimeAnilist(private val delegate: Anilist) : Tracker by delegate, AnimeTracker
+```
+
+Delegation is what makes this small and what makes it correct. Being a tracker — the id, the logo,
+the credentials, the OAuth token and its refresh — does not differ by media type, and `Anilist`,
+`AnilistInterceptor` and `TrackPreferences` are all public, with credentials keyed by tracker id. So
+a user signs in once, on Mihon's own tracking screen, and both halves work; there is no second login
+and no way for the two to disagree about being signed in. Only the queries are ours.
+
+Two related changes came with it. `AnimeTracker` now extends `Tracker`, because the implementations
+*are* trackers and typing it that way removed a cast from every call site. And `animeService` is a
+lookup rather than a cast, for the same reason it exists at all.
+
 ### Simkl is not among the ported trackers
 
 `AniChartApi` asked three trackers for an anime's next air time: AniList, MyAnimeList and Simkl.
@@ -449,7 +474,7 @@ is different: Aniyomi had added these *inside* Mihon's files.
 | anime components in Mihon's `AndroidManifest.xml` | `:anime:services`' and `:anime:player`'s own manifests, merged in by the build |
 | `Preference.MultiLineEditTextPreference`, `MPVConfPreference`, `EditTextInfoPreference` | **cannot be moved** — Mihon's `Preference` hierarchy is `sealed`, so no module of ours may extend it. See the player README |
 | `StorageManager.getMPVConfigDirectory` and friends | `animato.anime.player.PlayerStorage`, resolving the base directory from `StoragePreferences` |
-| `Tracker.animeService` | `eu.kanade.tachiyomi.data.track.animeService`, an extension that asks `this as? AnimeTracker` |
+| `Tracker.animeService` | `eu.kanade.tachiyomi.data.track.animeService`, an extension that looks the anime half up in `AnimeTrackerManager` — it cannot be a cast, since Mihon's trackers are Mihon's |
 | `LocaleHelper.getSimpleLocaleDisplayName` | `animato.anime.player.getSimpleLocaleDisplayName` |
 | `Padding.mediumSmall` | `animato.anime.player.mediumSmall` |
 | `Preference.deleteAndGet` | `animato.anime.player.deleteAndGet` |

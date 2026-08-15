@@ -1,11 +1,11 @@
 package eu.kanade.domain.track.anime.interactor
 
 import android.content.Context
+import animato.anime.track.AnimeTrackerManager
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.track.anime.model.toDomainTrack
 import eu.kanade.domain.track.anime.service.DelayedAnimeTrackingUpdateJob
 import eu.kanade.domain.track.anime.store.DelayedAnimeTrackingStore
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.animeService
 import eu.kanade.tachiyomi.util.system.isOnline
 import kotlinx.coroutines.async
@@ -18,7 +18,7 @@ import tachiyomi.domain.track.anime.interactor.InsertAnimeTrack
 
 class TrackEpisode(
     private val getTracks: GetAnimeTracks,
-    private val trackerManager: TrackerManager,
+    private val trackerManager: AnimeTrackerManager,
     private val insertTrack: InsertAnimeTrack,
     private val delayedTrackingStore: DelayedAnimeTrackingStore,
 ) {
@@ -37,10 +37,10 @@ class TrackEpisode(
                 async {
                     runCatching {
                         if (context.isOnline()) {
-                            val updatedTrack = service.animeService.refresh(track.toDbTrack())
+                            val updatedTrack = service.refresh(track.toDbTrack())
                                 .toDomainTrack(idRequired = true)!!
                                 .copy(lastEpisodeSeen = episodeNumber)
-                            service.animeService.update(updatedTrack.toDbTrack(), true)
+                            service.update(updatedTrack.toDbTrack(), true)
                             insertTrack.await(updatedTrack)
                             delayedTrackingStore.removeAnimeItem(track.id)
                         } else {

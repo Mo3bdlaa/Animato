@@ -2,6 +2,7 @@ package eu.kanade.presentation.track.anime
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import animato.anime.ui.track.DummyAnimeTracker
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
 import eu.kanade.test.DummyTracker
 import tachiyomi.domain.track.anime.model.AnimeTrack
@@ -30,23 +31,20 @@ internal class AnimeTrackInfoDialogHomePreviewProvider :
     private val privateTrack = aTrack.copy(private = true)
     private val trackItemWithoutTrack = AnimeTrackItem(
         track = null,
-        tracker = DummyTracker(
-            id = 1L,
-            name = "Example Tracker",
+        tracker = DummyAnimeTracker(
+            DummyTracker(id = 1L, name = "Example Tracker"),
         ),
     )
     private val trackItemWithTrack = AnimeTrackItem(
         track = aTrack,
-        tracker = DummyTracker(
-            id = 2L,
-            name = "Example Tracker 2",
+        tracker = DummyAnimeTracker(
+            DummyTracker(id = 2L, name = "Example Tracker 2"),
         ),
     )
     private val trackItemWithPrivateTrack = AnimeTrackItem(
         track = privateTrack,
-        tracker = DummyTracker(
-            id = 2L,
-            name = "Example Tracker 2",
+        tracker = DummyAnimeTracker(
+            DummyTracker(id = 2L, name = "Example Tracker 2"),
         ),
     )
 

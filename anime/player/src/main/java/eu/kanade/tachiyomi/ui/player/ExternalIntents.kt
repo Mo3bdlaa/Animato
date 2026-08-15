@@ -11,6 +11,7 @@ import android.os.Bundle
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import animato.anime.player.getSimpleLocaleDisplayName
+import animato.anime.track.AnimeTrackerManager
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.track.anime.service.DelayedAnimeTrackingUpdateJob
@@ -22,7 +23,6 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.player.service.HttpServerService
 import eu.kanade.tachiyomi.data.track.AnimeTracker
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.animeService
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
@@ -527,18 +527,14 @@ class ExternalIntents {
     private suspend fun updateTrackEpisodeSeen(episodeNumber: Double, anime: Anime) {
         if (!trackPreferences.autoUpdateTrack.get()) return
 
-        val trackerManager = Injekt.get<TrackerManager>()
+        val trackerManager = Injekt.get<AnimeTrackerManager>()
         val context = Injekt.get<Application>()
 
         withIOContext {
             getTracks.await(anime.id)
                 .mapNotNull { track ->
                     val tracker = trackerManager.get(track.trackerId)
-                    if (tracker != null &&
-                        tracker.isLoggedIn &&
-                        tracker is AnimeTracker &&
-                        episodeNumber > track.lastEpisodeSeen
-                    ) {
+                    if (tracker != null && tracker.isLoggedIn && episodeNumber > track.lastEpisodeSeen) {
                         val updatedTrack = track.copy(lastEpisodeSeen = episodeNumber)
 
                         // We want these to execute even if the presenter is destroyed and leaks

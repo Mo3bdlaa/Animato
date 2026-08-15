@@ -21,14 +21,24 @@ import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
 private val addTracks: AddAnimeTracks by injectLazy()
 private val insertTrack: InsertAnimeTrack by injectLazy()
 
-interface AnimeTracker {
+/**
+ * A tracker that can also track anime.
+ *
+ * Aniyomi kept this separate from [Tracker] and reached it through an `animeService` property, so
+ * every call site had to cast and every manga-only tracker had to declare one. Here it extends
+ * [Tracker] instead, because that is what the implementations are: the same account, the same
+ * credentials, the same id, answering about episodes as well as chapters.
+ *
+ * The three members below are [Tracker]'s too, and they mean the same thing in both — a completion
+ * status and a score format belong to the account, not to what is being tracked.
+ */
+interface AnimeTracker : Tracker {
 
-    // Common functions
-    fun getCompletionStatus(): Long
+    override fun getCompletionStatus(): Long
 
-    fun getScoreList(): ImmutableList<String>
+    override fun getScoreList(): ImmutableList<String>
 
-    fun indexToScore(index: Int): Double {
+    override fun indexToScore(index: Int): Double {
         return index.toDouble()
     }
 

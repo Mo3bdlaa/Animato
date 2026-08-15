@@ -1,5 +1,6 @@
 package eu.kanade.domain.track.anime.interactor
 
+import animato.anime.track.AnimeTrackerManager
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.track.anime.model.toDomainTrack
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -7,7 +8,6 @@ import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
 import eu.kanade.tachiyomi.data.track.Tracker
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.animeService
 import eu.kanade.tachiyomi.util.lang.convertEpochMillisZone
 import kotlinx.datetime.TimeZone
@@ -26,7 +26,7 @@ class AddAnimeTracks(
     private val insertTrack: InsertAnimeTrack,
     private val syncChapterProgressWithTrack: SyncEpisodeProgressWithTrack,
     private val getEpisodesByAnimeId: GetEpisodesByAnimeId,
-    private val trackerManager: TrackerManager,
+    private val trackerManager: AnimeTrackerManager,
 ) {
 
     // TODO: update all trackers based on common data
@@ -88,7 +88,7 @@ class AddAnimeTracks(
                     try {
                         service.match(anime)?.let { track ->
                             track.anime_id = anime.id
-                            (service as Tracker).animeService.bind(track)
+                            (service as AnimeTracker).bind(track)
                             insertTrack.await(track.toDomainTrack(idRequired = false)!!)
 
                             syncChapterProgressWithTrack.await(

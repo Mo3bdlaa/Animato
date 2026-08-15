@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.track.AnimeTrackerManager
 import animato.anime.ui.track.TrackEpisodeSelector
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -51,7 +52,6 @@ import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.DeletableAnimeTracker
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
 import eu.kanade.tachiyomi.data.track.Tracker
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.animeService
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.util.lang.convertEpochMillisZone
@@ -237,7 +237,7 @@ data class AnimeTrackInfoDialogHomeScreen(
                 val anime = Injekt.get<GetAnime>().await(animeId) ?: return@launchNonCancellable
                 try {
                     val matchResult = item.tracker.match(anime) ?: throw Exception()
-                    item.tracker.animeService.register(matchResult, animeId)
+                    item.tracker.register(matchResult, animeId)
                 } catch (e: Exception) {
                     withUIContext { Injekt.get<Application>().toast(MR.strings.error_no_match) }
                 }
@@ -268,14 +268,12 @@ data class AnimeTrackInfoDialogHomeScreen(
 
         fun togglePrivate(item: AnimeTrackItem) {
             viewModelScope.launchNonCancellable {
-                (item.tracker as? AnimeTracker)?.setRemotePrivate(item.track!!.toDbTrack(), !item.track.private)
+                item.tracker.setRemotePrivate(item.track!!.toDbTrack(), !item.track.private)
             }
         }
 
         private fun List<AnimeTrack>.mapToTrackItem(): List<AnimeTrackItem> {
-            val loggedInTrackers = Injekt.get<TrackerManager>().loggedInTrackers().filter {
-                it is AnimeTracker
-            }
+            val loggedInTrackers = Injekt.get<AnimeTrackerManager>().loggedInTrackers()
             val source = Injekt.get<AnimeSourceManager>().getOrStub(sourceId)
             return loggedInTrackers
                 // Map to TrackItem
@@ -302,7 +300,7 @@ private data class TrackStatusSelectorScreen(
         val screenModel = viewModel {
             Model(
                 track = track,
-                tracker = Injekt.get<TrackerManager>().get(serviceId)!!,
+                tracker = Injekt.get<AnimeTrackerManager>().get(serviceId)!!,
             )
         }
         val state by screenModel.state.collectAsState()
@@ -320,15 +318,15 @@ private data class TrackStatusSelectorScreen(
 
     private class Model(
         private val track: DbAnimeTrack,
-        private val tracker: Tracker,
+        private val tracker: AnimeTracker,
     ) : ViewModel() {
 
         val state: StateFlow<Model.State>
             field = MutableStateFlow<Model.State>(State(track.status))
 
         fun getSelections(): Map<Long, StringResource?> {
-            return tracker.animeService.getStatusListAnime().associateWith {
-                (tracker as? AnimeTracker)?.getStatusForAnime(it)
+            return tracker.getStatusListAnime().associateWith {
+                tracker.getStatusForAnime(it)
             }
         }
 
@@ -338,7 +336,7 @@ private data class TrackStatusSelectorScreen(
 
         fun setStatus() {
             viewModelScope.launchNonCancellable {
-                tracker.animeService.setRemoteAnimeStatus(track.toDbTrack(), state.value.selection)
+                tracker.setRemoteAnimeStatus(track.toDbTrack(), state.value.selection)
             }
         }
 
@@ -360,7 +358,7 @@ private data class TrackEpisodeSelectorScreen(
         val screenModel = viewModel {
             Model(
                 track = track,
-                tracker = Injekt.get<TrackerManager>().get(serviceId)!!,
+                tracker = Injekt.get<AnimeTrackerManager>().get(serviceId)!!,
             )
         }
         val state by screenModel.state.collectAsState()
@@ -379,7 +377,7 @@ private data class TrackEpisodeSelectorScreen(
 
     private class Model(
         private val track: DbAnimeTrack,
-        private val tracker: Tracker,
+        private val tracker: AnimeTracker,
     ) : ViewModel() {
 
         val state: StateFlow<Model.State>
@@ -400,7 +398,7 @@ private data class TrackEpisodeSelectorScreen(
 
         fun setEpisode() {
             viewModelScope.launchNonCancellable {
-                tracker.animeService.setRemoteLastEpisodeSeen(
+                tracker.setRemoteLastEpisodeSeen(
                     track.toDbTrack(),
                     state.value.selection,
                 )
@@ -425,7 +423,7 @@ private data class TrackScoreSelectorScreen(
         val screenModel = viewModel {
             Model(
                 track = track,
-                tracker = Injekt.get<TrackerManager>().get(serviceId)!!,
+                tracker = Injekt.get<AnimeTrackerManager>().get(serviceId)!!,
             )
         }
         val state by screenModel.state.collectAsState()
@@ -444,14 +442,14 @@ private data class TrackScoreSelectorScreen(
 
     private class Model(
         private val track: DbAnimeTrack,
-        private val tracker: Tracker,
+        private val tracker: AnimeTracker,
     ) : ViewModel() {
 
         val state: StateFlow<Model.State>
-            field = MutableStateFlow<Model.State>(State(tracker.animeService.displayScore(track)))
+            field = MutableStateFlow<Model.State>(State(tracker.displayScore(track)))
 
         fun getSelections(): ImmutableList<String> {
-            return tracker.animeService.getScoreList()
+            return tracker.getScoreList()
         }
 
         fun setSelection(selection: String) {
@@ -460,7 +458,7 @@ private data class TrackScoreSelectorScreen(
 
         fun setScore() {
             viewModelScope.launchNonCancellable {
-                tracker.animeService.setRemoteScore(track.toDbTrack(), state.value.selection)
+                tracker.setRemoteScore(track.toDbTrack(), state.value.selection)
             }
         }
 
@@ -540,7 +538,7 @@ private data class TrackDateSelectorScreen(
         val screenModel = viewModel {
             Model(
                 track = track,
-                tracker = Injekt.get<TrackerManager>().get(serviceId)!!,
+                tracker = Injekt.get<AnimeTrackerManager>().get(serviceId)!!,
                 start = start,
             )
         }
@@ -569,7 +567,7 @@ private data class TrackDateSelectorScreen(
 
     private class Model(
         private val track: DbAnimeTrack,
-        private val tracker: Tracker,
+        private val tracker: AnimeTracker,
         private val start: Boolean,
     ) : ViewModel() {
 
@@ -590,9 +588,9 @@ private data class TrackDateSelectorScreen(
                 millis.convertEpochMillisZone(TimeZone.UTC, TimeZone.currentSystemDefault())
             viewModelScope.launchNonCancellable {
                 if (start) {
-                    tracker.animeService.setRemoteStartDate(track.toDbTrack(), localMillis)
+                    tracker.setRemoteStartDate(track.toDbTrack(), localMillis)
                 } else {
-                    tracker.animeService.setRemoteFinishDate(track.toDbTrack(), localMillis)
+                    tracker.setRemoteFinishDate(track.toDbTrack(), localMillis)
                 }
             }
         }
@@ -615,7 +613,7 @@ private data class TrackDateRemoverScreen(
         val screenModel = viewModel {
             Model(
                 track = track,
-                tracker = Injekt.get<TrackerManager>().get(serviceId)!!,
+                tracker = Injekt.get<AnimeTrackerManager>().get(serviceId)!!,
                 start = start,
             )
         }
@@ -673,7 +671,7 @@ private data class TrackDateRemoverScreen(
 
     private class Model(
         private val track: DbAnimeTrack,
-        private val tracker: Tracker,
+        private val tracker: AnimeTracker,
         private val start: Boolean,
     ) : ViewModel() {
 
@@ -682,9 +680,9 @@ private data class TrackDateRemoverScreen(
         fun removeDate() {
             viewModelScope.launchNonCancellable {
                 if (start) {
-                    tracker.animeService.setRemoteStartDate(track.toDbTrack(), 0)
+                    tracker.setRemoteStartDate(track.toDbTrack(), 0)
                 } else {
-                    tracker.animeService.setRemoteFinishDate(track.toDbTrack(), 0)
+                    tracker.setRemoteFinishDate(track.toDbTrack(), 0)
                 }
             }
         }
@@ -706,7 +704,7 @@ data class TrackServiceSearchScreen(
                 animeId = animeId,
                 currentUrl = currentUrl,
                 initialQuery = initialQuery,
-                tracker = Injekt.get<TrackerManager>().get(serviceId)!!,
+                tracker = Injekt.get<AnimeTrackerManager>().get(serviceId)!!,
             )
         }
 
@@ -734,7 +732,7 @@ data class TrackServiceSearchScreen(
         private val animeId: Long,
         private val currentUrl: String? = null,
         initialQuery: String,
-        private val tracker: Tracker,
+        private val tracker: AnimeTracker,
     ) : ViewModel() {
 
         val state: StateFlow<Model.State>
@@ -756,7 +754,7 @@ data class TrackServiceSearchScreen(
 
                 val result = withIOContext {
                     try {
-                        val results = tracker.animeService.searchAnime(query)
+                        val results = tracker.searchAnime(query)
                         Result.success(results)
                     } catch (e: Throwable) {
                         Result.failure(e)
@@ -772,7 +770,7 @@ data class TrackServiceSearchScreen(
         }
 
         fun registerTracking(item: AnimeTrackSearch) {
-            viewModelScope.launchNonCancellable { tracker.animeService.register(item, animeId) }
+            viewModelScope.launchNonCancellable { tracker.register(item, animeId) }
         }
 
         fun updateSelection(selected: AnimeTrackSearch) {
@@ -800,7 +798,7 @@ private data class TrackerAnimeRemoveScreen(
             Model(
                 animeId = animeId,
                 track = track,
-                tracker = Injekt.get<TrackerManager>().get(serviceId)!!,
+                tracker = Injekt.get<AnimeTrackerManager>().get(serviceId)!!,
             )
         }
         val serviceName = screenModel.getName()
@@ -867,7 +865,7 @@ private data class TrackerAnimeRemoveScreen(
     private class Model(
         private val animeId: Long,
         private val track: AnimeTrack,
-        private val tracker: Tracker,
+        private val tracker: AnimeTracker,
         private val deleteTrack: DeleteAnimeTrack = Injekt.get(),
     ) : ViewModel() {
 

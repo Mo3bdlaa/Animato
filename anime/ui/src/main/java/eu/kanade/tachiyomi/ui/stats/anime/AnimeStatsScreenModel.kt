@@ -5,6 +5,7 @@ import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.track.AnimeTrackerManager
 import animato.anime.ui.stats.AnimeStatsData
 import animato.anime.ui.stats.AnimeStatsScreenState
 import aniyomi.domain.library.service.AnimeLibraryPreferences
@@ -16,7 +17,6 @@ import eu.kanade.core.util.fastFilterNot
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.AnimeTracker
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.animeService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,13 +39,13 @@ class AnimeStatsScreenModel(
     private val getTracks: GetAnimeTracks = Injekt.get(),
     private val preferences: LibraryPreferences = Injekt.get(),
     private val animePreferences: AnimeLibraryPreferences = Injekt.get(),
-    private val trackerManager: TrackerManager = Injekt.get(),
+    private val trackerManager: AnimeTrackerManager = Injekt.get(),
 ) : ViewModel() {
 
     val state: StateFlow<AnimeStatsScreenState>
         field = MutableStateFlow<AnimeStatsScreenState>(AnimeStatsScreenState.Loading)
 
-    private val loggedInTrackers by lazy { trackerManager.loggedInTrackers().filter { it is AnimeTracker } }
+    private val loggedInTrackers by lazy { trackerManager.loggedInTrackers() }
 
     init {
         viewModelScope.launchIO {
@@ -169,6 +169,6 @@ class AnimeStatsScreenModel(
 
     private fun get10PointScore(track: AnimeTrack): Double {
         val service = trackerManager.get(track.trackerId)!!
-        return service.animeService.get10PointScore(track)
+        return service.get10PointScore(track)
     }
 }

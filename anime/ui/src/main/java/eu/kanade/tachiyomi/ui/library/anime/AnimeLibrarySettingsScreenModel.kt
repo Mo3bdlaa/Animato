@@ -2,10 +2,10 @@ package eu.kanade.tachiyomi.ui.library.anime
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.track.AnimeTrackerManager
 import animato.domain.category.AnimeCategory
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import tachiyomi.core.common.preference.Preference
@@ -27,7 +27,7 @@ class AnimeLibrarySettingsScreenModel(
     val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val setAnimeDisplayMode: SetAnimeDisplayMode = Injekt.get(),
     private val setSortModeForCategory: SetSortModeForAnimeCategory = Injekt.get(),
-    trackerManager: TrackerManager = Injekt.get(),
+    trackerManager: AnimeTrackerManager = Injekt.get(),
 ) : ViewModel() {
 
     val trackersFlow = trackerManager.loggedInTrackersFlow()
