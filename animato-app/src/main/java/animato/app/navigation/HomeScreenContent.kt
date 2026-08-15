@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.settings.AnimatoSettingsScreen
 import animato.domain.content.ContentType
 import animato.ui.entries.ItemCover
 import animato.ui.navigation.AnimatoNavigator
@@ -41,7 +42,6 @@ import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearch
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
-import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -89,7 +89,7 @@ internal fun HomeScreenContent() {
                             contentDescription = stringResource(MR.strings.action_global_search),
                         )
                     }
-                    IconButton(onClick = { navigator.push(SettingsScreen()) }) {
+                    IconButton(onClick = { navigator.push(AnimatoSettingsScreen()) }) {
                         Icon(
                             imageVector = Icons.Outlined.Settings,
                             contentDescription = stringResource(MR.strings.label_settings),

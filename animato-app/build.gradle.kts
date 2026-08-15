@@ -145,6 +145,7 @@ dependencies {
     implementation(projects.core.viewmodel)
     implementation(projects.i18nAnime)
     implementation(libs.bundles.coil)
+    implementation(animato.kotlinx.immutables)
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)

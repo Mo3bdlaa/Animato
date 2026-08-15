@@ -413,6 +413,8 @@
     <string name="label_home">Home</string>
     <string name="label_discover">Discover</string>
     <string name="label_continue">Continue</string>
+    <string name="pref_track_on_adding_to_library">Track when adding to library</string>
+    <string name="pref_anime_summary">Player, episodes, anime library and sources</string>
     <string name="label_manga">Manga</string>
     <string name="label_recent_anime_updates">Anime Updates</string>
     <string name="label_manga_sources">Manga Sources</string>

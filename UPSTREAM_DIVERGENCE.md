@@ -359,6 +359,12 @@ is different: Aniyomi had added these *inside* Mihon's files.
 | `Preference.deleteAndGet` | `animato.anime.player.deleteAndGet` |
 | `TachiyomiTheme.playerRippleConfiguration` | `animato.anime.player.playerRippleConfiguration` |
 | `SourcePreferences.incognitoAnimeExtensions` | `aniyomi.domain.source.service.AnimeSourcePreferences` |
+| anime sections inside five of Mihon's settings screens | `animato.app.settings` — one Anime section, so Mihon's screens are unedited |
+| `MultiLineEditTextPreference`, `EditTextInfoPreference` | `animato.ui.settings`, as `CustomPreference` rather than new variants of a sealed type |
+| `MPVConfPreference` | `animato.anime.player.settings.mpvConfPreference`, beside the config directory it writes |
+| `BasePreferences.deviceHasPip()` | the package manager — it is a device capability, not a preference |
+| `InfoPreference(enabled = …)` | omitted from the list instead; Mihon hides a disabled preference rather than greying it out |
+| `SettingsMainScreen`'s list | `animato.app.settings.AnimatoSettingsMainScreen` — the list is copied so that one row can be added; every screen it points at is Mihon's |
 | `LibraryPreferences.hideHiddenCategoriesSettings` | `aniyomi.domain.library.service.AnimeLibraryPreferences` — Mihon's `Category` has no `hidden` field and its library never hides one |
 | `TrackPreferences.showNextEpisodeAiringTime` / `trackOnAddingToLibrary` | `aniyomi.domain.track.service.AnimeTrackPreferences` |
 | `AniChartApi` in `eu.kanade.tachiyomi.util` | `animato.anime.services.airing.AniChartApi`, taking tracker/track pairs instead of the details screen's item type |

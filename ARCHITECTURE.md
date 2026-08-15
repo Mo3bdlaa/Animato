@@ -219,7 +219,7 @@ to resolve.
 | 6a | our `MainActivity` and the Animato theme, above Mihon's screens | done |
 | 6b | `:anime:ui` — the anime screens | done |
 | 6c | the Animato tab bar and a home screen combining both content types | done |
-| 6d | settings structure — unblocks 5c | |
+| 6d | settings structure — unblocks 5c | done |
 | 7 | Importer for Aniyomi backups | |
 
 ### Why the player is not next
