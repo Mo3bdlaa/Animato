@@ -48,9 +48,29 @@ android {
             isPseudoLocalesEnabled = true
         }
         val release = getByName("release") {
-            isMinifyEnabled = true
+            /*
+             * Upstream this is `true`, and it has to become `false` here, because this module is an
+             * Android *library* in Animato rather than the application.
+             *
+             * A minified library ships classes that no longer match the ones its consumers compiled
+             * against. R8 optimises on the assumption that it can see every caller — true when this
+             * was the application, false now that our modules call into it. Measured on the release
+             * output: 57,438 method signatures in the compile-time jar against 38,721 in the runtime
+             * one, and among the rewrites was
+             *
+             *   registerSecureActivity(AppCompatActivity)  ->  registerSecureActivity(BaseActivity)
+             *
+             * because R8 saw only in-library callers passing a BaseActivity and narrowed the
+             * parameter. Our MainActivity compiled against the first and crashed on the second with
+             * NoSuchMethodError before it could draw a frame.
+             *
+             * Minification belongs on the application module, where R8 sees the whole program.
+             * `consumerProguardFiles` is how these keep rules get there — `proguardFiles` on a
+             * library configures only the library's own R8 run and is ignored by consumers.
+             */
+            isMinifyEnabled = false
 
-            proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
+            consumerProguardFiles("proguard-rules.pro")
 
             buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = true)}\"")
         }

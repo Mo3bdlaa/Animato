@@ -156,23 +156,37 @@ in the launcher.
 
 ## Open
 
-### The release APK is not minified
+### `:app` must not minify itself — `isMinifyEnabled` is `false` here
 
-Mihon's `:app` sets `isMinifyEnabled` and `proguardFiles` — but it is a **library** now, and a
-library passes keep rules to its consumer through `consumerProguardFiles`, not `proguardFiles`. Our
-application module sets neither, so R8 never runs: there is no `mapping/` output and our class names
-are readable in the shipped dex.
+Upstream sets `isMinifyEnabled = true` on `:app`'s release build type. That is right for an
+application and wrong for a library, which is what `:app` is here.
 
-For a first device test that is the safer configuration — a crash means a real bug rather than a
-missing keep rule. It is not what we want to ship. Turning minification on means wiring Mihon's
-rules through as consumer rules and then finding out what Injekt's `TypeReference` needs kept, which
-deserves its own pass rather than being folded into the first alpha.
+A library produces two outputs: a **compile** jar consumers build against, and the **runtime**
+classes that reach the APK. Minifying the library makes them disagree, because R8 optimises on the
+assumption that it can see every caller — true when `:app` was the application, false now. Measured
+on the release build: **57,438 method signatures at compile time, 38,721 at runtime.** Among the
+rewrites:
 
-Measured cost: 84.5 MB of raw dex compressing to 26.2 MB of the 127 MB release APK — the largest
-single item in it. [docs/APK_SIZE.md](docs/APK_SIZE.md) has the full breakdown and the order to
-tackle it in.
+```
+registerSecureActivity(AppCompatActivity)  ->  registerSecureActivity(BaseActivity)
+```
 
-*To do: enable minification on `:animato-app` and carry Mihon's keep rules across.*
+R8 saw only in-library callers passing a `BaseActivity` and narrowed the parameter. Everything
+compiled; `v0.1.0-alpha.2` died with `NoSuchMethodError` before drawing a frame. Every Mihon symbol
+our code calls was exposed to the same rewriting — that one was merely the first to be reached.
+
+`proguardFiles` became `consumerProguardFiles` in the same change, so Mihon's keep rules reach
+whoever does minify. `proguardFiles` on a library configures only the library's own R8 run.
+
+**This is the entry to re-check on every upstream sync.** A merge that restores `isMinifyEnabled =
+true` reintroduces a crash that compiles cleanly. `.github/check-library-abi.sh` runs in
+`quick_check.yml` and fails the build if the shipped API ever diverges again; it has been tested
+against the broken configuration as well as the fixed one.
+
+*To do: enable minification on `:animato-app` instead, where R8 sees the whole program. Mihon's keep
+rules already arrive; ours for the anime modules do not yet exist. See
+[docs/APK_SIZE.md](docs/APK_SIZE.md) — the unshrunk dex is 26.2 MB of the 127 MB APK, its largest
+single item.*
 
 
 ### `CategoryUpdate` — replaced by named methods

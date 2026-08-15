@@ -41,5 +41,12 @@ jobs:
       - name: Compile
         run: ./gradlew :animato-app:compileReleaseKotlin
 
+      # Compiling is not enough to know the app will start. Mihon's :app is a library here, and a
+      # library ships different classes from the ones consumers compile against if anything shrinks
+      # it — every call site still compiles, and the app dies at class-load time. That shipped once,
+      # in v0.1.0-alpha.2. The script has the details.
+      - name: Check :app ships the API we compile against
+        run: ./.github/check-library-abi.sh
+
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest

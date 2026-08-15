@@ -27,20 +27,38 @@ exists for the case where the architecture is not known up front. Per-ABI is the
 
 ## What is actually wasted today
 
-### 1. R8 never runs — the biggest single win
+### 1. R8 runs in the wrong place — the biggest single win
 
-`app/build.gradle.kts` sets `isMinifyEnabled = true` and names `proguardFiles(...)`, and it has no
-effect. Converting `:app` from an application to a library changed what those settings mean:
+**Corrected after v0.1.0-alpha.2.** This section previously said R8 never ran. It did: on the
+**library**, which is worse than not at all.
 
-- **minification happens in the application module**, not its libraries — and `animato-app` has no
-  `buildTypes` block at all, so it takes AGP's default of `isMinifyEnabled = false`
-- **`proguardFiles` on a library is ignored by consumers.** Only `consumerProguardFiles` propagates.
-  Mihon's `proguard-rules.pro` — the keep rules its reflection-using dependencies need — is
-  currently not applied to anything.
+`app/build.gradle.kts` set `isMinifyEnabled = true`, and converting `:app` from an application to a
+library changed what that means. R8 ran over `:app` alone and optimised on the assumption that it
+could see every caller — true when `:app` *was* the application, false once our modules started
+calling into it. The two outputs a library produces then disagree: consumers compile against the
+*compile* jar, and the APK gets the *runtime* classes. Measured on the release build, **57,438
+method signatures at compile time against 38,721 at runtime**, including
 
-So the shipped dex is unshrunk, unoptimised and fully symbolised: 84.5 MB raw compressing to 26.2 MB.
+```
+registerSecureActivity(AppCompatActivity)  ->  registerSecureActivity(BaseActivity)
+```
 
-The fix is two edits, and the second is not optional:
+— R8 saw only in-library callers passing a `BaseActivity` and narrowed the parameter. Our
+`MainActivity` compiled against the first and crashed with `NoSuchMethodError` before drawing a
+frame. Every other Mihon symbol we call was equally exposed; that one was simply the first to run.
+
+Meanwhile the application module has no `buildTypes` block at all, so it takes AGP's default of
+`isMinifyEnabled = false`. So our code was never shrunk, and Mihon's `proguard-rules.pro` was never
+applied to anything — `proguardFiles` on a library configures only the library's own R8 run, and it
+is `consumerProguardFiles` that propagates.
+
+`:app` no longer minifies itself, and its keep rules now travel as consumer rules.
+`.github/check-library-abi.sh` runs in `quick_check.yml` and fails the build if the shipped classes
+ever diverge from the compiled-against ones again.
+
+That leaves the dex unshrunk, unoptimised and fully symbolised: 84.5 MB raw compressing to 26.2 MB.
+
+The remaining edit is on the application module, where R8 sees the whole program:
 
 ```kotlin
 // animato-app/build.gradle.kts
@@ -52,15 +70,11 @@ buildTypes {
 }
 ```
 
-```kotlin
-// app/build.gradle.kts — one of the files we already own
-consumerProguardFiles("proguard-rules.pro")
-```
-
-Then add our own keep rules for the anime modules: SQLDelight, Injekt's reflective construction, the
-serialization of backup models, and mpv's JNI entry points. **Turning R8 on without them produces an
-app that builds, installs, and crashes at runtime** — which is why this is a task with a test pass
-attached, not a one-line change.
+Mihon's keep rules already arrive as consumer rules. What is still needed is our own, for the anime
+modules: SQLDelight, Injekt's reflective construction, the serialization of backup models, and mpv's
+JNI entry points. **Turning R8 on without them produces an app that builds, installs, and crashes at
+runtime** — which is why this is a task with a test pass attached, not a one-line change. The alpha
+crash is a preview of what getting it wrong looks like, and that one was a single method.
 
 Expect a large reduction; do not quote a number before measuring one. Verify with
 `unzip -l` on the output, and verify the app still runs.
