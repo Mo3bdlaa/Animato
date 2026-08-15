@@ -123,6 +123,10 @@ missing keep rule. It is not what we want to ship. Turning minification on means
 rules through as consumer rules and then finding out what Injekt's `TypeReference` needs kept, which
 deserves its own pass rather than being folded into the first alpha.
 
+Measured cost: 84.5 MB of raw dex compressing to 26.2 MB of the 127 MB release APK — the largest
+single item in it. [docs/APK_SIZE.md](docs/APK_SIZE.md) has the full breakdown and the order to
+tackle it in.
+
 *To do: enable minification on `:animato-app` and carry Mihon's keep rules across.*
 
 
