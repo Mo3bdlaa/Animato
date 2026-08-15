@@ -213,7 +213,7 @@ class AnimeDomainModule : InjektModule {
         addFactory { GetAnimeExtensionsByType(get(), get()) }
         addFactory { GetAnimeExtensionLanguages(get(), get()) }
         addFactory { GetAnimeExtensionSources(get()) }
-        addFactory { SyncEpisodeProgressWithTrack(get(), get(), get()) }
+        addFactory { SyncEpisodeProgressWithTrack(get(), get(), get(), get()) }
         addFactory { RefreshAnimeTracks(get(), get(), get(), get()) }
     }
 }

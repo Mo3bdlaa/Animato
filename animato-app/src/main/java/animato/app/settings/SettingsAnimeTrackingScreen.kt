@@ -65,6 +65,11 @@ object SettingsAnimeTrackingScreen : SearchableSettings {
                         preference = trackPreferences.showNextEpisodeAiringTime(),
                         title = stringResource(AYMR.strings.pref_show_next_episode_airing_time),
                     ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = trackPreferences.syncProgressFromTracker(),
+                        title = stringResource(AYMR.strings.pref_sync_progress_from_tracker),
+                        subtitle = stringResource(AYMR.strings.pref_sync_progress_from_tracker_summary),
+                    ),
                 ),
             ),
             Preference.PreferenceGroup(
