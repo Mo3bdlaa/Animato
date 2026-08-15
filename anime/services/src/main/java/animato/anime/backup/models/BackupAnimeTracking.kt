@@ -47,3 +47,43 @@ data class BackupAnimeTracking(
         )
     }
 }
+
+/**
+ * Reads a tracker row straight into its backup form.
+ *
+ * The parameter order is the column order of `SELECT * FROM anime_sync`. The remote id goes to 100
+ * and never to 3: 3 is the Int field that overflowed, and writing it again would recreate the bug
+ * it was added to work around.
+ */
+val backupAnimeTrackMapper = {
+        _: Long,
+        _: Long,
+        syncId: Long,
+        remoteId: Long,
+        libraryId: Long?,
+        title: String,
+        lastEpisodeSeen: Double,
+        totalEpisodes: Long,
+        status: Long,
+        score: Double,
+        remoteUrl: String,
+        startDate: Long,
+        finishDate: Long,
+        private: Boolean,
+    ->
+    BackupAnimeTracking(
+        syncId = syncId.toInt(),
+        // Not null in the 1.x format, so a missing one is written as zero rather than left out.
+        libraryId = libraryId ?: 0,
+        trackingUrl = remoteUrl,
+        title = title,
+        lastEpisodeSeen = lastEpisodeSeen.toFloat(),
+        totalEpisodes = totalEpisodes.toInt(),
+        score = score.toFloat(),
+        status = status.toInt(),
+        startedWatchingDate = startDate,
+        finishedWatchingDate = finishDate,
+        private = private,
+        mediaId = remoteId,
+    )
+}

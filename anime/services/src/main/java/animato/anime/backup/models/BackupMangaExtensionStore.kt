@@ -5,14 +5,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
 /**
- * A manga extension repository as an Aniyomi backup stores it.
+ * A manga extension store as it sits at field 106, in either app's backup.
  *
- * This is Mihon's own `BackupExtensionStore` at an earlier point in its life, when a repository
- * was five fields and was called a repository. The five it has still line up one-for-one with the
- * five Mihon kept, only renamed, so [toBackupExtensionStore] is a rename and nothing more.
+ * Mihon and Aniyomi wrote the same five fields there under different names — a repository grew
+ * into a store — and Mihon has since added three more. Reading all eight with a default for every
+ * one covers both: an Aniyomi backup fills the first five, a Mihon backup fills all eight, and
+ * neither fails on what the other left out.
  *
- * Mihon's model cannot be used to read these directly: its later fields have no defaults, so a
- * five-field message decoded into it fails on the three that are missing.
+ * Mihon's own model cannot be used to read these. Its later fields have no defaults, so the
+ * five-field message an Aniyomi backup carries dies on the three that are absent.
  */
 @Serializable
 data class BackupMangaExtensionStore(
@@ -21,13 +22,16 @@ data class BackupMangaExtensionStore(
     @ProtoNumber(3) val shortName: String? = null,
     @ProtoNumber(4) val website: String = "",
     @ProtoNumber(5) val signingKeyFingerprint: String = "",
+    @ProtoNumber(6) val contactDiscord: String? = null,
+    @ProtoNumber(7) val isLegacy: Boolean? = null,
+    @ProtoNumber(8) val extensionListUrl: String? = null,
 ) {
 
     /**
-     * The same repository in the shape Mihon's restorer takes.
+     * The same store in the shape Mihon's restorer takes.
      *
-     * `isLegacy` is true because that is what this repository is: one that serves the old index
-     * format. Every repository written by a backup of this age serves that format.
+     * A backup with no `isLegacy` was written before the new index format existed, so what it
+     * describes is a legacy store — which is why the absent case is true rather than false.
      */
     fun toBackupExtensionStore() = BackupExtensionStore(
         indexUrl = baseUrl,
@@ -35,8 +39,8 @@ data class BackupMangaExtensionStore(
         badgeLabel = shortName,
         signingKey = signingKeyFingerprint,
         contactWebsite = website,
-        contactDiscord = null,
-        isLegacy = true,
-        extensionListUrl = null,
+        contactDiscord = contactDiscord,
+        isLegacy = isLegacy ?: true,
+        extensionListUrl = extensionListUrl,
     )
 }

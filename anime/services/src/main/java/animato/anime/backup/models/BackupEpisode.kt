@@ -1,6 +1,7 @@
 package animato.anime.backup.models
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.core.common.extensions.JsonObjectEmptyBytes
 import tachiyomi.data.MemoColumnAdapter
@@ -87,4 +88,53 @@ data class BackupEpisode(
         result = 31 * result + memo.contentHashCode()
         return result
     }
+}
+
+/**
+ * Reads an episode row straight into its backup form.
+ *
+ * The parameter order is the column order of `SELECT * FROM episodes` and nothing else. Adding a
+ * column to that table means adding a parameter here, in the same position.
+ */
+val backupEpisodeMapper = {
+        _: Long,
+        _: Long,
+        url: String,
+        name: String,
+        scanlator: String?,
+        seen: Boolean,
+        bookmark: Boolean,
+        lastSecondSeen: Long,
+        totalSeconds: Long,
+        episodeNumber: Double,
+        sourceOrder: Long,
+        dateFetch: Long,
+        dateUpload: Long,
+        lastModifiedAt: Long,
+        version: Long,
+        _: Long,
+        summary: String?,
+        previewUrl: String?,
+        fillermark: Boolean,
+        memo: JsonObject,
+    ->
+    BackupEpisode(
+        url = url,
+        name = name,
+        scanlator = scanlator,
+        seen = seen,
+        bookmark = bookmark,
+        lastSecondSeen = lastSecondSeen,
+        totalSeconds = totalSeconds,
+        dateFetch = dateFetch,
+        dateUpload = dateUpload,
+        episodeNumber = episodeNumber.toFloat(),
+        sourceOrder = sourceOrder,
+        lastModifiedAt = lastModifiedAt,
+        version = version,
+        memo = MemoColumnAdapter.encode(memo),
+        fillermark = fillermark,
+        summary = summary,
+        previewUrl = previewUrl,
+    )
 }

@@ -358,6 +358,39 @@ So: one reader that knows both layouts, and Mihon's own restorers underneath doi
 `AniyomiBackupFormatTest` case named *does not read extension apks as a repository* is that
 collision, held down.
 
+### `BasePreferenceWidget` and `PrefsHorizontalPadding` are `internal`
+
+A settings row whose content is a control rather than a label and a switch is built with
+`BasePreferenceWidget(subcomponent = …)`. Both it and the padding it uses are `internal` to Mihon's
+app module, so a settings screen in another module cannot lay a row out the way the rows above and
+below it are laid out.
+
+`animato.ui.settings.PreferenceSubcomponentRow` is that row, with Mihon's measurements so it sits
+flush with theirs. It leaves out what a control-only row never used: the search highlight, the
+title, the icon and the trailing widget.
+
+Worth asking upstream about — the widget is general and the padding is a number, and neither looks
+deliberately hidden.
+
+### Backups are written from a different model than they are read into
+
+Not an upstream change. Protobuf leaves out a field holding its default value, and the reader is
+supposed to put it back from its own default — which works only while both ends agree.
+
+They do not. Everything here reads leniently, with a default on every field, so a backup from an
+older app still opens. Aniyomi's and Mihon's extension store and custom button models declare no
+defaults at all, so a field left out is a field *missing*, and one missing field fails the whole
+file. Writing from the model we read into would have produced backups only this app could open.
+
+Turning `encodeDefaults` on globally is not the fix either: a nullable field with a default cannot
+be encoded at all, because protobuf has no way to write a null. Protobuf will let you have a lenient
+reader or a strict writer from one declaration, not both.
+
+So `AniyomiBackupWriteEnvelope` declares the three models strictly and shares the rest — and two of
+those three are not new types, but Mihon's own `BackupExtensionStore`, which is exactly the shape
+Aniyomi uses for both of its stores. `AnimatoBackupInteropTest` decodes what we write with Mihon's
+real model and with Aniyomi's field rules, so the claim cannot rot quietly.
+
 ### Extension apks in a backup are not restored
 
 Aniyomi backs up the apk of every installed extension and reinstalls them on restore. Everything

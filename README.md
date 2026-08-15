@@ -42,8 +42,9 @@ Content comes from extensions you install and configure yourself. Animato ships 
 - **Tracking inside the title.** AniList, MyAnimeList and Kitsu, where you are already looking.
 - **A reader and a player built for the content.** Chrome that disappears when it is not wanted;
   gestures, playback speed, subtitles and external-player handoff on the anime side.
-- **Backup and restore**, including import from Tachiyomi, Mihon and Aniyomi backups with source
-  matching.
+- **Backups that other apps can read.** One file holds both libraries, written in Aniyomi's format —
+  so Aniyomi can open it in full and Mihon can open the manga in it. Aniyomi and Mihon backups import
+  the same way, and a restore names anything whose extension is missing before it starts.
 
 Not all of that is wired up yet — this is a pre-release, and
 [ARCHITECTURE.md](ARCHITECTURE.md) tracks what is built and what is not.

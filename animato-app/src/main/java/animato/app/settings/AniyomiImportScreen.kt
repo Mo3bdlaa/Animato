@@ -55,7 +55,17 @@ import uy.kohesive.injekt.api.get
  * is in this file, what will not survive the trip, and which parts to take. The file is read once
  * here to answer the first two questions, and again by the job to do the work.
  */
-class AniyomiImportScreen(private val uri: String) : Screen() {
+class AniyomiImportScreen(
+    private val uri: String,
+    /**
+     * Whether this arrived from the Aniyomi import row rather than from Restore backup.
+     *
+     * The screen does the same thing either way — it reads whatever the file is. Only the title
+     * differs, because someone restoring their own backup should not be told they are importing
+     * from an app they may never have used.
+     */
+    private val isAniyomiImport: Boolean = true,
+) : Screen() {
 
     @Composable
     override fun Content() {
@@ -69,7 +79,11 @@ class AniyomiImportScreen(private val uri: String) : Screen() {
         Scaffold(
             topBar = {
                 AppBar(
-                    title = stringResource(AYMR.strings.aniyomi_import),
+                    title = if (isAniyomiImport) {
+                        stringResource(AYMR.strings.aniyomi_import)
+                    } else {
+                        stringResource(MR.strings.pref_restore_backup)
+                    },
                     navigateUp = navigator::pop,
                     scrollBehavior = it,
                 )
@@ -77,7 +91,11 @@ class AniyomiImportScreen(private val uri: String) : Screen() {
         ) { contentPadding ->
             LazyColumnWithAction(
                 contentPadding = contentPadding,
-                actionLabel = stringResource(AYMR.strings.aniyomi_import_action),
+                actionLabel = if (isAniyomiImport) {
+                    stringResource(AYMR.strings.aniyomi_import_action)
+                } else {
+                    stringResource(MR.strings.action_restore)
+                },
                 actionEnabled = state.canImport && state.options.canRestore(),
                 onClickAction = {
                     viewModel.startImport()

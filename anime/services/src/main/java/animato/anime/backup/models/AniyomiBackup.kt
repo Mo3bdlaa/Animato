@@ -60,6 +60,10 @@ internal data class AniyomiBackupEnvelope(
     @ProtoNumber(105) val backupSourcePreferences: List<BackupSourcePreferences> = emptyList(),
     @ProtoNumber(106) val backupMangaExtensionStores: List<BackupMangaExtensionStore> = emptyList(),
 
+    // Aniyomi's stamp for which layout this is. False means this one. It defaults to true so that
+    // a file without it — anything older, and every Mihon backup — is not claimed by mistake, and
+    // it is written explicitly on the way out so Aniyomi can read what we write.
+    @ProtoNumber(500) val isLegacy: Boolean = true,
     @ProtoNumber(501) val backupAnime: List<BackupAnime> = emptyList(),
     @ProtoNumber(502) val backupAnimeCategories: List<BackupCategory> = emptyList(),
     @ProtoNumber(503) val backupAnimeSources: List<BackupAnimeSource> = emptyList(),

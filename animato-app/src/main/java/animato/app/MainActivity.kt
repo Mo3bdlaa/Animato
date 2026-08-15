@@ -47,10 +47,12 @@ import androidx.core.util.Consumer
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
+import animato.anime.backup.create.AnimatoBackupCreateJob
 import animato.anime.services.AnimeConstants
 import animato.anime.services.AnimeNotifications
 import animato.app.navigation.AnimatoHomeScreen
 import animato.app.navigation.setContentType
+import animato.app.settings.AniyomiImportScreen
 import animato.domain.content.ContentType
 import animato.ui.navigation.AnimatoNavigator
 import animato.ui.navigation.AnimatoTab
@@ -66,7 +68,6 @@ import eu.kanade.presentation.components.DownloadedOnlyBannerBackgroundColor
 import eu.kanade.presentation.components.IncognitoModeBannerBackgroundColor
 import eu.kanade.presentation.components.IndexingBannerBackgroundColor
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
-import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.data.cache.ChapterCache
@@ -168,6 +169,16 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         Migrator.awaitAndRelease()
+
+        /*
+         * Claim the periodic backup slot, now that the migrations have finished.
+         *
+         * One of Mihon's migrations schedules Mihon's backup job under the same name, and that job
+         * writes manga only — on this app, half a backup. Doing it here rather than earlier is the
+         * point of doing it at all: `awaitAndRelease` above has already run every migration, so
+         * this is the last word rather than a race with one.
+         */
+        AnimatoBackupCreateJob.setupTask(this)
 
         // Do not let the launcher create a new activity http://stackoverflow.com/questions/16283079
         if (!isTaskRoot) {
@@ -475,7 +486,9 @@ class MainActivity : BaseActivity() {
                 // Handling opening of backup files
                 if (intent.data.toString().endsWith(".tachibk")) {
                     navigator.popUntilRoot()
-                    navigator.push(RestoreBackupScreen(intent.data.toString()))
+                    // Ours, not Mihon's: a .tachibk opened from a file manager is as likely to be
+                    // an Aniyomi backup as a Mihon one, and Mihon's reader rejects those outright.
+                    navigator.push(AniyomiImportScreen(intent.data.toString(), isAniyomiImport = false))
                 }
                 // Deep link to add extension store
                 else if (intent.isAddExtensionStoreIntent()) {

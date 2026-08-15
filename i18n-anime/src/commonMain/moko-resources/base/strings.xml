@@ -627,4 +627,8 @@
     <string name="aniyomi_import_contents">This backup holds %1$d anime and %2$d manga.</string>
     <string name="aniyomi_import_in_progress">An import is already running</string>
     <string name="aniyomi_import_error_log_header">Entries that could not be imported. Everything not listed here came across.</string>
+
+    <!-- Creating a backup -->
+    <string name="backup_format_info">Backups hold both libraries and are written in Aniyomi\'s format, so Aniyomi can read them in full and Mihon can read the manga in them.</string>
+    <string name="backup_chapters_and_episodes">Chapters and episodes</string>
 </resources>

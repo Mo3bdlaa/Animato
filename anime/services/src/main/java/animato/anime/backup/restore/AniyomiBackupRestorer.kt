@@ -3,6 +3,7 @@ package animato.anime.backup.restore
 import android.content.Context
 import android.net.Uri
 import animato.anime.backup.AniyomiBackupDecoder
+import animato.anime.backup.create.AnimatoBackupCreateJob
 import animato.anime.backup.models.AniyomiBackup
 import animato.anime.backup.models.BackupAnime
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
@@ -210,6 +211,12 @@ class AniyomiBackupRestorer(
         // The player's custom buttons ride with the settings. They are settings, they are small,
         // and giving them a checkbox of their own would mean explaining what they are twice.
         customButtonRestorer(backup.customButtons)
+
+        // Mihon's preference restorer ends by scheduling Mihon's backup job from the interval it
+        // just restored. That job writes manga only, so the slot is claimed back here, at the
+        // restored interval, before anything can fire.
+        AnimatoBackupCreateJob.setupTask(context)
+
         reportProgress(context.stringResource(MR.strings.app_settings))
     }
 
