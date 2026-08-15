@@ -110,6 +110,16 @@ intent-filter, and suppressing Mihon's entry point through the manifest merger �
 directive in *our* manifest, not an edit to theirs. Mihon's activity stays a perfectly good class;
 it simply stops being the way in.
 
+That is done, and it cost one thing worth recording. Removing Mihon's activity would have broken the
+**nine** places that name it as an explicit component — eight `Intent(context, MainActivity::class)`
+constructions across notifications, deep links, the reader, OAuth and the crash handler, plus every
+`targetClass` in `@xml/shortcuts` — none of them ours to change. An `<activity-alias>` carrying
+Mihon's fully-qualified name and pointing at ours fixes all nine at once, because aliases resolve by
+component *name* and nothing requires that name to match a class.
+
+Worth generalising: when Mihon's code holds a reference we cannot edit, the manifest can often
+redirect it. That is a seam the "copy the file" rule does not cover.
+
 Everything phase 6 wants follows from owning that root, and nothing else unlocks it:
 
 - our theme wraps every screen, Mihon's included
@@ -206,7 +216,10 @@ to resolve.
 | 5a | `:anime:player` — loaders and the video resolver | done |
 | 5b | playback core, controls, external player, picture-in-picture | done |
 | 5c | player settings screens | blocked: Mihon's `Preference` is sealed — see the module README |
-| 6 | `:anime:ui` and a home screen combining both tab sets | |
+| 6a | our `MainActivity` and the Animato theme, above Mihon's screens | done |
+| 6b | `:anime:ui` — the anime screens | |
+| 6c | the Animato tab bar and a home screen combining both content types | |
+| 6d | settings structure — unblocks 5c | |
 | 7 | Importer for Aniyomi backups | |
 
 ### Why the player is not next

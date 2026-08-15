@@ -107,6 +107,51 @@ Mihon dropped it in favour of `androidx.sqlite:sqlite-bundled`, which does the s
 first-party library. Our anime database no longer references requery either — see the SQLDelight
 entry below for what it does use, and why that is not yet Mihon's driver.
 
+### `MainActivity` — copied, and two of its features left out
+
+`animato.app.MainActivity` is an adapted copy of Mihon's. It has to be: Mihon selects colours from
+an `AppTheme` **enum** through a **private** `colorSchemes` map over an `internal BaseColorScheme`,
+none of which another module can extend, so the Animato palette can only be applied *above* Mihon's
+screens — by owning the root composable. ARCHITECTURE.md sets out why nothing else unlocks it.
+
+It still hosts Mihon's own `HomeScreen`, so the app behaves exactly as before and merely looks like
+Animato. Two things from the original are deliberately gone:
+
+- **`CheckForUpdates()`** — `AppUpdateChecker` reads releases from `mihonapp/mihon`. Calling it
+  would offer our users Mihon's APK, which they cannot install: different package, different signing
+  key. *To do: an Animato updater pointed at this repository's own releases, which the alpha
+  workflow now produces.*
+- **`ShowDonationCampaign()`** — pushes Mihon's `SupportUsScreen`. Soliciting donations to another
+  project from a rebranded app is not ours to do.
+
+Three further differences are forced rather than chosen:
+
+- `NotificationReceiver.dismissNotification` is `internal`, so tapping a notification dismisses it
+  through our `AnimeNotifications.dismiss`, which implements the same group-summary rule.
+- `ExtensionApi` is `internal`; it was only reachable from inside `CheckForUpdates`, which is gone.
+- The splash `ready` flag is set when the navigator composes, rather than by each tab. Mihon's tabs
+  set it with `(context as? MainActivity)?.ready = true`, a cast against *their* class that ours
+  cannot satisfy, since their `MainActivity` is final. Left alone the splash would hang for its
+  five-second ceiling on every cold start.
+
+*To do: re-read Mihon's `MainActivity` on each upstream sync. It is the one file of ours that tracks
+theirs closely enough for their changes to matter.*
+
+### Mihon's `MainActivity` is replaced by an `activity-alias`
+
+Nine places name `eu.kanade.tachiyomi.ui.main.MainActivity` as an explicit component: eight
+`Intent(context, MainActivity::class.java)` constructions across notifications, deep links, the
+reader, the OAuth callback and the crash handler, plus every `<intent android:targetClass>` in
+`@xml/shortcuts`. None are ours to change.
+
+So the activity is removed with `tools:node="remove"` and an `<activity-alias>` of the same name
+points at ours. Aliases resolve by component name, and nothing requires that name to match a class,
+so all nine keep working — with their actions and extras intact, which is what our copy of
+`handleIntentAction` reads.
+
+The alias carries no intent-filter on purpose: one with a LAUNCHER category would put a second icon
+in the launcher.
+
 ---
 
 ## Open

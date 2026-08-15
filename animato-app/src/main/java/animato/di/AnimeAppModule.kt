@@ -10,6 +10,9 @@ import aniyomi.core.common.torrent.TorrentServerApi
 import aniyomi.core.common.torrent.TorrentServerUtils
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
+import dataanime.Animehistory
+import dataanime.Animes
+import dataanime.Episodes
 import eu.kanade.tachiyomi.data.cache.AnimeBackgroundCache
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
@@ -23,9 +26,6 @@ import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.handlers.anime.AndroidAnimeDatabaseHandler
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
-import dataanime.Animehistory
-import dataanime.Animes
-import dataanime.Episodes
 import tachiyomi.mi.data.AnimeDatabase
 import tachiyomi.source.local.entries.anime.LocalAnimeFetchTypeManager
 import tachiyomi.source.local.image.anime.LocalAnimeBackgroundManager

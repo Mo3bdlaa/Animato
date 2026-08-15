@@ -1,13 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The application module contributes no components of its own beyond the Injekt bootstrap.
-
-  Mihon's App, MainActivity and launcher intent-filter reach the APK through manifest merging, and
-  the anime components are declared by :anime:services. See ARCHITECTURE.md.
+  The application module contributes the entry point and the Injekt bootstrap. Everything else —
+  Mihon's App and its other activities, and the anime components declared by :anime:services —
+  arrives through manifest merging. See ARCHITECTURE.md.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application>
+
+        <!--
+          Animato's entry point.
+
+          Mihon's colour scheme cannot be extended from another module, so the palette has to be
+          applied above its screens rather than registered inside its theme — which means owning the
+          root composable, which means owning this activity. MainActivity.kt has the full reasoning.
+
+          The intent filters are Mihon's, carried across verbatim, because our activity now answers
+          for all of them. `Theme.Tachiyomi.SplashScreen` is Mihon's style, and reusing it is
+          correct: it draws `@color/splash` and `@drawable/ic_mihon_splash`, both of which this
+          module already overrides with Animato's, so the launch window is ours without a new style.
+        -->
+        <activity
+            android:name="animato.app.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Tachiyomi.SplashScreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Legacy deeplink to add extension store -->
+            <intent-filter android:label="@string/action_addExtensionStore">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="tachiyomi" />
+                <data android:host="add-repo" />
+            </intent-filter>
+
+            <!-- Deeplink to add extension store -->
+            <intent-filter android:label="@string/action_addExtensionStore">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="mihon" />
+                <data android:host="extension-store" />
+            </intent-filter>
+
+            <!-- Open backup files -->
+            <intent-filter android:label="@string/pref_restore_backup">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <!--
+                Work around Android's ugly primitive PatternMatcher implementation that can't cope
+                with finding a . early in the path unless it's explicitly matched.
+                See https://stackoverflow.com/a/31028507
+                -->
+                <data android:pathPattern=".*\\.tachibk" />
+                <data android:pathPattern=".*\\..*\\.tachibk" />
+                <data android:pathPattern=".*\\..*\\..*\\.tachibk" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.tachibk" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.tachibk" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.tachibk" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.tachibk" />
+            </intent-filter>
+
+            <!--
+              Launcher long-press shortcuts are declared on the launcher activity, so they move with
+              it. Their intents still name Mihon's class, which the alias below resolves.
+            -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+
+        <!--
+          Mihon's entry point stops being one. This is a directive in our manifest, not an edit to
+          theirs: the class stays exactly as it is, it simply stops being declared.
+        -->
+        <activity
+            android:name="eu.kanade.tachiyomi.ui.main.MainActivity"
+            tools:node="remove" />
+
+        <!--
+          …and its name is re-pointed at ours.
+
+          Nine places name `eu.kanade.tachiyomi.ui.main.MainActivity` as an explicit component and
+          are not ours to change: eight `Intent(context, MainActivity::class.java)` constructions
+          across Mihon's notifications, deep links, reader, OAuth callback and crash handler, plus
+          every `<intent android:targetClass>` in `@xml/shortcuts`. Removing the activity outright
+          would turn all of them into ActivityNotFoundException.
+
+          An alias is resolved by component *name*, and nothing requires that name to match a class.
+          So the name Mihon's code asks for keeps resolving, and it resolves to our activity with
+          the action and extras intact — which is exactly what MainActivity.handleIntentAction
+          expects, since it reads Mihon's own constants.
+
+          No intent-filter here on purpose: an alias carrying a LAUNCHER filter would put a second
+          icon in the launcher. Not exported, because every caller is inside this app — a
+          PendingIntent the system fires on our behalf does not need it, and nor does startActivity
+          from our own process.
+        -->
+        <activity-alias
+            android:name="eu.kanade.tachiyomi.ui.main.MainActivity"
+            android:exported="false"
+            android:targetActivity="animato.app.MainActivity" />
 
         <!--
           A hook, not a provider: it is created during application bind, which is what lets it
