@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.library.anime
 
+import animato.anime.services.AnimeNotifications
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
@@ -191,8 +192,8 @@ class AnimeLibraryUpdateNotifier(
     fun showUpdateNotifications(updates: List<Pair<Anime, Array<Episode>>>) {
         // Parent group notification
         context.notify(
-            Notifications.ID_NEW_EPISODES,
-            Notifications.CHANNEL_NEW_CHAPTERS_EPISODES,
+            AnimeNotifications.ID_NEW_EPISODES,
+            AnimeNotifications.CHANNEL_NEW_CHAPTERS_EPISODES,
         ) {
             setContentTitle(context.stringResource(AYMR.strings.notification_new_episodes))
             if (updates.size == 1 && !securityPreferences.hideNotificationContent().get()) {
@@ -220,7 +221,7 @@ class AnimeLibraryUpdateNotifier(
             setSmallIcon(R.drawable.ic_ani)
             setLargeIcon(notificationBitmap)
 
-            setGroup(Notifications.GROUP_NEW_EPISODES)
+            setGroup(AnimeNotifications.GROUP_NEW_EPISODES)
             setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
             setGroupSummary(true)
             priority = NotificationCompat.PRIORITY_HIGH
@@ -246,7 +247,7 @@ class AnimeLibraryUpdateNotifier(
 
     private suspend fun createNewEpisodesNotification(anime: Anime, episodes: Array<Episode>): Notification {
         val icon = getAnimeIcon(anime)
-        return context.notificationBuilder(Notifications.CHANNEL_NEW_CHAPTERS_EPISODES) {
+        return context.notificationBuilder(AnimeNotifications.CHANNEL_NEW_CHAPTERS_EPISODES) {
             setContentTitle(anime.title)
 
             val description = getNewEpisodesDescription(episodes)
@@ -259,7 +260,7 @@ class AnimeLibraryUpdateNotifier(
                 setLargeIcon(icon)
             }
 
-            setGroup(Notifications.GROUP_NEW_EPISODES)
+            setGroup(AnimeNotifications.GROUP_NEW_EPISODES)
             setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
             priority = NotificationCompat.PRIORITY_HIGH
 
@@ -277,7 +278,7 @@ class AnimeLibraryUpdateNotifier(
                     context,
                     anime,
                     episodes,
-                    Notifications.ID_NEW_EPISODES,
+                    AnimeNotifications.ID_NEW_EPISODES,
                 ),
             )
             // View episodes action
@@ -287,7 +288,7 @@ class AnimeLibraryUpdateNotifier(
                 NotificationReceiver.openEpisodePendingActivity(
                     context,
                     anime,
-                    Notifications.ID_NEW_EPISODES,
+                    AnimeNotifications.ID_NEW_EPISODES,
                 ),
             )
             // Download chapters action

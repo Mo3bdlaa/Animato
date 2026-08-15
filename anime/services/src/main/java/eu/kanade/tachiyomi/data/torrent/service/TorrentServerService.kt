@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.torrent.service
 
+import animato.anime.services.AnimeNotifications
 import android.app.Application
 import android.app.PendingIntent
 import android.app.Service
@@ -86,7 +87,7 @@ class TorrentServerService : Service() {
     private fun stopServer() {
         serviceScope.launch {
             TorrServer.stopServer()
-            applicationContext.cancelNotification(Notifications.ID_TORRENT_SERVER)
+            applicationContext.cancelNotification(AnimeNotifications.ID_TORRENT_SERVER)
             stopSelf()
         }
     }
@@ -111,7 +112,7 @@ class TorrentServerService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
 
-        val builder = context.notificationBuilder(Notifications.CHANNEL_TORRENT_SERVER) {
+        val builder = context.notificationBuilder(AnimeNotifications.CHANNEL_TORRENT_SERVER) {
             setSmallIcon(R.drawable.ic_ani)
             setContentText(stringResource(AYMR.strings.torrentserver_is_running))
             setContentTitle(stringResource(MR.strings.app_name))
@@ -128,12 +129,12 @@ class TorrentServerService : Service() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
-                Notifications.ID_TORRENT_SERVER,
+                AnimeNotifications.ID_TORRENT_SERVER,
                 builder.build(),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
             )
         } else {
-            startForeground(Notifications.ID_TORRENT_SERVER, builder.build())
+            startForeground(AnimeNotifications.ID_TORRENT_SERVER, builder.build())
         }
     }
 

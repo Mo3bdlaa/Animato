@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.download.anime
 
+import animato.anime.services.AnimeNotifications
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.BitmapFactory
@@ -62,7 +63,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
      * those can only be dismissed by the user.
      */
     fun dismissProgress() {
-        context.notificationManager.cancel(Notifications.ID_DOWNLOAD_EPISODE_PROGRESS)
+        context.notificationManager.cancel(AnimeNotifications.ID_DOWNLOAD_EPISODE_PROGRESS)
     }
 
     /**
@@ -77,7 +78,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 clearActions()
                 // Open download manager when clicked
                 setContentIntent(
-                    NotificationHandler.openAnimeDownloadManagerPendingActivity(context),
+                    AnimeNotifications.openAnimeDownloadManagerPendingActivity(context),
                 )
                 isDownloading = true
                 // Pause action
@@ -119,7 +120,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             }
             setOngoing(true)
 
-            show(Notifications.ID_DOWNLOAD_EPISODE_PROGRESS)
+            show(AnimeNotifications.ID_DOWNLOAD_EPISODE_PROGRESS)
         }
     }
 
@@ -135,7 +136,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             setOngoing(false)
             clearActions()
             // Open download manager when clicked
-            setContentIntent(NotificationHandler.openAnimeDownloadManagerPendingActivity(context))
+            setContentIntent(AnimeNotifications.openAnimeDownloadManagerPendingActivity(context))
             // Resume action
             addAction(
                 R.drawable.ic_play_arrow_24dp,
@@ -149,7 +150,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 NotificationReceiver.clearAnimeDownloadsPendingBroadcast(context),
             )
 
-            show(Notifications.ID_DOWNLOAD_EPISODE_PROGRESS)
+            show(AnimeNotifications.ID_DOWNLOAD_EPISODE_PROGRESS)
         }
 
         // Reset initial values
@@ -180,7 +181,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             setSmallIcon(R.drawable.ic_warning_white_24dp)
             setAutoCancel(true)
             clearActions()
-            setContentIntent(NotificationHandler.openAnimeDownloadManagerPendingActivity(context))
+            setContentIntent(AnimeNotifications.openAnimeDownloadManagerPendingActivity(context))
             if (animeId != null) {
                 addAction(
                     R.drawable.ic_book_24dp,
@@ -192,7 +193,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             timeout?.let { setTimeoutAfter(it) }
             contentIntent?.let { setContentIntent(it) }
 
-            show(Notifications.ID_DOWNLOAD_EPISODE_ERROR)
+            show(AnimeNotifications.ID_DOWNLOAD_EPISODE_ERROR)
         }
 
         // Reset download information
@@ -218,7 +219,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             setContentText(error ?: context.stringResource(MR.strings.download_notifier_unknown_error))
             setSmallIcon(R.drawable.ic_warning_white_24dp)
             clearActions()
-            setContentIntent(NotificationHandler.openAnimeDownloadManagerPendingActivity(context))
+            setContentIntent(AnimeNotifications.openAnimeDownloadManagerPendingActivity(context))
             if (animeId != null) {
                 addAction(
                     R.drawable.ic_book_24dp,
@@ -228,7 +229,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             }
             setProgress(0, 0, false)
 
-            show(Notifications.ID_DOWNLOAD_EPISODE_ERROR)
+            show(AnimeNotifications.ID_DOWNLOAD_EPISODE_ERROR)
         }
 
         // Reset download information

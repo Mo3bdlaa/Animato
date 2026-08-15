@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.download.anime
 
+import animato.anime.services.AnimeNotifications
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -43,7 +44,7 @@ class AnimeDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
             setSmallIcon(android.R.drawable.stat_sys_download)
         }.build()
         return ForegroundInfo(
-            Notifications.ID_DOWNLOAD_EPISODE_PROGRESS,
+            AnimeNotifications.ID_DOWNLOAD_EPISODE_PROGRESS,
             notification,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
