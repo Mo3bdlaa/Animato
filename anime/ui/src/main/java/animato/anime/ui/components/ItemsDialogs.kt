@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.toImmutableList
 import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
-import tachiyomi.domain.entries.manga.interactor.MangaFetchInterval
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.WheelTextPicker
@@ -132,7 +131,7 @@ fun SetIntervalDialog(
                     ) {
                         val size = DpSize(width = maxWidth / 2, height = 128.dp)
                         val maxInterval = if (isManga) {
-                            MangaFetchInterval.MAX_INTERVAL
+                            AnimeFetchInterval.MAX_INTERVAL
                         } else {
                             AnimeFetchInterval.MAX_INTERVAL
                         }

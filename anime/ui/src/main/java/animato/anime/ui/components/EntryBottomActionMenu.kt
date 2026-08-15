@@ -1,5 +1,7 @@
 package animato.anime.ui.components
 
+import animato.ui.components.EntryDownloadDropdownMenu
+import animato.ui.entries.DownloadAction
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
