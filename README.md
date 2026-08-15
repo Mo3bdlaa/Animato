@@ -50,7 +50,7 @@ Not all of that is wired up yet — this is a pre-release, and
 
 ## Design
 
-![Animato brand sheet](docs/branding/brand-sheet.jpg)
+![Animato brand sheet](docs/branding/brand-sheet.png)
 
 Palette, typography, component rules and a screen-by-screen specification live in
 [docs/BRANDING.md](docs/BRANDING.md).

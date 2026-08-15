@@ -1,10 +1,10 @@
 # Animato — brand and interface specification
 
 The reference for anything visual. The palette, type and component rules come from the brand sheet;
-the screen-by-screen section is read off the nine mockups in that same sheet and is what the UI
-work in phase 6 builds against.
+the screen-by-screen section is read off the nine mockups in `branding/screens.jpg` and is what the
+UI work in phase 6 builds against.
 
-![Animato brand sheet](branding/brand-sheet.jpg)
+![Animato brand sheet](branding/brand-sheet.png)
 
 ---
 
@@ -41,6 +41,16 @@ ivory (light).
 | Muted | `#9A9690` | Secondary text |
 | White | `#FFFFFF` | Light surfaces |
 
+Semantic colours, which say what happened rather than what to do:
+
+| Token | Hex | Use |
+| --- | --- | --- |
+| Success | `#22C55E` | Connected, synced, finished |
+| Warning | `#F59E0B` | Needs attention, not yet broken |
+| Error | `#EF4444` | Failed, destructive |
+| Info | `#8B5CF6` | Neutral notice |
+| Accent | `#06B6D4` | A second highlight, where blue is already spoken for |
+
 **The accent is not the interface.** The UI stays largely monochrome so that the accent keeps
 meaning: it marks the primary action, the active tab, and progress. A screen with blue in four
 places has diluted all four.
@@ -62,7 +72,9 @@ at once. Given the choice, be good at the button.
 
 One knock-on: the error colour was orange while the accent was red, to keep "do this" and "something
 is wrong" from looking alike. With a blue accent there is no clash, so errors are a conventional red
-again — which users read without being taught.
+again — which users read without being taught. `#EF4444` is 5.31:1 on ink but only 3.25:1 on paper,
+so in light mode the theme darkens it toward the text colour rather than drawing the brand value at
+body-text size.
 
 **In the logo, blue is a signature, not a wash.** The wordmark is blue; the Japanese type, the panel
 frame and the speed lines stay ink or ivory. Blue on everything would make it loud, which is the
@@ -243,7 +255,8 @@ These are the claims the interface has to earn:
 
 | File | What |
 | --- | --- |
-| `docs/branding/brand-sheet.jpg` | the sheet above, the source of this document |
+| `docs/branding/brand-sheet.png` | the sheet above, the source of this document |
+| `docs/branding/screens.jpg` | the nine screen mockups section 7 is read off |
 | `docs/branding/icon-dark.png` | 512px icon, dark variant, transparent corners |
 | `docs/branding/icon-light.png` | 512px icon, light variant, transparent corners |
 

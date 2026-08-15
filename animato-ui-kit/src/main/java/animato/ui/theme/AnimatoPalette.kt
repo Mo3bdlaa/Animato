@@ -47,8 +47,25 @@ data class AnimatoPalette(
      * accent was red and is why the error colour was orange then. With a blue accent there is no
      * clash, so this is a conventional red again — which is what users read as an error without
      * being taught.
+     *
+     * This is the brand value, not the drawn one: `#EF4444` is 5.31:1 on ink but only 3.25:1 on
+     * paper, so [AnimatoColors.errorOnBackground] darkens it toward the text colour in light mode
+     * rather than putting the brand red at body-text size where it would fail AA.
      */
     val error: Color,
+
+    /**
+     * Colours that report what happened, rather than offering something to do.
+     *
+     * Separate from [accent] because they mean different things: the accent is "act here", these
+     * are "this is the state". They are fixed rather than derived — a green that says *connected*
+     * has to read as green in every theme, so a palette does not get to reinterpret it.
+     */
+    val success: Color,
+
+    val warning: Color,
+
+    val info: Color,
 )
 
 object AnimatoPalettes {
@@ -72,7 +89,10 @@ object AnimatoPalettes {
         ink = Color(0xFF08080C),
         paper = Color(0xFFF2EEE5),
         muted = Color(0xFF9A9690),
-        error = Color(0xFFBA1A1A),
+        error = Color(0xFFEF4444),
+        success = Color(0xFF22C55E),
+        warning = Color(0xFFF59E0B),
+        info = Color(0xFF8B5CF6),
     )
 
     /** Every palette the app knows about. A theme picker would iterate this. */
