@@ -11,7 +11,7 @@ Measured, on the same repository, merging the same upstream:
 
 | Branch | Descends from | Conflicting files |
 | --- | --- | --- |
-| `claude/aniyomi-revival-upgrade-n0c0zp` | Aniyomi (forked Jan 2024) | **776** |
+| `aniyomi-donor` | Aniyomi (forked Jan 2024) | **776** |
 | this one | Mihon `77e88a21` | **2** |
 
 ## The rule
@@ -78,18 +78,18 @@ result is a redundant re-registration rather than a missing binding.
 
 ## The donor branch
 
-`claude/aniyomi-revival-upgrade-n0c0zp` is where the anime code is read from. Every module in
+`aniyomi-donor` is where the anime code is read from. Every module in
 `anime/` was ported out of it, and roughly **24,800 lines are still owed** to phases 6 and 7 — the
 anime UI, the player settings screens, the backup importer and anime tracking.
 
 It is a **read-only source**, not a parallel product:
 
-- **do not develop on it** — new work goes on `claude/mihon-base`
+- **do not develop on it** — new work goes on `main`
 - **do not merge it** — merging the two is precisely what this architecture exists to avoid; the
   measurement at the top of this file is what that merge costs
 - **do not delete it** while anything is still owed
 
-Once phases 6 and 7 are done, tag it rather than delete it — `git tag aniyomi-donor <sha>`. It is
+Once phases 6 and 7 are done, tag it rather than delete it — `git tag aniyomi-donor-final <sha>`. It is
 the only record of Aniyomi as we found it, and `UPSTREAM_DIVERGENCE.md` is full of claims about what
 Aniyomi did whose evidence lives there. When our own code later does something puzzling, the answer
 is usually in the original.
