@@ -16,6 +16,46 @@ android {
         buildConfig = true
     }
 
+    /*
+     * One APK per architecture, as Aniyomi and Mihon both ship.
+     *
+     * This matters far more here than in a manga reader: mpv, FFmpeg and the torrent server are
+     * native, and carrying all four architectures in one APK costs 342 MB of the 380 MB it came to
+     * without this. Splitting brings each one to roughly a quarter of that.
+     *
+     * The universal APK is kept for the cases where the architecture is not known up front.
+     */
+    splits {
+        abi {
+            isEnable = true
+            isUniversalApk = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+    }
+
+    packaging {
+        jniLibs {
+            // Stripping these breaks mpv's own crash reporting, and they are what Aniyomi kept.
+            keepDebugSymbols += listOf(
+                "libavcodec",
+                "libavdevice",
+                "libavfilter",
+                "libavformat",
+                "libavutil",
+                "libc++_shared",
+                "libffmpegkit_abidetect",
+                "libffmpegkit",
+                "libmpv",
+                "libplayer",
+                "libpostproc",
+                "libswresample",
+                "libswscale",
+                "libtorrserver",
+            ).map { "**/$it.so" }
+        }
+    }
+
     lint {
         abortOnError = false
         checkReleaseBuilds = false
