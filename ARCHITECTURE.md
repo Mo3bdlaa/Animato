@@ -76,6 +76,31 @@ registration lands just after `patchInjekt()`, and ahead of whatever component s
 has since been replaced. That is the safety net: if the ordering above ever stops holding, the
 result is a redundant re-registration rather than a missing binding.
 
+## Why phase 6 has to own the launcher activity
+
+Applying our palette is not a matter of writing a theme. Mihon picks its colour scheme from an
+`AppTheme` **enum** through a **private** `colorSchemes` map — an enum cannot be extended from
+another module, and the map cannot be added to. There is no seam.
+
+That is not a problem as long as we accept the consequence: the theme has to be applied *above*
+Mihon's screens rather than registered *inside* their theme. Mihon's screens read
+`MaterialTheme.colorScheme` — only 4 hard-coded colours in 186 presentation files — so whoever owns
+the root composable restyles all of them for free. Today that root is Mihon's `MainActivity`.
+
+So phase 6 begins by declaring a `MainActivity` of ours in `:animato:app` with the launcher
+intent-filter, and suppressing Mihon's entry point through the manifest merger — `tools:node`, a
+directive in *our* manifest, not an edit to theirs. Mihon's activity stays a perfectly good class;
+it simply stops being the way in.
+
+Everything phase 6 wants follows from owning that root, and nothing else unlocks it:
+
+- our theme wraps every screen, Mihon's included
+- the five-tab bar in `docs/BRANDING.md` replaces Mihon's five, reusing Mihon's Voyager screens for
+  the tabs that survive and adding Home, Discover and Downloads
+- the player finally has something that navigates to it
+- phase 5c stops being blocked, because the settings structure becomes ours and no longer needs to
+  extend Mihon's sealed `Preference`
+
 ## The metric
 
 > **Number of distinct Mihon symbols our code references.**
