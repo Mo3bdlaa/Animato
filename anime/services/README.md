@@ -20,8 +20,12 @@ symbols remain unresolved.
 
 ## What is left
 
-Errors went 282 → 254 → 210 → 184 → 141 over five rounds. Each round is mechanical; the count
+Errors went 282 → 254 → 210 → 184 → 153 → 133 over six rounds. Each round is mechanical; the count
 falls because the missing pieces are small and specific. One is not.
+
+The 133 that remain concentrate in a handful of names, which is what makes the rest predictable:
+`await` and its variants on interactors whose owners have not landed, `SetSeenStatus`,
+`UpdateAnime`, `TrustAnimeExtension`, `SEpisode`, and the `ENTRY_*` library-filter constants.
 
 ### The receiver — done
 
