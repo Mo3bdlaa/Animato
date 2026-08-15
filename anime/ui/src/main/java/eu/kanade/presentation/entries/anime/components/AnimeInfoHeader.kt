@@ -82,7 +82,7 @@ import eu.kanade.presentation.manga.components.DotSeparatorText
 import animato.ui.entries.ItemCover
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.SAnime
-import eu.kanade.tachiyomi.data.coil.useBackground
+import animato.anime.util.useBackground
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.i18n.MR

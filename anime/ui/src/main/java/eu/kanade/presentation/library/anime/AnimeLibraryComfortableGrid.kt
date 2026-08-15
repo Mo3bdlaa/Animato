@@ -9,9 +9,9 @@ import androidx.compose.ui.util.fastAny
 import animato.ui.library.DownloadsBadge
 import animato.ui.library.EntryComfortableGridItem
 import animato.ui.library.LanguageBadge
-import eu.kanade.presentation.library.components.LazyLibraryGrid
+import animato.ui.library.LazyLibraryGrid
 import animato.ui.library.UnviewedBadge
-import eu.kanade.presentation.library.components.globalSearchItem
+import animato.ui.library.globalSearchItem
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryItem
 import tachiyomi.domain.entries.anime.model.AnimeCover
 import tachiyomi.domain.library.anime.LibraryAnime

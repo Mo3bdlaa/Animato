@@ -9,8 +9,8 @@ import eu.kanade.domain.source.anime.interactor.ToggleAnimeSource
 import eu.kanade.domain.source.anime.interactor.ToggleAnimeSourcePin
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.browse.anime.AnimeSourceUiModel
-import eu.kanade.tachiyomi.util.system.LAST_USED_KEY
-import eu.kanade.tachiyomi.util.system.PINNED_KEY
+import animato.anime.services.LAST_USED_KEY
+import animato.anime.services.PINNED_KEY
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList

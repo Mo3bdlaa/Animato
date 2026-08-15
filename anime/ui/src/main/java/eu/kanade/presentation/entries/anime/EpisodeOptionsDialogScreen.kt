@@ -58,7 +58,7 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import animato.anime.player.HosterState
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.QualitySheetHosterContent
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.QualitySheetVideoContent
-import eu.kanade.tachiyomi.ui.player.controls.components.sheets.getChangedAt
+import animato.anime.player.getChangedAt
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.loader.HosterLoader
 import eu.kanade.tachiyomi.util.system.toast

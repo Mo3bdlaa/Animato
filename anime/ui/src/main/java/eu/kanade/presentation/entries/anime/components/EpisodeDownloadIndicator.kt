@@ -30,7 +30,7 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.IndicatorModifier
 import animato.ui.components.IndicatorSize
 import eu.kanade.presentation.components.IndicatorStrokeWidth
-import eu.kanade.presentation.components.commonClickable
+import animato.ui.components.commonClickable
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import tachiyomi.i18n.MR

@@ -19,7 +19,7 @@ import eu.kanade.core.util.fastPartition
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
-import eu.kanade.presentation.components.SEARCH_DEBOUNCE_MILLIS
+import animato.anime.services.SEARCH_DEBOUNCE_MILLIS
 import animato.ui.entries.DownloadAction
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -30,8 +30,8 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
-import eu.kanade.tachiyomi.util.removeBackgrounds
-import eu.kanade.tachiyomi.util.removeCovers
+import animato.anime.util.removeBackgrounds
+import animato.anime.util.removeCovers
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate

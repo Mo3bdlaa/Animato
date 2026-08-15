@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import animato.ui.library.DownloadsBadge
 import animato.ui.library.EntryListItem
-import eu.kanade.presentation.library.components.GlobalSearchItem
+import animato.ui.library.GlobalSearchItem
 import animato.ui.library.LanguageBadge
 import animato.ui.library.UnviewedBadge
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryItem

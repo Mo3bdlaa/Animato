@@ -24,8 +24,8 @@ import animato.anime.ui.ioCoroutineScope
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.data.cache.AnimeBackgroundCache
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
-import eu.kanade.tachiyomi.util.removeBackgrounds
-import eu.kanade.tachiyomi.util.removeCovers
+import animato.anime.util.removeBackgrounds
+import animato.anime.util.removeCovers
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.SharingStarted

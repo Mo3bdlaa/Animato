@@ -51,7 +51,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
 import animato.ui.entries.EditCoverAction
-import eu.kanade.tachiyomi.data.coil.useBackground
+import animato.anime.util.useBackground
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.common.util.lang.launchUI
