@@ -1,5 +1,6 @@
 package animato.di
 
+import animato.domain.content.interactor.GetUnifiedLibrary
 import aniyomi.domain.source.interactor.SetAnimeMigrateSorting
 import eu.kanade.domain.download.anime.interactor.DeleteEpisodeDownload
 import eu.kanade.domain.entries.anime.interactor.SyncSeasonsWithSource
@@ -167,6 +168,7 @@ class AnimeDomainModule : InjektModule {
         addSingletonFactory { AnimeExtensionStoreService(get(), get(), get()) }
         addSingletonFactory<AnimeExtensionStoreRepository> { AnimeExtensionStoreRepositoryImpl(get(), get()) }
         addFactory { SetAnimeMigrateSorting(get()) }
+        addFactory { GetUnifiedLibrary(get(), get()) }
         addFactory { AddAnimeExtensionStore(get()) }
         addFactory { GetAnimeExtensionStoreCountAsFlow(get()) }
         addFactory { GetAnimeExtensionStores(get()) }

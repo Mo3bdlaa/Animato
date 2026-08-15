@@ -22,7 +22,13 @@ interface LibraryEntry {
 
     val sourceId: Long
 
-    val categoryId: Long
+    /**
+     * Every category this entry is in.
+     *
+     * A list rather than one id because manga can be in several at once, and the library groups by
+     * category — an entry in three of them is drawn three times, once under each heading.
+     */
+    val categoryIds: List<Long>
 
     val title: String
 
