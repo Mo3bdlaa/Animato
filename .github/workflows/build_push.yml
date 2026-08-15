@@ -58,16 +58,46 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPO
         run: echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
+      # Checks the secrets before signing rather than after, so a missing one or a mistyped alias
+      # fails with a sentence instead of a stack trace. The alias check matters most: a keystore
+      # made without keytool takes its alias from the certificate's friendly name, which is easy to
+      # get wrong and impossible to inspect on a machine with no JDK.
       - name: Check signing secrets
         if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPO
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
         run: |
           set -e
-          if [ -z "$SIGNING_KEY" ]; then
-            echo "::error::SIGNING_KEY secret is not set. See .github/RELEASING.md."
+          missing=""
+          [ -z "$SIGNING_KEY" ] && missing="$missing SIGNING_KEY"
+          [ -z "$ALIAS" ] && missing="$missing ALIAS"
+          [ -z "$KEY_STORE_PASSWORD" ] && missing="$missing KEY_STORE_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing. See .github/RELEASING.md."
             exit 1
           fi
+
+          echo "$SIGNING_KEY" | base64 -d > /tmp/check.ks 2>/dev/null || {
+            echo "::error::SIGNING_KEY is not valid base64. Re-encode the keystore; see .github/RELEASING.md."
+            exit 1
+          }
+
+          aliases=$(keytool -list -keystore /tmp/check.ks -storepass "$KEY_STORE_PASSWORD" 2>/dev/null \
+            | grep -i 'PrivateKeyEntry' | cut -d, -f1) || true
+          rm -f /tmp/check.ks
+
+          if [ -z "$aliases" ]; then
+            echo "::error::Could not read the keystore. KEY_STORE_PASSWORD is probably wrong."
+            exit 1
+          fi
+          if ! printf '%s\n' "$aliases" | grep -qix "$ALIAS"; then
+            echo "::error::ALIAS is '$ALIAS' but the keystore contains: $(printf '%s ' $aliases)"
+            echo "::error::Set the ALIAS secret to one of those and re-run."
+            exit 1
+          fi
+          echo "Signing key present, alias '$ALIAS' found."
 
       - name: Sign APK
         if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPO
