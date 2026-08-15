@@ -250,14 +250,38 @@ Two related changes came with it. `AnimeTracker` now extends `Tracker`, because 
 *are* trackers and typing it that way removed a cast from every call site. And `animeService` is a
 lookup rather than a cast, for the same reason it exists at all.
 
-### Simkl is not among the ported trackers
+### The anime-only trackers: Simkl and Jellyfin
 
-`AniChartApi` asked three trackers for an anime's next air time: AniList, MyAnimeList and Simkl.
-The first two are Mihon's and came across unchanged. Simkl is Aniyomi's own — nine files under
-`data/track/simkl` — and none of the anime-only trackers have been ported yet, so that branch is
-absent rather than stubbed. Airing times still work through the other two.
+Neither has a Mihon counterpart, so neither could be a wrapper. They are `BaseTracker`s in their own
+right, which means answering Mihon's `Tracker` in full — manga half included. `AnimeOnlyTracker`
+answers that half once, by refusing: Simkl tracks shows and films, Jellyfin indexes a media server,
+and a tracker with no manga API cannot have a manga method that means anything. Nothing reaches
+them, because Mihon builds its manga list from its own final `TrackerManager`.
 
-The Simkl calendar path comes back with the tracker, not before it.
+Their ids are **Aniyomi's, unchanged** — 101 and 102, far above Mihon's range, which reaches 11. A
+track row records the id of the tracker that made it, so an imported Aniyomi backup only keeps its
+Simkl and Jellyfin links if the numbers still mean the same thing.
+
+Two things are worth knowing about them:
+
+- **Simkl's OAuth redirect is `aniyomi://simkl-auth`**, and has to be: the client id is Aniyomi's and
+  Simkl refuses a redirect address it was not registered with. So `AnimeTrackLoginActivity` answers
+  an `aniyomi://` link, and on a phone with both apps installed the system asks which should handle
+  it. Registering an Animato client with Simkl would make it `animato://` and is a two-line change.
+- **Jellyfin never asks for credentials.** The server, the account and the API key were configured
+  once in the Jellyfin extension, and `JellyfinInterceptor` reads them back out of that extension's
+  own preferences — deriving the source ids the same way the extension derives them. Signing in
+  only records that tracking is on.
+
+While wiring them up: `MigrateAnimeDialog` looked for enhanced trackers in **Mihon's**
+`TrackerManager`, a list that has never contained one. Every anime migration was silently dropping
+its Jellyfin link. It asks `AnimeTrackerManager` now.
+
+*Still absent: Simkl's calendar in `AniChartApi`.* Aniyomi read an anime's next air time from it by
+downloading three whole calendar files and slicing the raw JSON with `substringAfter` — and then,
+when the entry had a MyAnimeList id, threw that away and asked AniList anyway, which is what the
+other two branches already do. Carrying that as written would be carrying a liability; airing times
+work through AniList and MyAnimeList meanwhile.
 
 ### Our preferences are functions; Mihon's are now properties
 

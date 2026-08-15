@@ -2,9 +2,11 @@ package animato.anime.track
 
 import animato.anime.track.anilist.AnimeAnilist
 import animato.anime.track.bangumi.AnimeBangumi
+import animato.anime.track.jellyfin.AnimeJellyfin
 import animato.anime.track.kitsu.AnimeKitsu
 import animato.anime.track.myanimelist.AnimeMyAnimeList
 import animato.anime.track.shikimori.AnimeShikimori
+import animato.anime.track.simkl.AnimeSimkl
 import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.flow.Flow
@@ -22,8 +24,12 @@ import uy.kohesive.injekt.api.get
  * signed-in state. Signing in on Mihon's tracking screen signs in here too, and signing out signs
  * out of both, because there is only one account and one token underneath.
  *
- * Not every tracker appears. A tracker is here when it has an anime API and somebody has written
+ * Not every Mihon tracker appears. One is here when it has an anime API and somebody has written
  * the queries for it; the rest of Mihon's list is manga-only and is not missing anything.
+ *
+ * The last two are the other way round — Simkl and Jellyfin have no Mihon counterpart at all, so
+ * they are trackers in their own right rather than wrappers. [AnimeOnlyTracker] sets out what that
+ * costs.
  */
 class AnimeTrackerManager(
     trackerManager: TrackerManager = Injekt.get(),
@@ -35,12 +41,17 @@ class AnimeTrackerManager(
     val shikimori = AnimeShikimori(trackerManager.shikimori)
     val bangumi = AnimeBangumi(trackerManager.bangumi)
 
-    val trackers: List<AnimeTracker> = listOf(myAnimeList, aniList, kitsu, shikimori, bangumi)
+    val simkl = AnimeSimkl()
+    val jellyfin = AnimeJellyfin()
+
+    val trackers: List<AnimeTracker> =
+        listOf(myAnimeList, aniList, kitsu, shikimori, bangumi, simkl, jellyfin)
 
     /**
      * The ones the user is signed in to.
      *
-     * Signed-in is asked of the underlying Mihon tracker, which is the only thing that knows.
+     * For a wrapper this is asked of the Mihon tracker underneath, which is the only thing that
+     * knows; Simkl and Jellyfin answer for themselves, since the credentials are their own.
      */
     fun loggedInTrackers(): List<AnimeTracker> = trackers.filter { it.isLoggedIn }
 

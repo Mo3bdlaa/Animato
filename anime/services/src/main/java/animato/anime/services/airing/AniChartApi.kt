@@ -21,8 +21,10 @@ import tachiyomi.domain.track.anime.model.AnimeTrack
  * knows that — the airing schedule comes from a tracker. This asks AniList, going through
  * MyAnimeList's id when that is the tracker the entry is linked to.
  *
- * Aniyomi also read Simkl's calendar here. Simkl is not among the trackers ported yet, so that
- * path is absent rather than broken; it comes back with the tracker.
+ * Aniyomi also read Simkl's calendar here, and that branch stays absent even now that Simkl is a
+ * tracker again. It downloaded three whole calendar files and sliced the raw JSON with
+ * `substringAfter` — and then, whenever the entry had a MyAnimeList id, discarded all of it and
+ * asked AniList, which is what the branch below already does.
  *
  * Takes tracker/track pairs rather than the screen's own track item type, so the network call
  * does not depend on the screen that triggers it.

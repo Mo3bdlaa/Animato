@@ -39,7 +39,8 @@ Content comes from extensions you install and configure yourself. Animato ships 
   in advance which one carries it.
 - **Downloads that stay readable.** The queue groups by title and range rather than listing every
   chapter, so a hundred queued items still fits on a screen.
-- **Tracking inside the title.** AniList, MyAnimeList and Kitsu, where you are already looking.
+- **Tracking inside the title.** AniList, MyAnimeList, Kitsu, Shikimori and Bangumi for both
+  halves; Simkl and Jellyfin for anime. Where you are already looking, not on another screen.
 - **A reader and a player built for the content.** Chrome that disappears when it is not wanted;
   gestures, playback speed, subtitles and external-player handoff on the anime side.
 - **Backups that other apps can read.** One file holds both libraries, written in Aniyomi's format —

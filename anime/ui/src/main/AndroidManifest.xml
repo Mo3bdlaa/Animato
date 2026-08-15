@@ -45,6 +45,36 @@
             </intent-filter>
         </activity>
 
+        <!--
+          Where a tracker's sign-in page sends the browser back to.
+
+          Only for trackers Mihon does not have — its own TrackLoginActivity answers for the rest,
+          under `mihon://`, and the five wrapping trackers sign in through it because they share its
+          credentials.
+
+          The scheme is `aniyomi` and not ours because Simkl only redirects to the address its
+          client id is registered with, and that id is Aniyomi's. SimklApi has the full reasoning,
+          and what it costs: on a phone with Aniyomi also installed, the system asks which app
+          should handle the link.
+        -->
+        <activity
+            android:name="animato.anime.ui.track.AnimeTrackLoginActivity"
+            android:exported="true"
+            android:label="@string/track_activity_name"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.Tachiyomi">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="aniyomi" />
+
+                <data android:host="simkl-auth" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>

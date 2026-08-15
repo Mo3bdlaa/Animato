@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import animato.anime.track.AnimeTrackerManager
 import animato.ui.components.IndicatorSize
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.hasCustomBackground
@@ -37,7 +38,6 @@ import eu.kanade.tachiyomi.data.cache.AnimeBackgroundCache
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.ui.browse.anime.migration.AnimeMigrationFlags
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -221,8 +221,11 @@ internal class MigrateAnimeDialogScreenModel(
         preferenceStore.getInt("migrate_flags", Int.MAX_VALUE)
     }
 
+    // AnimeTrackerManager, not Mihon's: Jellyfin is the only enhanced tracker on this side and
+    // Mihon's list has never heard of it, so asking there would find nothing and silently drop the
+    // Jellyfin link on every migration.
     private val enhancedServices by lazy {
-        Injekt.get<TrackerManager>().trackers.filterIsInstance<EnhancedAnimeTracker>()
+        Injekt.get<AnimeTrackerManager>().trackers.filterIsInstance<EnhancedAnimeTracker>()
     }
 
     suspend fun migrateAnime(

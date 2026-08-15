@@ -23,10 +23,12 @@ cd "$(dirname "$0")/.."
 
 APK="animato-app/build/outputs/apk/release/animato-app-arm64-v8a-release-unsigned.apk"
 
-if [ ! -f "$APK" ]; then
-    echo "Building the release APK…"
-    ./gradlew --quiet :animato-app:assembleRelease
-fi
+# Always, not only when the file is missing. Reusing an APK that happens to be lying around means
+# checking whatever was built last — which is exactly the situation where the answer matters and
+# exactly the situation where it would be wrong. It reported a missing activity that was in fact
+# present, because the APK predated it. Gradle is incremental; an unchanged tree costs seconds.
+echo "Building the release APK…"
+./gradlew --quiet :animato-app:assembleRelease
 
 echo "Listing classes in $(basename "$APK")…"
 present="$(mktemp)"
