@@ -1,6 +1,9 @@
 plugins {
     alias(mihonx.plugins.android.application)
     alias(mihonx.plugins.compose)
+    // The other modules we own are format-checked; this one held only DI wiring and was missed.
+    // It has source worth checking now, and `spotlessCheck` at the root gates every release.
+    alias(mihonx.plugins.spotless)
 }
 
 android {
@@ -68,9 +71,25 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        // MainActivity is an adapted copy of Mihon's, which its own module compiles with these.
+        // Notably Scaffold in :presentation-core is @ExperimentalMaterial3Api.
+        freeCompilerArgs.addAll(
+            "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+        )
+    }
+}
+
 dependencies {
     // Mihon, consumed as a library. Nothing in this module edits it.
     implementation(projects.app)
+
+    // Our theme and generalised components. MainActivity applies AnimatoTheme from here.
+    implementation(projects.animatoUiKit)
 
     implementation(projects.anime.data)
     implementation(projects.anime.domain)
@@ -97,4 +116,19 @@ dependencies {
 
     // Mihon's app declares Compose artifacts without versions; they arrive transitively from it.
     implementation(platform(libs.androidx.compose.bom))
+
+    /*
+     * MainActivity's own needs. Mihon declares all of these too, but `implementation` does not leak
+     * to consumers, so depending on Mihon's app does not bring its Compose or Voyager with it.
+     * Declaring them here is what makes them ours to compile against, and the BOM above keeps the
+     * Compose versions identical to Mihon's rather than merely compatible.
+     */
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.coreSplashScreen)
+    implementation(libs.bundles.voyager)
+    implementation(projects.presentationCore)
+    implementation(projects.i18n)
 }

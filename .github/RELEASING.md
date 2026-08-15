@@ -32,9 +32,8 @@ subject and anyone can read them out of the APK, so put in something you are hap
 
 ### Windows with no JDK — PowerShell only
 
-Windows can produce a PKCS12 keystore without Java. `apksigner` reads PKCS12 directly, and takes
-the certificate's **friendly name** as the key alias — which is why `-FriendlyName` below is not
-cosmetic. Run in a normal (non-admin) PowerShell:
+Windows can produce a PKCS12 keystore without Java, and `apksigner` reads PKCS12 directly. Run in a
+normal (non-admin) PowerShell:
 
 ```powershell
 $cert = New-SelfSignedCertificate `
@@ -53,9 +52,14 @@ Export-PfxCertificate -Cert $cert -FilePath "$HOME\animato.jks" -Password $passw
 Remove-Item -Path "Cert:\CurrentUser\My\$($cert.Thumbprint)"
 ```
 
-The workflow checks the alias before it signs, and if it does not match it fails with a message
-naming the alias your keystore actually contains — so a wrong `-FriendlyName` costs you one edited
-secret, not a lost afternoon.
+**`-FriendlyName` does not become the key alias, despite appearances.** `Export-PfxCertificate`
+ignores it and writes the CNG key container name into the PKCS12 friendly-name attribute, which is
+what `keytool` and `apksigner` read back. So the alias of a keystore made this way is a GUID —
+something like `te-2d68bf83-6d8c-469a-9713-0d94e8385975` — and there is no way to choose it.
+
+That is harmless. The alias is a label for telling several keys apart inside one keystore, and this
+keystore holds one key, so the workflows read the alias out of it rather than being told. Set
+`-FriendlyName` anyway if you like; it shows up in the Windows certificate store and nowhere else.
 
 ### Then, on either path
 
@@ -75,7 +79,7 @@ base64 -w0 animato.jks > animato.jks.base64      # macOS: base64 -i animato.jks 
 for exactly this reason. Losing the key strands every existing install on its last version; leaking
 it lets someone else publish an update your users' phones will accept.
 
-## The four secrets
+## The secrets
 
 On GitHub: **your repository → Settings → Secrets and variables → Actions → New repository secret**.
 Add each one by name — the names are exact and case-sensitive.
@@ -83,9 +87,9 @@ Add each one by name — the names are exact and case-sensitive.
 | Secret | Value |
 | --- | --- |
 | `SIGNING_KEY` | the whole contents of `animato.jks.base64`, as one line |
-| `ALIAS` | `animato` — the `-alias`, or the `-FriendlyName`, you used |
 | `KEY_STORE_PASSWORD` | the keystore password |
 | `KEY_PASSWORD` | the key password. On the PowerShell path a PFX has **one** password for both, so set this to the same value; `keytool` only differs if you deliberately gave the key its own |
+| `ALIAS` | **optional.** Only needed if your keystore holds more than one private key, to say which signs the app. With one key the workflows read the alias from the keystore, and a stale `ALIAS` is a warning rather than a failure |
 
 The one that goes wrong is `SIGNING_KEY`, because it is a few thousand characters and selecting it
 by hand invites a missing character or a stray line break. Put it on the clipboard instead of
@@ -118,11 +122,15 @@ own:
 
 **Actions → Check signing secrets → Run workflow.**
 
-It takes about thirty seconds and builds nothing. It reports, in order: whether all four secrets are
-set, whether `SIGNING_KEY` decodes, whether the store password opens the keystore, whether `ALIAS`
-matches — printing the aliases the keystore actually contains if it does not — and whether
-`KEY_PASSWORD` reads the key. On success it prints the certificate's owner and fingerprint, which is
-worth keeping a note of: it is what identifies your app to Android for the rest of its life.
+It takes about thirty seconds and builds nothing. It reports, in order: whether the required secrets
+are set, whether `SIGNING_KEY` decodes, whether the store password opens the keystore, which alias
+it will sign with, and whether `KEY_PASSWORD` reads that key. On success it prints the certificate's
+owner and fingerprint, which is worth keeping a note of: it is what identifies your app to Android
+for the rest of its life.
+
+There is one more way to get a signed build, and it is the quicker one while the app is still in
+progress: **Actions → Alpha release → Run workflow** builds, signs, and publishes a prerelease with
+the four per-ABI APKs attached. It uses the same secrets, so a successful alpha proves them too.
 
 It never prints a password.
 

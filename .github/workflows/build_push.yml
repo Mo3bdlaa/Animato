@@ -58,11 +58,16 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPO
         run: echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
-      # Checks the secrets before signing rather than after, so a missing one or a mistyped alias
-      # fails with a sentence instead of a stack trace. The alias check matters most: a keystore
-      # made without keytool takes its alias from the certificate's friendly name, which is easy to
-      # get wrong and impossible to inspect on a machine with no JDK.
+      # Checks the secrets before signing rather than after, so a missing one fails with a sentence
+      # instead of a stack trace — and resolves which alias to sign with.
+      #
+      # The alias is a label inside the keystore, not a choice, and on the Windows-without-a-JDK path
+      # it is not predictable: Export-PfxCertificate ignores the certificate's -FriendlyName and
+      # writes the CNG key container name into the PKCS12 friendly-name attribute, so keytool reports
+      # a GUID. One key in the keystore therefore means the alias is read from it; the ALIAS secret
+      # only has to resolve anything when there are several.
       - name: Check signing secrets
+        id: signing
         if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPO
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
@@ -72,7 +77,6 @@ jobs:
           set -e
           missing=""
           [ -z "$SIGNING_KEY" ] && missing="$missing SIGNING_KEY"
-          [ -z "$ALIAS" ] && missing="$missing ALIAS"
           [ -z "$KEY_STORE_PASSWORD" ] && missing="$missing KEY_STORE_PASSWORD"
           if [ -n "$missing" ]; then
             echo "::error::Missing repository secret(s):$missing. See .github/RELEASING.md."
@@ -85,19 +89,37 @@ jobs:
           }
 
           aliases=$(keytool -list -keystore /tmp/check.ks -storepass "$KEY_STORE_PASSWORD" 2>/dev/null \
-            | grep -i 'PrivateKeyEntry' | cut -d, -f1) || true
+            | grep -i 'PrivateKeyEntry' | cut -d, -f1 | sed 's/[[:space:]]*$//') || true
           rm -f /tmp/check.ks
 
           if [ -z "$aliases" ]; then
-            echo "::error::Could not read the keystore. KEY_STORE_PASSWORD is probably wrong."
+            echo "::error::Could not read the keystore, or it holds no private key."
+            echo "::error::KEY_STORE_PASSWORD is probably wrong. See .github/RELEASING.md."
             exit 1
           fi
-          if ! printf '%s\n' "$aliases" | grep -qix "$ALIAS"; then
-            echo "::error::ALIAS is '$ALIAS' but the keystore contains: $(printf '%s ' $aliases)"
-            echo "::error::Set the ALIAS secret to one of those and re-run."
-            exit 1
+
+          count=$(printf '%s\n' "$aliases" | grep -c .)
+          if [ "$count" -eq 1 ]; then
+            resolved=$(printf '%s\n' "$aliases" | head -1)
+            if [ -n "$ALIAS" ] && ! printf '%s' "$resolved" | grep -qix "$ALIAS"; then
+              echo "::warning::The ALIAS secret does not match the keystore, which holds exactly"
+              echo "::warning::one key. Signing with that key. Set ALIAS to '$resolved' or clear it."
+            fi
+          else
+            if [ -z "$ALIAS" ]; then
+              echo "::error::The keystore holds $count keys: $(printf '%s ' $aliases)"
+              echo "::error::Set the ALIAS secret to whichever one should sign the app."
+              exit 1
+            fi
+            if ! printf '%s\n' "$aliases" | grep -qix "$ALIAS"; then
+              echo "::error::ALIAS is not one of the keystore's $count keys: $(printf '%s ' $aliases)"
+              exit 1
+            fi
+            resolved="$ALIAS"
           fi
-          echo "Signing key present, alias '$ALIAS' found."
+
+          echo "resolved-alias=$resolved" >> "$GITHUB_OUTPUT"
+          echo "Signing key present; signing with alias '$resolved'."
 
       - name: Sign APK
         if: startsWith(github.ref, 'refs/tags/') && github.repository == env.RELEASE_REPO
@@ -105,7 +127,7 @@ jobs:
         with:
           releaseDirectory: animato-app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
+          alias: ${{ steps.signing.outputs.resolved-alias }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
         env:

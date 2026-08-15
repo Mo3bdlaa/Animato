@@ -26,7 +26,6 @@ jobs:
 
           missing=""
           [ -z "$SIGNING_KEY" ] && missing="$missing SIGNING_KEY"
-          [ -z "$ALIAS" ] && missing="$missing ALIAS"
           [ -z "$KEY_STORE_PASSWORD" ] && missing="$missing KEY_STORE_PASSWORD"
           [ -z "$KEY_PASSWORD" ] && missing="$missing KEY_PASSWORD"
           if [ -n "$missing" ]; then
@@ -34,7 +33,9 @@ jobs:
             echo "See .github/RELEASING.md for what each one is."
             exit 1
           fi
-          echo "All four secrets are set."
+          # ALIAS is deliberately not required. A keystore holding one key needs no disambiguation,
+          # and on the Windows-without-a-JDK path its alias is an unpredictable GUID anyway.
+          echo "The required secrets are set."
 
           if ! echo "$SIGNING_KEY" | base64 -d > "$RUNNER_TEMP/check.ks" 2>/dev/null; then
             echo "::error::SIGNING_KEY is not valid base64."
@@ -50,24 +51,39 @@ jobs:
             exit 1
           fi
 
-          aliases=$(grep -i 'PrivateKeyEntry' "$RUNNER_TEMP/list.txt" | cut -d, -f1)
+          aliases=$(grep -i 'PrivateKeyEntry' "$RUNNER_TEMP/list.txt" | cut -d, -f1 | sed 's/[[:space:]]*$//')
           if [ -z "$aliases" ]; then
             echo "::error::The keystore opened but holds no private key."
             exit 1
           fi
 
-          if ! printf '%s\n' "$aliases" | grep -qix "$ALIAS"; then
-            echo "::error::ALIAS is '$ALIAS' but this keystore contains: $(printf '%s ' $aliases)"
-            echo "Set the ALIAS secret to one of those."
-            exit 1
+          count=$(printf '%s\n' "$aliases" | grep -c .)
+          if [ "$count" -eq 1 ]; then
+            resolved=$(printf '%s\n' "$aliases" | head -1)
+            if [ -n "$ALIAS" ] && ! printf '%s' "$resolved" | grep -qix "$ALIAS"; then
+              echo "::warning::The ALIAS secret does not match, but this keystore holds exactly one"
+              echo "::warning::key, so the release will sign with it regardless. To silence this,"
+              echo "::warning::set ALIAS to '$resolved' or delete the secret."
+            fi
+          else
+            if [ -z "$ALIAS" ]; then
+              echo "::error::This keystore holds $count keys: $(printf '%s ' $aliases)"
+              echo "Set the ALIAS secret to whichever one should sign the app."
+              exit 1
+            fi
+            if ! printf '%s\n' "$aliases" | grep -qix "$ALIAS"; then
+              echo "::error::ALIAS is not one of this keystore's $count keys: $(printf '%s ' $aliases)"
+              exit 1
+            fi
+            resolved="$ALIAS"
           fi
-          echo "Alias '$ALIAS' found."
+          echo "Will sign with alias '$resolved'."
 
           # The key can carry its own password. This is the check that catches the PowerShell path,
           # where a PFX has one password for both and KEY_PASSWORD must equal KEY_STORE_PASSWORD.
           if ! keytool -exportcert -keystore "$RUNNER_TEMP/check.ks" \
-                -storepass "$KEY_STORE_PASSWORD" -alias "$ALIAS" > /dev/null 2>&1; then
-            echo "::error::Could not read the key '$ALIAS'. KEY_PASSWORD is probably wrong."
+                -storepass "$KEY_STORE_PASSWORD" -alias "$resolved" > /dev/null 2>&1; then
+            echo "::error::Could not read the key '$resolved'. KEY_PASSWORD is probably wrong."
             exit 1
           fi
 
@@ -75,8 +91,8 @@ jobs:
           echo "Certificate:"
           grep -iE 'Owner|Valid from|SHA-256' "$RUNNER_TEMP/list.txt" -A1 | head -20 || true
           keytool -list -v -keystore "$RUNNER_TEMP/check.ks" -storepass "$KEY_STORE_PASSWORD" \
-            -alias "$ALIAS" 2>/dev/null | grep -iE 'Owner:|Valid from:|SHA256:' || true
+            -alias "$resolved" 2>/dev/null | grep -iE 'Owner:|Valid from:|SHA256:' || true
 
           rm -f "$RUNNER_TEMP/check.ks" "$RUNNER_TEMP/list.txt"
           echo
-          echo "All four secrets are correct. A tag will produce a signed release."
+          echo "The signing secrets are correct. A tag will produce a signed release."
