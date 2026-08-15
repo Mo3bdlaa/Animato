@@ -60,7 +60,7 @@ fun DuplicateAnimeDialog(
             )
 
             Text(
-                text = stringResource(MR.strings.confirm_add_duplicate_manga),
+                text = stringResource(MR.strings.possible_duplicates_summary),
                 style = MaterialTheme.typography.bodyMedium,
             )
 
@@ -78,7 +78,7 @@ fun DuplicateAnimeDialog(
             HorizontalDivider()
 
             TextPreferenceWidget(
-                title = stringResource(MR.strings.action_migrate_duplicate),
+                title = stringResource(MR.strings.action_migrate),
                 icon = Icons.Outlined.SwapVert,
                 onPreferenceClick = {
                     onDismissRequest()

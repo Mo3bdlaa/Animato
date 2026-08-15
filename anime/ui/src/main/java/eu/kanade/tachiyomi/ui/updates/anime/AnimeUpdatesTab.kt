@@ -183,6 +183,5 @@ fun Screen.animeUpdatesTab(
                 ),
             )
         },
-        navigateUp = navigateUp,
     )
 }

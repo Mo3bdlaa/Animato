@@ -25,12 +25,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import animato.ui.components.ArrowModifier
 import animato.ui.components.IndicatorModifier
 import animato.ui.components.IndicatorSize
+import animato.ui.components.IndicatorStrokeWidth
 import animato.ui.components.commonClickable
-import eu.kanade.presentation.components.ArrowModifier
 import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.components.IndicatorStrokeWidth
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import tachiyomi.i18n.MR
@@ -100,7 +100,7 @@ private fun NotDownloadedIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_download_item_24dp),
+            painter = painterResource(R.drawable.ic_download_chapter_24dp),
             contentDescription = stringResource(MR.strings.manga_download),
             modifier = Modifier.size(IndicatorSize),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,

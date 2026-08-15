@@ -69,6 +69,5 @@ fun Screen.animeCategoryTab(): TabContent {
                 }
             }
         },
-        navigateUp = navigator::pop,
     )
 }

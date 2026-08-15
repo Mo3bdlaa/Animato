@@ -38,7 +38,6 @@ fun Screen.animeDownloadTab(
                 nestedScrollConnection = nestedScrollConnection,
             )
         },
-        numberTitle = downloadCount,
-        navigateUp = navigator::pop,
+        badgeNumber = downloadCount.takeIf { it > 0 },
     )
 }

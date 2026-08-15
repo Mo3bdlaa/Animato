@@ -7,6 +7,9 @@ import androidx.lifecycle.viewModelScope
 import animato.anime.ui.stats.AnimeStatsData
 import animato.anime.ui.stats.AnimeStatsScreenState
 import aniyomi.domain.library.service.AnimeLibraryPreferences
+import aniyomi.domain.library.service.AnimeLibraryPreferences.Companion.ANIME_HAS_UNSEEN
+import aniyomi.domain.library.service.AnimeLibraryPreferences.Companion.ANIME_NON_COMPLETED
+import aniyomi.domain.library.service.AnimeLibraryPreferences.Companion.ANIME_NON_SEEN
 import eu.kanade.core.util.fastCountNot
 import eu.kanade.core.util.fastFilterNot
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -21,9 +24,6 @@ import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_HAS_UNVIEWED
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_COMPLETED
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_VIEWED
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.domain.track.anime.model.AnimeTrack
 import tachiyomi.source.local.entries.anime.isLocal
@@ -112,9 +112,9 @@ class AnimeStatsScreenModel(
             .fastFilterNot { it.anime.id in excludedMangaIds }
             .fastDistinctBy { it.anime.id }
             .fastCountNot {
-                (ENTRY_NON_COMPLETED in updateRestrictions && it.anime.status.toInt() == SAnime.COMPLETED) ||
-                    (ENTRY_HAS_UNVIEWED in updateRestrictions && it.unseenCount != 0L) ||
-                    (ENTRY_NON_VIEWED in updateRestrictions && it.totalCount > 0 && !it.hasStarted)
+                (ANIME_NON_COMPLETED in updateRestrictions && it.anime.status.toInt() == SAnime.COMPLETED) ||
+                    (ANIME_HAS_UNSEEN in updateRestrictions && it.unseenCount != 0L) ||
+                    (ANIME_NON_SEEN in updateRestrictions && it.totalCount > 0 && !it.hasStarted)
             }
     }
 

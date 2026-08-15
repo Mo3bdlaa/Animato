@@ -37,6 +37,5 @@ fun Screen.animeStatsTab(): TabContent {
                 )
             }
         },
-        navigateUp = navigator::pop,
     )
 }

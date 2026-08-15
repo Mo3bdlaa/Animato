@@ -5,6 +5,7 @@ import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import aniyomi.domain.source.service.AnimeSourcePreferences
+import aniyomi.domain.track.service.AnimeTrackPreferences
 import uy.kohesive.injekt.api.InjektModule
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingletonFactory
@@ -23,6 +24,7 @@ class AnimePreferenceModule(@Suppress("unused") val app: Application) : InjektMo
         addSingletonFactory { AnimeLibraryPreferences(get()) }
         addSingletonFactory { AnimeDownloadPreferences(get()) }
         addSingletonFactory { AnimeSourcePreferences(get()) }
+        addSingletonFactory { AnimeTrackPreferences(get()) }
         addSingletonFactory { TorrentPreferences(get()) }
     }
 }

@@ -3,11 +3,11 @@ package eu.kanade.tachiyomi.ui.browse.anime.extension.details
 import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.viewModelScope
+import aniyomi.domain.source.service.AnimeSourcePreferences
 import eu.kanade.domain.extension.anime.interactor.AnimeExtensionSourceItem
 import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionSources
 import eu.kanade.domain.source.anime.interactor.ToggleAnimeIncognito
 import eu.kanade.domain.source.anime.interactor.ToggleAnimeSource
-import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
@@ -40,7 +40,7 @@ class AnimeExtensionDetailsScreenModel(
     private val getExtensionSources: GetAnimeExtensionSources = Injekt.get(),
     private val toggleSource: ToggleAnimeSource = Injekt.get(),
     private val toggleIncognito: ToggleAnimeIncognito = Injekt.get(),
-    private val preferences: SourcePreferences = Injekt.get(),
+    private val preferences: AnimeSourcePreferences = Injekt.get(),
 ) : StateViewModel<AnimeExtensionDetailsScreenModel.State>(State()) {
 
     private val _events: Channel<AnimeExtensionDetailsEvent> = Channel()

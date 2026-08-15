@@ -17,6 +17,7 @@ import animato.anime.util.removeBackgrounds
 import animato.anime.util.removeCovers
 import animato.domain.category.AnimeCategory
 import aniyomi.domain.library.service.AnimeLibraryPreferences
+import aniyomi.domain.source.service.AnimeSourcePreferences
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.toDomainAnime
@@ -62,6 +63,7 @@ class BrowseAnimeSourceScreenModel(
     listingQuery: String?,
     sourceManager: AnimeSourceManager = Injekt.get(),
     sourcePreferences: SourcePreferences = Injekt.get(),
+    private val animeSourcePreferences: AnimeSourcePreferences = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val coverCache: AnimeCoverCache = Injekt.get(),
@@ -100,14 +102,14 @@ class BrowseAnimeSourceScreenModel(
         }
 
         if (!getIncognitoState.await(source.id)) {
-            sourcePreferences.lastUsedAnimeSource.set(source.id)
+            animeSourcePreferences.lastUsedAnimeSource.set(source.id)
         }
     }
 
     /**
      * Flow of Pager flow tied to [State.listing]
      */
-    private val hideInLibraryItems = sourcePreferences.hideInAnimeLibraryItems.get()
+    private val hideInLibraryItems = animeSourcePreferences.hideInAnimeLibraryItems.get()
     val animePagerFlowFlow = state.map { it.listing }
         .distinctUntilChanged()
         .map { listing ->

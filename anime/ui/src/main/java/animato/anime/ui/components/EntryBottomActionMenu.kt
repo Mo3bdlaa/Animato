@@ -55,8 +55,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import animato.ui.components.EntryDownloadDropdownMenu
 import animato.ui.entries.DownloadAction
-import eu.kanade.presentation.components.EntryDownloadDropdownMenu
-import eu.kanade.presentation.entries.DownloadAction
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import kotlinx.coroutines.Job

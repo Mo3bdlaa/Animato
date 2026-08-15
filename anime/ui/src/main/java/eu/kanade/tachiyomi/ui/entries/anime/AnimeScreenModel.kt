@@ -17,6 +17,7 @@ import aniyomi.domain.anime.SeasonAnime
 import aniyomi.domain.anime.SeasonDisplayMode
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
+import aniyomi.domain.track.service.AnimeTrackPreferences
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
@@ -118,6 +119,7 @@ class AnimeScreenModel(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val trackPreferences: TrackPreferences = Injekt.get(),
+    private val animeTrackPreferences: AnimeTrackPreferences = Injekt.get(),
     internal val playerPreferences: PlayerPreferences = Injekt.get(),
     internal val gesturePreferences: GesturePreferences = Injekt.get(),
     private val torrentPreferences: TorrentPreferences = Injekt.get(),
@@ -165,9 +167,9 @@ class AnimeScreenModel(
 
     val episodeSwipeStartAction = animeLibraryPreferences.swipeEpisodeEndAction().get()
     val episodeSwipeEndAction = animeLibraryPreferences.swipeEpisodeStartAction().get()
-    var autoTrackState = trackPreferences.autoUpdateTrackOnMarkRead().get()
+    var autoTrackState = trackPreferences.autoUpdateTrackOnMarkRead.get()
 
-    val showNextEpisodeAirTime = trackPreferences.showNextEpisodeAiringTime().get()
+    val showNextEpisodeAirTime = animeTrackPreferences.showNextEpisodeAiringTime().get()
     val alwaysUseExternalPlayer = playerPreferences.alwaysUseExternalPlayer().get()
     val useExternalDownloader = downloadPreferences.useExternalDownloader().get()
 
@@ -180,7 +182,7 @@ class AnimeScreenModel(
     internal var isFromChangeCategory: Boolean = false
 
     internal val autoOpenTrack: Boolean
-        get() = successState?.hasLoggedInTrackers == true && trackPreferences.trackOnAddingToLibrary().get()
+        get() = successState?.hasLoggedInTrackers == true && animeTrackPreferences.trackOnAddingToLibrary().get()
 
     /**
      * Helper function to update the UI state only if it's currently in success state

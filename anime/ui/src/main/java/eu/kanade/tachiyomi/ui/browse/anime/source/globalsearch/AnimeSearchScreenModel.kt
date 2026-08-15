@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.produceState
 import androidx.lifecycle.viewModelScope
 import animato.anime.ui.ioCoroutineScope
+import aniyomi.domain.source.service.AnimeSourcePreferences
 import eu.kanade.domain.entries.anime.model.toDomainAnime
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -36,6 +37,7 @@ import java.util.concurrent.Executors
 abstract class AnimeSearchScreenModel(
     initialState: State = State(),
     sourcePreferences: SourcePreferences = Injekt.get(),
+    private val animeSourcePreferences: AnimeSourcePreferences = Injekt.get(),
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val extensionManager: AnimeExtensionManager = Injekt.get(),
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
@@ -47,8 +49,8 @@ abstract class AnimeSearchScreenModel(
     private var searchJob: Job? = null
 
     private val enabledLanguages = sourcePreferences.enabledLanguages.get()
-    private val disabledSources = sourcePreferences.disabledAnimeSources.get()
-    protected val pinnedSources = sourcePreferences.pinnedAnimeSources.get()
+    private val disabledSources = animeSourcePreferences.disabledAnimeSources.get()
+    protected val pinnedSources = animeSourcePreferences.pinnedAnimeSources.get()
 
     private var lastQuery: String? = null
     private var lastSourceFilter: AnimeSourceFilter? = null

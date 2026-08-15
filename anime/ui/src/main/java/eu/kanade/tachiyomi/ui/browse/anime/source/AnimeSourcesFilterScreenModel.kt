@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.browse.anime.source
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.viewModelScope
+import aniyomi.domain.source.service.AnimeSourcePreferences
 import eu.kanade.domain.source.anime.interactor.GetLanguagesWithAnimeSources
 import eu.kanade.domain.source.anime.interactor.ToggleAnimeSource
 import eu.kanade.domain.source.interactor.ToggleLanguage
@@ -19,6 +20,7 @@ import java.util.SortedMap
 
 class AnimeSourcesFilterScreenModel(
     private val preferences: SourcePreferences = Injekt.get(),
+    private val animeSourcePreferences: AnimeSourcePreferences = Injekt.get(),
     private val getLanguagesWithSources: GetLanguagesWithAnimeSources = Injekt.get(),
     private val toggleSource: ToggleAnimeSource = Injekt.get(),
     private val toggleLanguage: ToggleLanguage = Injekt.get(),
@@ -29,7 +31,7 @@ class AnimeSourcesFilterScreenModel(
             combine(
                 getLanguagesWithSources.subscribe(),
                 preferences.enabledLanguages.changes(),
-                preferences.disabledAnimeSources.changes(),
+                animeSourcePreferences.disabledAnimeSources.changes(),
             ) { a, b, c -> Triple(a, b, c) }
                 .catch { throwable ->
                     mutableState.update {

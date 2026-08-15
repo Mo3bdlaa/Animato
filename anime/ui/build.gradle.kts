@@ -75,6 +75,7 @@ dependencies {
     implementation(animato.kotlinx.immutables)
     implementation(libs.composeGrid)
     implementation(libs.reorderable)
+    implementation(libs.swipe)
 
     // The anime download queue is Aniyomi's RecyclerView screen, not Compose. 6c replaces it with
     // the Downloads destination from the brand sheet; until then it needs its adapter.

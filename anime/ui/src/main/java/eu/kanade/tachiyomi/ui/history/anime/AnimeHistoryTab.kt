@@ -186,6 +186,5 @@ fun Screen.animeHistoryTab(
                 onClick = { screenModel.setDialog(AnimeHistoryScreenModel.Dialog.DeleteAll) },
             ),
         ),
-        navigateUp = navigateUp,
     )
 }

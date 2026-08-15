@@ -16,6 +16,7 @@ import androidx.paging.filter
 import androidx.paging.map
 import animato.anime.ui.ioCoroutineScope
 import aniyomi.domain.library.service.AnimeLibraryPreferences
+import aniyomi.domain.source.service.AnimeSourcePreferences
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.entries.anime.model.toDomainAnime
 import eu.kanade.domain.entries.anime.model.toSAnime
@@ -41,6 +42,7 @@ class MigrateSeasonSelectScreenModel(
     private val anime: Anime,
     sourceManager: AnimeSourceManager = Injekt.get(),
     sourcePreferences: SourcePreferences = Injekt.get(),
+    private val animeSourcePreferences: AnimeSourcePreferences = Injekt.get(),
     private val libraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val getAnime: GetAnime = Injekt.get(),
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
@@ -60,7 +62,7 @@ class MigrateSeasonSelectScreenModel(
         return if (columns == 0) GridCells.Adaptive(128.dp) else GridCells.Fixed(columns)
     }
 
-    private val hideInLibraryItems = sourcePreferences.hideInAnimeLibraryItems.get()
+    private val hideInLibraryItems = animeSourcePreferences.hideInAnimeLibraryItems.get()
     val seasonPagerFlowFlow = flow { emit(anime) }
         .map { anime ->
             Pager(

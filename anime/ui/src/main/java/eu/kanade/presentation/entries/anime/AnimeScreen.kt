@@ -56,6 +56,7 @@ import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
 import animato.anime.ui.components.EntryBottomActionMenu
+import animato.anime.ui.util.relativeDateTimeText
 import animato.domain.items.episode.formatEpisodeNumber
 import animato.ui.components.ExtendedFloatingActionButton
 import animato.ui.entries.DownloadAction
@@ -70,7 +71,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.entries.anime.model.episodesFiltered
 import eu.kanade.domain.entries.anime.model.seasonsFiltered
-import eu.kanade.presentation.components.relativeDateTimeText
 import eu.kanade.presentation.entries.anime.components.AnimeActionRow
 import eu.kanade.presentation.entries.anime.components.AnimeEpisodeListItem
 import eu.kanade.presentation.entries.anime.components.AnimeInfoBox
