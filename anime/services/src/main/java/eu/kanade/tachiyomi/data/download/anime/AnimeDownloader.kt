@@ -87,8 +87,17 @@ class AnimeDownloader(
     private val torrentServerApi: TorrentServerApi = Injekt.get(),
     private val torrentServerUtils: TorrentServerUtils = Injekt.get(),
     private val torrentPreferences: TorrentPreferences = Injekt.get(),
-    private val videoResolver: EpisodeVideoResolver = Injekt.get(),
 ) {
+    /**
+     * Resolves an episode to the video to download.
+     *
+     * Injected lazily rather than taken as a constructor parameter because the implementation
+     * lives in the player, above this module. Resolving it eagerly would mean the download manager
+     * could not be constructed at all until the player module exists, which would take the whole
+     * anime side down with it; this way only an actual download needs it.
+     */
+    private val videoResolver: EpisodeVideoResolver by injectLazy()
+
     /**
      * Store for persisting downloads across restarts.
      */

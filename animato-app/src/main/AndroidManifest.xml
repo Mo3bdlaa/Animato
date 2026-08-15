@@ -1,2 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<!--
+  The application module contributes no components of its own beyond the Injekt bootstrap.
+
+  Mihon's App, MainActivity and launcher intent-filter reach the APK through manifest merging, and
+  the anime components are declared by :anime:services. See ARCHITECTURE.md.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+
+        <!--
+          A hook, not a provider: it is created during application bind, which is what lets it
+          schedule the anime Injekt registration for the moment after Mihon's App.onCreate has
+          replaced the global scope. AnimeInjektInitializer explains the ordering.
+        -->
+        <provider
+            android:name="animato.di.AnimeInjektInitializer"
+            android:authorities="${applicationId}.animeinjekt"
+            android:enabled="true"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

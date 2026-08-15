@@ -31,4 +31,23 @@ dependencies {
     implementation(projects.anime.services)
     implementation(projects.anime.sourceApi)
     implementation(projects.anime.sourceLocal)
+
+    // The Injekt modules construct the anime database and repositories, so they need what those
+    // constructors take: Mihon's shared core, its column adapters, and the SQLDelight driver.
+    implementation(projects.domain)
+    implementation(projects.data)
+    implementation(projects.core.common)
+
+    implementation(libs.injekt)
+    implementation(libs.bundles.sqldelight)
+    // Mihon's bundle carries only the androidx driver, which needs an async schema.
+    // The version is read from Mihon's catalogue so this cannot drift away from it.
+    implementation(
+        libs.sqldelight.coroutines.map { "app.cash.sqldelight:android-driver:${it.version}" },
+    )
+    implementation(libs.bundles.serialization)
+    implementation(libs.bundles.kotlinx.coroutines)
+
+    // Mihon's app declares Compose artifacts without versions; they arrive transitively from it.
+    implementation(platform(libs.androidx.compose.bom))
 }

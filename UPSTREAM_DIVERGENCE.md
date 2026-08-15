@@ -116,6 +116,24 @@ everywhere, one dependency fewer, and no behaviour change.
 *To check: whether strong skipping is on in Mihon's Compose configuration. If it is, drop the
 dependency and use `List`.*
 
+### SQLDelight: Mihon generates async, we still generate sync
+
+Mihon's `:data` sets `generateAsync = true` and drives it with `AndroidxSqliteDriver` over bundled
+SQLite. That driver accepts **only** an async schema, so `:anime:data` — which still generates a
+synchronous one, as Aniyomi's did — cannot use it. The anime database is on SQLDelight's own
+`AndroidSqliteDriver` for now, pinned to the version Mihon's catalogue names so the two cannot
+drift apart.
+
+This is worth following: bundled SQLite means one behaviour across every Android version, and it
+drops Aniyomi's requery dependency, which Mihon has already removed.
+
+The work looks contained. Every query in `:anime:data` runs through `AndroidAnimeDatabaseHandler`,
+which is the only place `executeAsList`/`executeAsOne` appear; the repositories call
+`handler.awaitList { … }` and would not change shape. It was not done here because it is a change
+to the data layer, not to dependency injection, and it deserves its own verification.
+
+*To do: turn on `generateAsync` in `:anime:data`, convert the handler, move to the androidx driver.*
+
 ### `GetLibraryManga` — moved
 
 Needed by the unified library, which reads both halves at once. Mihon moved it out of

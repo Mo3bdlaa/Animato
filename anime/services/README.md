@@ -54,13 +54,14 @@ preferences, which a domain module has no business seeing.
   argument: they were copied without the animated vectors they reference, and nothing in this layer
   draws a tab bar. They return with the UI.
 
-## What still has to happen before any of this runs
+## Runtime state
 
-**Nothing registers these classes with Injekt yet.** `AnimeLibraryUpdateJob`, the receiver and the
-managers all call `Injekt.get()` for anime types — `AnimeLibraryPreferences`, `AnimeSourcePreferences`,
-`EpisodeVideoResolver`, the interactors above — and no module binds them. The code compiles and the
-components are in the manifest, but the anime DI module is still to be written, and it belongs in
-`:animato-app` next to the rest of the assembly.
+The Injekt modules now exist, in `:animato-app` under `animato.di`: `AnimePreferenceModule`,
+`AnimeAppModule` and `AnimeDomainModule`, bootstrapped by `AnimeInjektInitializer`. Everything this
+module resolves is bound, with one deliberate exception.
 
-`EpisodeVideoResolver` in particular has no implementation until `:anime:player` lands, so anime
-downloads cannot work before phase 5 regardless of DI.
+**`EpisodeVideoResolver` has no implementation until `:anime:player` lands.** `AnimeDownloader`
+injects it lazily rather than taking it as a constructor parameter, so the download manager still
+constructs and the rest of the anime side works; only starting an actual download needs it, and
+that fails with an error naming the missing type. Anime downloads therefore do not work before
+phase 5, by design rather than by accident.

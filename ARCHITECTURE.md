@@ -59,6 +59,23 @@ bar is Home / Library / Discover / Updates / Downloads against Mihon's Library /
 / Browse / More, so **Home and Downloads are new destinations we own** and settings leave the tab
 bar for the overflow menu.
 
+## Bootstrapping without a hook
+
+Mihon's `App` is `final` and its `onCreate` offers no extension point, so the anime Injekt modules
+cannot be imported the way Aniyomi did it — by adding a line to that method.
+
+Worse, `App.onCreate` opens with `patchInjekt()`, which does not merge into the existing Injekt
+scope but **replaces the global one**. Anything registered before that call is discarded silently.
+
+`AnimeInjektInitializer` is a content provider used purely as a hook: Android creates providers
+during application bind, immediately before `Application.onCreate`, and a runnable posted to the
+main looper from there cannot run until the whole bind — `onCreate` included — has returned. So the
+registration lands just after `patchInjekt()`, and ahead of whatever component started the process.
+
+`AnimeInjekt` records *which scope instance* it registered into and re-registers if the global one
+has since been replaced. That is the safety net: if the ordering above ever stops holding, the
+result is a redundant re-registration rather than a missing binding.
+
 ## The metric
 
 > **Number of distinct Mihon symbols our code references.**
@@ -142,7 +159,7 @@ to resolve.
 | 3 | `:animato:ui-kit` — generalised components re-homed | started |
 | 3a | components needing player preferences move with the player instead | phase 4 |
 | 4 | `:anime:services` — extensions, downloads, library update, torrent | done |
-| 4a | the Injekt module binding the anime types — belongs in `:animato:app` | |
+| 4a | the Injekt modules binding the anime types | done |
 | 5 | `:anime:player` | |
 | 6 | `:anime:ui` and a home screen combining both tab sets | |
 | 7 | Importer for Aniyomi backups | |
