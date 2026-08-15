@@ -7,7 +7,7 @@ import mihon.core.viewmodel.StateViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.entries.anime.model.toDomainAnime
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.presentation.util.ioCoroutineScope
+import animato.anime.ui.ioCoroutineScope
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import kotlinx.collections.immutable.PersistentMap

@@ -60,7 +60,7 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.entries.anime.model.AnimeUpdate
-import tachiyomi.domain.entries.applyFilter
+import tachiyomi.domain.manga.model.applyFilter
 import tachiyomi.domain.history.anime.interactor.GetNextEpisodes
 import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.items.episode.model.Episode

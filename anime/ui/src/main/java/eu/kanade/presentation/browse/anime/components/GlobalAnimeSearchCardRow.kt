@@ -14,9 +14,9 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.browse.InLibraryBadge
+import animato.ui.browse.InLibraryBadge
 import animato.ui.library.CommonEntryItemDefaults
-import eu.kanade.presentation.library.components.EntryComfortableGridItem
+import animato.ui.library.EntryComfortableGridItem
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.entries.anime.model.AnimeCover
 import tachiyomi.domain.entries.anime.model.asAnimeCover

@@ -23,7 +23,7 @@ import eu.kanade.presentation.history.anime.AnimeHistoryScreen
 import eu.kanade.tachiyomi.ui.browse.anime.migration.anime.season.MigrateSeasonSelectScreen
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialog
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialogScreenModel
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
+import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryTab
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -128,7 +128,7 @@ fun Screen.animeHistoryTab(
                     ChangeCategoryDialog(
                         initialSelection = dialog.initialSelection,
                         onDismissRequest = onDismissRequest,
-                        onEditCategories = { navigator.push(CategoriesTab) },
+                        onEditCategories = { navigator.push(AnimeCategoryTab) },
                         onConfirm = { include, _ ->
                             screenModel.moveAnimeToCategoriesAndAddToLibrary(dialog.anime, include)
                         },

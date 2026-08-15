@@ -35,12 +35,12 @@ import eu.kanade.presentation.entries.anime.EpisodeOptionsDialogScreen
 import eu.kanade.presentation.entries.anime.EpisodeSettingsDialog
 import eu.kanade.presentation.entries.anime.SeasonSettingsDialog
 import eu.kanade.presentation.entries.anime.components.AnimeImagesDialog
-import eu.kanade.presentation.entries.components.DeleteItemsDialog
-import eu.kanade.presentation.entries.components.SetIntervalDialog
+import animato.anime.ui.components.DeleteItemsDialog
+import eu.kanade.presentation.manga.components.SetIntervalDialog
 import eu.kanade.presentation.more.settings.screen.player.PlayerSettingsGesturesScreen.SkipIntroLengthDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
-import eu.kanade.presentation.util.formatEpisodeNumber
+import animato.domain.items.episode.formatEpisodeNumber
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.FetchType
@@ -54,7 +54,7 @@ import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialogSc
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeSearchScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
+import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryTab
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackInfoDialogHomeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
@@ -235,7 +235,7 @@ class AnimeScreen(
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,
                     onDismissRequest = onDismissRequest,
-                    onEditCategories = { navigator.push(CategoriesTab) },
+                    onEditCategories = { navigator.push(AnimeCategoryTab) },
                     onConfirm = { include, _ ->
                         screenModel.moveAnimeToCategoriesAndAddToLibrary(dialog.anime, include)
                     },

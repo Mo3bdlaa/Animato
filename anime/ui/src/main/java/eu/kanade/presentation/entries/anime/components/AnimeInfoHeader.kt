@@ -78,7 +78,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.entries.components.DotSeparatorText
+import eu.kanade.presentation.manga.components.DotSeparatorText
 import animato.ui.entries.ItemCover
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.animesource.model.SAnime

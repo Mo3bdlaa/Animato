@@ -6,11 +6,11 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastAny
-import eu.kanade.presentation.library.components.DownloadsBadge
-import eu.kanade.presentation.library.components.EntryComfortableGridItem
-import eu.kanade.presentation.library.components.LanguageBadge
+import animato.ui.library.DownloadsBadge
+import animato.ui.library.EntryComfortableGridItem
+import animato.ui.library.LanguageBadge
 import eu.kanade.presentation.library.components.LazyLibraryGrid
-import eu.kanade.presentation.library.components.UnviewedBadge
+import animato.ui.library.UnviewedBadge
 import eu.kanade.presentation.library.components.globalSearchItem
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryItem
 import tachiyomi.domain.entries.anime.model.AnimeCover

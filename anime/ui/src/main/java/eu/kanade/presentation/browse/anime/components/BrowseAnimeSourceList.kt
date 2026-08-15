@@ -11,10 +11,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
-import eu.kanade.presentation.browse.BrowseSourceLoadingItem
-import eu.kanade.presentation.browse.InLibraryBadge
+import animato.ui.browse.BrowseSourceLoadingItem
+import animato.ui.browse.InLibraryBadge
 import animato.ui.library.CommonEntryItemDefaults
-import eu.kanade.presentation.library.components.EntryListItem
+import animato.ui.library.EntryListItem
 import kotlinx.coroutines.flow.StateFlow
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.entries.anime.model.AnimeCover

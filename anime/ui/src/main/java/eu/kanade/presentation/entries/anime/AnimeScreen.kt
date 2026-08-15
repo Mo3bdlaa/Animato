@@ -72,11 +72,11 @@ import eu.kanade.presentation.entries.anime.components.AnimeSeasonListItem
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
 import eu.kanade.presentation.entries.anime.components.ExpandableAnimeDescription
 import eu.kanade.presentation.entries.anime.components.NextEpisodeAiringListItem
-import eu.kanade.presentation.entries.components.EntryBottomActionMenu
+import animato.anime.ui.components.EntryBottomActionMenu
 import animato.ui.entries.EntryToolbar
 import animato.ui.entries.ItemHeader
 import animato.ui.entries.MissingItemCountListItem
-import eu.kanade.presentation.util.formatEpisodeNumber
+import animato.domain.items.episode.formatEpisodeNumber
 import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime

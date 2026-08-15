@@ -20,7 +20,7 @@ import eu.kanade.domain.entries.anime.model.toDomainAnime
 import eu.kanade.domain.source.anime.interactor.GetAnimeIncognitoState
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.anime.interactor.AddAnimeTracks
-import eu.kanade.presentation.util.ioCoroutineScope
+import animato.anime.ui.ioCoroutineScope
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.data.cache.AnimeBackgroundCache
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache

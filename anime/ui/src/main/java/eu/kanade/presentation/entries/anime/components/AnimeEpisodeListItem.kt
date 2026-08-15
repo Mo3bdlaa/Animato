@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.sp
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import eu.kanade.presentation.entries.components.DotSeparatorText
+import eu.kanade.presentation.manga.components.DotSeparatorText
 import animato.ui.entries.ItemCover
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import me.saket.swipe.SwipeableActionsBox

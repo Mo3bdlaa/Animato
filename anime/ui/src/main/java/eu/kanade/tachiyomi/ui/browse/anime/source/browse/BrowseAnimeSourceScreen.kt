@@ -53,7 +53,7 @@ import eu.kanade.tachiyomi.ui.browse.anime.migration.anime.season.MigrateSeasonS
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialog
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialogScreenModel
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreenModel.Listing
-import eu.kanade.tachiyomi.ui.category.CategoriesTab
+import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryTab
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.channels.Channel
@@ -300,7 +300,7 @@ data class BrowseAnimeSourceScreen(
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,
                     onDismissRequest = onDismissRequest,
-                    onEditCategories = { navigator.push(CategoriesTab) },
+                    onEditCategories = { navigator.push(AnimeCategoryTab) },
                     onConfirm = { include, _ ->
                         screenModel.changeAnimeFavorite(dialog.anime)
                         screenModel.moveAnimeToCategories(dialog.anime, include)

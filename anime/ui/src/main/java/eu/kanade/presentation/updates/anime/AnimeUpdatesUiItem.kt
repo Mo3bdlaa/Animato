@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadIndicator
-import eu.kanade.presentation.entries.components.DotSeparatorText
+import eu.kanade.presentation.manga.components.DotSeparatorText
 import animato.ui.entries.ItemCover
 import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.presentation.util.relativeTimeSpanString

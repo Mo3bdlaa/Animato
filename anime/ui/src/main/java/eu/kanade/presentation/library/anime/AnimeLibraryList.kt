@@ -8,11 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
-import eu.kanade.presentation.library.components.DownloadsBadge
-import eu.kanade.presentation.library.components.EntryListItem
+import animato.ui.library.DownloadsBadge
+import animato.ui.library.EntryListItem
 import eu.kanade.presentation.library.components.GlobalSearchItem
-import eu.kanade.presentation.library.components.LanguageBadge
-import eu.kanade.presentation.library.components.UnviewedBadge
+import animato.ui.library.LanguageBadge
+import animato.ui.library.UnviewedBadge
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryItem
 import tachiyomi.domain.entries.anime.model.AnimeCover
 import tachiyomi.domain.library.anime.LibraryAnime
