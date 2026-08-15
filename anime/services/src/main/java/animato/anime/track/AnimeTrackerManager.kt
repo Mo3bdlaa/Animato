@@ -1,6 +1,10 @@
 package animato.anime.track
 
 import animato.anime.track.anilist.AnimeAnilist
+import animato.anime.track.bangumi.AnimeBangumi
+import animato.anime.track.kitsu.AnimeKitsu
+import animato.anime.track.myanimelist.AnimeMyAnimeList
+import animato.anime.track.shikimori.AnimeShikimori
 import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.flow.Flow
@@ -25,9 +29,13 @@ class AnimeTrackerManager(
     trackerManager: TrackerManager = Injekt.get(),
 ) {
 
+    val myAnimeList = AnimeMyAnimeList(trackerManager.myAnimeList)
     val aniList = AnimeAnilist(trackerManager.aniList)
+    val kitsu = AnimeKitsu(trackerManager.kitsu)
+    val shikimori = AnimeShikimori(trackerManager.shikimori)
+    val bangumi = AnimeBangumi(trackerManager.bangumi)
 
-    val trackers: List<AnimeTracker> = listOf(aniList)
+    val trackers: List<AnimeTracker> = listOf(myAnimeList, aniList, kitsu, shikimori, bangumi)
 
     /**
      * The ones the user is signed in to.
