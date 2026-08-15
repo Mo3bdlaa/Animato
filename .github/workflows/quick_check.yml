@@ -48,5 +48,11 @@ jobs:
       - name: Check :app ships the API we compile against
         run: ./.github/check-library-abi.sh
 
+      # Compiling every module is also not enough to know they can be packaged together. Two
+      # modules can each hold a copy of the same class and both compile; dex merging is where that
+      # is rejected, and dex merging is not part of this lane. The script has the details.
+      - name: Check no class is declared twice
+        run: ./.github/check-duplicate-classes.sh
+
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest
