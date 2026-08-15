@@ -34,22 +34,46 @@ ivory (light).
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| Accent Red | `#E5392F` | Primary actions, progress, active states |
+| Animato Blue | `#4169A1` | Primary actions, progress, active states |
 | Ink Black | `#08080C` | Dark background, light-mode typography |
 | Surface | `#151516` | Cards and elevated surfaces |
 | Paper | `#F2EEE5` | Light background — warm manga paper, never pure white |
 | Muted | `#9A9690` | Secondary text |
 | White | `#FFFFFF` | Light surfaces |
 
-**Red is an accent, not the interface.** The UI stays largely monochrome so that red keeps meaning:
-it marks the primary action, the active tab, and progress. A screen with red in four places has
-diluted all four.
+**The accent is not the interface.** The UI stays largely monochrome so that the accent keeps
+meaning: it marks the primary action, the active tab, and progress. A screen with blue in four
+places has diluted all four.
+
+### Why blue, and what it cost
+
+The accent was `#E5392F` red until the brand moved to blue. Red reads as energetic and aggressive,
+which suits action manga and does not suit an app someone reads in for two hours; blue is calmer to
+sit with, and it keeps a thread back to Tachiyomi and Mihon without looking like a clone of either.
+
+It also measures better where it matters most. White on the accent — every filled button, every
+primary action — goes from **4.24:1 to 5.59:1**, clearing the 4.5:1 that button labels need, which
+the red did not.
+
+The trade runs the other way: the accent drawn *as text* on the ink background is **3.58:1**, where
+the red was 4.72:1. That clears AA for large text and UI components, which is what the accent is
+used for — tab labels, icons, progress bars — and no single colour clears 4.5:1 in both directions
+at once. Given the choice, be good at the button.
+
+One knock-on: the error colour was orange while the accent was red, to keep "do this" and "something
+is wrong" from looking alike. With a blue accent there is no clash, so errors are a conventional red
+again — which users read without being taught.
+
+**In the logo, blue is a signature, not a wash.** The wordmark is blue; the Japanese type, the panel
+frame and the speed lines stay ink or ivory. Blue on everything would make it loud, which is the
+opposite of the point.
+
+These values live in `animato-ui-kit/.../AnimatoPalette.kt` as the six inputs a whole Material
+scheme is derived from, and in `animato-app/src/main/res/values/animato_brand.xml` for the launcher
+icon and splash window, which the platform draws before any Compose code runs. Changing the brand
+means editing those six values.
 
 Light mode uses warm paper rather than white — the manga-paper reference is the point.
-
-These live in `animato-app/src/main/res/values/animato_brand.xml` for the platform-drawn surfaces
-(launcher icon background, splash window). The Compose theme must read the same values; the two
-have to stay in step.
 
 ---
 

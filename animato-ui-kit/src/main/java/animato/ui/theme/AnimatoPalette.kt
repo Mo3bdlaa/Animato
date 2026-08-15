@@ -42,24 +42,37 @@ data class AnimatoPalette(
     /**
      * Warnings and destructive actions.
      *
-     * Material wants a red here, and this brand's accent is red. Two similar reds meaning "do this"
-     * and "something is wrong" dilutes both, which is exactly what BRANDING.md warns against — so
-     * the default is pushed towards orange. A palette whose accent is not red can set this back to
-     * a conventional red.
+     * Kept separate from [accent] on purpose: if a palette's accent is itself red, a red error means
+     * "do this" and "something is wrong" look alike, which dilutes both. That was the case while the
+     * accent was red and is why the error colour was orange then. With a blue accent there is no
+     * clash, so this is a conventional red again — which is what users read as an error without
+     * being taught.
      */
     val error: Color,
 )
 
 object AnimatoPalettes {
-    /** Animato's own. Red on ink black, warm paper in the light. */
+    /**
+     * Animato's own. Blue on ink black, warm paper in the light.
+     *
+     * The accent was red until the brand moved to blue: calmer to read for long sessions, and it
+     * keeps a thread back to Tachiyomi and Mihon without looking like a clone of either. It also
+     * measures better where it matters most — white on the accent, which is every filled button —
+     * going from 4.24:1 to 5.59:1, clearing AA for button labels where the red did not.
+     *
+     * The trade is the other direction: accent drawn *as text* on the ink background is 3.58:1
+     * against the red's 4.72:1. That passes AA for large text and UI components, which is what the
+     * accent is used for — tab labels, icons, progress — and no single colour clears 4.5:1 in both
+     * directions at once, so this is the side worth being good at.
+     */
     val Default = AnimatoPalette(
         name = "Animato",
-        accent = Color(0xFFE5392F),
+        accent = Color(0xFF4169A1),
         onAccent = Color(0xFFFFFFFF),
         ink = Color(0xFF08080C),
         paper = Color(0xFFF2EEE5),
         muted = Color(0xFF9A9690),
-        error = Color(0xFFD2601A),
+        error = Color(0xFFBA1A1A),
     )
 
     /** Every palette the app knows about. A theme picker would iterate this. */
@@ -105,15 +118,18 @@ fun AnimatoPalette.colorScheme(isDark: Boolean, isAmoled: Boolean = false): Colo
     // the foreground until it reads. Secondary text is most of the text on a library screen.
     val secondaryText = if (isDark) muted else lerp(muted, onBackground, 0.55f)
 
-    // Same reasoning for the error colour, which is drawn as text and icons on the background.
-    val errorOnBackground = if (isDark) error else lerp(error, onBackground, 0.25f)
+    // The error colour is drawn as text and icons on the background too, and needs the same
+    // treatment — but in whichever direction that mode requires. Blending towards `onBackground`
+    // does both: it darkens a red on paper and lightens the same red on ink, from one rule. A
+    // conventional error red is dark, and left alone it reads at 3.1:1 against the ink background.
+    val errorOnBackground = lerp(error, onBackground, 0.35f)
 
     val accentContainer = lerp(background, accent, if (isDark) 0.28f else 0.18f)
     val onAccentContainer = if (isDark) lerp(accent, Color.White, 0.7f) else lerp(accent, ink, 0.6f)
 
     val errorContainer = lerp(background, errorOnBackground, if (isDark) 0.30f else 0.20f)
     val onErrorContainer =
-        if (isDark) lerp(error, Color.White, 0.7f) else lerp(errorOnBackground, onBackground, 0.65f)
+        if (isDark) lerp(errorOnBackground, Color.White, 0.6f) else lerp(errorOnBackground, onBackground, 0.65f)
 
     // Borders are thin and low-contrast per BRANDING.md section 5: elevation comes from surface,
     // not from shadow, so the outline must not do the shadow's job.
@@ -155,7 +171,7 @@ fun AnimatoPalette.colorScheme(isDark: Boolean, isAmoled: Boolean = false): Colo
         outlineVariant = outlineVariant,
 
         error = errorOnBackground,
-        onError = if (isDark) lerp(error, ink, 0.75f) else Color.White,
+        onError = if (isDark) lerp(errorOnBackground, ink, 0.8f) else Color.White,
         errorContainer = errorContainer,
         onErrorContainer = onErrorContainer,
 
