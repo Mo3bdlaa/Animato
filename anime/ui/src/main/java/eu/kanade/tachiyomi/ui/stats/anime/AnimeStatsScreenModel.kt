@@ -107,7 +107,7 @@ class AnimeStatsScreenModel(
             emptyList()
         }
 
-        val updateRestrictions = preferences.autoUpdateItemRestrictions().get()
+        val updateRestrictions = preferences.autoUpdateMangaRestrictions.get()
         return includedAnime
             .fastFilterNot { it.anime.id in excludedMangaIds }
             .fastDistinctBy { it.anime.id }

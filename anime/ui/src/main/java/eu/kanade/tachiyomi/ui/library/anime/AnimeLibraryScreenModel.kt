@@ -347,7 +347,7 @@ class AnimeLibraryScreenModel(
             libraryPreferences.unreadBadge.changes(),
             libraryPreferences.localBadge.changes(),
             libraryPreferences.languageBadge.changes(),
-            libraryPreferences.autoUpdateItemRestrictions().changes(),
+            libraryPreferences.autoUpdateMangaRestrictions.changes(),
 
             preferences.downloadedOnly.changes(),
             animeLibraryPreferences.filterDownloadedAnime().changes(),

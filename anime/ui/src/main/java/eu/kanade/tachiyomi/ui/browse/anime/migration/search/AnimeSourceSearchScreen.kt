@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.ExtendedFloatingActionButton
+import animato.ui.components.ExtendedFloatingActionButton
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen

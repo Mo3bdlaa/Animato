@@ -29,7 +29,7 @@ import java.io.File
  * Class that handles the loading of the extensions installed in the system.
  */
 @SuppressLint("PackageManagerGetSignatures")
-internal object AnimeExtensionLoader {
+object AnimeExtensionLoader {
 
     private val preferences: SourcePreferences by injectLazy()
     private val trustExtension: TrustAnimeExtension by injectLazy()
