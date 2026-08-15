@@ -62,4 +62,10 @@ dependencies {
     implementation(animato.ffmpeg.kit)
     implementation(animato.arthenica.smartexceptions)
     implementation(animato.torrserver)
+
+    // The backup format is the one thing here that has to be exactly right and can be checked
+    // without a device: a field number read wrong loses somebody's library.
+    testImplementation(libs.bundles.test)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

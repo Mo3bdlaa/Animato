@@ -332,6 +332,42 @@ Needed by the unified library, which reads both halves at once. Mihon moved it o
 The unified library interactor is parked until the screen that uses it is built, so this is
 unresolved by design rather than by neglect.
 
+### The backup format: Aniyomi and Mihon disagree about field 106
+
+Not a Mihon change and not something either side can fix now — the files are already written. It is
+the reason `animato.anime.backup` reads Aniyomi backups itself instead of handing them to Mihon.
+
+A protobuf field is identified by a number, and three apps assigned 106 to three different things:
+
+| Layout | 106 holds |
+| --- | --- |
+| Mihon | extension stores — index URL, name, signing key, contacts |
+| Aniyomi, current | manga extension repositories — five fields, the shape Mihon's stores grew out of |
+| Aniyomi, every release | extension apks — a package name and the apk itself |
+
+The first two are harmless: they line up field for field, so one reads as the other with nothing
+lost, and our reader takes both. The third is not. An apk's bytes decode as a store's name, and the
+five fields after it are simply absent — and Mihon's model has no defaults for them, so decoding
+throws and the *whole file* is rejected. A user whose Aniyomi backup includes extensions cannot
+restore even the manga half through Mihon's screen.
+
+Aniyomi saw the collision coming and moved anime out to 500 and up, but only for backups written
+after that point. Both layouts are in the wild, and the released one is the common one.
+
+So: one reader that knows both layouts, and Mihon's own restorers underneath doing the writing. The
+`AniyomiBackupFormatTest` case named *does not read extension apks as a repository* is that
+collision, held down.
+
+### Extension apks in a backup are not restored
+
+Aniyomi backs up the apk of every installed extension and reinstalls them on restore. Everything
+else in the file is data; this is executable code, restored without the user seeing what it is or
+where it came from, and an apk that was safe when the backup was made is not necessarily safe now.
+
+The field is read past and named in the models so nobody has to rediscover what 504 and 106 are.
+Extension stores *are* restored, which is the part that makes reinstalling easy and leaves the
+decision with the user.
+
 ---
 
 ## Not upstream changes — our own boundary violations
@@ -384,6 +420,8 @@ is different: Aniyomi had added these *inside* Mihon's files.
 | `AnimeSource.icon` | `eu.kanade.domain.source.anime.model` in `:anime:ui` |
 | `HosterState` inside `QualitySheet.kt` | `animato.anime.player.HosterState` — a model, not a screen |
 | `CustomButtonFetchState` inside a settings screen model | `animato.anime.player.CustomButtonFetchState` |
+| `BackupCategory.toCategory` | `animato.anime.backup.models.toAnimeCategory` — the backup model is shared, the category it becomes is not |
+| the anime half of `BackupRestorer`, `BackupDecoder` and `BackupFileValidator` | `animato.anime.backup` — Mihon's manga restorers are called, not copied; only the decoding and the order of work are ours |
 
 ---
 
@@ -397,3 +435,4 @@ difference of opinion with upstream.
 | `AnimeLibraryUpdateNotifier` | the Download action passed `Notifications.ID_NEW_CHAPTERS`, the *manga* group, so tapping it dismissed the manga group and left the anime notification showing | uses `AnimeNotifications.ID_NEW_EPISODES`, agreeing with the two actions beside it |
 | `ExtensionUpdateNotifier` | anime and manga extension updates shared `ID_UPDATES_TO_EXTS`, so an anime notification replaced a pending manga one and the user lost that list | anime updates post under `-403`, beside Mihon's `-401`/`-402` rather than on top |
 | `NotificationReceiver` | two `openEpisodePendingActivity` overloads differing only in `Episode` vs `Int`, which is how a call site came to pass a notification id where an episode was meant | distinct names: `openEpisodePendingActivity` and `openAnimeEntryPendingActivity` |
+| `BackupRestorer.restoreAnime` | every anime in the backup was restored as a top-level entry *and* again as a season of its parent, so a season was written twice — and the top-level pass wrote the backup's own parent id straight into the database, pointing the season at whichever row happened to hold that number | seasons are partitioned out and restored only through their parent, which sets the parent id from the row the parent actually got; a season whose parent is not in the backup is restored as an entry in its own right |

@@ -617,4 +617,14 @@
     <string name="pref_download_fillermarked_items">Allow downloading of fillermarked episodes</string>
     <string name="show_episode_previews">Episode thumbnails</string>
     <string name="show_episode_summaries">Episode summaries</string>
+
+    <!-- Importing an Aniyomi backup -->
+    <string name="aniyomi_import">Import from Aniyomi</string>
+    <string name="aniyomi_import_summary">Bring a library across from an Aniyomi backup</string>
+    <string name="aniyomi_import_info">Animato does not upgrade over an existing Aniyomi install. Pick the file Aniyomi wrote — its name ends in .tachibk — and everything in it comes across: anime and manga, categories, history, tracking and settings. Importing again later is safe; nothing is deleted and progress is kept at whichever side got further.</string>
+    <string name="aniyomi_import_select_file">Select an Aniyomi backup</string>
+    <string name="aniyomi_import_action">Import</string>
+    <string name="aniyomi_import_contents">This backup holds %1$d anime and %2$d manga.</string>
+    <string name="aniyomi_import_in_progress">An import is already running</string>
+    <string name="aniyomi_import_error_log_header">Entries that could not be imported. Everything not listed here came across.</string>
 </resources>

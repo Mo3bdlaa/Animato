@@ -158,7 +158,8 @@ object AnimatoSettingsMainScreen : Screen() {
             titleRes = MR.strings.label_data_storage,
             subtitleRes = MR.strings.pref_backup_summary,
             icon = Icons.Outlined.Storage,
-            screen = SettingsDataScreen,
+            // Mihon's screen with one group appended — see AnimatoSettingsDataScreen.
+            screen = AnimatoSettingsDataScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_security,
