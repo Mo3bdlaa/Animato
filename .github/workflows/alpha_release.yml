@@ -1,0 +1,150 @@
+name: Alpha release
+
+permissions:
+  contents: write
+
+# Publishes a signed alpha to Releases, on demand.
+#
+# This exists because the two ways of getting a build onto a phone were both wrong for a work in
+# progress. A workflow artifact is a zip that expires in a week and cannot be downloaded on a phone
+# without a signed-in browser. A real release tag is a deliberate, public act.
+#
+# So: a prerelease, tagged automatically, signed with the real key, with the APKs attached directly.
+# Downloadable on the phone, permanent, and marked prerelease so it never becomes "latest".
+#
+# build_push.yml is still the gate for actual versioned releases — it runs spotless and the unit
+# tests first. This one only builds, because an alpha that takes half an hour to appear does not get
+# used.
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: "What to test in this build (optional)"
+        required: false
+        type: string
+
+env:
+  RELEASE_REPO: Mo3bdlaa/Animato
+
+jobs:
+  build:
+    name: Build and publish alpha
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Refuse to publish from a fork
+        if: github.repository != env.RELEASE_REPO
+        run: |
+          echo "::error::This workflow publishes releases to ${{ env.RELEASE_REPO }} and must not run elsewhere."
+          exit 1
+
+      - name: Clone repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+
+      # Fails before the build rather than after it. The alias check is the one that earns its keep:
+      # a keystore made without keytool takes its alias from the certificate's friendly name, which
+      # is easy to get wrong and cannot be inspected on a machine with no JDK.
+      - name: Check signing secrets
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+        run: |
+          set -e
+          missing=""
+          [ -z "$SIGNING_KEY" ] && missing="$missing SIGNING_KEY"
+          [ -z "$ALIAS" ] && missing="$missing ALIAS"
+          [ -z "$KEY_STORE_PASSWORD" ] && missing="$missing KEY_STORE_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing. See .github/RELEASING.md."
+            exit 1
+          fi
+
+          echo "$SIGNING_KEY" | base64 -d > /tmp/check.ks 2>/dev/null || {
+            echo "::error::SIGNING_KEY is not valid base64. Re-encode it; see .github/RELEASING.md."
+            exit 1
+          }
+          aliases=$(keytool -list -keystore /tmp/check.ks -storepass "$KEY_STORE_PASSWORD" 2>/dev/null \
+            | grep -i 'PrivateKeyEntry' | cut -d, -f1) || true
+          rm -f /tmp/check.ks
+
+          if [ -z "$aliases" ]; then
+            echo "::error::Could not read the keystore. KEY_STORE_PASSWORD is probably wrong."
+            exit 1
+          fi
+          if ! printf '%s\n' "$aliases" | grep -qix "$ALIAS"; then
+            echo "::error::ALIAS is '$ALIAS' but the keystore contains: $(printf '%s ' $aliases)"
+            exit 1
+          fi
+          echo "Signing key present, alias '$ALIAS' found."
+
+      # The run number is monotonic per workflow, so each alpha outranks the last and Android treats
+      # it as an upgrade instead of refusing it as a downgrade. Offset well past the versionCode a
+      # real release would use, so an alpha can never shadow one.
+      - name: Name this build
+        run: |
+          echo "VERSION_TAG=v0.1.0-alpha.${{ github.run_number }}" >> $GITHUB_ENV
+          echo "ANIMATO_VERSION_CODE=$(( 1000 + ${{ github.run_number }} ))" >> $GITHUB_ENV
+
+      - name: Build release APKs
+        run: ./gradlew :animato-app:assembleRelease
+
+      - name: Sign APKs
+        uses: r0adkll/sign-android-release@f30bdd30588842ac76044ecdbd4b6d0e3e813478
+        with:
+          releaseDirectory: animato-app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: '35.0.1'
+
+      # The universal APK is deliberately not published. It is ~400 MB because it carries all four
+      # architectures, and the four splits below already cover every device that exists.
+      - name: Collect the APKs worth publishing
+        run: |
+          set -e
+          mkdir -p upload
+          for abi in arm64-v8a armeabi-v7a x86 x86_64; do
+            src=$(ls animato-app/build/outputs/apk/release/*-"$abi"-release*-signed.apk 2>/dev/null | head -1)
+            if [ -z "$src" ]; then
+              echo "::error::No signed APK for $abi. Signing produced:"
+              ls -la animato-app/build/outputs/apk/release/
+              exit 1
+            fi
+            cp "$src" "upload/animato-${VERSION_TAG}-$abi.apk"
+          done
+          ls -la upload/
+
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        with:
+          tag_name: ${{ env.VERSION_TAG }}
+          name: Animato ${{ env.VERSION_TAG }}
+          files: upload/*.apk
+          prerelease: true
+          body: |
+            Alpha build from `${{ github.sha }}`.
+
+            ${{ inputs.notes }}
+
+            **Which file:** `arm64-v8a` for any phone from roughly 2017 onward. `armeabi-v7a` if
+            that one refuses to install. `x86_64` is for emulators.
+
+            **Coming from a debug build?** Uninstall it first. Android rejects an update signed by a
+            different certificate, and this one is signed with the release key. Uninstalling loses
+            the app's data.
+
+            Alphas never become "latest" — this is marked as a prerelease on purpose.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

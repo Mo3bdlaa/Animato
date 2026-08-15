@@ -8,7 +8,13 @@ android {
 
     defaultConfig {
         applicationId = "io.github.mo3bdlaa.animato"
-        versionCode = 1
+
+        /*
+         * Alpha builds set this from the workflow's run number, so each one outranks the last and
+         * Android accepts it as an upgrade. Local builds get 1, which is fine: installing over an
+         * equal versionCode is allowed, only a lower one is refused.
+         */
+        versionCode = System.getenv("ANIMATO_VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = "0.1.0"
     }
 
