@@ -141,7 +141,8 @@ to resolve.
 | 2d | `:anime:source-local` — local anime files | done |
 | 3 | `:animato:ui-kit` — generalised components re-homed | started |
 | 3a | components needing player preferences move with the player instead | phase 4 |
-| 4 | `:anime:services` — extensions, downloads, library update, torrent | started, see its README |
+| 4 | `:anime:services` — extensions, downloads, library update, torrent | done |
+| 4a | the Injekt module binding the anime types — belongs in `:animato:app` | |
 | 5 | `:anime:player` | |
 | 6 | `:anime:ui` and a home screen combining both tab sets | |
 | 7 | Importer for Aniyomi backups | |

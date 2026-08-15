@@ -3,10 +3,10 @@ package eu.kanade.tachiyomi.data.download.anime
 import android.app.Application
 import android.content.Context
 import androidx.core.net.toUri
+import animato.anime.util.size
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
-import animato.anime.util.size
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

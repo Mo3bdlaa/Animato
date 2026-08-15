@@ -4,13 +4,14 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import eu.kanade.domain.items.episode.interactor.SetSeenStatus
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.items.episode.interactor.GetEpisode
-import tachiyomi.domain.items.episode.interactor.SetSeenStatus
 import uy.kohesive.injekt.injectLazy
 
 /**
@@ -176,6 +177,42 @@ class AnimeNotificationReceiver : BroadcastReceiver() {
                 putExtra(EXTRA_EPISODE_ID, episodeId)
                 putExtra("notificationId", animeId.hashCode())
             }
+
+        /**
+         * Opens an anime's episode list, carrying the notification group so that tapping the
+         * action dismisses the whole group rather than the one notification.
+         *
+         * Aniyomi expressed this as a second `openEpisodePendingActivity` overload, differing from
+         * the one above only in whether its last parameter was an `Episode` or an `Int` group id.
+         * That is how a call site came to pass a notification id where an episode was meant, so
+         * the two have distinct names here.
+         */
+        fun openAnimeEntryPendingActivity(context: Context, animeId: Long, groupId: Int): PendingIntent =
+            AnimeNotifications.openMainActivity(
+                context,
+                AnimeConstants.SHORTCUT_ANIME,
+                requestCode = animeId.hashCode(),
+            ) {
+                putExtra(Constants.MANGA_EXTRA, animeId)
+                putExtra("notificationId", animeId.hashCode())
+                putExtra("groupId", groupId)
+            }
+
+        /**
+         * Opens a saved error log.
+         *
+         * Mihon has the same few lines, but `internal` to its module, so this is ours rather than
+         * a call into theirs. Nothing about it is anime-specific.
+         */
+        fun openErrorLogPendingActivity(context: Context, uri: Uri): PendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "text/plain")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            },
+            PendingIntent.FLAG_IMMUTABLE,
+        )
 
         const val EXTRA_EPISODE_ID = "$ID.$NAME.EXTRA_EPISODE_ID"
     }

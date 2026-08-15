@@ -1,2 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<!--
+  The anime side's components, declared by the module that owns them.
+
+  Aniyomi listed all of these in Mihon's own manifest. A library module can declare components and
+  have them merged into the application, so they belong here instead: nothing is added to Mihon's
+  manifest, and nothing anime-specific leaks into the application module either.
+
+  Permissions and the application element itself stay Mihon's — this only contributes components.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+
+        <!--
+          Handles the anime notification actions. Mihon's receiver keeps handling Mihon's: a
+          receiver dispatches on intent action, so the two coexist without either knowing.
+        -->
+        <receiver
+            android:name="animato.anime.services.AnimeNotificationReceiver"
+            android:exported="false" />
+
+        <activity
+            android:name="eu.kanade.tachiyomi.extension.anime.util.AnimeExtensionInstallActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <service
+            android:name="eu.kanade.tachiyomi.extension.anime.util.AnimeExtensionInstallService"
+            android:exported="false"
+            android:foregroundServiceType="shortService" />
+
+        <!-- Serves torrent streams to the player and to the downloader. -->
+        <service
+            android:name="eu.kanade.tachiyomi.data.torrent.service.TorrentServerService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!--
+          Serves video over local HTTP for sources that need it. Both the player and the downloader
+          start it, which is the reason it sits in this module rather than with the player.
+        -->
+        <service
+            android:name="eu.kanade.tachiyomi.data.player.service.HttpServerService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+    </application>
+
+</manifest>

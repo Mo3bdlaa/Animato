@@ -11,10 +11,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.installer.InstallerAnime
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
+import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
 import kotlinx.coroutines.delay
@@ -59,7 +59,7 @@ internal class AnimeExtensionInstaller(private val context: Context) {
 
     private val downloadsStateFlows = hashMapOf<Long, MutableStateFlow<InstallStep>>()
 
-    private val extensionInstaller = Injekt.get<BasePreferences>().extensionInstaller()
+    private val extensionInstaller = Injekt.get<BasePreferences>().extensionInstaller
 
     /**
      * Adds the given extension to the downloads queue and returns an observable containing its

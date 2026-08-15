@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.extension.anime.api
 
 import android.content.Context
-import eu.kanade.tachiyomi.extension.api.ExtensionUpdateNotifier
+import animato.anime.services.AnimeExtensionUpdateNotifier
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.extension.anime.model.AnimeLoadResult
@@ -69,9 +69,8 @@ internal class AnimeExtensionApi {
         }
 
         if (extensionsWithUpdate.isNotEmpty()) {
-            ExtensionUpdateNotifier(context).promptUpdates(
+            AnimeExtensionUpdateNotifier(context).promptUpdates(
                 names = extensionsWithUpdate.map { it.name },
-                anime = true,
             )
         }
 

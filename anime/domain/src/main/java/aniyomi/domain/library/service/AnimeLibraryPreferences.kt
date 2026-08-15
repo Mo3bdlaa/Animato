@@ -7,6 +7,7 @@ import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getEnum
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
+import tachiyomi.domain.library.service.LibraryPreferences
 
 /**
  * Preferences that only the anime half of the app reads or writes.
@@ -251,6 +252,20 @@ class AnimeLibraryPreferences(
     companion object {
         const val MARK_DUPLICATE_EPISODE_SEEN_NEW = "new_episode"
         const val MARK_DUPLICATE_EPISODE_SEEN_EXISTING = "existing_episode"
+
+        /*
+         * The library-update restriction set is a single preference read by both halves — one key,
+         * one stored set of strings — so these alias Mihon's constants instead of repeating the
+         * literals. Aniyomi renamed Mihon's constants in place, MANGA_* to ENTRY_*, which is why
+         * they went missing the moment we stopped editing that file.
+         *
+         * Aliasing rather than copying makes drift impossible: if upstream changes a value, ours
+         * changes with it and the two halves keep agreeing on what the preference means.
+         */
+        const val ANIME_NON_COMPLETED = LibraryPreferences.MANGA_NON_COMPLETED
+        const val ANIME_HAS_UNSEEN = LibraryPreferences.MANGA_HAS_UNREAD
+        const val ANIME_NON_SEEN = LibraryPreferences.MANGA_NON_READ
+        const val ANIME_OUTSIDE_RELEASE_PERIOD = LibraryPreferences.MANGA_OUTSIDE_RELEASE_PERIOD
 
         const val DEFAULT_ANIME_CATEGORY_PREF_KEY = "default_anime_category"
         private const val LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY = "animelib_update_categories"

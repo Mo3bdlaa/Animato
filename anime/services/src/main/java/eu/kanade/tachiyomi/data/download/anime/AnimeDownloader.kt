@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.core.net.toUri
+import animato.anime.services.download.EpisodeVideoResolver
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.core.common.torrent.TorrentServerApi
 import aniyomi.core.common.torrent.TorrentServerUtils
@@ -25,10 +26,8 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
+import eu.kanade.tachiyomi.data.player.service.HttpServerService
 import eu.kanade.tachiyomi.data.torrent.service.TorrentServerService
-import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
-import eu.kanade.tachiyomi.ui.player.loader.HosterLoader
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.toFFmpegString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -88,6 +87,7 @@ class AnimeDownloader(
     private val torrentServerApi: TorrentServerApi = Injekt.get(),
     private val torrentServerUtils: TorrentServerUtils = Injekt.get(),
     private val torrentPreferences: TorrentPreferences = Injekt.get(),
+    private val videoResolver: EpisodeVideoResolver = Injekt.get(),
 ) {
     /**
      * Store for persisting downloads across restarts.
@@ -361,11 +361,7 @@ class AnimeDownloader(
         try {
             if (download.video == null) {
                 // Pull video from network and add them to download object
-                val hosters = EpisodeLoader.getHosters(download.episode, download.anime, download.source)
-                if (hosters.isEmpty()) {
-                    throw Exception(context.stringResource(AYMR.strings.video_list_empty_error))
-                }
-                val bestVideo = HosterLoader.getBestVideo(download.source, hosters)
+                val bestVideo = videoResolver.resolveBestVideo(download.episode, download.anime, download.source)
                     ?: throw Exception(context.stringResource(AYMR.strings.video_list_empty_error))
                 download.video = bestVideo
             }
@@ -457,7 +453,7 @@ class AnimeDownloader(
                         downloadVideo(download, tmpDir, filename)
                     } else {
                         if (download.video!!.usesHttpServer()) {
-                            val (success, port) = MainActivity.startHttpServerService(context, download.source.id)
+                            val (success, port) = HttpServerService.start(context, download.source.id)
                             if (!success) throw Exception("Failed to start server")
                             download.video = download.video!!.copyHttpServer(port)
                         }

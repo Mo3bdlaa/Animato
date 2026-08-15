@@ -1,62 +1,66 @@
-# `:anime:services` — work in progress
+# `:anime:services`
 
-Not registered in `settings.gradle.kts`, so it is not part of the build yet. The files are here
-because they are ported and the analysis behind them is worth keeping; wiring it in before it
-compiles would only make CI red for everyone.
+The layer between the anime database and the screens: extension management, downloads, the library
+update job, notifications and the torrent and HTTP servers.
 
-## Where it stands
+It compiles, it is registered in `settings.gradle.kts`, and `:animato-app` depends on it, so its
+components ship in the APK.
 
-31 files ported: the anime extension manager, download manager, library update job, source manager
-and torrent service. Compile errors went 282 → 254 → 210 across three rounds, and 65 distinct
-symbols remain unresolved.
+## What it took
 
-## What is already settled
+Compile errors went **282 → 254 → 210 → 184 → 153 → 133 → 111 → 98 → 64 → 38 → 16 → 0**.
 
-- `InstallStep` and `ExtensionUpdateNotifier` still exist upstream, only at new paths
-- Notification ids and channels Aniyomi had added inside Mihon's `Notifications` object now live
-  in `animato.anime.services.AnimeNotifications`, numbers unchanged so installs keep their channels
-- `UpdateAnimeFromRemote` and the torrent core are ported
-- Compose artifacts arrive without versions through `:app`, so the Compose BOM has to be declared
+Most rounds were mechanical. The ones that were not are the interesting record:
 
-## What is left
+### The receiver
 
-Errors went 282 → 254 → 210 → 184 → 153 → 133 over six rounds. Each round is mechanical; the count
-falls because the missing pieces are small and specific. One is not.
-
-The 133 that remain concentrate in a handful of names, which is what makes the rest predictable:
-`await` and its variants on interactors whose owners have not landed, `SetSeenStatus`,
-`UpdateAnime`, `TrustAnimeExtension`, `SEpisode`, and the `ENTRY_*` library-filter constants.
-
-### The receiver — done
-
-`AnimeNotificationReceiver` now exists. It is a `BroadcastReceiver` of our own handling the anime
+`AnimeNotificationReceiver` is a `BroadcastReceiver` of our own handling the anime notification
 actions — pause, resume and clear downloads, cancel the library update, mark seen, download
-episodes — with action strings and extra keys byte-identical to Aniyomi's, so notifications posted
-by an older build still resolve. Mihon's receiver keeps handling Mihon's actions and never learns
-this one exists.
+episodes. Aniyomi added these cases to Mihon's receiver; a receiver is declared in a manifest and
+dispatches on intent action, so ours simply coexists and Mihon's never learns it exists.
 
-Two decisions inside it worth knowing:
+Action strings and extra keys are byte-identical to Aniyomi's, including the extras that carry
+anime ids under Mihon's *manga* key names, so notifications posted by an older build still resolve.
 
-- The extras keep Mihon's manga key names (`EXTRA_MANGA_ID`, `EXTRA_CHAPTER_URL`) because Aniyomi
-  reused them for anime. Renaming would orphan already-posted notifications.
-- Opening an episode routes through the main activity rather than starting the player directly.
-  The player sits above this module, and a service holding a hard reference to it would invert the
-  layering. Navigation resolves it once the player lands.
+Aniyomi had two `openEpisodePendingActivity` overloads differing only in whether the last parameter
+was an `Episode` or an `Int` group id. That is how a call site came to pass a notification id where
+an episode was meant. The two now have distinct names.
 
-It still needs registering in a manifest — `:animato:app`'s, not Mihon's.
+### The player seam
 
-### The rest, all mechanical
+`AnimeDownloader` imported `EpisodeLoader` and `HosterLoader` from `ui.player.loader` — a background
+service depending on the player. That requirement is now stated as
+`animato.anime.services.download.EpisodeVideoResolver`, an interface here that the player will
+implement and bind. The downloader depends on what it needs; nothing below the line knows the
+player exists.
 
-- `StorageUtil` (`size`) and `AnimeBackgroundCache` — single files in `util/`
-- `Constants` — the shortcut action ids
-- `formatEpisodeNumber` — already ported into `:animato:ui-kit`, just needs pointing at
-- `ic_ani*` drawables — copied in, but the code still imports `eu.kanade.tachiyomi.R` rather than
-  the library's own `R`
-- `deleteFromCache`, `toSAnime`, `await` on a few interactors — resolve as their owners land
+`MainActivity.startHttpServerService` was the same inversion in miniature — a service-start helper
+parked on an activity, which the downloader then had to reach up into. `HttpServerService` moved
+into this module and the helper became `HttpServerService.start`.
 
-## The lesson to carry
+### Where the ported interactors went
 
-Every earlier port shrank as it went. This one grew first and only then shrank. Each fix uncovered
-another unported dependency, because the services layer is where anime code stops being
-self-contained and starts calling the app — and where Aniyomi's edits to Mihon's files are
-thickest. That is worth knowing before estimating the layers above it.
+`SetSeenStatus`, `SyncEpisodesWithSource`, `SyncSeasonsWithSource`, `UpdateAnime`,
+`TrustAnimeExtension` and `DeleteEpisodeDownload` are here rather than in `:anime:domain`, because
+Mihon keeps its own equivalents in `:app`: they need the download manager and app-level
+preferences, which a domain module has no business seeing.
+
+## What is deliberately not here
+
+- **`EpisodeFilter`'s `List<EpisodeList.Item>` overload** — it filters what a screen is about to
+  draw and takes a screen model. It moves with the episode screen in phase 6.
+- **Tab-bar and launcher drawables** — `ic_animelibrary_*` and `ic_ani_monochrome_launcher` came
+  across with the port and were removed. The broken selector that failed the resource link is the
+  argument: they were copied without the animated vectors they reference, and nothing in this layer
+  draws a tab bar. They return with the UI.
+
+## What still has to happen before any of this runs
+
+**Nothing registers these classes with Injekt yet.** `AnimeLibraryUpdateJob`, the receiver and the
+managers all call `Injekt.get()` for anime types — `AnimeLibraryPreferences`, `AnimeSourcePreferences`,
+`EpisodeVideoResolver`, the interactors above — and no module binds them. The code compiles and the
+components are in the manifest, but the anime DI module is still to be written, and it belongs in
+`:animato-app` next to the rest of the assembly.
+
+`EpisodeVideoResolver` in particular has no implementation until `:anime:player` lands, so anime
+downloads cannot work before phase 5 regardless of DI.

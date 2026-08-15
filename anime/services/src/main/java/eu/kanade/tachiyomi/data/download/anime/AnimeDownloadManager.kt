@@ -1,11 +1,12 @@
 package eu.kanade.tachiyomi.data.download.anime
 
 import android.content.Context
+import animato.anime.util.size
+import animato.source.local.io.ArchiveAnime
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
-import animato.anime.util.size
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.drop
@@ -27,7 +28,6 @@ import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.source.local.entries.anime.LocalAnimeSource
-import tachiyomi.source.local.io.ArchiveAnime
 import tachiyomi.source.local.io.anime.LocalAnimeSourceFileSystem
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -421,7 +421,7 @@ class AnimeDownloadManager(
             episodes
         }
 
-        return if (!downloadPreferences.removeBookmarkedChapters().get()) {
+        return if (!downloadPreferences.removeBookmarkedChapters.get()) {
             filteredCategoryAnime.filterNot { it.bookmark }
         } else {
             filteredCategoryAnime

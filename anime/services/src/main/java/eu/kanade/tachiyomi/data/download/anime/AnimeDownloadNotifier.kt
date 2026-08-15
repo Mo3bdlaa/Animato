@@ -1,15 +1,15 @@
 package eu.kanade.tachiyomi.data.download.anime
 
-import animato.anime.services.AnimeNotifications
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.BitmapFactory
 import androidx.core.app.NotificationCompat
+import animato.anime.services.AnimeNotificationReceiver
+import animato.anime.services.AnimeNotifications
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
-import animato.anime.services.AnimeNotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.lang.chop
 import eu.kanade.tachiyomi.util.system.notificationBuilder
@@ -94,13 +94,13 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 )
             }
 
-            val downloadingProgressText = if (download.progress == 0) {
-                context.stringResource(MR.strings.update_check_notification_download_in_progress)
-            } else {
+            // Aniyomi showed a wordless "Downloading…" while progress was still zero. Mihon has
+            // since dropped that branch, and the string with it, and always shows the percentage —
+            // which reads the same at 0% and is one fewer string to translate.
+            val downloadingProgressText =
                 context.stringResource(AYMR.strings.episode_downloading_progress, download.progress)
-            }
 
-            if (preferences.hideNotificationContent().get()) {
+            if (preferences.hideNotificationContent.get()) {
                 setContentTitle(downloadingProgressText)
                 setContentText(null)
             } else {

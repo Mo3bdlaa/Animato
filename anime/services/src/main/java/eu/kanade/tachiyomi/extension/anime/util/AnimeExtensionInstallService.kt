@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.extension.anime.util
 
-import animato.anime.services.R as AnimeR
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -19,6 +18,7 @@ import logcat.LogPriority
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
+import animato.anime.services.R as AnimeR
 
 class AnimeExtensionInstallService : Service() {
 

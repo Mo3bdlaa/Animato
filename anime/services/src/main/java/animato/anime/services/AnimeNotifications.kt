@@ -26,6 +26,9 @@ object AnimeNotifications {
     const val CHANNEL_TORRENT_SERVER = "torrent_server_channel"
     const val ID_TORRENT_SERVER = -801
 
+    const val CHANNEL_HTTP_SERVER = "http_server_channel"
+    const val ID_HTTP_SERVER = -901
+
     /** Opens the anime download queue. */
     fun openAnimeDownloadManagerPendingActivity(context: Context): PendingIntent =
         openMainActivity(context, AnimeConstants.SHORTCUT_ANIME_DOWNLOADS)

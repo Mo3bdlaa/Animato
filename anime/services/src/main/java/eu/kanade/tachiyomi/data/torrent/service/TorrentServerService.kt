@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.data.torrent.service
 
-import animato.anime.services.R as AnimeR
-import animato.anime.services.AnimeNotifications
 import android.app.Application
 import android.app.PendingIntent
 import android.app.Service
@@ -10,6 +8,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import animato.anime.services.AnimeNotifications
 import aniyomi.core.common.torrent.ProxyMode
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.core.common.torrent.TorrentServerApi
@@ -32,6 +31,7 @@ import uy.kohesive.injekt.api.get
 import xyz.secozzi.torrserver.TorrServer
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration.Companion.seconds
+import animato.anime.services.R as AnimeR
 
 class TorrentServerService : Service() {
     private val serviceScope = CoroutineScope(EmptyCoroutineContext)
@@ -65,7 +65,7 @@ class TorrentServerService : Service() {
     private fun startServer() {
         serviceScope.launch {
             if (api.echo() == "") {
-                if (networkPreferences.verboseLogging().get()) {
+                if (networkPreferences.verboseLogging.get()) {
                     TorrServer.registerLogCallback()
                 }
 

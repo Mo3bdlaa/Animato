@@ -9,6 +9,19 @@ android {
     namespace = "animato.anime.services"
 }
 
+kotlin {
+    compilerOptions {
+        // The same opt-ins Mihon's app declares. The code moved here came from a module that
+        // had them, so without these the ported files fail on APIs they always used.
+        freeCompilerArgs.addAll(
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-opt-in=kotlinx.coroutines.FlowPreview",
+            "-opt-in=kotlinx.coroutines.InternalCoroutinesApi",
+            "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
+        )
+    }
+}
+
 dependencies {
     // Mihon's app is a library here: its notification, storage and network helpers are consumed
     // as they are.

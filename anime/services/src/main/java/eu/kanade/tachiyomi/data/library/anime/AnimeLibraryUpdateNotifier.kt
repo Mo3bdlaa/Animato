@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.data.library.anime
 
-import animato.anime.services.R as AnimeR
-import animato.anime.services.AnimeNotifications
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
@@ -11,18 +9,18 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import animato.anime.services.AnimeNotificationReceiver
+import animato.anime.services.AnimeNotifications
+import animato.domain.items.episode.formatEpisodeNumber
 import coil3.asDrawable
 import coil3.imageLoader
 import coil3.request.ImageRequest
 import coil3.request.transformations
 import coil3.transform.CircleCropTransformation
-import animato.ui.components.formatEpisodeNumber
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.core.common.Constants
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloader
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
-import animato.anime.services.AnimeNotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -31,6 +29,8 @@ import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.getBitmapOrNull
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
+import tachiyomi.core.common.Constants
+import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.domain.entries.anime.model.Anime
@@ -43,6 +43,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.math.RoundingMode
 import java.text.NumberFormat
+import animato.anime.services.R as AnimeR
 
 class AnimeLibraryUpdateNotifier(
     private val context: Context,
@@ -104,7 +105,7 @@ class AnimeLibraryUpdateNotifier(
                 ),
             )
 
-        if (!securityPreferences.hideNotificationContent().get()) {
+        if (!securityPreferences.hideNotificationContent.get()) {
             val updatingText = anime.joinToString("\n") { it.title.chop(40) }
             progressNotificationBuilder.setStyle(NotificationCompat.BigTextStyle().bigText(updatingText))
         }
@@ -177,7 +178,7 @@ class AnimeLibraryUpdateNotifier(
             Notifications.ID_LIBRARY_ERROR,
             Notifications.CHANNEL_LIBRARY_ERROR,
         ) {
-            setContentTitle(context.stringResource(MR.strings.notification_update_error, failed))
+            setContentTitle(context.pluralStringResource(MR.plurals.notification_update_error, failed, failed))
             setContentText(context.stringResource(MR.strings.action_show_errors))
             setSmallIcon(AnimeR.drawable.ic_ani)
 
@@ -197,18 +198,18 @@ class AnimeLibraryUpdateNotifier(
             AnimeNotifications.CHANNEL_NEW_CHAPTERS_EPISODES,
         ) {
             setContentTitle(context.stringResource(AYMR.strings.notification_new_episodes))
-            if (updates.size == 1 && !securityPreferences.hideNotificationContent().get()) {
+            if (updates.size == 1 && !securityPreferences.hideNotificationContent.get()) {
                 setContentText(updates.first().first.title.chop(NOTIF_TITLE_MAX_LEN))
             } else {
                 setContentText(
-                    context.resources.getQuantityString(
-                        R.plurals.notification_new_episodes_summary,
+                    context.pluralStringResource(
+                        AYMR.plurals.notification_new_episodes_summary,
                         updates.size,
                         updates.size,
                     ),
                 )
 
-                if (!securityPreferences.hideNotificationContent().get()) {
+                if (!securityPreferences.hideNotificationContent.get()) {
                     setStyle(
                         NotificationCompat.BigTextStyle().bigText(
                             updates.joinToString("\n") {
@@ -232,7 +233,7 @@ class AnimeLibraryUpdateNotifier(
         }
 
         // Per-anime notification
-        if (!securityPreferences.hideNotificationContent().get()) {
+        if (!securityPreferences.hideNotificationContent.get()) {
             launchUI {
                 context.notify(
                     updates.map { (anime, episodes) ->
@@ -267,18 +268,18 @@ class AnimeLibraryUpdateNotifier(
 
             // Open first episode on tap
             setContentIntent(
-                AnimeNotificationReceiver.openEpisodePendingActivity(context, anime, episodes.first()),
+                AnimeNotificationReceiver.openEpisodePendingActivity(context, anime.id, episodes.first().id),
             )
             setAutoCancel(true)
 
-            // Mark episodes as read action
+            // Mark episodes as seen action
             addAction(
                 R.drawable.ic_done_24dp,
                 context.stringResource(AYMR.strings.action_mark_as_seen),
                 AnimeNotificationReceiver.markAsViewedPendingBroadcast(
                     context,
-                    anime,
-                    episodes,
+                    anime.id,
+                    episodes.map { it.url }.toTypedArray(),
                     AnimeNotifications.ID_NEW_EPISODES,
                 ),
             )
@@ -286,23 +287,26 @@ class AnimeLibraryUpdateNotifier(
             addAction(
                 R.drawable.ic_book_24dp,
                 context.stringResource(AYMR.strings.action_view_episodes),
-                AnimeNotificationReceiver.openEpisodePendingActivity(
+                AnimeNotificationReceiver.openAnimeEntryPendingActivity(
                     context,
-                    anime,
+                    anime.id,
                     AnimeNotifications.ID_NEW_EPISODES,
                 ),
             )
-            // Download chapters action
-            // Only add the action when chapters is within threshold
+            // Download episodes action, only while the queue stays within the warning threshold
             if (episodes.size <= AnimeDownloader.EPISODES_PER_SOURCE_QUEUE_WARNING_THRESHOLD) {
                 addAction(
                     android.R.drawable.stat_sys_download_done,
                     context.stringResource(MR.strings.action_download),
                     AnimeNotificationReceiver.downloadEpisodesPendingBroadcast(
                         context,
-                        anime,
-                        episodes,
-                        Notifications.ID_NEW_CHAPTERS,
+                        anime.id,
+                        episodes.map { it.url }.toTypedArray(),
+                        // Aniyomi passed Notifications.ID_NEW_CHAPTERS here — the manga group — so
+                        // tapping Download on an anime notification dismissed the manga group and
+                        // left this one showing. The two actions above already used the anime
+                        // group; this one now agrees with them.
+                        AnimeNotifications.ID_NEW_EPISODES,
                     ),
                 )
             }
@@ -337,8 +341,8 @@ class AnimeLibraryUpdateNotifier(
             // No sensible episode numbers to show (i.e. no episodes have parsed episode number)
             0 -> {
                 // "1 new episode" or "5 new episodes"
-                context.resources.getQuantityString(
-                    R.plurals.notification_episodes_generic,
+                context.pluralStringResource(
+                    AYMR.plurals.notification_episodes_generic,
                     episodes.size,
                     episodes.size,
                 )
@@ -370,8 +374,8 @@ class AnimeLibraryUpdateNotifier(
                     val joinedEpisodeNumbers = displayableEpisodeNumbers.take(NOTIF_MAX_EPISODES).joinToString(
                         ", ",
                     )
-                    context.resources.getQuantityString(
-                        R.plurals.notification_episodes_multiple_and_more,
+                    context.pluralStringResource(
+                        AYMR.plurals.notification_episodes_multiple_and_more,
                         remaining,
                         joinedEpisodeNumbers,
                         remaining,

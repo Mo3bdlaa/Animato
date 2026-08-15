@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.data.download.anime
 
-import animato.anime.services.AnimeNotifications
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -12,6 +11,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import animato.anime.services.AnimeNotifications
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.NetworkState
@@ -57,7 +57,7 @@ class AnimeDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
     override suspend fun doWork(): Result {
         var networkCheck = checkNetworkState(
             applicationContext.activeNetworkState(),
-            downloadPreferences.downloadOnlyOverWifi().get(),
+            downloadPreferences.downloadOnlyOverWifi.get(),
         )
         var active = networkCheck && downloadManager.downloaderStart()
 
@@ -70,7 +70,7 @@ class AnimeDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
         coroutineScope {
             combineTransform(
                 applicationContext.networkStateFlow(),
-                downloadPreferences.downloadOnlyOverWifi().changes(),
+                downloadPreferences.downloadOnlyOverWifi.changes(),
                 transform = { a, b -> emit(checkNetworkState(a, b)) },
             )
                 .onEach { networkCheck = it }
