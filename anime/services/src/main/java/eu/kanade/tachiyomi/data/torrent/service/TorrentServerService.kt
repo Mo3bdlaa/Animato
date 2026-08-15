@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.torrent.service
 
+import animato.anime.services.R as AnimeR
 import animato.anime.services.AnimeNotifications
 import android.app.Application
 import android.app.PendingIntent
@@ -113,7 +114,7 @@ class TorrentServerService : Service() {
             )
 
         val builder = context.notificationBuilder(AnimeNotifications.CHANNEL_TORRENT_SERVER) {
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(AnimeR.drawable.ic_ani)
             setContentText(stringResource(AYMR.strings.torrentserver_is_running))
             setContentTitle(stringResource(MR.strings.app_name))
             setAutoCancel(false)

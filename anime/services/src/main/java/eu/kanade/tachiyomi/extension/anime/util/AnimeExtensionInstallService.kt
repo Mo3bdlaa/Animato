@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.anime.util
 
+import animato.anime.services.R as AnimeR
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -25,7 +26,7 @@ class AnimeExtensionInstallService : Service() {
 
     override fun onCreate() {
         val notification = notificationBuilder(Notifications.CHANNEL_EXTENSIONS_UPDATE) {
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(AnimeR.drawable.ic_ani)
             setAutoCancel(false)
             setOngoing(true)
             setShowWhen(false)

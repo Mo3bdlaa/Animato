@@ -9,7 +9,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
-import eu.kanade.tachiyomi.data.notification.NotificationReceiver
+import animato.anime.services.AnimeNotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.lang.chop
 import eu.kanade.tachiyomi.util.system.notificationBuilder
@@ -85,12 +85,12 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 addAction(
                     R.drawable.ic_pause_24dp,
                     context.stringResource(AYMR.strings.action_stop),
-                    NotificationReceiver.pauseAnimeDownloadsPendingBroadcast(context),
+                    AnimeNotificationReceiver.pauseAnimeDownloadsPendingBroadcast(context),
                 )
                 addAction(
                     R.drawable.ic_book_24dp,
                     context.stringResource(AYMR.strings.action_show_anime),
-                    NotificationReceiver.openAnimeEntryPendingActivity(context, download.anime.id),
+                    AnimeNotificationReceiver.openAnimeEntryPendingActivity(context, download.anime.id),
                 )
             }
 
@@ -141,13 +141,13 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             addAction(
                 R.drawable.ic_play_arrow_24dp,
                 context.stringResource(MR.strings.action_resume),
-                NotificationReceiver.resumeAnimeDownloadsPendingBroadcast(context),
+                AnimeNotificationReceiver.resumeAnimeDownloadsPendingBroadcast(context),
             )
             // Clear action
             addAction(
                 R.drawable.ic_close_24dp,
                 context.stringResource(MR.strings.action_cancel_all),
-                NotificationReceiver.clearAnimeDownloadsPendingBroadcast(context),
+                AnimeNotificationReceiver.clearAnimeDownloadsPendingBroadcast(context),
             )
 
             show(AnimeNotifications.ID_DOWNLOAD_EPISODE_PROGRESS)
@@ -186,7 +186,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 addAction(
                     R.drawable.ic_book_24dp,
                     context.stringResource(AYMR.strings.action_show_anime),
-                    NotificationReceiver.openAnimeEntryPendingActivity(context, animeId),
+                    AnimeNotificationReceiver.openAnimeEntryPendingActivity(context, animeId),
                 )
             }
             setProgress(0, 0, false)
@@ -224,7 +224,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 addAction(
                     R.drawable.ic_book_24dp,
                     context.stringResource(AYMR.strings.action_show_anime),
-                    NotificationReceiver.openAnimeEntryPendingActivity(context, animeId),
+                    AnimeNotificationReceiver.openAnimeEntryPendingActivity(context, animeId),
                 )
             }
             setProgress(0, 0, false)

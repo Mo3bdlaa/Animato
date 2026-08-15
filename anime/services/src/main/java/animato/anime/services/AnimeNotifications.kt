@@ -1,9 +1,9 @@
 package animato.anime.services
 
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import eu.kanade.tachiyomi.Constants
 import eu.kanade.tachiyomi.ui.main.MainActivity
 
 /**
@@ -27,16 +27,33 @@ object AnimeNotifications {
     const val ID_TORRENT_SERVER = -801
 
     /** Opens the anime download queue. */
-    fun openAnimeDownloadManagerPendingActivity(context: Context): PendingIntent {
-        val intent = Intent(context, MainActivity::class.java).apply {
+    fun openAnimeDownloadManagerPendingActivity(context: Context): PendingIntent =
+        openMainActivity(context, AnimeConstants.SHORTCUT_ANIME_DOWNLOADS)
+
+    /** Builds a pending intent that brings the app to the given deep-link action. */
+    fun openMainActivity(
+        context: Context,
+        action: String,
+        requestCode: Int = 0,
+        extras: Intent.() -> Unit = {},
+    ): PendingIntent = PendingIntent.getActivity(
+        context,
+        requestCode,
+        Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            action = Constants.SHORTCUT_ANIME_DOWNLOADS
+            this.action = action
+            extras()
+        },
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
+
+    /** Cancels a posted notification, and its summary when it was the last of its group. */
+    fun dismiss(context: Context, notificationId: Int, groupId: Int? = null) {
+        val manager = context.getSystemService(NotificationManager::class.java) ?: return
+        manager.cancel(notificationId)
+        if (groupId != null && groupId != 0) {
+            val remaining = manager.activeNotifications.filter { it.groupKey.endsWith(groupId.toString()) }
+            if (remaining.size == 1) manager.cancel(groupId)
         }
-        return PendingIntent.getActivity(
-            context,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
     }
 }

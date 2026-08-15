@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.library.anime
 
+import animato.anime.services.R as AnimeR
 import animato.anime.services.AnimeNotifications
 import android.app.Notification
 import android.app.PendingIntent
@@ -15,13 +16,13 @@ import coil3.imageLoader
 import coil3.request.ImageRequest
 import coil3.request.transformations
 import coil3.transform.CircleCropTransformation
-import eu.kanade.presentation.util.formatEpisodeNumber
+import animato.ui.components.formatEpisodeNumber
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.common.Constants
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloader
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
-import eu.kanade.tachiyomi.data.notification.NotificationReceiver
+import animato.anime.services.AnimeNotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -59,7 +60,7 @@ class AnimeLibraryUpdateNotifier(
      * Pending intent of action that cancels the library update
      */
     private val cancelIntent by lazy {
-        NotificationReceiver.cancelAnimelibUpdatePendingBroadcast(context)
+        AnimeNotificationReceiver.cancelAnimelibUpdatePendingBroadcast(context)
     }
 
     /**
@@ -178,9 +179,9 @@ class AnimeLibraryUpdateNotifier(
         ) {
             setContentTitle(context.stringResource(MR.strings.notification_update_error, failed))
             setContentText(context.stringResource(MR.strings.action_show_errors))
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(AnimeR.drawable.ic_ani)
 
-            setContentIntent(NotificationReceiver.openErrorLogPendingActivity(context, uri))
+            setContentIntent(AnimeNotificationReceiver.openErrorLogPendingActivity(context, uri))
         }
     }
 
@@ -218,7 +219,7 @@ class AnimeLibraryUpdateNotifier(
                 }
             }
 
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(AnimeR.drawable.ic_ani)
             setLargeIcon(notificationBitmap)
 
             setGroup(AnimeNotifications.GROUP_NEW_EPISODES)
@@ -254,7 +255,7 @@ class AnimeLibraryUpdateNotifier(
             setContentText(description)
             setStyle(NotificationCompat.BigTextStyle().bigText(description))
 
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(AnimeR.drawable.ic_ani)
 
             if (icon != null) {
                 setLargeIcon(icon)
@@ -266,7 +267,7 @@ class AnimeLibraryUpdateNotifier(
 
             // Open first episode on tap
             setContentIntent(
-                NotificationReceiver.openEpisodePendingActivity(context, anime, episodes.first()),
+                AnimeNotificationReceiver.openEpisodePendingActivity(context, anime, episodes.first()),
             )
             setAutoCancel(true)
 
@@ -274,7 +275,7 @@ class AnimeLibraryUpdateNotifier(
             addAction(
                 R.drawable.ic_done_24dp,
                 context.stringResource(AYMR.strings.action_mark_as_seen),
-                NotificationReceiver.markAsViewedPendingBroadcast(
+                AnimeNotificationReceiver.markAsViewedPendingBroadcast(
                     context,
                     anime,
                     episodes,
@@ -285,7 +286,7 @@ class AnimeLibraryUpdateNotifier(
             addAction(
                 R.drawable.ic_book_24dp,
                 context.stringResource(AYMR.strings.action_view_episodes),
-                NotificationReceiver.openEpisodePendingActivity(
+                AnimeNotificationReceiver.openEpisodePendingActivity(
                     context,
                     anime,
                     AnimeNotifications.ID_NEW_EPISODES,
@@ -297,7 +298,7 @@ class AnimeLibraryUpdateNotifier(
                 addAction(
                     android.R.drawable.stat_sys_download_done,
                     context.stringResource(MR.strings.action_download),
-                    NotificationReceiver.downloadEpisodesPendingBroadcast(
+                    AnimeNotificationReceiver.downloadEpisodesPendingBroadcast(
                         context,
                         anime,
                         episodes,

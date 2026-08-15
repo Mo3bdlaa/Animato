@@ -23,15 +23,23 @@ symbols remain unresolved.
 Errors went 282 → 254 → 210 → 184 → 141 over five rounds. Each round is mechanical; the count
 falls because the missing pieces are small and specific. One is not.
 
-### The one that needs designing, not copying
+### The receiver — done
 
-`NotificationReceiver`. Aniyomi added the anime notification *actions* — mark seen, download next,
-open episode — inside Mihon's own `BroadcastReceiver`, along with `openEpisodePendingActivity` and
-`openAnimeEntryPendingActivity`. There is no version of copying that fixes this: a receiver is
-registered in the manifest and dispatches on intent actions, so ours has to be a receiver of our
-own that handles the anime actions and leaves Mihon's alone.
+`AnimeNotificationReceiver` now exists. It is a `BroadcastReceiver` of our own handling the anime
+actions — pause, resume and clear downloads, cancel the library update, mark seen, download
+episodes — with action strings and extra keys byte-identical to Aniyomi's, so notifications posted
+by an older build still resolve. Mihon's receiver keeps handling Mihon's actions and never learns
+this one exists.
 
-Do this first. It is the only remaining item with a real decision in it.
+Two decisions inside it worth knowing:
+
+- The extras keep Mihon's manga key names (`EXTRA_MANGA_ID`, `EXTRA_CHAPTER_URL`) because Aniyomi
+  reused them for anime. Renaming would orphan already-posted notifications.
+- Opening an episode routes through the main activity rather than starting the player directly.
+  The player sits above this module, and a service holding a hard reference to it would invert the
+  layering. Navigation resolves it once the player lands.
+
+It still needs registering in a manifest — `:animato:app`'s, not Mihon's.
 
 ### The rest, all mechanical
 
