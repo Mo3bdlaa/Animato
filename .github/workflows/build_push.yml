@@ -119,5 +119,8 @@ jobs:
           name: Animato ${{ env.VERSION_TAG }}
           files: animato-app/build/outputs/apk/release/*-signed.apk
           draft: true
+          # A tag with a suffix - v0.1.0-alpha, v0.2.0-rc1 - is a pre-release. GitHub then keeps it
+          # out of "latest", which is what the in-app updater and anyone browsing releases follows.
+          prerelease: ${{ contains(env.VERSION_TAG, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

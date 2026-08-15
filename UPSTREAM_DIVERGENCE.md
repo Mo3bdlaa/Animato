@@ -111,6 +111,21 @@ entry below for what it does use, and why that is not yet Mihon's driver.
 
 ## Open
 
+### The release APK is not minified
+
+Mihon's `:app` sets `isMinifyEnabled` and `proguardFiles` — but it is a **library** now, and a
+library passes keep rules to its consumer through `consumerProguardFiles`, not `proguardFiles`. Our
+application module sets neither, so R8 never runs: there is no `mapping/` output and our class names
+are readable in the shipped dex.
+
+For a first device test that is the safer configuration — a crash means a real bug rather than a
+missing keep rule. It is not what we want to ship. Turning minification on means wiring Mihon's
+rules through as consumer rules and then finding out what Injekt's `TypeReference` needs kept, which
+deserves its own pass rather than being folded into the first alpha.
+
+*To do: enable minification on `:animato-app` and carry Mihon's keep rules across.*
+
+
 ### `CategoryUpdate` — replaced by named methods
 
 Aniyomi's category interactors applied a partial update by building a `CategoryUpdate` with every
