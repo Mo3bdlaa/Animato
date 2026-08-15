@@ -76,6 +76,24 @@ registration lands just after `patchInjekt()`, and ahead of whatever component s
 has since been replaced. That is the safety net: if the ordering above ever stops holding, the
 result is a redundant re-registration rather than a missing binding.
 
+## The donor branch
+
+`claude/aniyomi-revival-upgrade-n0c0zp` is where the anime code is read from. Every module in
+`anime/` was ported out of it, and roughly **24,800 lines are still owed** to phases 6 and 7 — the
+anime UI, the player settings screens, the backup importer and anime tracking.
+
+It is a **read-only source**, not a parallel product:
+
+- **do not develop on it** — new work goes on `claude/mihon-base`
+- **do not merge it** — merging the two is precisely what this architecture exists to avoid; the
+  measurement at the top of this file is what that merge costs
+- **do not delete it** while anything is still owed
+
+Once phases 6 and 7 are done, tag it rather than delete it — `git tag aniyomi-donor <sha>`. It is
+the only record of Aniyomi as we found it, and `UPSTREAM_DIVERGENCE.md` is full of claims about what
+Aniyomi did whose evidence lives there. When our own code later does something puzzling, the answer
+is usually in the original.
+
 ## Why phase 6 has to own the launcher activity
 
 Applying our palette is not a matter of writing a theme. Mihon picks its colour scheme from an
