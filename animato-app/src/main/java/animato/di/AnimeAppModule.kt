@@ -71,9 +71,21 @@ class AnimeAppModule(val app: Application) : InjektModule {
                 callback = object : AndroidSqliteDriver.Callback(AnimeDatabase.Schema) {
                     override fun onOpen(db: SupportSQLiteDatabase) {
                         super.onOpen(db)
-                        db.execSQL("PRAGMA foreign_keys = ON")
-                        db.execSQL("PRAGMA journal_mode = WAL")
-                        db.execSQL("PRAGMA synchronous = NORMAL")
+                        setPragma(db, "foreign_keys = ON")
+                        setPragma(db, "journal_mode = WAL")
+                        setPragma(db, "synchronous = NORMAL")
+                    }
+
+                    /**
+                     * Read through a cursor, not execSQL. `PRAGMA journal_mode = WAL` answers with
+                     * the mode it settled on, and Android refuses any statement that returns rows
+                     * from execSQL — so that one throws, and the anime database never opens.
+                     *
+                     * The cursor has to be stepped: Android runs the statement when the window is
+                     * filled, not when the cursor is handed out.
+                     */
+                    private fun setPragma(db: SupportSQLiteDatabase, pragma: String) {
+                        db.query("PRAGMA $pragma").use { it.moveToFirst() }
                     }
                 },
             )

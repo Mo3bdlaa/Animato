@@ -365,8 +365,22 @@ so `:anime:data`, which still generates a synchronous one as Aniyomi's did, cann
 anime database runs on SQLDelight's own `AndroidSqliteDriver`, pinned to the version Mihon's
 catalogue names so the two cannot drift apart.
 
-Worth following: bundled SQLite means one behaviour across every Android version, and it is what
-let Mihon drop requery.
+Worth following — and now more than worth it. Bundled SQLite means one behaviour across every
+Android version, and it is what let Mihon drop requery. Without it the anime database runs on
+whatever SQLite the device shipped with, and `minSdk` is 26:
+
+| API | Android | SQLite |
+| --- | ------- | ------ |
+| 26–27 | 8.0, 8.1 | 3.18, 3.19 |
+| 28 | 9 | 3.22 |
+| 29–30 | 10, 11 | 3.28 |
+
+`animehistory.sq`, `animesources.sq` and `extension_store.sq` all upsert with
+`ON CONFLICT (…) DO UPDATE`, which SQLite only learned in **3.24**. On Android 8 and 9 those three
+statements are a syntax error at execution — and the first of them runs every time an episode is
+watched. Aniyomi never met this because requery carried its own SQLite; Mihon does not meet it
+because the bundled driver carries its own. We removed the one and have not yet adopted the other,
+so this one is ours, and it is the reason this entry is no longer merely tidy-up.
 
 The work looks contained. Every query in `:anime:data` goes through `AndroidAnimeDatabaseHandler`,
 the only place `executeAsList`/`executeAsOne` appear; repositories call `handler.awaitList { … }`
