@@ -9,8 +9,8 @@ import mihon.core.viewmodel.StateViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.core.util.fastCountNot
 import eu.kanade.core.util.fastFilterNot
-import eu.kanade.presentation.more.stats.StatsScreenState
-import eu.kanade.presentation.more.stats.data.StatsData
+import animato.anime.ui.stats.AnimeStatsScreenState
+import animato.anime.ui.stats.AnimeStatsData
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.AnimeTracker
@@ -38,7 +38,7 @@ class AnimeStatsScreenModel(
     private val preferences: LibraryPreferences = Injekt.get(),
     private val animePreferences: AnimeLibraryPreferences = Injekt.get(),
     private val trackerManager: TrackerManager = Injekt.get(),
-) : StateViewModel<StatsScreenState>(StatsScreenState.Loading) {
+) : StateViewModel<AnimeStatsScreenState>(AnimeStatsScreenState.Loading) {
 
     private val loggedInTrackers by lazy { trackerManager.loggedInTrackers().filter { it is AnimeTracker } }
 
@@ -53,7 +53,7 @@ class AnimeStatsScreenModel(
 
             val meanScore = getTrackMeanScore(scoredAnimeTrackerMap)
 
-            val overviewStatData = StatsData.AnimeOverview(
+            val overviewStatData = AnimeStatsData.Overview(
                 libraryAnimeCount = distinctLibraryAnime.size,
                 completedAnimeCount = distinctLibraryAnime.count {
                     it.anime.status.toInt() == SAnime.COMPLETED && it.unseenCount == 0L
@@ -61,26 +61,26 @@ class AnimeStatsScreenModel(
                 totalSeenDuration = getWatchTime(distinctLibraryAnime),
             )
 
-            val titlesStatData = StatsData.AnimeTitles(
+            val titlesStatData = AnimeStatsData.Titles(
                 globalUpdateItemCount = getGlobalUpdateItemCount(animelibAnime),
                 startedAnimeCount = distinctLibraryAnime.count { it.hasStarted },
                 localAnimeCount = distinctLibraryAnime.count { it.anime.isLocal() },
             )
 
-            val chaptersStatData = StatsData.Episodes(
+            val chaptersStatData = AnimeStatsData.Episodes(
                 totalEpisodeCount = distinctLibraryAnime.sumOf { it.totalCount }.toInt(),
                 readEpisodeCount = distinctLibraryAnime.sumOf { it.seenCount }.toInt(),
                 downloadCount = downloadManager.getDownloadCount(),
             )
 
-            val trackersStatData = StatsData.Trackers(
+            val trackersStatData = AnimeStatsData.Trackers(
                 trackedTitleCount = animeTrackMap.count { it.value.isNotEmpty() },
                 meanScore = meanScore,
                 trackerCount = loggedInTrackers.size,
             )
 
             mutableState.update {
-                StatsScreenState.SuccessAnime(
+                AnimeStatsScreenState.Success(
                     overview = overviewStatData,
                     titles = titlesStatData,
                     episodes = chaptersStatData,

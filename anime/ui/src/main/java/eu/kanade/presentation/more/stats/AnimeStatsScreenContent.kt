@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.stats.components.StatsItem
 import eu.kanade.presentation.more.stats.components.StatsOverviewItem
-import eu.kanade.presentation.more.stats.data.StatsData
+import animato.anime.ui.stats.AnimeStatsData
 import eu.kanade.presentation.util.toDurationString
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
@@ -32,7 +32,7 @@ import kotlin.time.toDuration
 
 @Composable
 fun AnimeStatsScreenContent(
-    state: StatsScreenState.SuccessAnime,
+    state: AnimeStatsScreenState.Success,
     paddingValues: PaddingValues,
 ) {
     val statListState = rememberLazyListState()
@@ -58,7 +58,7 @@ fun AnimeStatsScreenContent(
 
 @Composable
 private fun LazyItemScope.OverviewSection(
-    data: StatsData.AnimeOverview,
+    data: AnimeStatsData.Overview,
 ) {
     val none = stringResource(MR.strings.none)
     val context = LocalContext.current
@@ -92,7 +92,7 @@ private fun LazyItemScope.OverviewSection(
 
 @Composable
 private fun LazyItemScope.TitlesStats(
-    data: StatsData.AnimeTitles,
+    data: AnimeStatsData.Titles,
 ) {
     SectionCard(MR.strings.label_titles_section) {
         Row {
@@ -114,7 +114,7 @@ private fun LazyItemScope.TitlesStats(
 
 @Composable
 private fun LazyItemScope.EpisodeStats(
-    data: StatsData.Episodes,
+    data: AnimeStatsData.Episodes,
 ) {
     SectionCard(AYMR.strings.episodes) {
         Row {
@@ -136,7 +136,7 @@ private fun LazyItemScope.EpisodeStats(
 
 @Composable
 private fun LazyItemScope.TrackerStats(
-    data: StatsData.Trackers,
+    data: AnimeStatsData.Trackers,
 ) {
     val notApplicable = stringResource(MR.strings.not_applicable)
     val meanScoreStr = remember(data.trackedTitleCount, data.meanScore) {

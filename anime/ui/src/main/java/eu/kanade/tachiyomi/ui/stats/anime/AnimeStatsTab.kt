@@ -9,7 +9,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.more.stats.AnimeStatsScreenContent
-import eu.kanade.presentation.more.stats.StatsScreenState
+import animato.anime.ui.stats.AnimeStatsScreenState
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.screens.LoadingScreen
 
@@ -20,7 +20,7 @@ fun Screen.animeStatsTab(): TabContent {
     val screenModel = viewModel { AnimeStatsScreenModel() }
     val state by screenModel.state.collectAsState()
 
-    if (state is StatsScreenState.Loading) {
+    if (state is AnimeStatsScreenState.Loading) {
         LoadingScreen()
     }
 
@@ -28,11 +28,11 @@ fun Screen.animeStatsTab(): TabContent {
         titleRes = AYMR.strings.label_anime,
         content = { contentPadding, _ ->
 
-            if (state is StatsScreenState.Loading) {
+            if (state is AnimeStatsScreenState.Loading) {
                 LoadingScreen()
             } else {
                 AnimeStatsScreenContent(
-                    state = state as StatsScreenState.SuccessAnime,
+                    state = state as AnimeStatsScreenState.Success,
                     paddingValues = contentPadding,
                 )
             }

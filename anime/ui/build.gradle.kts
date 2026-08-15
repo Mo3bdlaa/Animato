@@ -78,4 +78,7 @@ dependencies {
     // The anime download queue is Aniyomi's RecyclerView screen, not Compose. 6c replaces it with
     // the Downloads destination from the brand sheet; until then it needs its adapter.
     implementation(libs.flexibleAdapter)
+    // Its layout is one of Mihon's, so the generated binding comes from :app and no view binding
+    // is needed here — but the views in it are Material Components, a different artifact from Compose.
+    implementation(libs.material)
 }
