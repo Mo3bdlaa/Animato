@@ -1,5 +1,6 @@
 package eu.kanade.presentation.track.anime
 
+import eu.kanade.tachiyomi.data.track.animeService
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable

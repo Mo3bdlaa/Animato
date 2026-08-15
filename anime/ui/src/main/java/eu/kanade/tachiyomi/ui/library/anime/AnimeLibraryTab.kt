@@ -40,7 +40,7 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryTab
+import animato.anime.ui.AnimeCategoriesScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -253,7 +253,7 @@ data object AnimeLibraryTab : Tab {
                     onDismissRequest = onDismissRequest,
                     onEditCategories = {
                         screenModel.clearSelection()
-                        navigator.push(AnimeCategoryTab)
+                        navigator.push(AnimeCategoriesScreen())
                     },
                     onConfirm = { include, exclude ->
                         screenModel.clearSelection()

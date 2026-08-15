@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.stats.anime
 
+import eu.kanade.tachiyomi.data.track.animeService
 import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMapNotNull

@@ -13,7 +13,7 @@ import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.presentation.core.components.material.IconButtonTokens
 import uy.kohesive.injekt.injectLazy
 
-internal fun Modifier.commonClickable(
+fun Modifier.commonClickable(
     enabled: Boolean,
     hapticFeedback: HapticFeedback,
     onLongClick: () -> Unit,
@@ -33,16 +33,16 @@ internal fun Modifier.commonClickable(
     ),
 )
 
-internal val IndicatorSize = 26.dp
-internal val IndicatorPadding = 2.dp
+val IndicatorSize = 26.dp
+val IndicatorPadding = 2.dp
 
 // To match composable parameter name when used later
-internal val IndicatorStrokeWidth = IndicatorPadding
+val IndicatorStrokeWidth = IndicatorPadding
 
-internal val IndicatorModifier = Modifier
+val IndicatorModifier = Modifier
     .size(IndicatorSize)
     .padding(IndicatorPadding)
-internal val ArrowModifier = Modifier
+val ArrowModifier = Modifier
     .size(IndicatorSize - 7.dp)
 
-internal val preferences: DownloadPreferences by injectLazy()
+val preferences: DownloadPreferences by injectLazy()

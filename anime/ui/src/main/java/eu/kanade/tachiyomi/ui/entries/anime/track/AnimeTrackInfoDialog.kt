@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.entries.anime.track
 
+import eu.kanade.tachiyomi.data.track.animeService
 import android.app.Application
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
