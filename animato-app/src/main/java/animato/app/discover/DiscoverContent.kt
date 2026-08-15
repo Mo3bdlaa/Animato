@@ -20,7 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,6 +67,12 @@ internal fun DiscoverContent() {
     val screenModel = viewModel(key = "discover-$type") { DiscoverScreenModel(contentType = type) }
     val state by screenModel.state.collectAsStateWithLifecycle()
 
+    // The toolbar shows its title until the query is non-null, and hands back "" when the search
+    // icon is tapped. Holding that here is what opens the field; ignoring it leaves a search button
+    // that does nothing. Starting at null rather than "" keeps the keyboard from taking the screen
+    // over the moment Discover is opened.
+    var searchQuery by rememberSaveable { mutableStateOf<String?>(null) }
+
     val openItem: (DiscoverItem) -> Unit = { item ->
         scope.launch {
             val id = withIOContext { screenModel.resolveEntryId(item) }
@@ -80,8 +89,8 @@ internal fun DiscoverContent() {
         topBar = { scrollBehavior ->
             SearchToolbar(
                 titleContent = { AppBarTitle(stringResource(AYMR.strings.label_discover)) },
-                searchQuery = null,
-                onChangeSearchQuery = {},
+                searchQuery = searchQuery,
+                onChangeSearchQuery = { searchQuery = it },
                 placeholderText = stringResource(MR.strings.action_global_search),
                 onSearch = { query ->
                     navigator.push(
