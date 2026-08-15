@@ -2,6 +2,8 @@ package animato.di
 
 import android.app.Application
 import androidx.sqlite.db.SupportSQLiteDatabase
+import animato.anime.player.PlayerEpisodeVideoResolver
+import animato.anime.services.download.EpisodeVideoResolver
 import animato.data.AnimeUpdateStrategyColumnAdapter
 import animato.data.FetchTypeColumnAdapter
 import aniyomi.core.common.torrent.TorrentServerApi
@@ -111,6 +113,9 @@ class AnimeAppModule(val app: Application) : InjektModule {
         addSingletonFactory { LocalAnimeCoverManager(app, get()) }
         addSingletonFactory { LocalAnimeFetchTypeManager(app, get()) }
         addSingletonFactory { LocalEpisodeThumbnailManager(app, get()) }
+
+        // The downloader asks for this by interface; the player is what can answer.
+        addSingletonFactory<EpisodeVideoResolver> { PlayerEpisodeVideoResolver() }
 
         addSingletonFactory { TorrentServerApi(get(), get()) }
         addSingletonFactory { TorrentServerUtils(get(), get()) }

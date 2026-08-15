@@ -60,8 +60,7 @@ The Injekt modules now exist, in `:animato-app` under `animato.di`: `AnimePrefer
 `AnimeAppModule` and `AnimeDomainModule`, bootstrapped by `AnimeInjektInitializer`. Everything this
 module resolves is bound, with one deliberate exception.
 
-**`EpisodeVideoResolver` has no implementation until `:anime:player` lands.** `AnimeDownloader`
-injects it lazily rather than taking it as a constructor parameter, so the download manager still
-constructs and the rest of the anime side works; only starting an actual download needs it, and
-that fails with an error naming the missing type. Anime downloads therefore do not work before
-phase 5, by design rather than by accident.
+`EpisodeVideoResolver` is implemented by `:anime:player` and bound in `AnimeAppModule`, so nothing
+this module resolves is unbound. `AnimeDownloader` still injects it lazily rather than taking it as
+a constructor parameter — the implementation lives above this layer, and resolving it eagerly would
+tie constructing the download manager to the player existing.

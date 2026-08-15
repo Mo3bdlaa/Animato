@@ -160,7 +160,9 @@ to resolve.
 | 3a | components needing player preferences move with the player instead | phase 4 |
 | 4 | `:anime:services` — extensions, downloads, library update, torrent | done |
 | 4a | the Injekt modules binding the anime types | done |
-| 5 | `:anime:player` | |
+| 5a | `:anime:player` — loaders and the video resolver | done |
+| 5b | playback core — activity, view model, mpv view, observers | |
+| 5c | player controls and settings screens | |
 | 6 | `:anime:ui` and a home screen combining both tab sets | |
 | 7 | Importer for Aniyomi backups | |
 
