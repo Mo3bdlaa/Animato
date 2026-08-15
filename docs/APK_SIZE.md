@@ -1,13 +1,15 @@
 # APK size
 
-Measured on `animato-app-arm64-v8a-release-unsigned.apk`, commit `543b26cbf`: **127 MB**.
+Measured on `animato-app-arm64-v8a-release-unsigned.apk`: **102 MB** with R8 on, down from 124 MB
+without it. The per-architecture builds are what ship; the universal one is 361 MB because it
+carries four copies of every native library, and nobody should install it.
 
 Numbers below are bytes *in the APK* — compressed for code and resources, uncompressed for native
 libraries, which Android stores flat so they can be mapped without extracting.
 
 | | in APK | Whose |
 | --- | ---: | --- |
-| `classes*.dex` — all Java/Kotlin | 26.2 MB | both |
+| `classes*.dex` — all Java/Kotlin, after R8 | 8.7 MB | both |
 | FFmpeg (`libav*`, `libsw*`, `libffmpegkit`) | 22.1 MB | anime |
 | Image decoders (`libimagedecoder`, `libimagedecoder2`) | 21.5 MB | **Mihon** |
 | torrserver | 19.0 MB | anime |
@@ -27,7 +29,11 @@ exists for the case where the architecture is not known up front. Per-ABI is the
 
 ## What is actually wasted today
 
-### 1. R8 runs in the wrong place — the biggest single win
+### 1. R8 runs in the wrong place — done
+
+**Done.** R8 now runs on `:animato-app`, and the dex went from 95.1 MB to 22.3 MB uncompressed —
+seven dex files down to three, and 22 MB off the APK. What follows is the history, because the way
+this was wrong the first time is the reason the check in CI exists.
 
 **Corrected after v0.1.0-alpha.2.** This section previously said R8 never ran. It did: on the
 **library**, which is worse than not at all.
@@ -70,14 +76,32 @@ buildTypes {
 }
 ```
 
-Mihon's keep rules already arrive as consumer rules. What is still needed is our own, for the anime
-modules: SQLDelight, Injekt's reflective construction, the serialization of backup models, and mpv's
-JNI entry points. **Turning R8 on without them produces an app that builds, installs, and crashes at
-runtime** — which is why this is a task with a test pass attached, not a one-line change. The alpha
-crash is a preview of what getting it wrong looks like, and that one was a single method.
+Two things turned out differently from what this predicted.
 
-Expect a large reduction; do not quote a number before measuring one. Verify with
-`unzip -l` on the output, and verify the app still runs.
+**Mihon's rules cannot arrive as consumer rules.** `app/proguard-rules.pro` opens with
+`-dontobfuscate`, and AGP rejects a global option in a consumer file — it would change the terms for
+every consumer without saying so. The check only fires once a consumer actually minifies, which is
+why it stayed quiet until the day R8 was switched on. `:animato-app` names the file directly in its
+own `proguardFiles` instead, which is where a global option is legal, and `:app` is left with one
+edit fewer.
+
+**`-dontobfuscate` is doing a lot of work.** Nothing is renamed, so the usual reflection failure —
+a class found by name that no longer has that name — cannot happen at all. What remains is R8
+removing a class it cannot see being used, and `.github/check-dex-keeps.sh` is the answer to that:
+it builds the release APK, lists what is genuinely in its dex, and asserts that every WorkManager
+job, every manifest component and every class native code calls into is still there. It runs in
+`quick_check.yml`, and it has been watched failing.
+
+The keep rules in `animato-app/proguard-rules.pro` for `animato.**` and `is.xyz.mpv.**` are, as of
+today, redundant: removing them and rebuilding changes nothing, because everything on the list is
+statically reachable in this build. They stay. Reachability is a property of the current call
+graph, and a refactor that makes a worker reachable only from a preference would remove it
+silently.
+
+**Still not verified on a device.** The dex check covers the failure mode that gets found by
+looking; it cannot cover a native library that wanted a method rather than a class, or an
+optimisation that changed behaviour. Before any release, an R8 build has to be installed and driven
+through the player, a download, a backup and a restore.
 
 ### 2. Two image decoders, 21.5 MB
 
@@ -101,15 +125,23 @@ Three options, in increasing order of effort:
 
 Not a decision to make now. Option 1 until there are users to ask.
 
-### 4. FFmpeg, 22 MB — check for a duplicate before assuming
+### 4. FFmpeg, 22 MB — answered: there is no duplicate
 
-`libffmpegkit.so` (FFmpegKit, used for the video-conversion path in `:anime:services`) and mpv both
-want FFmpeg. What ships is one set of `libav*` libraries at 22 MB, so they appear to already share —
-but that should be confirmed by reading which `.so` each links against, not inferred from the file
-list. If mpv carries FFmpeg statically inside `libmpv.so` and FFmpegKit brings its own on top, part
-of that 22 MB is a second copy and FFmpegKit's real cost is the whole set rather than its 0.4 MB stub.
+`readelf -d` on the shipped libraries settles it. Both link against the same files:
 
-`readelf -d` on both, checking `NEEDED` entries, settles it in a minute.
+```
+libmpv.so       NEEDED  libavcodec.so libavfilter.so libavformat.so libavutil.so
+                        libswresample.so libswscale.so libavdevice.so …
+libffmpegkit.so NEEDED  libavfilter.so libavformat.so libavcodec.so libavutil.so
+                        libswresample.so libavdevice.so libswscale.so …
+```
+
+One set of FFmpeg libraries, dynamically linked, shared. mpv does not carry a static copy and
+FFmpegKit does not bring a second one. So FFmpegKit costs 0.47 MB — its own stub plus
+`libffmpegkit_abidetect.so` — and the 22 MB of `libav*` is mpv's requirement, which is to say it is
+the price of playing video at all.
+
+Nothing to do here. Recorded so nobody spends the afternoon on it again.
 
 ### 5. `subfont.ttf`, 2.8 MB
 
@@ -121,12 +153,13 @@ listed so it is not mistaken for an oversight.
 Not before phase 6. Every item here is measured against a build, and the build is about to gain
 ~17,600 lines of UI — measurements taken now would be re-taken anyway.
 
-1. Build stock Mihon at our merge base and record its arm64 APK size. Without that baseline every
-   later number is unattributable: we cannot tell our bloat from the one we inherited.
-2. Enable R8 with the keep rules, and **test the app end to end** — every screen, the player, a
-   download, a backup restore. R8 failures are runtime failures.
-3. `readelf` the FFmpeg question.
-4. Re-measure. Decide about torrserver with real numbers.
+1. ~~`readelf` the FFmpeg question.~~ Done — no duplicate, nothing to reclaim.
+2. ~~Enable R8 with the keep rules.~~ Done — 22 MB off, guarded by a check in CI.
+3. **Test an R8 build end to end on a device** — every screen, the player, a download, a backup and
+   a restore. This is the one that is still open, and it gates any release.
+4. Build stock Mihon at our merge base and record its arm64 APK size. Without that baseline the
+   remaining 102 MB is unattributable: we cannot tell our bloat from the one we inherited.
+5. Decide about torrserver with real numbers, once there are users to ask.
 
 ## How to measure
 

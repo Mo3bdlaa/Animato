@@ -65,6 +65,37 @@ android {
         }
     }
 
+    /*
+     * R8 runs here and nowhere else.
+     *
+     * It used to run on `:app`, which is a library in this build, and that was worse than not
+     * running at all: R8 optimises on the assumption that it can see every caller, so it narrowed
+     * a parameter type Mihon's own callers happened to satisfy and our MainActivity did not, and
+     * the app died with NoSuchMethodError before drawing a frame. On the application module R8 sees
+     * the whole program, which is the only place that assumption holds.
+     *
+     * Both `source-api` modules send their extension-API rules as consumer rules, which needs no
+     * help. Mihon's own rules cannot travel that way — `proguard-rules.pro` opens with
+     * `-dontobfuscate`, and AGP rejects a global option in a consumer file, since it would change
+     * the terms for every consumer without saying so. So the file is named directly here, where a
+     * global option is legal. If Mihon moves or renames it the build fails, which is the right
+     * failure: these rules going missing is not something to discover at runtime.
+     *
+     * `proguard-rules.pro` in this module adds only what neither can know about — this fork's own
+     * packages and the native libraries the anime side brought.
+     */
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                rootProject.file("app/proguard-rules.pro"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+
     lint {
         abortOnError = false
         checkReleaseBuilds = false

@@ -54,5 +54,12 @@ jobs:
       - name: Check no class is declared twice
         run: ./.github/check-duplicate-classes.sh
 
+      # R8 runs on the release build and removes anything it cannot see being used — which includes
+      # every class only ever found by name: WorkManager's jobs, manifest components, and whatever
+      # native code calls back into. Those fail on a device, in the one case that reaches them, so
+      # the release APK is built here and asked what is actually in it. The script has the details.
+      - name: Check R8 kept what is only reached by name
+        run: ./.github/check-dex-keeps.sh
+
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest

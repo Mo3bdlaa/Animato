@@ -65,12 +65,14 @@ android {
              * NoSuchMethodError before it could draw a frame.
              *
              * Minification belongs on the application module, where R8 sees the whole program.
-             * `consumerProguardFiles` is how these keep rules get there — `proguardFiles` on a
-             * library configures only the library's own R8 run and is ignored by consumers.
+             *
+             * These keep rules still have to get there, and not through `consumerProguardFiles`:
+             * `proguard-rules.pro` opens with `-dontobfuscate`, and AGP refuses a global option in a
+             * consumer file — it would silently change the terms for anyone consuming the library.
+             * So `:animato-app` names this file in its own `proguardFiles` instead, which is where
+             * a global option is legal. Nothing here needs to change for that to work.
              */
             isMinifyEnabled = false
-
-            consumerProguardFiles("proguard-rules.pro")
 
             buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = true)}\"")
         }
