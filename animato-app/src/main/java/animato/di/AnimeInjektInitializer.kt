@@ -6,9 +6,10 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import animato.anime.services.AnimeNotifications
 
 /**
- * Runs [AnimeInjekt.ensureRegistered] at the first moment it can take effect.
+ * Runs the anime side's own application start-up at the first moment it can take effect.
  *
  * A content provider is used purely as a hook, not as a provider: it is the only component Android
  * creates during application bind, which is what makes the timing below work. It answers no queries.
@@ -28,12 +29,23 @@ import android.os.Looper
  *
  * [AnimeInjekt] re-registers if the scope was replaced anyway, so the guarantee above decides when
  * this happens, never whether it is correct.
+ *
+ * ## What else rides here
+ *
+ * The anime notification channels. Mihon creates its own in `App.onCreate` and cannot know about
+ * ours, and nothing may be posted to a channel that does not exist — the torrent server and the
+ * HTTP server both call `startForeground`, which throws outright when the channel is missing. The
+ * same message that guarantees the registration lands after `patchInjekt()` guarantees the channels
+ * exist before any service the process was started for can run.
  */
 class AnimeInjektInitializer : ContentProvider() {
 
     override fun onCreate(): Boolean {
         val app = context?.applicationContext as? android.app.Application ?: return false
-        Handler(Looper.getMainLooper()).post { AnimeInjekt.ensureRegistered(app) }
+        Handler(Looper.getMainLooper()).post {
+            AnimeInjekt.ensureRegistered(app)
+            AnimeNotifications.createChannels(app)
+        }
         return true
     }
 

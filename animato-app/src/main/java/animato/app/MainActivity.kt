@@ -73,6 +73,7 @@ import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
+import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
@@ -92,7 +93,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.migration.Migrator
@@ -185,6 +189,27 @@ class MainActivity : BaseActivity() {
          * this is the last word rather than a race with one.
          */
         AnimatoBackupCreateJob.setupTask(this)
+
+        /*
+         * Schedule the periodic anime library update, and keep it scheduled.
+         *
+         * Mihon schedules its own from `SetupLibraryUpdateMigration`, a migration that runs on
+         * every start — a list we cannot add to, so nothing had ever scheduled the anime one and
+         * automatic episode checks simply never happened.
+         *
+         * The two jobs hold separate slots but read the *same* preferences, which are Mihon's:
+         * changing the interval or the device restrictions in settings calls Mihon's `setupTask`
+         * and knows nothing of ours. So the changes are observed rather than read once, and the
+         * anime job follows the same setting rather than lagging a restart behind it.
+         */
+        lifecycleScope.launch {
+            merge(
+                libraryPreferences.autoUpdateInterval.changes().map {},
+                libraryPreferences.autoUpdateDeviceRestrictions.changes().map {},
+            )
+                .onStart { emit(Unit) }
+                .collect { AnimeLibraryUpdateJob.setupTask(this@MainActivity) }
+        }
 
         // Do not let the launcher create a new activity http://stackoverflow.com/questions/16283079
         if (!isTaskRoot) {

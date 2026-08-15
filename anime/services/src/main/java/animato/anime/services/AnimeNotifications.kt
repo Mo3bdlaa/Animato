@@ -4,7 +4,13 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.NotificationManagerCompat.IMPORTANCE_DEFAULT
+import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.util.system.buildNotificationChannel
+import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.i18n.aniyomi.AYMR
 
 /**
  * Notification identifiers, channels and intents for the anime side.
@@ -15,7 +21,6 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
  * notification channels and its user-facing settings for them.
  */
 object AnimeNotifications {
-    const val CHANNEL_DOWNLOADER_EPISODE_PROGRESS = "downloader_episode_progress_channel"
     const val ID_DOWNLOAD_EPISODE_PROGRESS = -203
     const val ID_DOWNLOAD_EPISODE_ERROR = -204
 
@@ -28,6 +33,43 @@ object AnimeNotifications {
 
     const val CHANNEL_HTTP_SERVER = "http_server_channel"
     const val ID_HTTP_SERVER = -901
+
+    /**
+     * Registers the three channels above with the system.
+     *
+     * Nothing may be posted to a channel that does not exist. Since Android 8 the system drops such
+     * a notification outright, and `startForeground` with one throws — which is what the torrent
+     * server and the HTTP server both do, so neither could start at all.
+     *
+     * Mihon creates its own channels in `App.onCreate` and knows nothing of these, so this is
+     * called alongside the anime dependency registration, from `AnimeInjektInitializer`. Creating a
+     * channel twice is a no-op, and creating one the user has already configured leaves their
+     * settings alone — only the name is refreshed — so running after Mihon's costs nothing.
+     *
+     * There is no channel for episode downloads: that notifier posts to Mihon's downloader
+     * channels, as Aniyomi's did, so the two queues appear under one heading in system settings.
+     */
+    fun createChannels(context: Context) {
+        NotificationManagerCompat.from(context).createNotificationChannelsCompat(
+            listOf(
+                buildNotificationChannel(CHANNEL_NEW_CHAPTERS_EPISODES, IMPORTANCE_DEFAULT) {
+                    // Aniyomi called this "Chapter/Episode updates", because it *replaced* Mihon's
+                    // chapter channel rather than standing beside it. Here Mihon's still exists and
+                    // still says "New chapters", so a name covering both would be a lie about which
+                    // notifications this switch turns off.
+                    setName(context.stringResource(AYMR.strings.notification_new_episodes))
+                },
+                buildNotificationChannel(CHANNEL_TORRENT_SERVER, IMPORTANCE_LOW) {
+                    setName(context.stringResource(AYMR.strings.pref_category_torrentserver))
+                    setShowBadge(false)
+                },
+                buildNotificationChannel(CHANNEL_HTTP_SERVER, IMPORTANCE_LOW) {
+                    setName(context.stringResource(AYMR.strings.pref_http_server_name))
+                    setShowBadge(false)
+                },
+            ),
+        )
+    }
 
     /** Opens the anime download queue. */
     fun openAnimeDownloadManagerPendingActivity(context: Context): PendingIntent =

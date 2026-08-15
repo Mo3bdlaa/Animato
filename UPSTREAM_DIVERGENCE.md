@@ -534,6 +534,8 @@ is different: Aniyomi had added these *inside* Mihon's files.
 | `ExtensionUpdateNotifier(names, anime = true)` | `animato.anime.services.AnimeExtensionUpdateNotifier` — a flag that only chose which screen to open is a class of ours instead |
 | `SourcePreferences.animeExtensionUpdatesCount` | `aniyomi.domain.source.service.AnimeSourcePreferences` |
 | `Notifications.CHANNEL_HTTP_SERVER` / `ID_HTTP_SERVER` | `animato.anime.services.AnimeNotifications`, values unchanged |
+| `Notifications.createChannels`, for the three anime channels | `AnimeNotifications.createChannels`, called from `AnimeInjektInitializer`. Mihon calls its own from `App.onCreate` and cannot know about ours — and nothing may be posted to a channel that does not exist, which made both foreground services throw at `startForeground` |
+| `SetupLibraryUpdateMigration` | Mihon's migration list is fixed and cannot be added to, so the anime job is scheduled from `MainActivity`, watching the same preferences Mihon's settings screen writes |
 | `Constants.SHORTCUT_ANIME*` | `animato.anime.services.AnimeConstants`, action strings unchanged |
 | `MainActivity.startHttpServerService` | `HttpServerService.start` — it starts a service and waits on a flow; nothing in it touched an activity |
 | anime components in Mihon's `AndroidManifest.xml` | `:anime:services`' and `:anime:player`'s own manifests, merged in by the build |
