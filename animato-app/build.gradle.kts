@@ -134,4 +134,15 @@ dependencies {
     implementation(libs.bundles.voyager)
     implementation(projects.presentationCore)
     implementation(projects.i18n)
+
+    // The tab bar and the home screen: animated tab icons, the fade between destinations, the
+    // Material icon set the two new destinations use, and view models for the home screen.
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.animationGraphics)
+    implementation(libs.androidx.compose.materialIcons)
+    implementation(libs.composeMaterialMotion)
+    implementation(libs.androidx.lifecycle.viewmodelCompose)
+    implementation(projects.core.viewmodel)
+    implementation(projects.i18nAnime)
+    implementation(libs.bundles.coil)
 }

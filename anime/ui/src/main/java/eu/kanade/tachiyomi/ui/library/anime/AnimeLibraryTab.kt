@@ -32,6 +32,8 @@ import animato.anime.ui.components.LibraryBottomActionMenu
 import animato.domain.category.AnimeCategory
 import animato.ui.category.ChangeCategoryDialog
 import animato.ui.library.DeleteLibraryEntryDialog
+import animato.ui.navigation.AnimatoNavigator
+import animato.ui.navigation.AnimatoTab
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -45,7 +47,6 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import kotlinx.collections.immutable.persistentListOf
@@ -287,7 +288,7 @@ data object AnimeLibraryTab : Tab {
         }
 
         LaunchedEffect(state.selectionMode, state.dialog) {
-            HomeScreen.showBottomNav(!state.selectionMode)
+            AnimatoNavigator.showBottomNav(!state.selectionMode)
         }
 
         LaunchedEffect(state.isLoading) {

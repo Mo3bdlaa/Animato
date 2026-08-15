@@ -28,6 +28,7 @@ import animato.anime.ui.entries.SkipIntroLengthDialog
 import animato.domain.items.episode.formatEpisodeNumber
 import animato.ui.category.ChangeCategoryDialog
 import animato.ui.entries.EditCoverAction
+import animato.ui.navigation.AnimatoRoot
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -58,7 +59,6 @@ import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeSearchSc
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackInfoDialogHomeScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
@@ -480,7 +480,7 @@ class AnimeScreen(
         }
 
         when (val previousController = navigator.items[navigator.size - 2]) {
-            is HomeScreen -> {
+            is AnimatoRoot -> {
                 navigator.pop()
                 AnimeLibraryTab.search(query)
             }

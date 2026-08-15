@@ -27,7 +27,6 @@ import eu.kanade.tachiyomi.ui.browse.anime.migration.anime.season.MigrateSeasonS
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialog
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialogScreenModel
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import kotlinx.collections.immutable.persistentListOf

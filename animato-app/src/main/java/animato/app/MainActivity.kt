@@ -47,7 +47,13 @@ import androidx.core.util.Consumer
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
+import animato.anime.services.AnimeConstants
 import animato.anime.services.AnimeNotifications
+import animato.app.navigation.AnimatoHomeScreen
+import animato.app.navigation.setContentType
+import animato.domain.content.ContentType
+import animato.ui.navigation.AnimatoNavigator
+import animato.ui.navigation.AnimatoTab
 import animato.ui.theme.AnimatoTheme
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -66,10 +72,11 @@ import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
+import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
@@ -105,8 +112,8 @@ import uy.kohesive.injekt.injectLazy
  * screens rather than inside their theme, and whoever owns the root composable restyles all of them
  * at once. Owning this activity is what buys that.
  *
- * It still hosts Mihon's own `HomeScreen` — this stage changes what the app looks like, not what it
- * does. Replacing the tab bar is phase 6c.
+ * The root it hosts is [animato.app.navigation.AnimatoHomeScreen], Animato's own five-destination
+ * bar, rather than Mihon's `HomeScreen`.
  *
  * ## Two things from Mihon's version are deliberately absent
  *
@@ -194,7 +201,7 @@ class MainActivity : BaseActivity() {
                 }
 
                 Navigator(
-                    screen = HomeScreen,
+                    screen = AnimatoHomeScreen,
                     disposeBehavior = NavigatorDisposeBehavior(
                         disposeNestedNavigators = false,
                         disposeSteps = true,
@@ -395,19 +402,49 @@ class MainActivity : BaseActivity() {
         }
 
         val tabToOpen = when (intent.action) {
-            Constants.SHORTCUT_LIBRARY -> HomeScreen.Tab.Library()
+            Constants.SHORTCUT_LIBRARY -> AnimatoTab.LIBRARY
             Constants.SHORTCUT_MANGA -> {
                 val idToOpen = intent.extras?.getLong(Constants.MANGA_EXTRA) ?: return false
                 navigator.popUntilRoot()
-                HomeScreen.Tab.Library(idToOpen)
+                navigator.push(MangaScreen(idToOpen))
+                setContentType(ContentType.MANGA)
+                AnimatoTab.LIBRARY
             }
-            Constants.SHORTCUT_UPDATES -> HomeScreen.Tab.Updates
-            Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.History
-            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(false)
-            Constants.SHORTCUT_EXTENSIONS -> HomeScreen.Tab.Browse(true)
+            AnimeConstants.SHORTCUT_ANIMELIB -> {
+                setContentType(ContentType.ANIME)
+                AnimatoTab.LIBRARY
+            }
+            // The anime notifications carry the id under Mihon's own extra key, which is what
+            // Aniyomi did too — one key for "the entry this intent is about", whichever it is.
+            AnimeConstants.SHORTCUT_ANIME -> {
+                val idToOpen = intent.extras?.getLong(Constants.MANGA_EXTRA) ?: return false
+                navigator.popUntilRoot()
+                navigator.push(AnimeScreen(idToOpen))
+                setContentType(ContentType.ANIME)
+                AnimatoTab.LIBRARY
+            }
+            Constants.SHORTCUT_UPDATES -> AnimatoTab.UPDATES
+            // History has no destination of its own; it is the continue rail on Home.
+            Constants.SHORTCUT_HISTORY -> AnimatoTab.HOME
+            Constants.SHORTCUT_SOURCES -> AnimatoTab.DISCOVER
+            Constants.SHORTCUT_EXTENSIONS -> {
+                BrowseTab.showExtension()
+                setContentType(ContentType.MANGA)
+                AnimatoTab.DISCOVER
+            }
+            AnimeConstants.SHORTCUT_ANIMEEXTENSIONS -> {
+                setContentType(ContentType.ANIME)
+                AnimatoTab.DISCOVER
+            }
             Constants.SHORTCUT_DOWNLOADS -> {
                 navigator.popUntilRoot()
-                HomeScreen.Tab.More(toDownloads = true)
+                setContentType(ContentType.MANGA)
+                AnimatoTab.DOWNLOADS
+            }
+            AnimeConstants.SHORTCUT_ANIME_DOWNLOADS -> {
+                navigator.popUntilRoot()
+                setContentType(ContentType.ANIME)
+                AnimatoTab.DOWNLOADS
             }
             Intent.ACTION_APPLICATION_PREFERENCES -> {
                 navigator.popUntilRoot()
@@ -453,7 +490,7 @@ class MainActivity : BaseActivity() {
         }
 
         if (tabToOpen != null) {
-            lifecycleScope.launch { HomeScreen.openTab(tabToOpen) }
+            AnimatoNavigator.openTab(tabToOpen)
         }
 
         ready = true

@@ -16,6 +16,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.ui.components.ExtendedFloatingActionButton
+import animato.ui.navigation.AnimatoNavigator
+import animato.ui.navigation.AnimatoTab
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.core.util.ifAnimeSourcesLoaded
@@ -27,7 +29,6 @@ import eu.kanade.tachiyomi.ui.browse.anime.migration.anime.season.MigrateSeasonS
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreenModel
 import eu.kanade.tachiyomi.ui.browse.anime.source.browse.SourceFilterAnimeDialog
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.launch
 import mihon.presentation.core.util.collectAsLazyPagingItems
@@ -131,7 +132,7 @@ data class AnimeSourceSearchScreen(
                     onPopScreen = {
                         scope.launch {
                             navigator.popUntilRoot()
-                            HomeScreen.openTab(HomeScreen.Tab.Browse())
+                            AnimatoNavigator.openTab(AnimatoTab.DISCOVER)
                             navigator.push(AnimeScreen(dialog.newAnime.id))
                         }
                     },

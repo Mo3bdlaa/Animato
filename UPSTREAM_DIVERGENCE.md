@@ -156,6 +156,24 @@ in the launcher.
 
 ## Open
 
+### Mihon's `HomeScreen` channels are private, so its screens cannot reach our tab bar
+
+Mihon's `HomeScreen` is an object with three private rendezvous channels — `showBottomNavEvent`,
+`openTabEvent`, `librarySearchEvent` — received only inside its own `Content()`. Animato's bar is a
+different host, so that `Content()` is never composed and nothing outside Mihon's file can receive
+from those channels. A `send` into them now suspends its caller for as long as the caller lives.
+
+Two of Mihon's screens send:
+
+| Caller | Effect | Handled |
+| --- | --- | --- |
+| `LibraryTab`, `UpdatesTab` — `showBottomNav` on selection mode | tab bar would stay over the selection bar | yes — the destination reads `selectionMode` off the same view model and forwards it |
+| `MigrateSourceSearchScreen` — `openTab(Browse)` after a migration | the `push` that follows never runs, so it stops at the root instead of opening the migrated entry | no |
+
+The second is one navigation step after a manga migration and needs no workaround: it goes away
+when the migrate flow becomes ours, and until then the coroutine is cancelled with the screen.
+
+
 ### Simkl is not among the ported trackers
 
 `AniChartApi` asked three trackers for an anime's next air time: AniList, MyAnimeList and Simkl.

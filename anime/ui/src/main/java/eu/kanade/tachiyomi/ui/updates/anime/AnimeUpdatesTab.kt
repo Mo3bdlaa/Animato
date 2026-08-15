@@ -16,6 +16,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.player.PlayerLauncher
 import animato.anime.ui.upcoming.UpcomingAnimeScreen
 import animato.anime.ui.updates.EpisodesDeleteConfirmationDialog
+import animato.ui.navigation.AnimatoNavigator
+import animato.ui.navigation.AnimatoTab
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -25,7 +27,6 @@ import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.entries.anime.EpisodeOptionsDialogScreen
 import eu.kanade.presentation.updates.anime.AnimeUpdateScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import kotlinx.collections.immutable.persistentListOf
@@ -134,7 +135,7 @@ fun Screen.animeUpdatesTab(
             }
 
             LaunchedEffect(state.selectionMode) {
-                HomeScreen.showBottomNav(!state.selectionMode)
+                AnimatoNavigator.showBottomNav(!state.selectionMode)
             }
 
             LaunchedEffect(state.isLoading) {

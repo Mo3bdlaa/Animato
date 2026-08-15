@@ -1,6 +1,7 @@
 package animato.di
 
 import android.app.Application
+import animato.domain.content.ContentPreferences
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
@@ -12,11 +13,14 @@ import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
 /**
- * The anime half of Mihon's PreferenceModule.
+ * The preferences Mihon's own PreferenceModule does not bind.
  *
- * `PreferenceStore` itself is Mihon's and is bound by their module, so these read the same store
- * and the same keys an Aniyomi install already wrote — splitting the classes changed where the
- * declarations live, not where the values are kept.
+ * Mostly the anime half. `PreferenceStore` itself is Mihon's and is bound by their module, so these
+ * read the same store and the same keys an Aniyomi install already wrote — splitting the classes
+ * changed where the declarations live, not where the values are kept.
+ *
+ * [ContentPreferences] is the exception: it belongs to neither half, because it is the setting that
+ * decides which half you are looking at.
  */
 class AnimePreferenceModule(@Suppress("unused") val app: Application) : InjektModule {
 
@@ -26,5 +30,6 @@ class AnimePreferenceModule(@Suppress("unused") val app: Application) : InjektMo
         addSingletonFactory { AnimeSourcePreferences(get()) }
         addSingletonFactory { AnimeTrackPreferences(get()) }
         addSingletonFactory { TorrentPreferences(get()) }
+        addSingletonFactory { ContentPreferences(get()) }
     }
 }

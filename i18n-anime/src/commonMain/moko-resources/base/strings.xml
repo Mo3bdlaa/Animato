@@ -409,6 +409,10 @@
     <string name="label_manga_library">Manga</string>
     <string name="label_anime_library">Anime</string>
     <string name="label_anime">Anime</string>
+    <!-- The Animato navigation bar and home screen -->
+    <string name="label_home">Home</string>
+    <string name="label_discover">Discover</string>
+    <string name="label_continue">Continue</string>
     <string name="label_manga">Manga</string>
     <string name="label_recent_anime_updates">Anime Updates</string>
     <string name="label_manga_sources">Manga Sources</string>
