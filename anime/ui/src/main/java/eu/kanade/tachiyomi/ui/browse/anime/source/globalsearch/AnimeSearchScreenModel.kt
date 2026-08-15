@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.produceState
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.ui.ioCoroutineScope
 import aniyomi.domain.source.service.AnimeSourcePreferences
@@ -18,13 +19,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.toggle
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.NetworkToLocalAnime
@@ -43,7 +45,16 @@ abstract class AnimeSearchScreenModel(
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
     private val getAnime: GetAnime = Injekt.get(),
     private val preferences: SourcePreferences = Injekt.get(),
-) : StateViewModel<AnimeSearchScreenModel.State>(initialState) {
+) : ViewModel() {
+
+    val state: StateFlow<AnimeSearchScreenModel.State>
+        field = MutableStateFlow<AnimeSearchScreenModel.State>(initialState)
+
+    // Kotlin forbids a visibility modifier on a backing field, so a subclass cannot reach the
+    // mutable one. State writes from them come through here — the same shape Mihon settled on.
+    protected fun updateState(function: (State) -> State) {
+        state.update(function)
+    }
 
     private val coroutineDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
     private var searchJob: Job? = null
@@ -67,8 +78,8 @@ abstract class AnimeSearchScreenModel(
 
     init {
         viewModelScope.launch {
-            preferences.globalSearchFilterState.changes().collectLatest { state ->
-                mutableState.update { it.copy(onlyShowHasResults = state) }
+            preferences.globalSearchFilterState.changes().collectLatest { onlyShowHasResults ->
+                state.update { it.copy(onlyShowHasResults = onlyShowHasResults) }
             }
         }
     }
@@ -110,11 +121,11 @@ abstract class AnimeSearchScreenModel(
     }
 
     fun updateSearchQuery(query: String?) {
-        mutableState.update { it.copy(searchQuery = query) }
+        state.update { it.copy(searchQuery = query) }
     }
 
     fun setSourceFilter(filter: AnimeSourceFilter) {
-        mutableState.update { it.copy(sourceFilter = filter) }
+        state.update { it.copy(sourceFilter = filter) }
         search()
     }
 
@@ -181,7 +192,7 @@ abstract class AnimeSearchScreenModel(
     }
 
     private fun updateItems(items: PersistentMap<AnimeSource, AnimeSearchItemResult>) {
-        mutableState.update {
+        state.update {
             it.copy(
                 items = items
                     .toSortedMap(sortComparator(items))

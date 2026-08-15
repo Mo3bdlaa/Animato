@@ -59,6 +59,8 @@ import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -67,7 +69,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
@@ -205,7 +206,10 @@ data class AnimeTrackInfoDialogHomeScreen(
         private val animeId: Long,
         private val sourceId: Long,
         private val getTracks: GetAnimeTracks = Injekt.get(),
-    ) : StateViewModel<Model.State>(State()) {
+    ) : ViewModel() {
+
+        val state: StateFlow<Model.State>
+            field = MutableStateFlow<Model.State>(State())
 
         init {
             viewModelScope.launch {
@@ -218,7 +222,7 @@ data class AnimeTrackInfoDialogHomeScreen(
                     .distinctUntilChanged()
                     .map { it.mapToTrackItem() }
                     .collectLatest { trackItems ->
-                        mutableState.update {
+                        state.update {
                             it.copy(
                                 trackItems = trackItems,
                             )
@@ -317,7 +321,10 @@ private data class TrackStatusSelectorScreen(
     private class Model(
         private val track: DbAnimeTrack,
         private val tracker: Tracker,
-    ) : StateViewModel<Model.State>(State(track.status)) {
+    ) : ViewModel() {
+
+        val state: StateFlow<Model.State>
+            field = MutableStateFlow<Model.State>(State(track.status))
 
         fun getSelections(): Map<Long, StringResource?> {
             return tracker.animeService.getStatusListAnime().associateWith {
@@ -326,7 +333,7 @@ private data class TrackStatusSelectorScreen(
         }
 
         fun setSelection(selection: Long) {
-            mutableState.update { it.copy(selection = selection) }
+            state.update { it.copy(selection = selection) }
         }
 
         fun setStatus() {
@@ -373,7 +380,10 @@ private data class TrackEpisodeSelectorScreen(
     private class Model(
         private val track: DbAnimeTrack,
         private val tracker: Tracker,
-    ) : StateViewModel<Model.State>(State(track.lastEpisodeSeen.toInt())) {
+    ) : ViewModel() {
+
+        val state: StateFlow<Model.State>
+            field = MutableStateFlow<Model.State>(State(track.lastEpisodeSeen.toInt()))
 
         fun getRange(): Iterable<Int> {
             val endRange = if (track.totalEpisodes > 0) {
@@ -385,7 +395,7 @@ private data class TrackEpisodeSelectorScreen(
         }
 
         fun setSelection(selection: Int) {
-            mutableState.update { it.copy(selection = selection) }
+            state.update { it.copy(selection = selection) }
         }
 
         fun setEpisode() {
@@ -435,14 +445,17 @@ private data class TrackScoreSelectorScreen(
     private class Model(
         private val track: DbAnimeTrack,
         private val tracker: Tracker,
-    ) : StateViewModel<Model.State>(State(tracker.animeService.displayScore(track))) {
+    ) : ViewModel() {
+
+        val state: StateFlow<Model.State>
+            field = MutableStateFlow<Model.State>(State(tracker.animeService.displayScore(track)))
 
         fun getSelections(): ImmutableList<String> {
             return tracker.animeService.getScoreList()
         }
 
         fun setSelection(selection: String) {
-            mutableState.update { it.copy(selection = selection) }
+            state.update { it.copy(selection = selection) }
         }
 
         fun setScore() {
@@ -722,7 +735,10 @@ data class TrackServiceSearchScreen(
         private val currentUrl: String? = null,
         initialQuery: String,
         private val tracker: Tracker,
-    ) : StateViewModel<Model.State>(State()) {
+    ) : ViewModel() {
+
+        val state: StateFlow<Model.State>
+            field = MutableStateFlow<Model.State>(State())
 
         val supportsPrivateTracking = tracker.supportsPrivateTracking
 
@@ -736,7 +752,7 @@ data class TrackServiceSearchScreen(
         fun trackingSearch(query: String) {
             viewModelScope.launch {
                 // To show loading state
-                mutableState.update { it.copy(queryResult = null, selected = null) }
+                state.update { it.copy(queryResult = null, selected = null) }
 
                 val result = withIOContext {
                     try {
@@ -746,7 +762,7 @@ data class TrackServiceSearchScreen(
                         Result.failure(e)
                     }
                 }
-                mutableState.update { oldState ->
+                state.update { oldState ->
                     oldState.copy(
                         queryResult = result,
                         selected = result.getOrNull()?.find { it.tracking_url == currentUrl },
@@ -760,7 +776,7 @@ data class TrackServiceSearchScreen(
         }
 
         fun updateSelection(selected: AnimeTrackSearch) {
-            mutableState.update { it.copy(selected = selected) }
+            state.update { it.copy(selected = selected) }
         }
 
         @Immutable

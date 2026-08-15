@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.deeplink.anime
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.entries.anime.model.toDomainAnime
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -8,8 +9,9 @@ import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.online.ResolvableAnimeSource
 import eu.kanade.tachiyomi.animesource.online.UriType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import mihon.core.viewmodel.StateViewModel
 import mihon.domain.source.interactor.UpdateAnimeFromRemote
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entries.anime.interactor.GetAnimeByUrlAndSourceId
@@ -28,7 +30,10 @@ class DeepLinkAnimeScreenModel(
     private val getEpisodeByUrlAndAnimeId: GetEpisodeByUrlAndAnimeId = Injekt.get(),
     private val getAnimeByUrlAndSourceId: GetAnimeByUrlAndSourceId = Injekt.get(),
     private val updateAnimeFromRemote: UpdateAnimeFromRemote = Injekt.get(),
-) : StateViewModel<DeepLinkAnimeScreenModel.State>(State.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<DeepLinkAnimeScreenModel.State>
+        field = MutableStateFlow<DeepLinkAnimeScreenModel.State>(State.Loading)
 
     init {
         viewModelScope.launchIO {
@@ -46,7 +51,7 @@ class DeepLinkAnimeScreenModel(
                 null
             }
 
-            mutableState.update {
+            state.update {
                 if (anime == null) {
                     State.NoResults
                 } else {

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.history.anime
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.domain.category.AnimeCategory
 import aniyomi.domain.library.service.AnimeLibraryPreferences
@@ -27,7 +28,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
@@ -60,7 +60,10 @@ class AnimeHistoryScreenModel(
     private val updateAnime: UpdateAnime = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
     private val sourceManager: AnimeSourceManager = Injekt.get(),
-) : StateViewModel<AnimeHistoryScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<AnimeHistoryScreenModel.State>
+        field = MutableStateFlow<AnimeHistoryScreenModel.State>(State())
 
     private val _events: Channel<Event> = Channel(Channel.UNLIMITED)
     val events: Flow<Event> = _events.receiveAsFlow()
@@ -79,7 +82,7 @@ class AnimeHistoryScreenModel(
                     }
                     .map { it.toAnimeHistoryUiModels() }
                     .flowOn(Dispatchers.IO)
-                    .collect { newList -> mutableState.update { it.copy(list = newList) } }
+                    .collect { newList -> state.update { it.copy(list = newList) } }
             }
         }
     }
@@ -139,7 +142,7 @@ class AnimeHistoryScreenModel(
     }
 
     fun setDialog(dialog: Dialog?) {
-        mutableState.update { it.copy(dialog = dialog) }
+        state.update { it.copy(dialog = dialog) }
     }
 
     /**
@@ -182,7 +185,7 @@ class AnimeHistoryScreenModel(
 
             val duplicate = getDuplicateLibraryAnime.await(anime).getOrNull(0)
             if (duplicate != null) {
-                mutableState.update { it.copy(dialog = Dialog.DuplicateAnime(anime, duplicate)) }
+                state.update { it.copy(dialog = Dialog.DuplicateAnime(anime, duplicate)) }
                 return@launchIO
             }
 
@@ -222,7 +225,7 @@ class AnimeHistoryScreenModel(
     }
 
     fun showMigrateDialog(currentAnime: Anime, duplicate: Anime) {
-        mutableState.update { currentState ->
+        state.update { currentState ->
             currentState.copy(dialog = Dialog.Migrate(newAnime = currentAnime, oldAnime = duplicate))
         }
     }
@@ -231,7 +234,7 @@ class AnimeHistoryScreenModel(
         viewModelScope.launch {
             val categories = getCategories()
             val selection = getAnimeCategoryIds(anime)
-            mutableState.update { currentState ->
+            state.update { currentState ->
                 currentState.copy(
                     dialog = Dialog.ChangeCategory(
                         anime = anime,

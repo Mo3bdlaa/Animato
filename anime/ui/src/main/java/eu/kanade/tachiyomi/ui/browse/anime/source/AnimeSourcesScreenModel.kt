@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.anime.source
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.services.LAST_USED_KEY
 import animato.anime.services.PINNED_KEY
@@ -14,12 +15,13 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.anime.model.AnimeSource
@@ -34,7 +36,10 @@ class AnimeSourcesScreenModel(
     private val getEnabledAnimeSources: GetEnabledAnimeSources = Injekt.get(),
     private val toggleSource: ToggleAnimeSource = Injekt.get(),
     private val toggleSourcePin: ToggleAnimeSourcePin = Injekt.get(),
-) : StateViewModel<AnimeSourcesScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<AnimeSourcesScreenModel.State>
+        field = MutableStateFlow<AnimeSourcesScreenModel.State>(State())
 
     private val _events = Channel<Event>(Int.MAX_VALUE)
     val events = _events.receiveAsFlow()
@@ -51,7 +56,7 @@ class AnimeSourcesScreenModel(
     }
 
     private fun collectLatestAnimeSources(sources: List<AnimeSource>) {
-        mutableState.update { state ->
+        state.update { state ->
             val map = TreeMap<String, MutableList<AnimeSource>> { d1, d2 ->
                 // Sources without a lang defined will be placed at the end
                 when {
@@ -97,11 +102,11 @@ class AnimeSourcesScreenModel(
     }
 
     fun showSourceDialog(source: AnimeSource) {
-        mutableState.update { it.copy(dialog = Dialog(source)) }
+        state.update { it.copy(dialog = Dialog(source)) }
     }
 
     fun closeDialog() {
-        mutableState.update { it.copy(dialog = null) }
+        state.update { it.copy(dialog = null) }
     }
 
     sealed interface Event {

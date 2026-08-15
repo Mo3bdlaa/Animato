@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.player.getMPVConfigDirectory
 import animato.anime.player.getScriptOptsDirectory
@@ -11,10 +12,10 @@ import animato.anime.player.getScriptsDirectory
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
@@ -28,7 +29,11 @@ class CodeEditScreenModel(
     private val context: Context,
     private val filePath: String,
     private val storageManager: StorageManager = Injekt.get(),
-) : StateViewModel<CodeEditScreenState>(CodeEditScreenState.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<CodeEditScreenState>
+        field = MutableStateFlow<CodeEditScreenState>(CodeEditScreenState.Loading)
+
     private val _hasModified = MutableStateFlow(false)
     val hasModified = _hasModified.asStateFlow()
 
@@ -48,7 +53,7 @@ class CodeEditScreenModel(
                 val content = file.openInputStream().use {
                     it.readBytes().toString(Charsets.UTF_8)
                 }
-                mutableState.update { _ ->
+                state.update { _ ->
                     CodeEditScreenState.Success(
                         TextFieldValue(
                             annotatedString = content.highlightText(),
@@ -57,7 +62,7 @@ class CodeEditScreenModel(
                     )
                 }
             } catch (e: Exception) {
-                mutableState.update { _ -> CodeEditScreenState.Error(e) }
+                state.update { _ -> CodeEditScreenState.Error(e) }
             }
         }
     }
@@ -85,7 +90,7 @@ class CodeEditScreenModel(
     }
 
     fun onEdit(value: TextFieldValue) {
-        mutableState.update { current ->
+        state.update { current ->
             if (value.text != (current as? CodeEditScreenState.Success)?.content?.text) {
                 _hasModified.update { _ -> true }
 
@@ -114,7 +119,7 @@ class CodeEditScreenModel(
             return
         }
 
-        val content = (mutableState.value as? CodeEditScreenState.Success)
+        val content = (state.value as? CodeEditScreenState.Success)
             ?.content?.annotatedString?.text ?: kotlin.run {
             context.toast(AYMR.strings.editor_save_error)
             return

@@ -6,6 +6,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.viewModelScope
 import animato.anime.services.airing.AniChartApi
@@ -59,6 +60,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -68,7 +71,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import mihon.domain.items.episode.interactor.FilterEpisodesForDownload
 import mihon.domain.source.interactor.UpdateAnimeFromRemote
 import tachiyomi.core.common.i18n.stringResource
@@ -149,7 +151,10 @@ class AnimeScreenModel(
     private val torrentServerUtils: TorrentServerUtils = Injekt.get(),
     internal val setAnimeViewerFlags: SetAnimeViewerFlags = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-) : StateViewModel<AnimeScreenModel.State>(State.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<AnimeScreenModel.State>
+        field = MutableStateFlow<AnimeScreenModel.State>(State.Loading)
 
     private val successState: State.Success?
         get() = state.value as? State.Success
@@ -189,7 +194,7 @@ class AnimeScreenModel(
      * Helper function to update the UI state only if it's currently in success state
      */
     private inline fun updateSuccessState(func: (State.Success) -> State.Success) {
-        mutableState.update {
+        state.update {
             when (it) {
                 State.Loading -> it
                 is State.Success -> func(it)
@@ -246,7 +251,7 @@ class AnimeScreenModel(
             val needRefreshSeason = seasons.isEmpty() && anime.fetchType == FetchType.Seasons
 
             // Show what we have earlier
-            mutableState.update {
+            state.update {
                 State.Success(
                     anime = anime,
                     source = source,

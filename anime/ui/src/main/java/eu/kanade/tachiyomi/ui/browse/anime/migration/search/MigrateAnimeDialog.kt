@@ -26,6 +26,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import animato.ui.components.IndicatorSize
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.hasCustomBackground
@@ -38,8 +39,9 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.ui.browse.anime.migration.AnimeMigrationFlags
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import mihon.core.viewmodel.StateViewModel
 import mihon.domain.source.interactor.UpdateAnimeFromRemote
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -210,7 +212,10 @@ internal class MigrateAnimeDialogScreenModel(
     private val backgroundCache: AnimeBackgroundCache = Injekt.get(),
     private val preferenceStore: PreferenceStore = Injekt.get(),
     private val updateAnimeFromRemote: UpdateAnimeFromRemote = Injekt.get(),
-) : StateViewModel<MigrateAnimeDialogScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<MigrateAnimeDialogScreenModel.State>
+        field = MutableStateFlow<MigrateAnimeDialogScreenModel.State>(State())
 
     val migrateFlags: Preference<Int> by lazy {
         preferenceStore.getInt("migrate_flags", Int.MAX_VALUE)
@@ -230,7 +235,7 @@ internal class MigrateAnimeDialogScreenModel(
         val source = sourceManager.get(newAnime.source) ?: return
         val prevSource = sourceManager.get(oldAnime.source)
 
-        mutableState.update { it.copy(isMigrating = true) }
+        state.update { it.copy(isMigrating = true) }
 
         try {
             migrateAnimeInternal(
@@ -244,7 +249,7 @@ internal class MigrateAnimeDialogScreenModel(
         } catch (_: Throwable) {
             // Explicitly stop if an error occurred; the dialog normally gets popped at the end
             // anyway
-            mutableState.update { it.copy(isMigrating = false) }
+            state.update { it.copy(isMigrating = false) }
         }
     }
 

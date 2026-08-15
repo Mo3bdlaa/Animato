@@ -19,6 +19,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.core.net.toUri
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -33,9 +34,10 @@ import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
 import eu.kanade.tachiyomi.util.system.DeviceUtil
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
@@ -185,14 +187,17 @@ class AniyomiImportScreen(
 class AniyomiImportViewModel(
     private val context: Context,
     private val uri: String,
-) : StateViewModel<AniyomiImportViewModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<AniyomiImportViewModel.State>
+        field = MutableStateFlow<AniyomiImportViewModel.State>(State())
 
     init {
         validate()
     }
 
     fun toggle(setter: (RestoreOptions, Boolean) -> RestoreOptions, enabled: Boolean) {
-        mutableState.update { it.copy(options = setter(it.options, enabled)) }
+        state.update { it.copy(options = setter(it.options, enabled)) }
     }
 
     fun startImport() {
@@ -209,7 +214,7 @@ class AniyomiImportViewModel(
         val results = try {
             withIOContext { AniyomiBackupValidator(context).validate(uri.toUri()) }
         } catch (e: Exception) {
-            mutableState.update {
+            state.update {
                 it.copy(
                     problem = ImportProblem.Unreadable(uri, e.message.orEmpty()),
                     canImport = false,
@@ -218,7 +223,7 @@ class AniyomiImportViewModel(
             return@launch
         }
 
-        mutableState.update {
+        state.update {
             it.copy(
                 // Missing sources are worth saying out loud and are not a reason to stop. The
                 // entries still restore; they are unreadable until the extension is installed.

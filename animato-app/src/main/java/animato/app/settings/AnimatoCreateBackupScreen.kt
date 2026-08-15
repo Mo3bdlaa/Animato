@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.backup.create.AnimatoBackupCreateJob
 import animato.anime.backup.create.AnimatoBackupCreator
@@ -26,8 +27,9 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.LabeledCheckbox
@@ -151,11 +153,13 @@ class AnimatoCreateBackupScreen : Screen() {
     }
 }
 
-class AnimatoCreateBackupViewModel :
-    StateViewModel<AnimatoCreateBackupViewModel.State>(State()) {
+class AnimatoCreateBackupViewModel : ViewModel() {
+
+    val state: StateFlow<AnimatoCreateBackupViewModel.State>
+        field = MutableStateFlow<AnimatoCreateBackupViewModel.State>(State())
 
     fun toggle(setter: (BackupOptions, Boolean) -> BackupOptions, enabled: Boolean) {
-        mutableState.update { it.copy(options = setter(it.options, enabled)) }
+        state.update { it.copy(options = setter(it.options, enabled)) }
     }
 
     fun createBackup(context: Context, uri: Uri) {

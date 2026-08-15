@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.category.anime
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.domain.category.AnimeCategory
 import aniyomi.domain.library.service.AnimeLibraryPreferences
@@ -8,11 +9,12 @@ import dev.icerock.moko.resources.StringResource
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.domain.category.anime.interactor.CreateAnimeCategoryWithName
 import tachiyomi.domain.category.anime.interactor.DeleteAnimeCategory
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
@@ -33,7 +35,10 @@ class AnimeCategoryScreenModel(
     private val reorderCategory: ReorderAnimeCategory = Injekt.get(),
     private val renameCategory: RenameAnimeCategory = Injekt.get(),
     private val libraryPreferences: AnimeLibraryPreferences = Injekt.get(),
-) : StateViewModel<AnimeCategoryScreenState>(AnimeCategoryScreenState.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<AnimeCategoryScreenState>
+        field = MutableStateFlow<AnimeCategoryScreenState>(AnimeCategoryScreenState.Loading)
 
     private val _events: Channel<AnimeCategoryEvent> = Channel()
     val events = _events.receiveAsFlow()
@@ -47,7 +52,7 @@ class AnimeCategoryScreenModel(
             }
 
             allCategories.collectLatest { categories ->
-                mutableState.update {
+                state.update {
                     AnimeCategoryScreenState.Success(
                         categories = categories
                             .filterNot(AnimeCategory::isSystemCategory)
@@ -115,7 +120,7 @@ class AnimeCategoryScreenModel(
     }
 
     fun showDialog(dialog: AnimeCategoryDialog) {
-        mutableState.update {
+        state.update {
             when (it) {
                 AnimeCategoryScreenState.Loading -> it
                 is AnimeCategoryScreenState.Success -> it.copy(dialog = dialog)
@@ -124,7 +129,7 @@ class AnimeCategoryScreenModel(
     }
 
     fun dismissDialog() {
-        mutableState.update {
+        state.update {
             when (it) {
                 AnimeCategoryScreenState.Loading -> it
                 is AnimeCategoryScreenState.Success -> it.copy(dialog = null)

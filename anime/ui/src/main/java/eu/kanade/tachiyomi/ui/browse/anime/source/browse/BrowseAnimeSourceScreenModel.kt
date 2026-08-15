@@ -6,6 +6,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -29,7 +30,9 @@ import eu.kanade.tachiyomi.data.cache.AnimeBackgroundCache
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -38,7 +41,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
@@ -78,14 +80,17 @@ class BrowseAnimeSourceScreenModel(
     private val updateAnime: UpdateAnime = Injekt.get(),
     private val addTracks: AddAnimeTracks = Injekt.get(),
     private val getIncognitoState: GetAnimeIncognitoState = Injekt.get(),
-) : StateViewModel<BrowseAnimeSourceScreenModel.State>(State(Listing.valueOf(listingQuery))) {
+) : ViewModel() {
+
+    val state: StateFlow<BrowseAnimeSourceScreenModel.State>
+        field = MutableStateFlow<BrowseAnimeSourceScreenModel.State>(State(Listing.valueOf(listingQuery)))
 
     var displayMode by sourcePreferences.sourceDisplayMode.asState(viewModelScope)
 
     val source = sourceManager.getOrStub(sourceId)
 
     init {
-        mutableState.update {
+        state.update {
             var query: String? = null
             var listing = it.listing
 
@@ -149,15 +154,15 @@ class BrowseAnimeSourceScreenModel(
     }
 
     fun resetFilters() {
-        mutableState.update { it.copy(filters = source.getFilterList()) }
+        state.update { it.copy(filters = source.getFilterList()) }
     }
 
     fun setListing(listing: Listing) {
-        mutableState.update { it.copy(listing = listing, toolbarQuery = null) }
+        state.update { it.copy(listing = listing, toolbarQuery = null) }
     }
 
     fun setFilters(filters: AnimeFilterList) {
-        mutableState.update {
+        state.update {
             it.copy(
                 filters = filters,
             )
@@ -168,7 +173,7 @@ class BrowseAnimeSourceScreenModel(
         val input = state.value.listing as? Listing.Search
             ?: Listing.Search(query = null, filters = source.getFilterList())
 
-        mutableState.update {
+        state.update {
             it.copy(
                 listing = input.copy(
                     query = query ?: input.query,
@@ -207,7 +212,7 @@ class BrowseAnimeSourceScreenModel(
                 }
             }
         }
-        mutableState.update {
+        state.update {
             val listing = if (genreExists) {
                 Listing.Search(query = null, filters = defaultFilters)
             } else {
@@ -316,11 +321,11 @@ class BrowseAnimeSourceScreenModel(
     }
 
     fun setDialog(dialog: Dialog?) {
-        mutableState.update { it.copy(dialog = dialog) }
+        state.update { it.copy(dialog = dialog) }
     }
 
     fun setToolbarQuery(query: String?) {
-        mutableState.update { it.copy(toolbarQuery = query) }
+        state.update { it.copy(toolbarQuery = query) }
     }
 
     sealed class Listing(open val query: String?, open val filters: AnimeFilterList) {

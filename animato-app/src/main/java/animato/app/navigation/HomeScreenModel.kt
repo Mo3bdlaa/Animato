@@ -1,12 +1,14 @@
 package animato.app.navigation
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.domain.content.ContentType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
 import tachiyomi.domain.history.interactor.GetHistory
@@ -51,7 +53,10 @@ class HomeScreenModel(
     getAnimeHistory: GetAnimeHistory = Injekt.get(),
     getLibraryManga: GetLibraryManga = Injekt.get(),
     getLibraryAnime: GetLibraryAnime = Injekt.get(),
-) : StateViewModel<HomeScreenState>(HomeScreenState()) {
+) : ViewModel() {
+
+    val state: StateFlow<HomeScreenState>
+        field = MutableStateFlow<HomeScreenState>(HomeScreenState())
 
     init {
         combine(
@@ -97,7 +102,7 @@ class HomeScreenModel(
                 animeCount = anime.size,
             )
         }
-            .onEach { newState -> mutableState.value = newState }
+            .onEach { newState -> state.value = newState }
             .launchIn(viewModelScope)
     }
 

@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.anime.migration.anime
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import kotlinx.collections.immutable.ImmutableList
@@ -8,6 +9,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
@@ -15,7 +18,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
 import tachiyomi.domain.entries.anime.model.Anime
@@ -27,14 +29,17 @@ class MigrateAnimeScreenModel(
     private val sourceId: Long,
     private val sourceManager: AnimeSourceManager = Injekt.get(),
     private val getFavorites: GetAnimeFavorites = Injekt.get(),
-) : StateViewModel<MigrateAnimeScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<MigrateAnimeScreenModel.State>
+        field = MutableStateFlow<MigrateAnimeScreenModel.State>(State())
 
     private val _events: Channel<MigrationAnimeEvent> = Channel()
     val events: Flow<MigrationAnimeEvent> = _events.receiveAsFlow()
 
     init {
         viewModelScope.launch {
-            mutableState.update { state ->
+            state.update { state ->
                 state.copy(source = sourceManager.getOrStub(sourceId))
             }
 
@@ -42,7 +47,7 @@ class MigrateAnimeScreenModel(
                 .catch {
                     logcat(LogPriority.ERROR, it)
                     _events.send(MigrationAnimeEvent.FailedFetchingFavorites)
-                    mutableState.update { state ->
+                    state.update { state ->
                         state.copy(titleList = persistentListOf())
                     }
                 }
@@ -52,7 +57,7 @@ class MigrateAnimeScreenModel(
                         .toImmutableList()
                 }
                 .collectLatest { list ->
-                    mutableState.update { it.copy(titleList = list) }
+                    state.update { it.copy(titleList = list) }
                 }
         }
     }

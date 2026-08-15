@@ -1,6 +1,7 @@
 package animato.ui.storage
 
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,7 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.lang.launchIO
 import kotlin.random.Random
 
@@ -31,7 +31,10 @@ abstract class CommonStorageScreenModel<T>(
     private val getCategoryId: T.() -> Long,
     private val getTitle: T.() -> String,
     private val getThumbnail: T.() -> String?,
-) : StateViewModel<StorageScreenState>(StorageScreenState.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<StorageScreenState>
+        field = MutableStateFlow<StorageScreenState>(StorageScreenState.Loading)
 
     private val selectedCategory = MutableStateFlow(AllCategory)
 
@@ -45,7 +48,7 @@ abstract class CommonStorageScreenModel<T>(
                 flow5 = selectedCategory,
                 transform = { _, _, libraries, categories, selectedCategory ->
                     // initialize the screen with an empty state
-                    mutableState.update {
+                    state.update {
                         StorageScreenState.Success(
                             selectedCategory = selectedCategory,
                             categories = listOf(AllCategory, *categories.toTypedArray()),
@@ -84,7 +87,7 @@ abstract class CommonStorageScreenModel<T>(
                             ),
                         )
 
-                        mutableState.update { state ->
+                        state.update { state ->
                             when (state) {
                                 is StorageScreenState.Success -> state.copy(
                                     items = (state.items + item).sortedByDescending { it.size },

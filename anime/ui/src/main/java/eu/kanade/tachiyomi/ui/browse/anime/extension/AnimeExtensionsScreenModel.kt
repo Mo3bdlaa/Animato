@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.browse.anime.extension
 
 import android.app.Application
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.services.SEARCH_DEBOUNCE_MILLIS
 import aniyomi.domain.source.service.AnimeSourcePreferences
@@ -16,6 +17,7 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -27,7 +29,6 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
@@ -39,7 +40,10 @@ class AnimeExtensionsScreenModel(
     basePreferences: BasePreferences = Injekt.get(),
     private val extensionManager: AnimeExtensionManager = Injekt.get(),
     private val getExtensions: GetAnimeExtensionsByType = Injekt.get(),
-) : StateViewModel<AnimeExtensionsScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<AnimeExtensionsScreenModel.State>
+        field = MutableStateFlow<AnimeExtensionsScreenModel.State>(State())
 
     private val currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
 
@@ -133,7 +137,7 @@ class AnimeExtensionsScreenModel(
                 itemsGroups
             }
                 .collectLatest {
-                    mutableState.update { state ->
+                    state.update { state ->
                         state.copy(
                             isLoading = false,
                             items = it,
@@ -144,16 +148,16 @@ class AnimeExtensionsScreenModel(
         viewModelScope.launchIO { findAvailableExtensions() }
 
         preferences.animeExtensionUpdatesCount.changes()
-            .onEach { mutableState.update { state -> state.copy(updates = it) } }
+            .onEach { state.update { state -> state.copy(updates = it) } }
             .launchIn(viewModelScope)
 
         basePreferences.extensionInstaller.changes()
-            .onEach { mutableState.update { state -> state.copy(installer = it) } }
+            .onEach { state.update { state -> state.copy(installer = it) } }
             .launchIn(viewModelScope)
     }
 
     fun search(query: String?) {
-        mutableState.update {
+        state.update {
             it.copy(searchQuery = query)
         }
     }
@@ -204,13 +208,13 @@ class AnimeExtensionsScreenModel(
 
     fun findAvailableExtensions() {
         viewModelScope.launchIO {
-            mutableState.update { it.copy(isRefreshing = true) }
+            state.update { it.copy(isRefreshing = true) }
             extensionManager.findAvailableExtensions()
 
             // Fake slower refresh so it doesn't seem like it's not doing anything
             delay(1.seconds)
 
-            mutableState.update { it.copy(isRefreshing = false) }
+            state.update { it.copy(isRefreshing = false) }
         }
     }
 

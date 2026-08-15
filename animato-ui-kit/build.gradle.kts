@@ -22,7 +22,6 @@ dependencies {
     implementation(projects.i18nAnime)
     implementation(libs.injekt)
     implementation(projects.core.common)
-    implementation(projects.core.viewmodel)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.foundation)

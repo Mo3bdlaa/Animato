@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.stats.anime
 import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMapNotNull
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.ui.stats.AnimeStatsData
 import animato.anime.ui.stats.AnimeStatsScreenState
@@ -17,8 +18,9 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.animeService
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
@@ -38,7 +40,10 @@ class AnimeStatsScreenModel(
     private val preferences: LibraryPreferences = Injekt.get(),
     private val animePreferences: AnimeLibraryPreferences = Injekt.get(),
     private val trackerManager: TrackerManager = Injekt.get(),
-) : StateViewModel<AnimeStatsScreenState>(AnimeStatsScreenState.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<AnimeStatsScreenState>
+        field = MutableStateFlow<AnimeStatsScreenState>(AnimeStatsScreenState.Loading)
 
     private val loggedInTrackers by lazy { trackerManager.loggedInTrackers().filter { it is AnimeTracker } }
 
@@ -79,7 +84,7 @@ class AnimeStatsScreenModel(
                 trackerCount = loggedInTrackers.size,
             )
 
-            mutableState.update {
+            state.update {
                 AnimeStatsScreenState.Success(
                     overview = overviewStatData,
                     titles = titlesStatData,

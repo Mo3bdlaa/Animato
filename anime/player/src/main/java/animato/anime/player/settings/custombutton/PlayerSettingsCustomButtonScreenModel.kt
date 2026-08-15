@@ -1,16 +1,18 @@
 package animato.anime.player.settings.custombutton
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.icerock.moko.resources.StringResource
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.domain.custombuttons.interactor.CreateCustomButton
 import tachiyomi.domain.custombuttons.interactor.DeleteCustomButton
 import tachiyomi.domain.custombuttons.interactor.GetCustomButtons
@@ -30,7 +32,10 @@ class PlayerSettingsCustomButtonScreenModel(
     private val updateCustomButton: UpdateCustomButton = Injekt.get(),
     private val reorderCustomButton: ReorderCustomButton = Injekt.get(),
     private val toggleFavoriteCustomButton: ToggleFavoriteCustomButton = Injekt.get(),
-) : StateViewModel<CustomButtonScreenState>(CustomButtonScreenState.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<CustomButtonScreenState>
+        field = MutableStateFlow<CustomButtonScreenState>(CustomButtonScreenState.Loading)
 
     private val _events: Channel<CustomButtonEvent> = Channel()
     val events = _events.receiveAsFlow()
@@ -39,7 +44,7 @@ class PlayerSettingsCustomButtonScreenModel(
         viewModelScope.launch {
             getCustomButtons.subscribeAll()
                 .collectLatest { customButtons ->
-                    mutableState.update {
+                    state.update {
                         CustomButtonScreenState.Success(
                             customButtons = customButtons.toImmutableList(),
                         )
@@ -104,7 +109,7 @@ class PlayerSettingsCustomButtonScreenModel(
     }
 
     fun showDialog(dialog: CustomButtonDialog) {
-        mutableState.update {
+        state.update {
             when (it) {
                 CustomButtonScreenState.Loading -> it
                 is CustomButtonScreenState.Success -> it.copy(dialog = dialog)
@@ -113,7 +118,7 @@ class PlayerSettingsCustomButtonScreenModel(
     }
 
     fun dismissDialog() {
-        mutableState.update {
+        state.update {
             when (it) {
                 CustomButtonScreenState.Loading -> it
                 is CustomButtonScreenState.Success -> it.copy(dialog = null)

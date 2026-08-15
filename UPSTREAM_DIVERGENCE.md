@@ -292,6 +292,33 @@ more — in favour of `mihon.core.viewmodel.StateViewModel`, a plain AndroidX `V
 Adopted. An AndroidX `ViewModel` is the platform's own answer to surviving configuration changes,
 and it is one fewer third-party abstraction between a screen and its state.
 
+### …and then `StateViewModel` itself — deleted
+
+Mihon has since removed the base class and the `:core:viewmodel` module with it, in favour of
+Kotlin's explicit backing fields:
+
+```kotlin
+val state: StateFlow<State>
+    field = MutableStateFlow(State())
+```
+
+Inside the class `state` is the mutable one; outside it is not. So the pair of names collapses into
+one, and a base class is no longer needed to hold it.
+
+Adopted, across 31 of our view models. Keeping the deleted class in a module of ours would have been
+one small file against 31 mechanical edits — but the class was only ever a workaround for something
+the language now does, and holding on to it would have left our view models reading differently from
+every Mihon one beside them.
+
+Three things the rename cannot do by itself, all of which the compiler caught:
+
+- **A lambda parameter named `state` now shadows the property.** It was harmless while the mutable
+  one was called something else. Renamed the parameters.
+- **A subclass cannot reach the backing field** — Kotlin forbids a visibility modifier on one, so
+  `protected` is not available. Mihon's answer is a `protected fun updateState(…)` on the base, and
+  `AnimeSearchScreenModel` has the same.
+- **Nested view models in one file** need converting individually; `AnimeTrackInfoDialog` holds four.
+
 ### `convertEpochMillisZone` and the date helpers → `kotlinx.datetime`
 
 Mihon moved `eu.kanade.tachiyomi.util.lang`'s date helpers from `java.time` to `kotlinx.datetime`,

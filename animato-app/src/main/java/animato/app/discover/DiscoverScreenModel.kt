@@ -1,6 +1,7 @@
 package animato.app.discover
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.domain.content.ContentType
 import aniyomi.domain.source.service.AnimeSourcePreferences
@@ -11,10 +12,11 @@ import eu.kanade.tachiyomi.source.CatalogueSource
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import mihon.domain.manga.model.toDomainManga
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.interactor.NetworkToLocalAnime
@@ -72,21 +74,24 @@ class DiscoverScreenModel(
     private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
     private val contentType: ContentType,
-) : StateViewModel<DiscoverState>(DiscoverState()) {
+) : ViewModel() {
+
+    val state: StateFlow<DiscoverState>
+        field = MutableStateFlow<DiscoverState>(DiscoverState())
 
     init {
         viewModelScope.launch {
             pinnedSourceIds().collectLatest { pinned ->
-                mutableState.value = DiscoverState(hasPinnedSources = pinned.isNotEmpty())
+                state.value = DiscoverState(hasPinnedSources = pinned.isNotEmpty())
                 if (pinned.isEmpty()) return@collectLatest
 
                 launch {
                     val rail = load(pinned, latest = false)
-                    mutableState.value = state.value.copy(popular = rail)
+                    state.value = state.value.copy(popular = rail)
                 }
                 launch {
                     val rail = load(pinned, latest = true)
-                    mutableState.value = state.value.copy(latest = rail)
+                    state.value = state.value.copy(latest = rail)
                 }
             }
         }

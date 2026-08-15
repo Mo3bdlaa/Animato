@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
@@ -24,6 +25,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -33,7 +36,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
@@ -62,7 +64,10 @@ class AnimeUpdatesScreenModel(
     private val animeLibraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
     downloadPreferences: AnimeDownloadPreferences = Injekt.get(),
-) : StateViewModel<AnimeUpdatesScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<AnimeUpdatesScreenModel.State>
+        field = MutableStateFlow<AnimeUpdatesScreenModel.State>(State())
 
     private val _events: Channel<Event> = Channel(Int.MAX_VALUE)
     val events: Flow<Event> = _events.receiveAsFlow()
@@ -90,7 +95,7 @@ class AnimeUpdatesScreenModel(
                     _events.send(Event.InternalError)
                 }
                 .collectLatest { updates ->
-                    mutableState.update {
+                    state.update {
                         it.copy(
                             isLoading = false,
                             items = updates.toUpdateItems(),
@@ -145,7 +150,7 @@ class AnimeUpdatesScreenModel(
      * @param download download object containing progress.
      */
     private fun updateDownloadState(download: AnimeDownload) {
-        mutableState.update { state ->
+        state.update { state ->
             val newItems = state.items.mutate { list ->
                 val modifiedIndex = list.indexOfFirst { it.update.episodeId == download.episode.id }
                 if (modifiedIndex < 0) return@mutate
@@ -304,7 +309,7 @@ class AnimeUpdatesScreenModel(
         userSelected: Boolean = false,
         fromLongPress: Boolean = false,
     ) {
-        mutableState.update { state ->
+        state.update { state ->
             val newItems = state.items.toMutableList().apply {
                 val selectedIndex = indexOfFirst { it.update.episodeId == item.update.episodeId }
                 if (selectedIndex < 0) return@apply
@@ -363,7 +368,7 @@ class AnimeUpdatesScreenModel(
     }
 
     fun toggleAllSelection(selected: Boolean) {
-        mutableState.update { state ->
+        state.update { state ->
             val newItems = state.items.map {
                 selectedEpisodeIds.addOrRemove(it.update.episodeId, selected)
                 it.copy(selected = selected)
@@ -376,7 +381,7 @@ class AnimeUpdatesScreenModel(
     }
 
     fun invertSelection() {
-        mutableState.update { state ->
+        state.update { state ->
             val newItems = state.items.map {
                 selectedEpisodeIds.addOrRemove(it.update.episodeId, !it.selected)
                 it.copy(selected = !it.selected)
@@ -388,7 +393,7 @@ class AnimeUpdatesScreenModel(
     }
 
     fun setDialog(dialog: Dialog?) {
-        mutableState.update { it.copy(dialog = dialog) }
+        state.update { it.copy(dialog = dialog) }
     }
 
     fun resetNewUpdatesCount() {

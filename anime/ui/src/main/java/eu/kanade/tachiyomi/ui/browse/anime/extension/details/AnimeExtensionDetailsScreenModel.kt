@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.browse.anime.extension.details
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import aniyomi.domain.source.service.AnimeSourcePreferences
 import eu.kanade.domain.extension.anime.interactor.AnimeExtensionSourceItem
@@ -18,6 +19,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -26,7 +29,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
@@ -41,7 +43,10 @@ class AnimeExtensionDetailsScreenModel(
     private val toggleSource: ToggleAnimeSource = Injekt.get(),
     private val toggleIncognito: ToggleAnimeIncognito = Injekt.get(),
     private val preferences: AnimeSourcePreferences = Injekt.get(),
-) : StateViewModel<AnimeExtensionDetailsScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<AnimeExtensionDetailsScreenModel.State>
+        field = MutableStateFlow<AnimeExtensionDetailsScreenModel.State>(State())
 
     private val _events: Channel<AnimeExtensionDetailsEvent> = Channel()
     val events: Flow<AnimeExtensionDetailsEvent> = _events.receiveAsFlow()
@@ -56,15 +61,15 @@ class AnimeExtensionDetailsScreenModel(
                             _events.send(AnimeExtensionDetailsEvent.Uninstalled)
                             return@collectLatest
                         }
-                        mutableState.update { state ->
+                        state.update { state ->
                             state.copy(extension = extension)
                         }
                     }
             }
             launch {
-                state.collectLatest { state ->
-                    if (state.extension == null) return@collectLatest
-                    getExtensionSources.subscribe(state.extension)
+                state.collectLatest { current ->
+                    if (current.extension == null) return@collectLatest
+                    getExtensionSources.subscribe(current.extension)
                         .map {
                             it.sortedWith(
                                 compareBy(
@@ -81,10 +86,10 @@ class AnimeExtensionDetailsScreenModel(
                         }
                         .catch { throwable ->
                             logcat(LogPriority.ERROR, throwable)
-                            mutableState.update { it.copy(_sources = persistentListOf()) }
+                            state.update { it.copy(_sources = persistentListOf()) }
                         }
                         .collectLatest { sources ->
-                            mutableState.update { it.copy(_sources = sources.toImmutableList()) }
+                            state.update { it.copy(_sources = sources.toImmutableList()) }
                         }
                 }
             }
@@ -94,7 +99,7 @@ class AnimeExtensionDetailsScreenModel(
                     .map { pkgName in it }
                     .distinctUntilChanged()
                     .collectLatest { isIncognito ->
-                        mutableState.update { it.copy(isIncognito = isIncognito) }
+                        state.update { it.copy(isIncognito = isIncognito) }
                     }
             }
         }

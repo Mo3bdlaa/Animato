@@ -2,6 +2,7 @@ package animato.anime.ui.upcoming
 
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapIndexedNotNull
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.core.util.insertSeparatorsReversed
 import eu.kanade.tachiyomi.util.lang.toLocalDate
@@ -11,6 +12,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -19,7 +22,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.yearMonth
-import mihon.core.viewmodel.StateViewModel
 import mihon.domain.upcoming.anime.interactor.GetUpcomingAnime
 import tachiyomi.domain.entries.anime.model.Anime
 import uy.kohesive.injekt.Injekt
@@ -28,12 +30,15 @@ import kotlin.time.Clock
 
 class UpcomingAnimeScreenModel(
     private val getUpcomingAnime: GetUpcomingAnime = Injekt.get(),
-) : StateViewModel<UpcomingAnimeScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<UpcomingAnimeScreenModel.State>
+        field = MutableStateFlow<UpcomingAnimeScreenModel.State>(State())
 
     init {
         viewModelScope.launch {
             getUpcomingAnime.subscribe().collectLatest {
-                mutableState.update { state ->
+                state.update { state ->
                     val upcomingItems = it.toUpcomingAnimeUIModels()
                     state.copy(
                         items = upcomingItems,
@@ -82,7 +87,7 @@ class UpcomingAnimeScreenModel(
     }
 
     fun setSelectedYearMonth(yearMonth: YearMonth) {
-        mutableState.update { it.copy(selectedYearMonth = yearMonth) }
+        state.update { it.copy(selectedYearMonth = yearMonth) }
     }
 
     data class State(

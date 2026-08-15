@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.anime.migration.sources
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import aniyomi.domain.source.interactor.SetAnimeMigrateSorting
 import aniyomi.domain.source.service.AnimeSourcePreferences
@@ -9,6 +10,8 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
@@ -16,7 +19,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.anime.model.AnimeSource
@@ -27,7 +29,10 @@ class MigrateAnimeSourceScreenModel(
     preferences: AnimeSourcePreferences = Injekt.get(),
     private val getSourcesWithFavoriteCount: GetAnimeSourcesWithFavoriteCount = Injekt.get(),
     private val setMigrateSorting: SetAnimeMigrateSorting = Injekt.get(),
-) : StateViewModel<MigrateAnimeSourceScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<MigrateAnimeSourceScreenModel.State>
+        field = MutableStateFlow<MigrateAnimeSourceScreenModel.State>(State())
 
     private val _channel = Channel<Event>(Int.MAX_VALUE)
     val channel = _channel.receiveAsFlow()
@@ -40,7 +45,7 @@ class MigrateAnimeSourceScreenModel(
                     _channel.send(Event.FailedFetchingSourcesWithCount)
                 }
                 .collectLatest { sources ->
-                    mutableState.update {
+                    state.update {
                         it.copy(
                             isLoading = false,
                             items = sources.toImmutableList(),
@@ -50,11 +55,11 @@ class MigrateAnimeSourceScreenModel(
         }
 
         preferences.migrationSortingDirection.changes()
-            .onEach { mutableState.update { state -> state.copy(sortingDirection = it) } }
+            .onEach { state.update { state -> state.copy(sortingDirection = it) } }
             .launchIn(viewModelScope)
 
         preferences.migrationSortingMode.changes()
-            .onEach { mutableState.update { state -> state.copy(sortingMode = it) } }
+            .onEach { state.update { state -> state.copy(sortingMode = it) } }
             .launchIn(viewModelScope)
     }
 

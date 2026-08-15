@@ -43,7 +43,6 @@ dependencies {
     implementation(projects.presentationCore)
     implementation(projects.animatoUiKit)
     implementation(projects.core.common)
-    implementation(projects.core.viewmodel)
     implementation(projects.coreMetadata)
     implementation(projects.sourceApi)
     implementation(projects.i18n)

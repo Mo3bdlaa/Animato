@@ -142,7 +142,6 @@ dependencies {
     implementation(libs.androidx.compose.materialIcons)
     implementation(libs.composeMaterialMotion)
     implementation(libs.androidx.lifecycle.viewmodelCompose)
-    implementation(projects.core.viewmodel)
     implementation(projects.i18nAnime)
     implementation(libs.bundles.coil)
     implementation(animato.kotlinx.immutables)

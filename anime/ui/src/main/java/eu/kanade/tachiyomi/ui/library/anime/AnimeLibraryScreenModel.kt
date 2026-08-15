@@ -8,6 +8,7 @@ import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapNotNull
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.services.SEARCH_DEBOUNCE_MILLIS
 import animato.anime.util.removeBackgrounds
@@ -38,6 +39,8 @@ import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -49,7 +52,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.compareToWithCollator
@@ -101,7 +103,10 @@ class AnimeLibraryScreenModel(
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val downloadCache: AnimeDownloadCache = Injekt.get(),
     private val trackerManager: TrackerManager = Injekt.get(),
-) : StateViewModel<AnimeLibraryScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<AnimeLibraryScreenModel.State>
+        field = MutableStateFlow<AnimeLibraryScreenModel.State>(State())
 
     var activeCategoryIndex: Int by animeLibraryPreferences.lastUsedAnimeCategory().asState(
         viewModelScope,
@@ -128,7 +133,7 @@ class AnimeLibraryScreenModel(
                     }
             }
                 .collectLatest {
-                    mutableState.update { state ->
+                    state.update { state ->
                         state.copy(
                             isLoading = false,
                             library = it,
@@ -143,7 +148,7 @@ class AnimeLibraryScreenModel(
             libraryPreferences.showContinueReadingButton.changes(),
         ) { a, b, c -> arrayOf(a, b, c) }
             .onEach { (showCategoryTabs, showAnimeCount, showAnimeContinueButton) ->
-                mutableState.update { state ->
+                state.update { state ->
                     state.copy(
                         showCategoryTabs = showCategoryTabs,
                         showAnimeCount = showAnimeCount,
@@ -170,7 +175,7 @@ class AnimeLibraryScreenModel(
         }
             .distinctUntilChanged()
             .onEach {
-                mutableState.update { state ->
+                state.update { state ->
                     state.copy(hasActiveFilters = it)
                 }
             }
@@ -607,15 +612,15 @@ class AnimeLibraryScreenModel(
     }
 
     fun showSettingsDialog() {
-        mutableState.update { it.copy(dialog = Dialog.SettingsSheet) }
+        state.update { it.copy(dialog = Dialog.SettingsSheet) }
     }
 
     fun clearSelection() {
-        mutableState.update { it.copy(selection = persistentListOf()) }
+        state.update { it.copy(selection = persistentListOf()) }
     }
 
     fun toggleSelection(anime: LibraryAnime) {
-        mutableState.update { state ->
+        state.update { state ->
             val newSelection = state.selection.mutate { list ->
                 if (list.fastAny { it.id == anime.id }) {
                     list.removeAll { it.id == anime.id }
@@ -632,7 +637,7 @@ class AnimeLibraryScreenModel(
      * same category as the given anime
      */
     fun toggleRangeSelection(anime: LibraryAnime) {
-        mutableState.update { state ->
+        state.update { state ->
             val newSelection = state.selection.mutate { list ->
                 val lastSelected = list.lastOrNull()
                 if (lastSelected?.category != anime.category) {
@@ -662,7 +667,7 @@ class AnimeLibraryScreenModel(
     }
 
     fun selectAll(index: Int) {
-        mutableState.update { state ->
+        state.update { state ->
             val newSelection = state.selection.mutate { list ->
                 val categoryId = state.categories.getOrNull(index)?.id ?: -1
                 val selectedIds = list.fastMap { it.id }
@@ -677,7 +682,7 @@ class AnimeLibraryScreenModel(
     }
 
     fun invertSelection(index: Int) {
-        mutableState.update { state ->
+        state.update { state ->
             val newSelection = state.selection.mutate { list ->
                 val categoryId = state.categories[index].id
                 val items = state.getAnimelibItemsByCategoryId(categoryId)?.fastMap { it.libraryAnime }.orEmpty()
@@ -692,7 +697,7 @@ class AnimeLibraryScreenModel(
     }
 
     fun search(query: String?) {
-        mutableState.update { it.copy(searchQuery = query) }
+        state.update { it.copy(searchQuery = query) }
     }
 
     fun openChangeCategoryDialog() {
@@ -716,17 +721,17 @@ class AnimeLibraryScreenModel(
                     }
                 }
                 .toImmutableList()
-            mutableState.update { it.copy(dialog = Dialog.ChangeCategory(animeList, preselected)) }
+            state.update { it.copy(dialog = Dialog.ChangeCategory(animeList, preselected)) }
         }
     }
 
     fun openDeleteAnimeDialog() {
         val nimeList = state.value.selection.map { it.anime }
-        mutableState.update { it.copy(dialog = Dialog.DeleteAnime(nimeList)) }
+        state.update { it.copy(dialog = Dialog.DeleteAnime(nimeList)) }
     }
 
     fun closeDialog() {
-        mutableState.update { it.copy(dialog = null) }
+        state.update { it.copy(dialog = null) }
     }
 
     sealed interface Dialog {

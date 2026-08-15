@@ -2,6 +2,7 @@ package animato.anime.player.settings.editor
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.player.SCRIPTS_PATH
 import animato.anime.player.SCRIPT_OPTS_PATH
@@ -14,10 +15,10 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.storage.service.StorageManager
@@ -31,7 +32,11 @@ import java.util.Locale
 class PlayerSettingsEditorScreenModel(
     private val context: Context,
     private val storageManager: StorageManager = Injekt.get(),
-) : StateViewModel<EditorScreenState>(EditorScreenState.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<EditorScreenState>
+        field = MutableStateFlow<EditorScreenState>(EditorScreenState.Loading)
+
     private val _selectedType = MutableStateFlow(EditorListType.SCRIPTS)
     val selectedType = _selectedType.asStateFlow()
 
@@ -47,7 +52,7 @@ class PlayerSettingsEditorScreenModel(
     }
 
     private fun updateItems(type: EditorListType) {
-        mutableState.update {
+        state.update {
             EditorScreenState.Success(
                 editorListItems = getEditorListItems(type),
             )
@@ -91,7 +96,7 @@ class PlayerSettingsEditorScreenModel(
     }
 
     fun isValidName(name: String, initialName: String? = null): FileCreationResult {
-        val names = (mutableState.value as? EditorScreenState.Success)
+        val names = (state.value as? EditorScreenState.Success)
             ?.editorListItems
             ?.map { it.name }
             ?.filterNot { it == initialName }

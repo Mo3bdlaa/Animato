@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.SnackbarHostState
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.util.editBackground
 import animato.anime.util.editCover
@@ -19,10 +20,11 @@ import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.saver.Location
 import eu.kanade.tachiyomi.util.system.getBitmapOrNull
 import eu.kanade.tachiyomi.util.system.toShareIntent
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
@@ -44,7 +46,10 @@ class AnimeImageScreenModel(
     private val updateAnime: UpdateAnime = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
     val pagerState: PagerState = PagerState(pageCount = { 2 }),
-) : StateViewModel<Anime?>(null) {
+) : ViewModel() {
+
+    val state: StateFlow<Anime?>
+        field = MutableStateFlow<Anime?>(null)
 
     private val isCover: Boolean
         get() = pagerState.currentPage != 1
@@ -52,7 +57,7 @@ class AnimeImageScreenModel(
     init {
         viewModelScope.launchIO {
             getAnime.subscribe(animeId)
-                .collect { newAnime -> mutableState.update { newAnime } }
+                .collect { newAnime -> state.update { newAnime } }
         }
     }
 

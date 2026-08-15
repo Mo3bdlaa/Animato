@@ -1,15 +1,17 @@
 package animato.app.library
 
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.domain.content.ContentType
 import animato.domain.content.LibraryEntry
 import animato.domain.content.interactor.GetUnifiedLibrary
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.category.anime.interactor.GetVisibleAnimeCategories
 import tachiyomi.domain.category.interactor.GetCategories
@@ -34,7 +36,10 @@ class UnifiedLibraryScreenModel(
     getAnimeCategories: GetVisibleAnimeCategories = Injekt.get(),
     private val downloadCache: DownloadCache = Injekt.get(),
     private val animeDownloadCache: AnimeDownloadCache = Injekt.get(),
-) : StateViewModel<UnifiedLibraryState>(UnifiedLibraryState()) {
+) : ViewModel() {
+
+    val state: StateFlow<UnifiedLibraryState>
+        field = MutableStateFlow<UnifiedLibraryState>(UnifiedLibraryState())
 
     init {
         combine(
@@ -58,7 +63,7 @@ class UnifiedLibraryScreenModel(
         }
             .onEach { (entries, options) ->
                 val downloaded = withIOContext { entries.filterDownloaded() }
-                mutableState.value = state.value.copy(
+                state.value = state.value.copy(
                     isLoading = false,
                     entries = entries,
                     downloadedEntryKeys = downloaded,
@@ -88,18 +93,18 @@ class UnifiedLibraryScreenModel(
         }
 
     fun setStatusFilter(filter: LibraryStatusFilter) {
-        mutableState.value = state.value.copy(statusFilter = filter)
+        state.value = state.value.copy(statusFilter = filter)
     }
 
     fun setCategoryScope(scope: CategoryScope) {
-        mutableState.value = state.value.copy(categoryScope = scope)
+        state.value = state.value.copy(categoryScope = scope)
     }
 
     fun setSortMode(mode: LibrarySortMode) {
-        mutableState.value = state.value.copy(sortMode = mode)
+        state.value = state.value.copy(sortMode = mode)
     }
 
     fun search(query: String?) {
-        mutableState.value = state.value.copy(searchQuery = query)
+        state.value = state.value.copy(searchQuery = query)
     }
 }

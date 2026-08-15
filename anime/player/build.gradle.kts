@@ -47,7 +47,6 @@ dependencies {
     implementation(libs.reorderable)
     implementation(libs.androidx.lifecycle.viewmodelCompose)
     implementation(projects.core.common)
-    implementation(projects.core.viewmodel)
     implementation(projects.i18n)
 
     // Depending on Mihon's app pulls its Compose artifacts in transitively, and those take
