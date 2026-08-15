@@ -17,17 +17,15 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 
-/**
- * Pieces of the extensions screen that both content types draw the same way.
- *
- * In Mihon these live inside `MangaExtensionsScreen.kt` and `MangaExtensionDetailsScreen.kt` as
- * file-private or module-internal declarations — fine when the manga and anime screens were in one
- * module, and unreachable once the anime screens are in another. They are copies here rather than
- * a shared abstraction pushed back into Mihon's files, which is the rule the architecture keeps.
- *
- * `TrailingWidgetBuffer` is the same story: an `internal val` in Mihon's preference widgets, and
- * the extension detail rows need it to line their trailing controls up with the settings screens.
- */
+// Pieces of the extensions screen that both content types draw the same way.
+//
+// In Mihon these live inside MangaExtensionsScreen.kt and MangaExtensionDetailsScreen.kt as
+// file-private or module-internal declarations — fine when the manga and anime screens were in one
+// module, and unreachable once the anime screens are in another. They are copies here rather than a
+// shared abstraction pushed back into Mihon's files, which is the rule the architecture keeps.
+//
+// TrailingWidgetBuffer is the same story: an internal val in Mihon's preference widgets, and the
+// extension detail rows need it to line their trailing controls up with the settings screens.
 
 /** Section heading in an extension list — "Installed", "Available", and so on. */
 @Composable
