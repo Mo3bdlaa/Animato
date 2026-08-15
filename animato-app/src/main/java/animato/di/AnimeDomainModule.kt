@@ -5,9 +5,20 @@ import aniyomi.domain.source.interactor.SetAnimeMigrateSorting
 import eu.kanade.domain.download.anime.interactor.DeleteEpisodeDownload
 import eu.kanade.domain.entries.anime.interactor.SyncSeasonsWithSource
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
+import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionLanguages
+import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionSources
+import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionsByType
 import eu.kanade.domain.extension.anime.interactor.TrustAnimeExtension
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
 import eu.kanade.domain.items.episode.interactor.SyncEpisodesWithSource
+import eu.kanade.domain.source.anime.interactor.GetAnimeSourcesWithFavoriteCount
+import eu.kanade.domain.source.anime.interactor.GetEnabledAnimeSources
+import eu.kanade.domain.source.anime.interactor.GetLanguagesWithAnimeSources
+import eu.kanade.domain.source.anime.interactor.ToggleAnimeIncognito
+import eu.kanade.domain.source.anime.interactor.ToggleAnimeSource
+import eu.kanade.domain.source.anime.interactor.ToggleAnimeSourcePin
+import eu.kanade.domain.track.anime.interactor.RefreshAnimeTracks
+import eu.kanade.domain.track.anime.interactor.SyncEpisodeProgressWithTrack
 import mihon.data.extension.anime.repository.AnimeExtensionStoreRepositoryImpl
 import mihon.data.extension.anime.service.AnimeExtensionStoreService
 import mihon.domain.extension.anime.interactor.AddAnimeExtensionStore
@@ -182,5 +193,27 @@ class AnimeDomainModule : InjektModule {
         addFactory { ReorderCustomButton(get()) }
         addFactory { ToggleFavoriteCustomButton(get()) }
         addFactory { UpdateAnimeFromRemote(get(), get(), get(), get(), get(), get(), get()) }
+
+        /*
+         * The browse and tracking interactors, which had been written and never bound.
+         *
+         * Every one of these is the default argument of a screen model — `= Injekt.get()` — so a
+         * missing binding is not a degraded screen, it is an exception on the way in: the anime
+         * source list, the extension list and its filter, the extension details, migration, and
+         * the anime entry screen with its tracking dialog. Mihon binds each of their manga
+         * counterparts in DomainModule; these are the anime half, and were the last thing between
+         * the anime side and being usable.
+         */
+        addFactory { GetEnabledAnimeSources(get(), get(), get()) }
+        addFactory { GetLanguagesWithAnimeSources(get(), get(), get()) }
+        addFactory { GetAnimeSourcesWithFavoriteCount(get(), get()) }
+        addFactory { ToggleAnimeSource(get()) }
+        addFactory { ToggleAnimeSourcePin(get()) }
+        addFactory { ToggleAnimeIncognito(get()) }
+        addFactory { GetAnimeExtensionsByType(get(), get()) }
+        addFactory { GetAnimeExtensionLanguages(get(), get()) }
+        addFactory { GetAnimeExtensionSources(get()) }
+        addFactory { SyncEpisodeProgressWithTrack(get(), get(), get()) }
+        addFactory { RefreshAnimeTracks(get(), get(), get(), get()) }
     }
 }
