@@ -39,8 +39,8 @@ fun StorageManager.getScriptOptsDirectory(): UniFile? =
 
 fun StorageManager.getShadersDirectory(): UniFile? = getMPVConfigDirectory()?.createDirectory(SHADERS_PATH)
 
-private const val MPV_CONFIG_PATH = "mpv"
-private const val FONTS_PATH = "fonts"
-private const val SCRIPTS_PATH = "scripts"
-private const val SCRIPT_OPTS_PATH = "script-opts"
-private const val SHADERS_PATH = "shaders"
+const val MPV_CONFIG_PATH = "mpv"
+const val FONTS_PATH = "fonts"
+const val SCRIPTS_PATH = "scripts"
+const val SCRIPT_OPTS_PATH = "script-opts"
+const val SHADERS_PATH = "shaders"

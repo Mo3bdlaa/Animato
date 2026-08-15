@@ -12,7 +12,7 @@ torrent-server native libraries are in the shipped APK.
 | --- | --- | --- |
 | 5a | loaders and the video resolver | done |
 | 5b | playback core and controls | done |
-| 5c | player settings screens | **blocked — see below** |
+| 5c | player settings screens | done |
 
 ## The seam
 
@@ -40,29 +40,33 @@ The pattern is worth naming: the loaders imported a Compose sheet to get at a *s
 the view model imported a *settings screen* to describe its own loading state. Neither is about
 drawing. Moving them is what let the loaders ship in 5a without dragging the whole UI along.
 
-## What 5c is blocked on
+## The blocker that was not one
 
-Aniyomi's player settings screens — 22 files, about 3,300 lines — plug into Mihon's settings
-framework, and to do so Aniyomi added three item types to it: `MultiLineEditTextPreference`,
-`MPVConfPreference` and `EditTextInfoPreference`.
+Aniyomi's player settings screens plug into Mihon's settings framework, and to do so Aniyomi added
+three item types to it: `MultiLineEditTextPreference`, `MPVConfPreference` and
+`EditTextInfoPreference`.
 
-**Mihon's `Preference` and `PreferenceItem` are `sealed`.** A sealed hierarchy can only be extended
-from the module that declares it, so no amount of care lets us add those three from here. This is
-not a boundary we chose to respect; it is one the compiler enforces.
+Mihon's `Preference` and `PreferenceItem` are `sealed`, so those three cannot be added from here.
+This module's notes concluded from that that 5c was blocked until phase 6 built a preference
+renderer of our own. **That was wrong**, and it cost the screens a phase.
 
-There are two ways through, and both belong to phase 6 rather than here:
+The hierarchy has an escape hatch: `CustomPreference` takes a `@Composable` and renders exactly it.
+Nothing needed extending. The three item types are three functions in `animato.ui.settings` that
+return a `CustomPreference`, so a settings screen declares them the way it declares any other row,
+and upstream keeps one preference hierarchy while we keep none.
 
-1. **Render the player's settings ourselves.** `ARCHITECTURE.md` already puts the settings structure
-   in `:animato:app`, and the brand specification replaces the settings tab with an overflow entry —
-   so phase 6 is rebuilding this surface regardless. Writing our own preference rendering now would
-   mean writing it twice.
-2. **Ask upstream.** Mihon may well accept the hierarchy being opened up; that is a conversation, not
-   a workaround.
+The lesson is narrower than "read the file": the sealed-ness was real and the conclusion drawn from
+it was not checked against what the sealed type already offered.
 
-The screens are not in this module. They are a `cp -r` from the donor branch at
-`app/src/main/java/eu/kanade/presentation/more/settings/screen/player`, and the analysis above is
-what to read before doing it.
+## Where the settings live
 
-Until then the player runs on its preference defaults: `PlayerPreferences`, `AudioPreferences`,
-`SubtitlePreferences`, `DecoderPreferences`, `GesturePreferences` and `AdvancedPlayerPreferences` are
-all bound and read, there is simply no screen to change them from.
+| | |
+| --- | --- |
+| `animato.ui.settings` | the two generic rows — multi-line text, and text with a caption and a rule |
+| `animato.anime.player.settings.mpvConfPreference` | the third, which also writes an mpv config file |
+| `animato.anime.player.settings` | the eight settings screens, the custom-button editor and the config editor |
+
+Two things Aniyomi read off Mihon that were not there to read: `BasePreferences.deviceHasPip()`,
+which is a device capability rather than a preference and is answered by the package manager, and
+`InfoPreference(enabled = …)`, which does not exist — Mihon hides a disabled preference rather than
+greying it out, so leaving the item out of the list says the same thing.

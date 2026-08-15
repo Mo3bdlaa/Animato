@@ -43,6 +43,9 @@ dependencies {
     implementation(projects.domain)
     implementation(projects.presentationCore)
     implementation(projects.animatoUiKit)
+    // The custom-button settings list is drag-to-reorder.
+    implementation(libs.reorderable)
+    implementation(libs.androidx.lifecycle.viewmodelCompose)
     implementation(projects.core.common)
     implementation(projects.core.viewmodel)
     implementation(projects.i18n)

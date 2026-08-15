@@ -215,7 +215,7 @@ to resolve.
 | 4a | the Injekt modules binding the anime types | done |
 | 5a | `:anime:player` — loaders and the video resolver | done |
 | 5b | playback core, controls, external player, picture-in-picture | done |
-| 5c | player settings screens | blocked: Mihon's `Preference` is sealed — see the module README |
+| 5c | player settings screens | done — the sealed hierarchy was never the blocker; see the module README |
 | 6a | our `MainActivity` and the Animato theme, above Mihon's screens | done |
 | 6b | `:anime:ui` — the anime screens | done |
 | 6c | the Animato tab bar and a home screen combining both content types | done |
