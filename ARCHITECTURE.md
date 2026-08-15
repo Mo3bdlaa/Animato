@@ -218,7 +218,7 @@ to resolve.
 | 5c | player settings screens | blocked: Mihon's `Preference` is sealed — see the module README |
 | 6a | our `MainActivity` and the Animato theme, above Mihon's screens | done |
 | 6b | `:anime:ui` — the anime screens | done |
-| 6c | the Animato tab bar and a home screen combining both content types | started: the bar is up; the library and updates screens still show one content type at a time |
+| 6c | the Animato tab bar and a home screen combining both content types | started: bar, home and unified library are up; Discover is still Browse renamed |
 | 6d | settings structure — unblocks 5c | |
 | 7 | Importer for Aniyomi backups | |
 

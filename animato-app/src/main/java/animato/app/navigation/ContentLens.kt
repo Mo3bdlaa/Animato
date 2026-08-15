@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import animato.domain.content.ContentFilter
 import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
 import tachiyomi.i18n.aniyomi.AYMR
@@ -33,6 +34,37 @@ fun contentType(): ContentType {
 
 fun setContentType(type: ContentType) {
     Injekt.get<ContentPreferences>().contentType.set(type)
+}
+
+/**
+ * The library's own lens, which has a third state the others cannot offer.
+ *
+ * Library is the one destination that can draw both halves at once, so it is the one that gets an
+ * `ALL`. Discover, Updates and Downloads each show one library's screen, and there is no unified
+ * screen for them to show instead.
+ */
+@Composable
+fun libraryFilter(): ContentFilter {
+    val preferences = remember { Injekt.get<ContentPreferences>() }
+    val filter by preferences.libraryFilter.collectAsState()
+    return filter
+}
+
+fun cycleLibraryFilter() {
+    val preferences = Injekt.get<ContentPreferences>()
+    val next = when (preferences.libraryFilter.get()) {
+        ContentFilter.ALL -> ContentFilter.MANGA
+        ContentFilter.MANGA -> ContentFilter.ANIME
+        ContentFilter.ANIME -> ContentFilter.ALL
+    }
+    preferences.libraryFilter.set(next)
+    // Keep the other destinations pointed at whichever half the library was just narrowed to, so
+    // moving between them does not silently change what you are looking at.
+    if (next != ContentFilter.ALL) {
+        preferences.contentType.set(
+            if (next == ContentFilter.ANIME) ContentType.ANIME else ContentType.MANGA,
+        )
+    }
 }
 
 fun toggleContentType() {

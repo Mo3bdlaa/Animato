@@ -34,6 +34,16 @@ interface LibraryEntry {
 
     val thumbnailUrl: String?
 
+    /**
+     * What the image loader should be handed to draw this entry's cover.
+     *
+     * An `AnimeCover` or a `MangaCover`, passed through rather than converted: both already have a
+     * fetcher registered, and each carries the entry id and last-modified stamp that make a custom
+     * cover and a cache key work. Untyped because Mihon's `MangaCover` is upstream's file and
+     * cannot be made to implement anything of ours.
+     */
+    val coverData: Any
+
     val favorite: Boolean
 
     val dateAdded: Long

@@ -3,6 +3,7 @@ package tachiyomi.domain.library.anime
 import animato.domain.content.ContentType
 import animato.domain.content.LibraryEntry
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.asAnimeCover
 
 data class LibraryAnime(
     val anime: Anime,
@@ -40,6 +41,8 @@ data class LibraryAnime(
     override val title: String get() = anime.title
 
     override val thumbnailUrl: String? get() = anime.thumbnailUrl
+
+    override val coverData: Any get() = anime.asAnimeCover()
 
     override val favorite: Boolean get() = anime.favorite
 

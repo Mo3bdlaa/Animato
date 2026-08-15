@@ -1,6 +1,7 @@
 package animato.domain.content
 
 import tachiyomi.domain.library.model.LibraryManga
+import tachiyomi.domain.manga.model.asMangaCover
 
 /**
  * A manga library row, seen as a [LibraryEntry].
@@ -27,6 +28,8 @@ value class MangaLibraryEntry(val libraryManga: LibraryManga) : LibraryEntry {
     override val title: String get() = libraryManga.manga.title
 
     override val thumbnailUrl: String? get() = libraryManga.manga.thumbnailUrl
+
+    override val coverData: Any get() = libraryManga.manga.asMangaCover()
 
     override val favorite: Boolean get() = libraryManga.manga.favorite
 

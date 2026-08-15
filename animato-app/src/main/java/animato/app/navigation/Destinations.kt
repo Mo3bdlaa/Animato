@@ -11,6 +11,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.library.UnifiedLibraryContent
+import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.navigation.AnimatoNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -55,16 +57,19 @@ data object AnimatoLibraryTab : Tab {
             )
         }
 
-    override suspend fun onReselect(navigator: Navigator) = toggleContentType()
+    override suspend fun onReselect(navigator: Navigator) = cycleLibraryFilter()
 
     @Composable
     override fun Content() {
-        when (contentType()) {
-            ContentType.MANGA -> {
+        when (libraryFilter()) {
+            // Both halves in one grid. Re-selecting the destination narrows to one, where the
+            // per-library screens still hold everything the unified grid does not do yet.
+            ContentFilter.ALL -> UnifiedLibraryContent()
+            ContentFilter.MANGA -> {
                 MirrorSelectionMode(viewModel<LibraryViewModel>().state.collectAsState().value.selectionMode)
                 LibraryTab.Content()
             }
-            ContentType.ANIME -> AnimeLibraryTab.Content()
+            ContentFilter.ANIME -> AnimeLibraryTab.Content()
         }
     }
 }
