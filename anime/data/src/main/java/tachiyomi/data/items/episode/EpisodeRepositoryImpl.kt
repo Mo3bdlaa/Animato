@@ -1,5 +1,6 @@
 package tachiyomi.data.items.episode
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonObject
 import logcat.LogPriority
@@ -37,7 +38,7 @@ class EpisodeRepositoryImpl(
                         episode.fillermark,
                         episode.memo,
                     )
-                    val lastInsertId = episodesQueries.selectLastInsertedRowId().executeAsOne()
+                    val lastInsertId = episodesQueries.selectLastInsertedRowId().awaitAsOne()
                     episode.copy(id = lastInsertId)
                 }
             }

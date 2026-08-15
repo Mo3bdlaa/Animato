@@ -104,8 +104,8 @@ Aniyomi opened its databases through `RequerySQLiteOpenHelperFactory`, a bundled
 existed to get consistent behaviour on old Android versions.
 
 Mihon dropped it in favour of `androidx.sqlite:sqlite-bundled`, which does the same job as a
-first-party library. Our anime database no longer references requery either — see the SQLDelight
-entry below for what it does use, and why that is not yet Mihon's driver.
+first-party library. The anime database is on that too — see the SQLDelight entry below, and the
+Android 8 and 9 breakage that came of dropping the one before adopting the other.
 
 ### `MainActivity` — copied, and its update check replaced
 
@@ -408,17 +408,15 @@ Adopted, and the call sites got shorter for it.
 
 Mihon put a `create()` factory in front of it. A one-word change at each call site.
 
-### SQLDelight: Mihon generates async, we still generate sync
+### SQLDelight: async, and bundled SQLite — followed
 
-Mihon's `:data` sets `generateAsync = true` and drives it with `AndroidxSqliteDriver` over bundled
-SQLite. That driver accepts **only** an async schema — checked against the artifact, not assumed —
-so `:anime:data`, which still generates a synchronous one as Aniyomi's did, cannot use it. The
-anime database runs on SQLDelight's own `AndroidSqliteDriver`, pinned to the version Mihon's
-catalogue names so the two cannot drift apart.
+`:anime:data` now sets `generateAsync = true` and the anime database is opened by
+`AndroidxSqliteDriver` over `BundledSQLiteDriver`, as Mihon's is. It was not a tidy-up.
 
-Worth following — and now more than worth it. Bundled SQLite means one behaviour across every
-Android version, and it is what let Mihon drop requery. Without it the anime database runs on
-whatever SQLite the device shipped with, and `minSdk` is 26:
+Aniyomi generated synchronous queries and opened its databases through requery, a bundled SQLite
+build. Mihon dropped requery for `androidx.sqlite:sqlite-bundled`, which does the same job as a
+first-party library — and we had dropped requery with them while still using the *device's* SQLite.
+`minSdk` is 26:
 
 | API | Android | SQLite |
 | --- | ------- | ------ |
@@ -428,17 +426,31 @@ whatever SQLite the device shipped with, and `minSdk` is 26:
 
 `animehistory.sq`, `animesources.sq` and `extension_store.sq` all upsert with
 `ON CONFLICT (…) DO UPDATE`, which SQLite only learned in **3.24**. On Android 8 and 9 those three
-statements are a syntax error at execution — and the first of them runs every time an episode is
-watched. Aniyomi never met this because requery carried its own SQLite; Mihon does not meet it
-because the bundled driver carries its own. We removed the one and have not yet adopted the other,
-so this one is ours, and it is the reason this entry is no longer merely tidy-up.
+were a syntax error at execution, and the first runs every time an episode is watched. A SQLite
+carried in the APK has one behaviour everywhere, which is precisely why both upstreams carry one.
 
-The work looks contained. Every query in `:anime:data` goes through `AndroidAnimeDatabaseHandler`,
-the only place `executeAsList`/`executeAsOne` appear; repositories call `handler.awaitList { … }`
-and would not change shape. It was left out of the dependency-injection work because it is a change
-to the data layer and deserves its own verification.
+**It cost nothing to ship.** `libsqliteJni.so` was already in the APK — Mihon's own database uses
+it — so the anime side joining it added no bytes.
 
-*To do: turn on `generateAsync` in `:anime:data`, convert the handler, move to the androidx driver.*
+What the change came to:
+
+- the handler kept its interface, so no repository changed: `executeAsList` became `awaitAsList`,
+  and so on for the four others;
+- `AnimeTransactionContext.kt` was **deleted**. Its 150 lines were Aniyomi's copy of Room's
+  `withTransaction` — a transaction element in the coroutine context, a control job, a thread taken
+  over from the query executor and held for the duration, and a `runBlocking` to bridge back. All of
+  it existed because a synchronous SQLDelight transaction is confined to its opening thread and a
+  coroutine is not. A `SuspendingTransacter` is confined by the driver instead;
+- the query dispatcher went with it. Sending a read to IO by hand would be dispatching it twice;
+- `QueryPagingAnimeSource` takes bound query producers rather than a handler and a receiver, which
+  is the shape Mihon's `QueryPagingSource` settled on;
+- two `updatePartialBlocking` helpers became `suspend`, since the generated mutators now are. The
+  name stayed: every call site reads the same, and Mihon's manga twin still carries it;
+- the pragma callback is gone. All three pragmas are the driver's own — `journalMode` defaults to
+  WAL and `sync` to Normal, checked against the artifact — except foreign keys, which is the one
+  line `AndroidxSqliteConfiguration` is passed, and the only one Mihon passes either.
+
+The database file name is unchanged, so an existing install opens the database it already has.
 
 ### `GetLibraryManga` — moved
 

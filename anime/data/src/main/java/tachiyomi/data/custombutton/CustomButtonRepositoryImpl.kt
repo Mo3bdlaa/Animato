@@ -52,7 +52,10 @@ class CustomButtonRepositoryImpl(
         return handler.await { custom_buttonsQueries.delete(customButtonId) }
     }
 
-    private fun AnimeDatabase.updatePartialBlocking(update: CustomButtonUpdate) {
+    // Suspending, and no longer "blocking": the generated mutators became suspend functions
+    // when :anime:data moved to async queries. The name is kept because every call site
+    // reads the same, and Mihon's manga twin still carries it.
+    private suspend fun AnimeDatabase.updatePartialBlocking(update: CustomButtonUpdate) {
         custom_buttonsQueries.update(
             name = update.name,
             isFavorite = update.isFavorite,

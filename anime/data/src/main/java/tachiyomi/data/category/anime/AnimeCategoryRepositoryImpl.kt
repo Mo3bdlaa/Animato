@@ -79,7 +79,10 @@ class AnimeCategoryRepositoryImpl(
         }
     }
 
-    private fun AnimeDatabase.updatePartialBlocking(update: AnimeCategoryUpdate) {
+    // Suspending, and no longer "blocking": the generated mutators became suspend functions
+    // when :anime:data moved to async queries. The name is kept because every call site
+    // reads the same, and Mihon's manga twin still carries it.
+    private suspend fun AnimeDatabase.updatePartialBlocking(update: AnimeCategoryUpdate) {
         categoriesQueries.update(
             name = update.name,
             order = update.order,

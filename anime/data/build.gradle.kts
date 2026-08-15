@@ -18,6 +18,18 @@ android {
                 dialect(libs.sqldelight.sqliteDialect338)
                 schemaOutputDirectory.set(project.file("./src/main/sqldelightanime"))
                 srcDirs.from(project.file("./src/main/sqldelightanime"))
+
+                /*
+                 * As Mihon's :data does — and for more than keeping in step. The androidx driver
+                 * over bundled SQLite accepts only an async schema, and bundled SQLite is what
+                 * makes these queries mean the same thing on every Android version.
+                 *
+                 * On the device's own SQLite they did not. `minSdk` is 26; `animehistory.sq`,
+                 * `animesources.sq` and `extension_store.sq` upsert with ON CONFLICT … DO UPDATE,
+                 * and SQLite only learned that in 3.24 — Android 10. On 8 and 9 those three were a
+                 * syntax error at execution, and the first runs every time an episode is watched.
+                 */
+                generateAsync.set(true)
             }
         }
     }

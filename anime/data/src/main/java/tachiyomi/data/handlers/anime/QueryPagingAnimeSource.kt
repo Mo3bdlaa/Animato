@@ -3,13 +3,20 @@ package tachiyomi.data.handlers.anime
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import app.cash.sqldelight.Query
-import tachiyomi.mi.data.AnimeDatabase
+import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import kotlin.properties.Delegates
 
+/**
+ * A paging source over the anime database.
+ *
+ * The queries are bound to the database by the handler before this is constructed, so it takes
+ * plain producers rather than a handler and a receiver — one fewer thing to keep in step, and it
+ * matches the shape Mihon's `QueryPagingSource` settled on.
+ */
 class QueryPagingAnimeSource<RowType : Any>(
-    val handler: AnimeDatabaseHandler,
-    val countQuery: AnimeDatabase.() -> Query<Long>,
-    val queryProvider: AnimeDatabase.(Long, Long) -> Query<RowType>,
+    val countQuery: () -> Query<Long>,
+    val queryProvider: (Long, Long) -> Query<RowType>,
 ) : PagingSource<Long, RowType>(), Query.Listener {
 
     override val jumpingSupported: Boolean = true
@@ -30,17 +37,16 @@ class QueryPagingAnimeSource<RowType : Any>(
         try {
             val key = params.key ?: 0L
             val loadSize = params.loadSize
-            val count = handler.awaitOne { countQuery() }
+            val count = countQuery().awaitAsOne()
 
             val (offset, limit) = when (params) {
                 is LoadParams.Prepend -> key - loadSize to loadSize.toLong()
                 else -> key to loadSize.toLong()
             }
 
-            val data = handler.awaitList {
-                queryProvider(limit, offset)
-                    .also { currentQuery = it }
-            }
+            val data = queryProvider(limit, offset)
+                .also { currentQuery = it }
+                .awaitAsList()
 
             val (prevKey, nextKey) = when (params) {
                 is LoadParams.Append -> {

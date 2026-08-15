@@ -1,7 +1,7 @@
 package animato.di
 
 import android.app.Application
-import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import animato.anime.player.PlayerEpisodeVideoResolver
 import animato.anime.services.download.EpisodeVideoResolver
 import animato.anime.track.AnimeTrackerManager
@@ -10,7 +10,10 @@ import animato.data.FetchTypeColumnAdapter
 import aniyomi.core.common.torrent.TorrentServerApi
 import aniyomi.core.common.torrent.TorrentServerUtils
 import app.cash.sqldelight.db.SqlDriver
-import app.cash.sqldelight.driver.android.AndroidSqliteDriver
+import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteConfiguration
+import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteDatabaseType
+import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteDriver
+import com.eygraber.sqldelight.androidx.driver.FileProvider
 import dataanime.Animehistory
 import dataanime.Animes
 import dataanime.Episodes
@@ -55,39 +58,29 @@ class AnimeAppModule(val app: Application) : InjektModule {
          * `by lazy` rather than a plain val so that registering the module does not open the
          * database.
          *
-         * Mihon has since moved to AndroidxSqliteDriver over bundled SQLite, which we cannot use
-         * here: that driver only accepts an async schema, and :anime:data still generates a
-         * synchronous one. Following them means turning on generateAsync there first — a change
-         * contained almost entirely to AndroidAnimeDatabaseHandler, and recorded as open in
-         * UPSTREAM_DIVERGENCE.md. Until then this is SQLDelight's own Android driver, on the
-         * version Mihon pins so the two cannot drift apart.
+         * Bundled SQLite, exactly as Mihon opens its own, and not for symmetry: on the device's own
+         * SQLite these queries did not all mean the same thing. `minSdk` is 26, three of the anime
+         * `.sq` files upsert with ON CONFLICT … DO UPDATE, and SQLite only learned that in 3.24 —
+         * Android 10. On 8 and 9 they were a syntax error at execution, and the first of them runs
+         * every time an episode is watched. A SQLite that travels with the app has one behaviour
+         * everywhere, which is the whole reason Mihon carries it and Aniyomi carried requery.
+         *
+         * No pragma callback any more. All three of the ones it used to set are the driver's now,
+         * checked against the artifact rather than assumed: `journalMode` defaults to WAL and
+         * `sync` to Normal, and foreign keys are the one that does *not* default on — hence the
+         * configuration below, which is also the only line Mihon passes.
+         *
+         * The file name is Aniyomi's, unchanged, so an existing install opens the database it
+         * already has and migrates from the version recorded in it.
          */
         val driver: SqlDriver by lazy {
-            AndroidSqliteDriver(
+            AndroidxSqliteDriver(
+                driver = BundledSQLiteDriver(),
+                databaseType = AndroidxSqliteDatabaseType.FileProvider(app, "tachiyomi.animedb"),
                 schema = AnimeDatabase.Schema,
-                context = app,
-                // Unchanged from Aniyomi, so an existing install opens the database it already has.
-                name = "tachiyomi.animedb",
-                callback = object : AndroidSqliteDriver.Callback(AnimeDatabase.Schema) {
-                    override fun onOpen(db: SupportSQLiteDatabase) {
-                        super.onOpen(db)
-                        setPragma(db, "foreign_keys = ON")
-                        setPragma(db, "journal_mode = WAL")
-                        setPragma(db, "synchronous = NORMAL")
-                    }
-
-                    /**
-                     * Read through a cursor, not execSQL. `PRAGMA journal_mode = WAL` answers with
-                     * the mode it settled on, and Android refuses any statement that returns rows
-                     * from execSQL — so that one throws, and the anime database never opens.
-                     *
-                     * The cursor has to be stepped: Android runs the statement when the window is
-                     * filled, not when the cursor is handed out.
-                     */
-                    private fun setPragma(db: SupportSQLiteDatabase, pragma: String) {
-                        db.query("PRAGMA $pragma").use { it.moveToFirst() }
-                    }
-                },
+                configuration = AndroidxSqliteConfiguration(
+                    isForeignKeyConstraintsEnabled = true,
+                ),
             )
         }
 
@@ -109,7 +102,7 @@ class AnimeAppModule(val app: Application) : InjektModule {
             )
         }
 
-        addSingletonFactory<AnimeDatabaseHandler> { AndroidAnimeDatabaseHandler(get(), driver) }
+        addSingletonFactory<AnimeDatabaseHandler> { AndroidAnimeDatabaseHandler(get()) }
 
         addSingletonFactory { AnimeCoverCache(app) }
         addSingletonFactory { AnimeBackgroundCache(app) }

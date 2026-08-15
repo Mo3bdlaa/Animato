@@ -153,11 +153,9 @@ dependencies {
 
     implementation(libs.injekt)
     implementation(libs.bundles.sqldelight)
-    // Mihon's bundle carries only the androidx driver, which needs an async schema.
-    // The version is read from Mihon's catalogue so this cannot drift away from it.
-    implementation(
-        libs.sqldelight.coroutines.map { "app.cash.sqldelight:android-driver:${it.version}" },
-    )
+    // The SQLite the anime database runs on, carried in the APK rather than taken from the device.
+    // AnimeAppModule says why that is a fix and not a preference.
+    implementation(libs.androidx.sqlite.bundled)
     implementation(libs.bundles.serialization)
     implementation(libs.bundles.kotlinx.coroutines)
 

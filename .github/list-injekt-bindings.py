@@ -78,7 +78,12 @@ def sources():
         text=True,
         check=True,
     ).stdout.split()
-    return [f for f in listed if "/build/" not in f and "/src/test/" not in f]
+    # `git ls-files` reads the index, which still names a file deleted in the working tree but not
+    # yet staged — a normal state mid-change, and not a reason for the check to crash.
+    return [
+        f for f in listed
+        if "/build/" not in f and "/src/test/" not in f and Path(f).is_file()
+    ]
 
 
 def strip_comments(text):
