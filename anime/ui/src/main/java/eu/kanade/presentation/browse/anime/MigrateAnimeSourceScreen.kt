@@ -21,7 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
-import eu.kanade.domain.source.interactor.SetMigrateSorting
+import aniyomi.domain.source.interactor.SetAnimeMigrateSorting
 import eu.kanade.presentation.browse.anime.components.AnimeSourceIcon
 import eu.kanade.presentation.browse.anime.components.BaseAnimeSourceItem
 import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.MigrateAnimeSourceScreenModel
@@ -80,9 +80,9 @@ private fun MigrateAnimeSourceList(
     contentPadding: PaddingValues,
     onClickItem: (AnimeSource) -> Unit,
     onLongClickItem: (AnimeSource) -> Unit,
-    sortingMode: SetMigrateSorting.Mode,
+    sortingMode: SetAnimeMigrateSorting.Mode,
     onToggleSortingMode: () -> Unit,
-    sortingDirection: SetMigrateSorting.Direction,
+    sortingDirection: SetAnimeMigrateSorting.Direction,
     onToggleSortingDirection: () -> Unit,
 ) {
     ScrollbarLazyColumn(
@@ -103,11 +103,11 @@ private fun MigrateAnimeSourceList(
 
                 IconButton(onClick = onToggleSortingMode) {
                     when (sortingMode) {
-                        SetMigrateSorting.Mode.ALPHABETICAL -> Icon(
+                        SetAnimeMigrateSorting.Mode.ALPHABETICAL -> Icon(
                             Icons.Outlined.SortByAlpha,
                             contentDescription = stringResource(MR.strings.action_sort_alpha),
                         )
-                        SetMigrateSorting.Mode.TOTAL -> Icon(
+                        SetAnimeMigrateSorting.Mode.TOTAL -> Icon(
                             Icons.Outlined.Numbers,
                             contentDescription = stringResource(MR.strings.action_sort_count),
                         )
@@ -115,11 +115,11 @@ private fun MigrateAnimeSourceList(
                 }
                 IconButton(onClick = onToggleSortingDirection) {
                     when (sortingDirection) {
-                        SetMigrateSorting.Direction.ASCENDING -> Icon(
+                        SetAnimeMigrateSorting.Direction.ASCENDING -> Icon(
                             Icons.Outlined.ArrowUpward,
                             contentDescription = stringResource(MR.strings.action_asc),
                         )
-                        SetMigrateSorting.Direction.DESCENDING -> Icon(
+                        SetAnimeMigrateSorting.Direction.DESCENDING -> Icon(
                             Icons.Outlined.ArrowDownward,
                             contentDescription = stringResource(MR.strings.action_desc),
                         )

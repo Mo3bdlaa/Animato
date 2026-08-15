@@ -2,9 +2,9 @@ package eu.kanade.tachiyomi.ui.browse.anime.migration.sources
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.viewModelScope
+import aniyomi.domain.source.interactor.SetAnimeMigrateSorting
 import aniyomi.domain.source.service.AnimeSourcePreferences
 import eu.kanade.domain.source.anime.interactor.GetAnimeSourcesWithFavoriteCount
-import eu.kanade.domain.source.interactor.SetMigrateSorting
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -26,7 +26,7 @@ import uy.kohesive.injekt.api.get
 class MigrateAnimeSourceScreenModel(
     preferences: AnimeSourcePreferences = Injekt.get(),
     private val getSourcesWithFavoriteCount: GetAnimeSourcesWithFavoriteCount = Injekt.get(),
-    private val setMigrateSorting: SetMigrateSorting = Injekt.get(),
+    private val setMigrateSorting: SetAnimeMigrateSorting = Injekt.get(),
 ) : StateViewModel<MigrateAnimeSourceScreenModel.State>(State()) {
 
     private val _channel = Channel<Event>(Int.MAX_VALUE)
@@ -61,8 +61,8 @@ class MigrateAnimeSourceScreenModel(
     fun toggleSortingMode() {
         with(state.value) {
             val newMode = when (sortingMode) {
-                SetMigrateSorting.Mode.ALPHABETICAL -> SetMigrateSorting.Mode.TOTAL
-                SetMigrateSorting.Mode.TOTAL -> SetMigrateSorting.Mode.ALPHABETICAL
+                SetAnimeMigrateSorting.Mode.ALPHABETICAL -> SetAnimeMigrateSorting.Mode.TOTAL
+                SetAnimeMigrateSorting.Mode.TOTAL -> SetAnimeMigrateSorting.Mode.ALPHABETICAL
             }
 
             setMigrateSorting.await(newMode, sortingDirection)
@@ -72,8 +72,8 @@ class MigrateAnimeSourceScreenModel(
     fun toggleSortingDirection() {
         with(state.value) {
             val newDirection = when (sortingDirection) {
-                SetMigrateSorting.Direction.ASCENDING -> SetMigrateSorting.Direction.DESCENDING
-                SetMigrateSorting.Direction.DESCENDING -> SetMigrateSorting.Direction.ASCENDING
+                SetAnimeMigrateSorting.Direction.ASCENDING -> SetAnimeMigrateSorting.Direction.DESCENDING
+                SetAnimeMigrateSorting.Direction.DESCENDING -> SetAnimeMigrateSorting.Direction.ASCENDING
             }
 
             setMigrateSorting.await(sortingMode, newDirection)
@@ -84,8 +84,8 @@ class MigrateAnimeSourceScreenModel(
     data class State(
         val isLoading: Boolean = true,
         val items: ImmutableList<Pair<AnimeSource, Long>> = persistentListOf(),
-        val sortingMode: SetMigrateSorting.Mode = SetMigrateSorting.Mode.ALPHABETICAL,
-        val sortingDirection: SetMigrateSorting.Direction = SetMigrateSorting.Direction.ASCENDING,
+        val sortingMode: SetAnimeMigrateSorting.Mode = SetAnimeMigrateSorting.Mode.ALPHABETICAL,
+        val sortingDirection: SetAnimeMigrateSorting.Direction = SetAnimeMigrateSorting.Direction.ASCENDING,
     ) {
         val isEmpty = items.isEmpty()
     }

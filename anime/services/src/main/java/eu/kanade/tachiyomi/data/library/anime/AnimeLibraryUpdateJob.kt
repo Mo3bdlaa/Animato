@@ -18,6 +18,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import animato.domain.category.AnimeCategory
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences.Companion.ANIME_HAS_UNSEEN
 import aniyomi.domain.library.service.AnimeLibraryPreferences.Companion.ANIME_NON_COMPLETED
@@ -47,7 +48,6 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
@@ -501,7 +501,7 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
         }
         fun startNow(
             context: Context,
-            category: Category? = null,
+            category: AnimeCategory? = null,
         ): Boolean {
             val wm = context.workManager
             if (wm.isRunning(TAG)) {

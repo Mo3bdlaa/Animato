@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.viewModelScope
+import animato.anime.util.editBackground
+import animato.anime.util.editCover
 import coil3.asDrawable
 import coil3.imageLoader
 import coil3.request.ImageRequest
@@ -15,8 +17,6 @@ import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.saver.Image
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.saver.Location
-import eu.kanade.tachiyomi.util.editBackground
-import eu.kanade.tachiyomi.util.editCover
 import eu.kanade.tachiyomi.util.system.getBitmapOrNull
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import kotlinx.coroutines.flow.update
@@ -128,7 +128,7 @@ class AnimeImageScreenModel(
                 Image.Cover(
                     bitmap = bitmap,
                     name = if (isCover) "cover" else "background",
-                    location = if (temp) Location.Cache else Location.Pictures(anime.title),
+                    location = if (temp) Location.Cache else Location.Pictures.create(anime.title),
                 ),
             )
         }

@@ -156,6 +156,15 @@ in the launcher.
 
 ## Open
 
+### Simkl is not among the ported trackers
+
+`AniChartApi` asked three trackers for an anime's next air time: AniList, MyAnimeList and Simkl.
+The first two are Mihon's and came across unchanged. Simkl is Aniyomi's own — nine files under
+`data/track/simkl` — and none of the anime-only trackers have been ported yet, so that branch is
+absent rather than stubbed. Airing times still work through the other two.
+
+The Simkl calendar path comes back with the tracker, not before it.
+
 ### Our preferences are functions; Mihon's are now properties
 
 Mihon has moved its preference accessors from functions to properties:
@@ -332,6 +341,23 @@ is different: Aniyomi had added these *inside* Mihon's files.
 | `Preference.deleteAndGet` | `animato.anime.player.deleteAndGet` |
 | `TachiyomiTheme.playerRippleConfiguration` | `animato.anime.player.playerRippleConfiguration` |
 | `SourcePreferences.incognitoAnimeExtensions` | `aniyomi.domain.source.service.AnimeSourcePreferences` |
+| `LibraryPreferences.hideHiddenCategoriesSettings` | `aniyomi.domain.library.service.AnimeLibraryPreferences` — Mihon's `Category` has no `hidden` field and its library never hides one |
+| `TrackPreferences.showNextEpisodeAiringTime` / `trackOnAddingToLibrary` | `aniyomi.domain.track.service.AnimeTrackPreferences` |
+| `AniChartApi` in `eu.kanade.tachiyomi.util` | `animato.anime.services.airing.AniChartApi`, taking tracker/track pairs instead of the details screen's item type |
+| `relativeDateTimeText` in Mihon's `DateText.kt` | `animato.anime.ui.util` — it goes past "today" to hours and minutes, which only an air time needs |
+| `CustomIcons.Magnet` | `animato.ui.icons.Magnet`, an extension on Mihon's icon set rather than a member of it |
+| `CategoryListItem`'s hide button | `animato.anime.ui.category.AnimeCategoryListItem` |
+| `TrackItemSelector(isManga)` | `animato.anime.ui.track.TrackEpisodeSelector` |
+| `UpdatesDeleteConfirmationDialog(isManga)` | `animato.anime.ui.updates.EpisodesDeleteConfirmationDialog` |
+| `SetIntervalDialog(isManga)` | `animato.anime.ui.entries.SetAnimeIntervalDialog`, on `AnimeFetchInterval`'s own ceiling |
+| `StorageScreenContent(isManga)` and `CommonStorageScreenModel` | `animato.ui.storage`, written against a `StorageCategory` of id and name rather than either library's model |
+| `ChangeCategoryDialog` / `LibraryTabs` taking `Category` | `animato.ui.category` / `animato.ui.library`, generic with an id and a label |
+| `RemoveMangaDialog` taking a `Manga` | `animato.ui.browse.RemoveEntryDialog`, taking the title it was only ever reading |
+| `PlayerSettingsGesturesScreen.SkipIntroLengthDialog` | `animato.anime.ui.entries.SkipIntroLengthDialog` — a per-anime setting shown from the anime page should not live in a settings screen object |
+| `MainActivity.INTENT_SEARCH_TYPE` + `DeepLinkScreenType` | `animato.ui.deeplink.DeepLinkScreenType` — the deep-link activities live in library modules and cannot see the app module |
+| `shouldExpandFAB` for `LazyGridState` | `animato.ui.components` — Mihon has the `LazyListState` one; the anime details list is a grid |
+| `List<EpisodeList.Item>.applyFilters` | `animato.anime.ui.entries` — a services-layer helper taking a screen model inverts the layering |
+| `AnimeSource.icon` | `eu.kanade.domain.source.anime.model` in `:anime:ui` |
 | `HosterState` inside `QualitySheet.kt` | `animato.anime.player.HosterState` — a model, not a screen |
 | `CustomButtonFetchState` inside a settings screen model | `animato.anime.player.CustomButtonFetchState` |
 

@@ -59,6 +59,7 @@ import animato.anime.ui.components.EntryBottomActionMenu
 import animato.anime.ui.util.relativeDateTimeText
 import animato.domain.items.episode.formatEpisodeNumber
 import animato.ui.components.ExtendedFloatingActionButton
+import animato.ui.components.shouldExpandFAB
 import animato.ui.entries.DownloadAction
 import animato.ui.entries.EntryScreenItem
 import animato.ui.entries.EntryToolbar
@@ -100,7 +101,6 @@ import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.shouldExpandFAB
 import tachiyomi.source.local.entries.anime.isLocal
 import java.time.Instant
 import java.util.concurrent.TimeUnit

@@ -147,7 +147,7 @@ data object AnimeLibraryTab : Tab {
                         )
                     },
                     onClickGlobalUpdate = { onClickRefresh(null) },
-                    onClickOpenRandomEntry = {
+                    onClickOpenRandomManga = {
                         scope.launch {
                             val randomItem = screenModel.getRandomAnimelibItemForCurrentCategory()
                             if (randomItem != null) {

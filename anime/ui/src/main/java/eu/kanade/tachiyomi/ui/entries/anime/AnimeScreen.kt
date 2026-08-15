@@ -23,6 +23,8 @@ import animato.anime.player.PlayerLauncher
 import animato.anime.ui.AnimeCategoriesScreen
 import animato.anime.ui.category.visualName
 import animato.anime.ui.components.DeleteItemsDialog
+import animato.anime.ui.entries.SetAnimeIntervalDialog
+import animato.anime.ui.entries.SkipIntroLengthDialog
 import animato.domain.items.episode.formatEpisodeNumber
 import animato.ui.category.ChangeCategoryDialog
 import animato.ui.entries.EditCoverAction
@@ -40,8 +42,6 @@ import eu.kanade.presentation.entries.anime.EpisodeOptionsDialogScreen
 import eu.kanade.presentation.entries.anime.EpisodeSettingsDialog
 import eu.kanade.presentation.entries.anime.SeasonSettingsDialog
 import eu.kanade.presentation.entries.anime.components.AnimeImagesDialog
-import eu.kanade.presentation.manga.components.SetIntervalDialog
-import eu.kanade.presentation.more.settings.screen.player.PlayerSettingsGesturesScreen.SkipIntroLengthDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
@@ -353,11 +353,10 @@ class AnimeScreen(
                 }
             }
             is AnimeScreenModel.Dialog.SetAnimeFetchInterval -> {
-                SetIntervalDialog(
+                SetAnimeIntervalDialog(
                     interval = dialog.anime.fetchInterval,
                     nextUpdate = dialog.anime.expectedNextUpdate,
                     onDismissRequest = onDismissRequest,
-                    isManga = false,
                     onValueChanged = { interval: Int -> screenModel.setFetchInterval(dialog.anime, interval) }
                         .takeIf { screenModel.isUpdateIntervalEnabled },
                 )

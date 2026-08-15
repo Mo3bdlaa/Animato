@@ -97,6 +97,9 @@ dependencies {
     implementation(projects.anime.services)
     implementation(projects.anime.sourceApi)
     implementation(projects.anime.sourceLocal)
+    // The anime screens. Nothing navigates to them yet — phase 6c builds the tab bar that does —
+    // but the dependency is what makes CI compile them, since it only builds this module.
+    implementation(projects.anime.ui)
 
     // The Injekt modules construct the anime database and repositories, so they need what those
     // constructors take: Mihon's shared core, its column adapters, and the SQLDelight driver.

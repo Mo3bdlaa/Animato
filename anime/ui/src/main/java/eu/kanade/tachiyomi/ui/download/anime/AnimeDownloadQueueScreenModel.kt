@@ -125,7 +125,8 @@ class AnimeDownloadQueueScreenModel(
         }
     }
 
-    override fun onDispose() {
+    // Voyager's ScreenModel had onDispose; a ViewModel has onCleared, called at the same point.
+    override fun onCleared() {
         for (job in progressJobs.values) {
             job.cancel()
         }
