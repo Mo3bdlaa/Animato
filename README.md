@@ -6,38 +6,47 @@
 
 ### Your anime & manga universe, unified.
 
-One library for both. Built **on top of** [Mihon](https://github.com/mihonapp/mihon) rather than
-forked from it, so every upstream release is a merge instead of a rewrite.
+One app, one library, both kinds of story.
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue?labelColor=27303D)](/LICENSE)
-![Status: pre-release](https://img.shields.io/badge/status-pre--release-E5392F?labelColor=27303D)
+![Status: pre-release](https://img.shields.io/badge/status-pre--release-4169A1?labelColor=27303D)
 
 </div>
 
 ---
 
-> **Not released yet.** There is no installable build, and the database schema is not frozen.
-> Animato does **not** upgrade in place over an existing Aniyomi install — migration is by backup
-> import. See [ARCHITECTURE.md](ARCHITECTURE.md#why-users-must-not-upgrade-in-place-from-aniyomi).
+> **Not released yet.** There is no stable build, and the database schema is not frozen.
+> Animato does **not** upgrade in place over an existing Aniyomi install — bring your library
+> across with a backup import. See
+> [ARCHITECTURE.md](ARCHITECTURE.md#why-users-must-not-upgrade-in-place-from-aniyomi).
 
 ## What it is
 
-Mihon reads manga. Aniyomi added anime to it, and then went two years without an upstream sync,
-because a fork that edits 248 upstream files cannot merge one.
+A reader and a player in one place. Animato keeps anime and manga in a single library, with one
+set of categories, one search, one download queue and one place to pick up where you left off —
+instead of asking you to decide which app you are in before you have decided what you want to
+watch or read.
 
-Animato takes the anime half and rebuilds it as modules **beside** Mihon instead of inside it.
-Mihon's `:app` is consumed as an Android library; our application module supplies the identity, the
-theme and the anime side, and never opens a Mihon file.
+Content comes from extensions you install and configure yourself. Animato ships none of it.
 
-The measurement that drives the whole design — merging the same upstream into the same repository:
+## What it does
 
-| Branch | Descends from | Conflicting files |
-| --- | --- | --- |
-| Aniyomi-descended | Aniyomi, forked Jan 2024 | **776** |
-| this one | Mihon `77e88a21` | **2** |
+- **One library.** Series and shows in the same grid, filtered and sorted together, or apart when
+  you want them apart.
+- **One-tap continuation.** The first screen is the next chapter and the next episode, whichever
+  you touched last.
+- **Search across sources.** Search once and see what every installed source has, without knowing
+  in advance which one carries it.
+- **Downloads that stay readable.** The queue groups by title and range rather than listing every
+  chapter, so a hundred queued items still fits on a screen.
+- **Tracking inside the title.** AniList, MyAnimeList and Kitsu, where you are already looking.
+- **A reader and a player built for the content.** Chrome that disappears when it is not wanted;
+  gestures, playback speed, subtitles and external-player handoff on the anime side.
+- **Backup and restore**, including import from Tachiyomi, Mihon and Aniyomi backups with source
+  matching.
 
-Upstream breakage arrives as compile errors in files we own — a short, specific list — rather than
-as a merge conflict in files we do not.
+Not all of that is wired up yet — this is a pre-release, and
+[ARCHITECTURE.md](ARCHITECTURE.md) tracks what is built and what is not.
 
 ## Design
 
@@ -59,16 +68,15 @@ Android 8.0 (API 26).
 
 | | |
 | --- | --- |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | the layering, the rule about never editing Mihon, migration phases |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | how the app is put together, and what is built so far |
 | [docs/BRANDING.md](docs/BRANDING.md) | brand and interface specification |
-| [UPSTREAM_DIVERGENCE.md](UPSTREAM_DIVERGENCE.md) | what Mihon changed under us, and whether to adopt it |
+| [UPSTREAM_DIVERGENCE.md](UPSTREAM_DIVERGENCE.md) | where Animato differs from the code it builds on |
 
 ## Credit
 
 Animato is built on the work of others, and depends on that work continuing:
 
-- **[Mihon](https://github.com/mihonapp/mihon)** — the manga app this is built on, and the upstream
-  it tracks. Apache-2.0.
+- **[Mihon](https://github.com/mihonapp/mihon)** — the manga app Animato is built on. Apache-2.0.
 - **[Aniyomi](https://github.com/aniyomiorg/aniyomi)** — the origin of the anime half. Apache-2.0.
 - **[Tachiyomi](https://github.com/tachiyomiorg)** — where both began.
 
