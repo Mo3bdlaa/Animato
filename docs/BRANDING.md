@@ -257,8 +257,9 @@ These are the claims the interface has to earn:
 | --- | --- |
 | `docs/branding/brand-sheet.png` | the sheet above, the source of this document |
 | `docs/branding/screens.jpg` | the nine screen mockups section 7 is read off |
+| `docs/branding/icon-light.png` | 512px icon, light variant, transparent corners — **the launcher icon** |
 | `docs/branding/icon-dark.png` | 512px icon, dark variant, transparent corners |
-| `docs/branding/icon-light.png` | 512px icon, light variant, transparent corners |
+| `docs/branding/build-icon.py` | turns either of those into the five foreground densities |
 
 In the app, under `animato-app/src/main/res/`:
 
@@ -275,8 +276,9 @@ In the app, under `animato-app/src/main/res/`:
 ### Why the launcher icon has no light variant
 
 Android does not theme launcher icons: an app ships one icon and the launcher masks it to whatever
-shape the device uses. The dark variant is therefore the launcher icon, and the light variant is
-used where the platform does honour the theme — in-app, via `drawable-night`.
+shape the device uses. **The light variant is the launcher icon** — paper ground, black panel frame
+and speed lines, blue wordmark — and the dark variant is used where the platform does honour the
+theme, in-app via `drawable-night`.
 
 The one place the system does recolour the icon is the **monochrome** layer, for themed icons on
 Android 13+. That is generated from the light artwork, because a black-on-paper silhouette
@@ -284,10 +286,30 @@ converts to an alpha mask cleanly.
 
 ### How the icon is built
 
+`docs/branding/build-icon.py` builds the five foreground densities from one 512px source:
+
+```
+python3 docs/branding/build-icon.py light
+```
+
 The foreground square spans the inner 72dp of the 108dp canvas. A 72dp square fully contains the
 72dp mask circle, so the entire visible area is artwork under any mask, and the rounding comes from
-the launcher rather than being baked into the PNG. The background layer is flat `Ink Black`, which
-matches the artwork's own background, so no seam is visible whatever shape is applied.
+the launcher rather than being baked into the PNG.
+
+The artwork's own background is **keyed out**, and the flat `<background>` layer supplies it —
+`Paper` for the light variant, `Ink Black` for the dark. That is not tidiness: a launcher may slide
+the two layers against each other for parallax, and a foreground carrying its own opaque background
+would show its edges the moment it did. Keying leaves only the mark.
+
+Two things about the keying are easy to get wrong, and both were, on the way to this:
+
+- **Resize before keying, not after.** Pillow interpolates colour and alpha separately, so a black
+  frame line one pixel wide is averaged with the paper-coloured pixels still sitting under its
+  transparent neighbours, and comes out grey.
+- **Find the background colour by frequency, not by sampling a point.** Both variants round their
+  corners with transparency and both are edged in black, so every obvious place to sample lands on
+  something that is not the background. Reading the light variant's black edge made its black panel
+  frame *nearly* background, and it came out at two-thirds alpha.
 
 All of this is done by **overriding resource names**, never by editing a Mihon file — the
 application module wins resource merging over its library dependencies. See `ARCHITECTURE.md`.

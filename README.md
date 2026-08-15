@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./docs/branding/icon-dark.png" alt="Animato" width="120"/>
+<img src="./docs/branding/icon-light.png" alt="Animato" width="120"/>
 
 # Animato
 

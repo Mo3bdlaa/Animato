@@ -8,9 +8,13 @@
   The foreground square spans the inner 72dp of the 108dp canvas. A 72dp square fully contains the
   72dp mask circle, so the whole visible area is artwork whatever shape the launcher applies, and
   the rounding comes from the launcher rather than from a radius baked into the PNG.
+
+  The background is flat and the artwork's own background is keyed out of the foreground, so this
+  layer is what supplies it — which is what lets a launcher slide the two against each other for
+  parallax without the foreground showing an edge. Both are built by docs/branding/build-icon.py.
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/animato_ink_black" />
+    <background android:drawable="@color/animato_paper" />
     <foreground android:drawable="@drawable/animato_icon_foreground" />
     <monochrome android:drawable="@drawable/animato_icon_monochrome" />
 </adaptive-icon>
