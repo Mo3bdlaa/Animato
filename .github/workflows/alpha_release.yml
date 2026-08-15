@@ -117,9 +117,14 @@ jobs:
       # The run number is monotonic per workflow, so each alpha outranks the last and Android treats
       # it as an upgrade instead of refusing it as a downgrade. Offset well past the versionCode a
       # real release would use, so an alpha can never shadow one.
+      #
+      # ANIMATO_VERSION_NAME is the same string as the tag without its leading v, and it has to be:
+      # the in-app updater compares the running build's versionName against the tags in Releases, so
+      # a build that calls itself plain "0.1.0" can never be told apart from the alpha after it.
       - name: Name this build
         run: |
           echo "VERSION_TAG=v0.1.0-alpha.${{ github.run_number }}" >> $GITHUB_ENV
+          echo "ANIMATO_VERSION_NAME=0.1.0-alpha.${{ github.run_number }}" >> $GITHUB_ENV
           echo "ANIMATO_VERSION_CODE=$(( 1000 + ${{ github.run_number }} ))" >> $GITHUB_ENV
 
       - name: Build release APKs

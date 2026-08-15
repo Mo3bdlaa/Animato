@@ -107,28 +107,29 @@ Mihon dropped it in favour of `androidx.sqlite:sqlite-bundled`, which does the s
 first-party library. Our anime database no longer references requery either — see the SQLDelight
 entry below for what it does use, and why that is not yet Mihon's driver.
 
-### `MainActivity` — copied, and two of its features left out
+### `MainActivity` — copied, and its update check replaced
 
 `animato.app.MainActivity` is an adapted copy of Mihon's. It has to be: Mihon selects colours from
 an `AppTheme` **enum** through a **private** `colorSchemes` map over an `internal BaseColorScheme`,
 none of which another module can extend, so the Animato palette can only be applied *above* Mihon's
 screens — by owning the root composable. ARCHITECTURE.md sets out why nothing else unlocks it.
 
-It still hosts Mihon's own `HomeScreen`, so the app behaves exactly as before and merely looks like
-Animato. Two things from the original are deliberately gone:
-
-- **`CheckForUpdates()`** — `AppUpdateChecker` reads releases from `mihonapp/mihon`. Calling it
-  would offer our users Mihon's APK, which they cannot install: different package, different signing
-  key. *To do: an Animato updater pointed at this repository's own releases, which the alpha
-  workflow now produces.*
-- **`ShowDonationCampaign()`** — pushes Mihon's `SupportUsScreen`. Soliciting donations to another
-  project from a rebranded app is not ours to do.
+- **`CheckForUpdates()`** is now ours. Mihon's `AppUpdateChecker` reads `mihonapp/mihon`, and
+  pointing it at this repository would not have been enough even with the name changed — see the
+  updater entry below. It pushes Mihon's own `NewUpdateScreen`, which takes a download link and
+  neither knows nor cares whose release it came from.
+- **`ShowDonationCampaign()`** is deliberately gone — it pushes Mihon's `SupportUsScreen`, and
+  soliciting donations to another project from a rebranded app is not ours to do.
 
 Three further differences are forced rather than chosen:
 
 - `NotificationReceiver.dismissNotification` is `internal`, so tapping a notification dismisses it
   through our `AnimeNotifications.dismiss`, which implements the same group-summary rule.
-- `ExtensionApi` is `internal`; it was only reachable from inside `CheckForUpdates`, which is gone.
+- `ExtensionApi` is `internal` to `:app`. Mihon calls it from inside `CheckForUpdates` to notify
+  about extension updates, and ours cannot: the class is not visible here and `ExtensionManager`
+  keeps its instance private. Mihon has no periodic job for this any more either, so **Animato does
+  not check for extension updates at all**. *To do: rebuild the check on the public pieces —
+  `ExtensionManager.findAvailableExtensions()` and the installed/available flows — for both halves.*
 - The splash `ready` flag is set when the navigator composes, rather than by each tab. Mihon's tabs
   set it with `(context as? MainActivity)?.ready = true`, a cast against *their* class that ours
   cannot satisfy, since their `MainActivity` is final. Left alone the splash would hang for its
@@ -136,6 +137,56 @@ Three further differences are forced rather than chosen:
 
 *To do: re-read Mihon's `MainActivity` on each upstream sync. It is the one file of ours that tracks
 theirs closely enough for their changes to matter.*
+
+### `BuildConfig.APPLICATION_ID` — a constant that had to stop being a constant
+
+`:app` sets `buildConfigField("String", "APPLICATION_ID", "\"app.mihon\"")`. Upstream that is simply
+true: `:app` *is* the application. Here it is a library inside ours, and the app installs as
+`io.github.mo3bdlaa.animato`.
+
+It is not a label. Mihon's own code reads it for things that have to name the running package:
+
+- `File.getUriCompat` builds the FileProvider authority from it, and the authority the merged
+  manifest declares is `${applicationId}.provider` — ours. The two never met, so **every**
+  FileProvider use threw: sharing an image, sending a crash log, opening a finished backup, and
+  installing an extension, which is the first thing anyone does.
+- `ShizukuInstaller` addresses its install-result broadcast with `setPackage(APPLICATION_ID)`, to a
+  package that is not installed.
+- `ShellInterface` binds its Shizuku user service under it.
+
+Declaring a second FileProvider with `app.mihon.provider` in our manifest would have fixed the first
+and broken something worse: provider authorities are unique across the device, so Animato would have
+refused to install alongside Mihon.
+
+So the string is read from `animato.applicationId` in `gradle.properties`, which `:animato-app`
+also sets its `applicationId` from. One value, and the build fails rather than drifting.
+
+This is the second change to `app/build.gradle.kts`, after turning its minification off. Both are
+consequences of the same fact — that Mihon is a library here — and both will conflict on a sync,
+which is the correct outcome: they should be re-decided, not silently carried.
+
+### The updater — ours, because our releases are not shaped like Mihon's
+
+`animato.app.updater.AnimatoAppUpdateChecker` replaces `AppUpdateChecker`. Changing the repository
+name in Mihon's would not have been enough:
+
+- it reads `/releases/latest`, and GitHub's "latest" **excludes prereleases**. Every Animato release
+  so far is one, so that endpoint answers with nothing at all;
+- its comparison strips every character that is not a digit or a dot and compares positionally, so
+  `0.1.0-alpha.7` becomes four numbers. Compared against the `0.1.0` it eventually released into, it
+  indexes the shorter list by the longer one's positions and throws. Mihon never meets this because
+  Mihon only ever tags `vX.Y.Z`.
+
+Ours parses versions instead (`SemanticVersion`, semver §11, with tests) and reads the release list.
+Whether prereleases count is taken from the running build rather than a setting: a build whose own
+version has a prerelease part is offered alphas, a plain one is offered only finished releases. So
+whoever installs an alpha keeps getting alphas, and nobody is dragged onto one.
+
+The consequence for the build: `versionName` now comes from `ANIMATO_VERSION_NAME`, which the alpha
+workflow sets to the tag it is about to push. A build that calls itself `0.1.0` cannot be told apart
+from the alpha after it.
+
+`NewUpdateScreen` and `NewUpdateScreenModel` are Mihon's, unchanged. They take a link.
 
 ### Mihon's `MainActivity` is replaced by an `activity-alias`
 

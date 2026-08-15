@@ -10,7 +10,9 @@ android {
     namespace = "io.github.mo3bdlaa.animato"
 
     defaultConfig {
-        applicationId = "io.github.mo3bdlaa.animato"
+        // Shared with :app, which compiles it into BuildConfig.APPLICATION_ID — the comment there
+        // sets out why that constant cannot stay Mihon's.
+        applicationId = providers.gradleProperty("animato.applicationId").get()
 
         /*
          * Alpha builds set this from the workflow's run number, so each one outranks the last and
@@ -18,7 +20,18 @@ android {
          * equal versionCode is allowed, only a lower one is refused.
          */
         versionCode = System.getenv("ANIMATO_VERSION_CODE")?.toIntOrNull() ?: 1
-        versionName = "0.1.0"
+
+        /*
+         * The updater compares this with the tag of the newest release, so an alpha has to say
+         * which alpha it is — otherwise every build calls itself 0.1.0 and alpha 6 looks no newer
+         * than alpha 5. The workflow passes `0.1.0-alpha.<run number>`.
+         *
+         * A local build keeps the plain version, which by semver outranks every prerelease of it,
+         * so a development build is never offered an alpha.
+         */
+        versionName = System.getenv("ANIMATO_VERSION_NAME")?.takeIf(String::isNotBlank) ?: "0.1.0"
+
+        buildConfigField("String", "ANIMATO_RELEASE_REPO", "\"Mo3bdlaa/Animato\"")
     }
 
     buildFeatures {

@@ -53,6 +53,7 @@ import animato.anime.services.AnimeNotifications
 import animato.app.navigation.AnimatoHomeScreen
 import animato.app.navigation.setContentType
 import animato.app.settings.AniyomiImportScreen
+import animato.app.updater.AnimatoAppUpdateChecker
 import animato.domain.content.ContentType
 import animato.ui.navigation.AnimatoNavigator
 import animato.ui.navigation.AnimatoTab
@@ -79,10 +80,12 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
+import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
+import eu.kanade.tachiyomi.util.system.updaterEnabled
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -91,9 +94,11 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import logcat.LogPriority
 import mihon.core.migration.Migrator
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.util.collectAsState
@@ -116,18 +121,19 @@ import uy.kohesive.injekt.injectLazy
  * The root it hosts is [animato.app.navigation.AnimatoHomeScreen], Animato's own five-destination
  * bar, rather than Mihon's `HomeScreen`.
  *
- * ## Two things from Mihon's version are deliberately absent
+ * ## What differs from Mihon's version
  *
- * **The update check.** `AppUpdateChecker` reads releases from `mihonapp/mihon`. Calling it here
- * would offer Animato's users Mihon's APK — which they could not install even if they wanted to,
- * since it is a different package signed with a different key. An Animato updater pointed at this
- * repository's own releases is the replacement, and it is not this stage's job.
+ * **The update check is ours.** `AppUpdateChecker` reads releases from `mihonapp/mihon`, and
+ * calling it here would offer Animato's users Mihon's APK — which they could not install even if
+ * they wanted to, since it is a different package signed with a different key. [CheckForUpdates]
+ * asks this repository instead; see [AnimatoAppUpdateChecker] for why pointing Mihon's at us was
+ * not enough. The screen it pushes is still Mihon's.
  *
- * **The donation campaign.** It pushes Mihon's `SupportUsScreen`. Soliciting donations to another
- * project from a rebranded app is not ours to do.
+ * **The donation campaign is absent.** It pushes Mihon's `SupportUsScreen`. Soliciting donations to
+ * another project from a rebranded app is not ours to do.
  *
- * Both omissions are listed in UPSTREAM_DIVERGENCE.md, because a future sync will show them as
- * missing rather than as decided.
+ * Both are listed in UPSTREAM_DIVERGENCE.md, because a future sync will show them as changed rather
+ * than as decided.
  */
 class MainActivity : BaseActivity() {
 
@@ -292,6 +298,7 @@ class MainActivity : BaseActivity() {
 
                     HandleOnNewIntent(context = context, navigator = navigator)
 
+                    if (isLaunch) CheckForUpdates()
                     ShowOnboarding()
                 }
             }
@@ -330,6 +337,38 @@ class MainActivity : BaseActivity() {
                 awaitClose { componentActivity.removeOnNewIntentListener(consumer) }
             }
                 .collectLatest { handleIntentAction(it, navigator) }
+        }
+    }
+
+    /**
+     * Offers a newer Animato, once, on a cold start.
+     *
+     * The check is ours — [AnimatoAppUpdateChecker] sets out why Mihon's cannot be pointed at this
+     * repository — but the screen that follows is Mihon's, unchanged: it takes a download link and
+     * knows nothing about whose release it came from.
+     *
+     * Failing quietly is deliberate. There is no network on a plane and no GitHub behind some
+     * firewalls, and neither is a reason to interrupt someone opening their library.
+     */
+    @Composable
+    private fun CheckForUpdates() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        LaunchedEffect(Unit) {
+            if (!updaterEnabled) return@LaunchedEffect
+            try {
+                val release = AnimatoAppUpdateChecker().checkForUpdate() ?: return@LaunchedEffect
+                navigator.push(
+                    NewUpdateScreen(
+                        versionName = release.version,
+                        changelogInfo = release.info,
+                        releaseLink = release.releaseLink,
+                        downloadLink = release.downloadLink,
+                    ),
+                )
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e)
+            }
         }
     }
 

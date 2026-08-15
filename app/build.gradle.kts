@@ -30,7 +30,25 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        buildConfigField("String", "APPLICATION_ID", "\"app.mihon\"")
+        /*
+         * Upstream this is the literal "app.mihon", and it has to come from outside here, because
+         * this module is a library inside Animato rather than the application.
+         *
+         * It is not a label. `File.getUriCompat` builds the FileProvider authority out of it, and
+         * the authority the merged manifest actually declares is `${applicationId}.provider` —
+         * ours. Left as "app.mihon" the two never meet and every FileProvider use throws: sharing
+         * an image, sending a crash log, opening a finished backup, and installing an extension,
+         * which is the first thing anyone does. `ShizukuInstaller` addresses its result broadcast
+         * to this package too, and `ShellInterface` binds its user service under it.
+         *
+         * So it is read from `animato.applicationId` in gradle.properties — the same property
+         * :animato-app sets its applicationId from, so the two cannot drift apart.
+         */
+        buildConfigField(
+            "String",
+            "APPLICATION_ID",
+            "\"${providers.gradleProperty("animato.applicationId").get()}\"",
+        )
         buildConfigField("int", "VERSION_CODE", "29")
         buildConfigField("String", "VERSION_NAME", "\"0.20.4\"")
 
