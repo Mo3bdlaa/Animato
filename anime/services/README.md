@@ -20,8 +20,7 @@ symbols remain unresolved.
 
 ## What is left, in the order worth doing it
 
-1. **`:anime:source-local`** — 13 files. `LocalAnimeSource` is imported from two different packages
-   and nothing here resolves until that module exists. Biggest single unblock.
+1. ~~`:anime:source-local`~~ — **done**, the module exists and builds.
 2. **Anime drawables** (`ic_ani*`) and `util/size` — small, mechanical.
 3. **More notification helpers** — `openAnimeDownloadManagerPendingActivity`,
    `openAnimeEntryPendingActivity`. Same story as the constants: Aniyomi put them inside Mihon's

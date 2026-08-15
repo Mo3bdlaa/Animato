@@ -29,4 +29,5 @@ dependencies {
     implementation(projects.anime.data)
     implementation(projects.anime.domain)
     implementation(projects.anime.sourceApi)
+    implementation(projects.anime.sourceLocal)
 }

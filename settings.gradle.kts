@@ -35,6 +35,7 @@ rootProject.name = "Animato"
 include(":anime:data")
 include(":anime:domain")
 include(":anime:source-api")
+include(":anime:source-local")
 include(":app")
 // probe: the baseline profile module consumes :app as an application
 // include(":baseline-profile")

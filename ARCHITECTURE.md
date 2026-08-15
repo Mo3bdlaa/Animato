@@ -107,6 +107,7 @@ to resolve.
 | 2a | `:anime:source-api` — 26 files, the frozen extension contract | done |
 | 2b | `:anime:domain` — 104 files | done |
 | 2c | `:anime:data` — the anime database and its repositories | done |
+| 2d | `:anime:source-local` — local anime files | done |
 | 3 | `:animato:ui-kit` — generalised components re-homed | started |
 | 3a | components needing player preferences move with the player instead | phase 4 |
 | 4 | `:anime:services` — extensions, downloads, library update, torrent | started, see its README |
