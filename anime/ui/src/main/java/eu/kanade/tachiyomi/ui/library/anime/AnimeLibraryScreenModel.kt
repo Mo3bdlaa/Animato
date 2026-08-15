@@ -349,7 +349,7 @@ class AnimeLibraryScreenModel(
             libraryPreferences.languageBadge().changes(),
             libraryPreferences.autoUpdateItemRestrictions().changes(),
 
-            preferences.downloadedOnly().changes(),
+            preferences.downloadedOnly.changes(),
             animeLibraryPreferences.filterDownloadedAnime().changes(),
             animeLibraryPreferences.filterUnseen().changes(),
             animeLibraryPreferences.filterStartedAnime().changes(),

@@ -81,7 +81,7 @@ private fun ColumnScope.FilterPage(
     screenModel: AnimeLibrarySettingsScreenModel,
 ) {
     val filterDownloaded by screenModel.animeLibraryPreferences.filterDownloadedAnime().collectAsState()
-    val downloadedOnly by screenModel.preferences.downloadedOnly().collectAsState()
+    val downloadedOnly by screenModel.preferences.downloadedOnly.collectAsState()
     val autoUpdateAnimeRestrictions by screenModel.libraryPreferences.autoUpdateItemRestrictions().collectAsState()
 
     TriStateItem(
