@@ -10,9 +10,25 @@ ffmpegKit = "1.18"
 arthenicaSmartExceptions = "0.2.1"
 torrserver = "0.1.0"
 
+# The player itself: mpv for playback, seeker for the seek bar, truetypeparser to read the
+# names out of embedded subtitle fonts, media for the media session.
+aniyomiMpvLib = "1.18.n"
+constraintLayoutCompose = "1.1.0"
+constraintLayoutView = "2.2.1"
+media = "1.7.0"
+seeker = "1.2.2"
+truetypeparser = "2.1.4"
+
 [libraries]
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 kotlinx-immutables = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxImmutables" }
 ffmpeg-kit = { module = "com.github.jmir1:ffmpeg-kit", version.ref = "ffmpegKit" }
 arthenica-smartexceptions = { module = "com.arthenica:smart-exception-java", version.ref = "arthenicaSmartExceptions" }
 torrserver = { module = "io.github.secozzi:torrserver", version.ref = "torrserver" }
+aniyomi-mpv = { module = "com.github.aniyomiorg:aniyomi-mpv-lib", version.ref = "aniyomiMpvLib" }
+compose-constraintlayout = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintLayoutCompose" }
+# player_layout.xml is a ConstraintLayout, so the view library is needed as well as the Compose one.
+constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintLayoutView" }
+mediasession = { module = "androidx.media:media", version.ref = "media" }
+seeker = { module = "io.github.2307vivek:seeker", version.ref = "seeker" }
+truetypeparser = { module = "io.github.yubyf:truetypeparser-light", version.ref = "truetypeparser" }

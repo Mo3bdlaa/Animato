@@ -148,6 +148,32 @@ So the immutable types are no longer earning anything, and the dependency is our
 
 *To do: use plain `List` in our composable parameters and drop `animato.kotlinx.immutables`.*
 
+### Voyager `ScreenModel` → Mihon's `StateViewModel`
+
+Aniyomi's player settings screens used Voyager's `StateScreenModel`, `rememberScreenModel`,
+`screenModelScope`.
+
+Mihon has dropped Voyager screen models entirely — the artifact is not even in its catalogues any
+more — in favour of `mihon.core.viewmodel.StateViewModel`, a plain AndroidX `ViewModel` holding a
+`MutableStateFlow`. The shapes line up almost exactly: `mutableState` keeps its name,
+`screenModelScope` becomes `viewModelScope`, `rememberScreenModel { }` becomes `viewModel { }`.
+
+Adopted. An AndroidX `ViewModel` is the platform's own answer to surviving configuration changes,
+and it is one fewer third-party abstraction between a screen and its state.
+
+### `convertEpochMillisZone` and the date helpers → `kotlinx.datetime`
+
+Mihon moved `eu.kanade.tachiyomi.util.lang`'s date helpers from `java.time` to `kotlinx.datetime`,
+so `convertEpochMillisZone` now takes `kotlinx.datetime.TimeZone` rather than `ZoneId`, and
+`toRelativeString` hangs off `kotlinx.datetime.LocalDate`. Mihon also grew `Long.toLocalDate()`,
+which replaces building a `LocalDate` from an `Instant` and a zone by hand.
+
+Adopted, and the call sites got shorter for it.
+
+### `Location.Pictures` — constructor made private
+
+Mihon put a `create()` factory in front of it. A one-word change at each call site.
+
 ### SQLDelight: Mihon generates async, we still generate sync
 
 Mihon's `:data` sets `generateAsync = true` and drives it with `AndroidxSqliteDriver` over bundled
@@ -193,7 +219,17 @@ is different: Aniyomi had added these *inside* Mihon's files.
 | `Notifications.CHANNEL_HTTP_SERVER` / `ID_HTTP_SERVER` | `animato.anime.services.AnimeNotifications`, values unchanged |
 | `Constants.SHORTCUT_ANIME*` | `animato.anime.services.AnimeConstants`, action strings unchanged |
 | `MainActivity.startHttpServerService` | `HttpServerService.start` — it starts a service and waits on a flow; nothing in it touched an activity |
-| anime components in Mihon's `AndroidManifest.xml` | `:anime:services`' own manifest, merged in by the build |
+| anime components in Mihon's `AndroidManifest.xml` | `:anime:services`' and `:anime:player`'s own manifests, merged in by the build |
+| `Preference.MultiLineEditTextPreference`, `MPVConfPreference`, `EditTextInfoPreference` | **cannot be moved** — Mihon's `Preference` hierarchy is `sealed`, so no module of ours may extend it. See the player README |
+| `StorageManager.getMPVConfigDirectory` and friends | `animato.anime.player.PlayerStorage`, resolving the base directory from `StoragePreferences` |
+| `Tracker.animeService` | `eu.kanade.tachiyomi.data.track.animeService`, an extension that asks `this as? AnimeTracker` |
+| `LocaleHelper.getSimpleLocaleDisplayName` | `animato.anime.player.getSimpleLocaleDisplayName` |
+| `Padding.mediumSmall` | `animato.anime.player.mediumSmall` |
+| `Preference.deleteAndGet` | `animato.anime.player.deleteAndGet` |
+| `TachiyomiTheme.playerRippleConfiguration` | `animato.anime.player.playerRippleConfiguration` |
+| `SourcePreferences.incognitoAnimeExtensions` | `aniyomi.domain.source.service.AnimeSourcePreferences` |
+| `HosterState` inside `QualitySheet.kt` | `animato.anime.player.HosterState` — a model, not a screen |
+| `CustomButtonFetchState` inside a settings screen model | `animato.anime.player.CustomButtonFetchState` |
 
 ---
 

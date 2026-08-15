@@ -161,8 +161,8 @@ to resolve.
 | 4 | `:anime:services` — extensions, downloads, library update, torrent | done |
 | 4a | the Injekt modules binding the anime types | done |
 | 5a | `:anime:player` — loaders and the video resolver | done |
-| 5b | playback core — activity, view model, mpv view, observers | |
-| 5c | player controls and settings screens | |
+| 5b | playback core, controls, external player, picture-in-picture | done |
+| 5c | player settings screens | blocked: Mihon's `Preference` is sealed — see the module README |
 | 6 | `:anime:ui` and a home screen combining both tab sets | |
 | 7 | Importer for Aniyomi backups | |
 

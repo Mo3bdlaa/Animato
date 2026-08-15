@@ -17,4 +17,6 @@ class AnimeSourcePreferences(
 ) {
 
     fun animeExtensionUpdatesCount() = preferenceStore.getInt("animeext_updates_count", 0)
+
+    fun incognitoAnimeExtensions() = preferenceStore.getStringSet("incognito_anime_extensions", emptySet())
 }

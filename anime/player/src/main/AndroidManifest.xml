@@ -1,2 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<!--
+  The player activity, declared by the module that owns it.
+
+  Aniyomi listed it in Mihon's manifest; a library module can contribute components to the merge, so
+  it belongs here and Mihon's manifest stays untouched. Attributes are Aniyomi's, unchanged — the
+  S Pen remote-action filter included, since that is what makes the pen's button seek.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+
+        <activity
+            android:name="eu.kanade.tachiyomi.ui.player.PlayerActivity"
+            android:autoRemoveFromRecents="true"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|keyboardHidden|keyboard|uiMode"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:theme="@style/Theme.Tachiyomi">
+            <intent-filter>
+                <action android:name="com.samsung.android.support.REMOTE_ACTION" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.samsung.android.support.REMOTE_ACTION"
+                android:resource="@xml/s_pen_actions" />
+        </activity>
+
+    </application>
+
+</manifest>

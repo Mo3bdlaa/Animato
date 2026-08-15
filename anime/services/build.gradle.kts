@@ -45,6 +45,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
 
     implementation(libs.bundles.kotlinx.coroutines)
+    implementation(libs.kotlinx.datetime)
     implementation(libs.bundles.serialization)
     implementation(libs.injekt)
     implementation(libs.unifile)
@@ -57,6 +58,7 @@ dependencies {
     implementation(libs.bundles.coil)
     implementation(libs.bundles.shizuku)
 
+    implementation(animato.kotlinx.immutables)
     implementation(animato.ffmpeg.kit)
     implementation(animato.arthenica.smartexceptions)
     implementation(animato.torrserver)

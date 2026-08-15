@@ -34,6 +34,7 @@ object AnimeInjekt {
         scope.importModule(AnimePreferenceModule(app))
         scope.importModule(AnimeAppModule(app))
         scope.importModule(AnimeDomainModule())
+        scope.importModule(AnimePlayerModule(app))
 
         registeredInto = scope
     }
