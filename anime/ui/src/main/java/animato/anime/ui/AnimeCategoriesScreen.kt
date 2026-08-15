@@ -18,7 +18,7 @@ import tachiyomi.i18n.MR
  * When 6c builds the combined screen, this becomes one of its two tabs rather than being thrown
  * away — `animeCategoryTab()` is already a `TabContent`, which is the shape that screen will want.
  */
-class AnimeCategoriesScreen : Screen() {
+class AnimeCategoriesScreen : Screen {
 
     @Composable
     override fun Content() {

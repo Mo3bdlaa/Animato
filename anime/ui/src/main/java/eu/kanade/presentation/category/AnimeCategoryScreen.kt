@@ -14,9 +14,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import animato.anime.ui.category.AnimeCategoryListItem
 import animato.domain.category.AnimeCategory
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
-import eu.kanade.presentation.category.components.CategoryListItem
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryScreenState
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -98,7 +98,7 @@ private fun CategoryContent(
             key = { category -> category.key },
         ) { category ->
             ReorderableItem(reorderableState, category.key) {
-                CategoryListItem(
+                AnimeCategoryListItem(
                     modifier = Modifier.animateItem(),
                     category = category,
                     onRename = { onClickRename(category) },

@@ -8,6 +8,8 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.viewModelScope
+import animato.anime.services.airing.AniChartApi
+import animato.anime.ui.entries.applyFilters
 import animato.anime.util.removeCovers
 import animato.domain.category.AnimeCategory
 import animato.ui.entries.DownloadAction
@@ -47,7 +49,6 @@ import eu.kanade.tachiyomi.source.anime.isSourceForTorrents
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
 import eu.kanade.tachiyomi.ui.player.settings.GesturePreferences
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
-import eu.kanade.tachiyomi.util.AniChartApi
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.ImmutableList
@@ -1494,7 +1495,8 @@ class AnimeScreenModel(
         trackItems: List<AnimeTrackItem>,
         manualFetch: Boolean,
     ) {
-        val airingEpisodeData = AniChartApi().loadAiringTime(anime, trackItems, manualFetch)
+        val airingEpisodeData = AniChartApi()
+            .loadAiringTime(anime, trackItems.map { it.tracker to it.track }, manualFetch)
         setAnimeViewerFlags.awaitSetNextEpisodeAiring(anime.id, airingEpisodeData)
         updateSuccessState { it.copy(nextAiringEpisode = airingEpisodeData) }
     }
@@ -1629,29 +1631,6 @@ class AnimeScreenModel(
 
             val showSummaries: Boolean
                 get() = anime.showSummaries()
-
-            /**
-             * Applies the view filters to the list of episodes obtained from the database.
-             * @return an observable of the list of episodes filtered and sorted.
-             */
-            private fun List<EpisodeList.Item>.applyFilters(anime: Anime): Sequence<EpisodeList.Item> {
-                val isLocalAnime = anime.isLocal()
-                val unseenFilter = anime.unseenFilter
-                val downloadedFilter = anime.downloadedFilter
-                val bookmarkedFilter = anime.bookmarkedFilter
-                val fillermarkedFilter = anime.fillermarkedFilter
-                return asSequence()
-                    .filter { (episode) -> applyFilter(unseenFilter) { !episode.seen } }
-                    .filter { (episode) -> applyFilter(bookmarkedFilter) { episode.bookmark } }
-                    .filter { (episode) -> applyFilter(fillermarkedFilter) { episode.fillermark } }
-                    .filter { applyFilter(downloadedFilter) { it.isDownloaded || isLocalAnime } }
-                    .sortedWith { (episode1), (episode2) ->
-                        getEpisodeSort(anime).invoke(
-                            episode1,
-                            episode2,
-                        )
-                    }
-            }
 
             private fun List<AnimeSeasonItem>.applySeasonFilters(anime: Anime): Sequence<AnimeSeasonItem> {
                 val unseenFilter = anime.seasonUnseenFilter

@@ -20,9 +20,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.entries.anime.DuplicateAnimeDialog
-import eu.kanade.presentation.history.HistoryDeleteAllDialog
-import eu.kanade.presentation.history.HistoryDeleteDialog
 import eu.kanade.presentation.history.anime.AnimeHistoryScreen
+import eu.kanade.presentation.history.components.HistoryDeleteAllDialog
+import eu.kanade.presentation.history.components.HistoryDeleteDialog
 import eu.kanade.tachiyomi.ui.browse.anime.migration.anime.season.MigrateSeasonSelectScreen
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialog
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialogScreenModel
@@ -67,14 +67,10 @@ fun Screen.animeHistoryTab(
     }
 
     val scope = rememberCoroutineScope()
+    // Aniyomi sent this back to its own library tab. Mihon's home has no anime tab to send it to
+    // until phase 6c adds one, so for now it just goes back the way it came.
     val navigateUp: (() -> Unit)? = if (fromMore) {
-        {
-            if (navigator.lastItem == HomeScreen) {
-                scope.launch { HomeScreen.openTab(HomeScreen.Tab.AnimeLib()) }
-            } else {
-                navigator.pop()
-            }
-        }
+        { navigator.pop() }
     } else {
         null
     }
@@ -105,7 +101,6 @@ fun Screen.animeHistoryTab(
                                 screenModel.removeFromHistory(dialog.history)
                             }
                         },
-                        isManga = false,
                     )
                 }
                 is AnimeHistoryScreenModel.Dialog.DeleteAll -> {

@@ -47,6 +47,7 @@ import animato.ui.browse.BaseBrowseItem
 import animato.ui.browse.ExtensionHeader
 import animato.ui.browse.ExtensionTrustDialog
 import animato.ui.components.animateItemFastScroll
+import animato.ui.icons.Magnet
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.browse.anime.components.AnimeExtensionIcon
@@ -68,7 +69,6 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.icons.CustomIcons
-import tachiyomi.presentation.core.icons.Magnet
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen

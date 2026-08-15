@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.util.episode
 
+import animato.anime.ui.entries.applyFilters
 import eu.kanade.domain.items.episode.model.applyFilters
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.ui.entries.anime.EpisodeList

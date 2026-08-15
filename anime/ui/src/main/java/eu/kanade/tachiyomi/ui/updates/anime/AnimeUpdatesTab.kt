@@ -14,6 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.player.PlayerLauncher
+import animato.anime.ui.upcoming.UpcomingAnimeScreen
+import animato.anime.ui.updates.EpisodesDeleteConfirmationDialog
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -21,7 +23,6 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.NavigatorAdaptiveSheet
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.entries.anime.EpisodeOptionsDialogScreen
-import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.anime.AnimeUpdateScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -30,7 +31,6 @@ import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import mihon.feature.upcoming.anime.UpcomingAnimeScreen
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.MR
@@ -48,14 +48,10 @@ fun Screen.animeUpdatesTab(
     val scope = rememberCoroutineScope()
     val state by screenModel.state.collectAsState()
 
+    // Aniyomi sent this back to its own library tab. Mihon's home has no anime tab to send it to
+    // until phase 6c adds one, so for now it just goes back the way it came.
     val navigateUp: (() -> Unit)? = if (fromMore) {
-        {
-            if (navigator.lastItem == HomeScreen) {
-                scope.launch { HomeScreen.openTab(HomeScreen.Tab.AnimeLib()) }
-            } else {
-                navigator.pop()
-            }
-        }
+        { navigator.pop() }
     } else {
         null
     }
@@ -96,10 +92,9 @@ fun Screen.animeUpdatesTab(
             val onDismissDialog = { screenModel.setDialog(null) }
             when (val dialog = state.dialog) {
                 is AnimeUpdatesScreenModel.Dialog.DeleteConfirmation -> {
-                    UpdatesDeleteConfirmationDialog(
+                    EpisodesDeleteConfirmationDialog(
                         onDismissRequest = onDismissDialog,
                         onConfirm = { screenModel.deleteEpisodes(dialog.toDelete) },
-                        isManga = false,
                     )
                 }
                 is AnimeUpdatesScreenModel.Dialog.ShowQualities -> {

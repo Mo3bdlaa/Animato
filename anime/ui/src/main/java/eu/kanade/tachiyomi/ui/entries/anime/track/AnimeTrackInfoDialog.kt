@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.ui.track.TrackEpisodeSelector
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -41,7 +42,6 @@ import eu.kanade.domain.track.anime.interactor.RefreshAnimeTracks
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.track.TrackDateSelector
-import eu.kanade.presentation.track.TrackItemSelector
 import eu.kanade.presentation.track.TrackScoreSelector
 import eu.kanade.presentation.track.TrackStatusSelector
 import eu.kanade.presentation.track.anime.AnimeTrackInfoDialogHome
@@ -65,6 +65,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
 import logcat.LogPriority
 import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.i18n.stringResource
@@ -88,6 +89,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
+import kotlin.time.Clock
 import tachiyomi.domain.track.anime.model.AnimeTrack as DbAnimeTrack
 
 data class AnimeTrackInfoDialogHomeScreen(
@@ -356,7 +358,7 @@ private data class TrackEpisodeSelectorScreen(
         }
         val state by screenModel.state.collectAsState()
 
-        TrackItemSelector(
+        TrackEpisodeSelector(
             selection = state.selection,
             onSelectionChange = screenModel::setSelection,
             range = remember { screenModel.getRange() },
@@ -365,7 +367,6 @@ private data class TrackEpisodeSelectorScreen(
                 navigator.pop()
             },
             onDismissRequest = navigator::pop,
-            isManga = false,
         )
     }
 
@@ -565,15 +566,15 @@ private data class TrackDateSelectorScreen(
                 val millis =
                     (if (start) track.startDate else track.finishDate)
                         .takeIf { it != 0L }
-                        ?: Instant.now().toEpochMilli()
-                return millis.convertEpochMillisZone(ZoneOffset.systemDefault(), ZoneOffset.UTC)
+                        ?: Clock.System.now().toEpochMilliseconds()
+                return millis.convertEpochMillisZone(TimeZone.currentSystemDefault(), TimeZone.UTC)
             }
 
         // In UTC
         fun setDate(millis: Long) {
             // Convert to local time
             val localMillis =
-                millis.convertEpochMillisZone(ZoneOffset.UTC, ZoneOffset.systemDefault())
+                millis.convertEpochMillisZone(TimeZone.UTC, TimeZone.currentSystemDefault())
             viewModelScope.launchNonCancellable {
                 if (start) {
                     tracker.animeService.setRemoteStartDate(track.toDbTrack(), localMillis)
