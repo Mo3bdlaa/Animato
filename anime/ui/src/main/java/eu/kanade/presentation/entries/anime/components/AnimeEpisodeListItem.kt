@@ -51,7 +51,7 @@ import aniyomi.domain.library.service.AnimeLibraryPreferences
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import eu.kanade.presentation.entries.components.DotSeparatorText
-import eu.kanade.presentation.entries.components.ItemCover
+import animato.ui.entries.ItemCover
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import me.saket.swipe.SwipeableActionsBox
 import tachiyomi.i18n.MR

@@ -63,8 +63,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.entries.anime.model.episodesFiltered
 import eu.kanade.domain.entries.anime.model.seasonsFiltered
 import eu.kanade.presentation.components.relativeDateTimeText
-import eu.kanade.presentation.entries.DownloadAction
-import eu.kanade.presentation.entries.EntryScreenItem
+import animato.ui.entries.DownloadAction
+import animato.ui.entries.EntryScreenItem
 import eu.kanade.presentation.entries.anime.components.AnimeActionRow
 import eu.kanade.presentation.entries.anime.components.AnimeEpisodeListItem
 import eu.kanade.presentation.entries.anime.components.AnimeInfoBox
@@ -73,9 +73,9 @@ import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
 import eu.kanade.presentation.entries.anime.components.ExpandableAnimeDescription
 import eu.kanade.presentation.entries.anime.components.NextEpisodeAiringListItem
 import eu.kanade.presentation.entries.components.EntryBottomActionMenu
-import eu.kanade.presentation.entries.components.EntryToolbar
-import eu.kanade.presentation.entries.components.ItemHeader
-import eu.kanade.presentation.entries.components.MissingItemCountListItem
+import animato.ui.entries.EntryToolbar
+import animato.ui.entries.ItemHeader
+import animato.ui.entries.MissingItemCountListItem
 import eu.kanade.presentation.util.formatEpisodeNumber
 import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
 import eu.kanade.tachiyomi.animesource.model.FetchType

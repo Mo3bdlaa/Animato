@@ -1,7 +1,6 @@
 package animato.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialExpressiveTheme
@@ -22,18 +21,23 @@ import uy.kohesive.injekt.api.get
  * the look of every screen below it.
  *
  * The composition locals below are not decoration. Mihon's `setComposeContent` sets exactly these
- * two, so its screens are written assuming them; a root that omits them would leave Mihon's text
- * at the wrong default size and its icons the wrong colour. Matching them is what makes this a
- * drop-in replacement rather than a reskin that breaks things.
+ * two, so its screens are written assuming them; a root that omits them would leave Mihon's text at
+ * the wrong default size and its icons the wrong colour. Matching them is what makes this a drop-in
+ * replacement rather than a reskin that breaks things.
+ *
+ * [palette] is a parameter rather than a constant so that a theme picker can be added later by
+ * passing a different one — see [AnimatoPalettes].
  */
 @Composable
 fun AnimatoTheme(
+    palette: AnimatoPalette = AnimatoPalettes.Default,
     isDark: Boolean? = null,
     isAmoled: Boolean? = null,
     content: @Composable () -> Unit,
 ) {
     val uiPreferences = remember { Injekt.get<UiPreferences>() }
     BaseAnimatoTheme(
+        palette = palette,
         // Mihon's ThemingDelegate has already pushed the user's light/dark/system choice into
         // AppCompatDelegate by the time any of this composes, so the system value is the setting.
         isDark = isDark ?: isSystemInDarkTheme(),
@@ -48,19 +52,21 @@ fun AnimatoTheme(
  */
 @Composable
 fun AnimatoPreviewTheme(
+    palette: AnimatoPalette = AnimatoPalettes.Default,
     isDark: Boolean = true,
     isAmoled: Boolean = false,
     content: @Composable () -> Unit,
-) = BaseAnimatoTheme(isDark = isDark, isAmoled = isAmoled, content = content)
+) = BaseAnimatoTheme(palette = palette, isDark = isDark, isAmoled = isAmoled, content = content)
 
 @Composable
 private fun BaseAnimatoTheme(
+    palette: AnimatoPalette,
     isDark: Boolean,
     isAmoled: Boolean,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = remember(isDark, isAmoled) {
-        animatoColorScheme(isDark = isDark, isAmoled = isAmoled)
+    val colorScheme = remember(palette, isDark, isAmoled) {
+        palette.colorScheme(isDark = isDark, isAmoled = isAmoled)
     }
     MaterialExpressiveTheme(colorScheme = colorScheme) {
         CompositionLocalProvider(
@@ -69,10 +75,4 @@ private fun BaseAnimatoTheme(
             content = content,
         )
     }
-}
-
-private fun animatoColorScheme(isDark: Boolean, isAmoled: Boolean): ColorScheme = when {
-    !isDark -> AnimatoLightColorScheme
-    isAmoled -> AnimatoDarkColorScheme.toAmoled()
-    else -> AnimatoDarkColorScheme
 }

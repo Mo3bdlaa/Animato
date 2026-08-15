@@ -67,6 +67,8 @@ dependencies {
     implementation(libs.androidx.compose.animationGraphics)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.compose.uiUtil)
+    implementation(libs.androidx.lifecycle.viewmodelCompose)
+    implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.paging.compose)
     implementation(libs.androidx.paging.runtime)
 

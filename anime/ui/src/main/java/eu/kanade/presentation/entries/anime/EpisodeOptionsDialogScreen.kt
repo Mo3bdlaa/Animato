@@ -44,9 +44,9 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -54,7 +54,7 @@ import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.player.controls.components.sheets.HosterState
+import animato.anime.player.HosterState
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.QualitySheetHosterContent
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.QualitySheetVideoContent
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.getChangedAt
@@ -97,7 +97,7 @@ class EpisodeOptionsDialogScreen(
 
     @Composable
     override fun Content() {
-        val sm = rememberScreenModel {
+        val sm = viewModel {
             EpisodeOptionsDialogScreenModel(
                 episodeId = episodeId,
                 animeId = animeId,
@@ -139,7 +139,7 @@ class EpisodeOptionsDialogScreenModel(
     episodeId: Long,
     animeId: Long,
     sourceId: Long,
-) : ScreenModel {
+) : ViewModel() {
     private val sourceManager: AnimeSourceManager = Injekt.get()
 
     private val _hosterState = MutableStateFlow<Result<List<HosterState>>?>(null)
@@ -168,7 +168,7 @@ class EpisodeOptionsDialogScreenModel(
     init {
         val hasFoundPreferredVideo = AtomicBoolean(false)
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val episode = Injekt.get<GetEpisode>().await(episodeId)!!
             val anime = Injekt.get<GetAnime>().await(animeId)!!
             val source = sourceManager.getOrStub(sourceId)
@@ -346,7 +346,7 @@ class EpisodeOptionsDialogScreenModel(
                 val hosterName = hosterState.name
                 _hosterState.updateAt(hosterIndex, HosterState.Loading(hosterName))
 
-                screenModelScope.launchIO {
+                viewModelScope.launchIO {
                     val newHosterState = EpisodeLoader.loadHosterVideos(
                         _source.value!!,
                         _hosterList.value[hosterIndex],
@@ -364,7 +364,7 @@ class EpisodeOptionsDialogScreenModel(
             ?.getOrNull(videoIndex)
             ?: return
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val success = loadVideo(_source.value!!, video, hosterIndex, videoIndex)
             if (success) {
                 _showAllQualities.update { _ -> false }

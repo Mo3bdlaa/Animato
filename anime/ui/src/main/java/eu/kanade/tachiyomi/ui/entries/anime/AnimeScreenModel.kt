@@ -13,8 +13,8 @@ import aniyomi.domain.anime.SeasonAnime
 import aniyomi.domain.anime.SeasonDisplayMode
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import mihon.core.viewmodel.StateViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
@@ -27,7 +27,7 @@ import eu.kanade.domain.track.anime.interactor.RefreshAnimeTracks
 import eu.kanade.domain.track.anime.interactor.TrackEpisode
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
-import eu.kanade.presentation.entries.DownloadAction
+import animato.ui.entries.DownloadAction
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -146,7 +146,7 @@ class AnimeScreenModel(
     private val torrentServerUtils: TorrentServerUtils = Injekt.get(),
     internal val setAnimeViewerFlags: SetAnimeViewerFlags = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-) : StateScreenModel<AnimeScreenModel.State>(State.Loading) {
+) : StateViewModel<AnimeScreenModel.State>(State.Loading) {
 
     private val successState: State.Success?
         get() = state.value as? State.Success
@@ -195,7 +195,7 @@ class AnimeScreenModel(
     }
 
     init {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             combine(
                 getAnimeAndEpisodesAndSeasons.subscribe(animeId).distinctUntilChanged(),
                 downloadCache.changes,
@@ -215,7 +215,7 @@ class AnimeScreenModel(
 
         observeDownloads()
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val anime = getAnimeAndEpisodesAndSeasons.awaitAnime(animeId)
             val source = sourceManager.getOrStub(anime.source)
 
@@ -258,7 +258,7 @@ class AnimeScreenModel(
             observeTrackers()
 
             // Fetch info-episodes when needed
-            if ((needRefreshInfo || needRefreshEpisode || needRefreshSeason) && screenModelScope.isActive) {
+            if ((needRefreshInfo || needRefreshEpisode || needRefreshSeason) && viewModelScope.isActive) {
                 fetchAllFromSource(
                     manualFetch = false,
                     fetchDetails = needRefreshInfo,
@@ -273,7 +273,7 @@ class AnimeScreenModel(
     }
 
     fun fetchAllFromSource(manualFetch: Boolean = true) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             updateSuccessState { it.copy(isRefreshingData = true) }
             fetchAllFromSource(
                 manualFetch = manualFetch,
@@ -345,7 +345,7 @@ class AnimeScreenModel(
                 }
             }
 
-            screenModelScope.launch {
+            viewModelScope.launch {
                 snackbarHostState.showSnackbar(message = message)
             }
         }
@@ -356,7 +356,7 @@ class AnimeScreenModel(
     fun toggleFavorite() {
         toggleFavorite(
             onRemoved = {
-                screenModelScope.launch {
+                viewModelScope.launch {
                     if (!hasDownloads()) return@launch
                     val result = snackbarHostState.showSnackbar(
                         message = context.stringResource(AYMR.strings.delete_downloads_for_anime),
@@ -379,7 +379,7 @@ class AnimeScreenModel(
         checkDuplicate: Boolean = true,
     ) {
         val state = successState ?: return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val anime = state.anime
 
             if (isFavorited) {
@@ -443,7 +443,7 @@ class AnimeScreenModel(
 
     fun showChangeCategoryDialog() {
         val anime = successState?.anime ?: return
-        screenModelScope.launch {
+        viewModelScope.launch {
             val categories = getCategories()
             val selection = getAnimeCategoryIds(anime)
             updateSuccessState { successState ->
@@ -465,7 +465,7 @@ class AnimeScreenModel(
     }
 
     fun setFetchInterval(anime: Anime, interval: Int) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             if (
                 updateAnime.awaitUpdateFetchInterval(
                     // Custom intervals are negative
@@ -518,7 +518,7 @@ class AnimeScreenModel(
         moveAnimeToCategory(categories)
         if (anime.favorite) return
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             updateAnime.awaitUpdateFavorite(anime.id, true)
         }
     }
@@ -534,7 +534,7 @@ class AnimeScreenModel(
     }
 
     private fun moveAnimeToCategory(categoryIds: List<Long>) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             setAnimeCategories.await(animeId, categoryIds)
         }
     }
@@ -553,7 +553,7 @@ class AnimeScreenModel(
     // Episodes list - start
 
     private fun observeDownloads() {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             downloadManager.statusFlow()
                 .filter { it.anime.id == successState?.anime?.id }
                 .catch { error -> logcat(LogPriority.ERROR, error) }
@@ -565,7 +565,7 @@ class AnimeScreenModel(
                 }
         }
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             downloadManager.progressFlow()
                 .filter { it.anime.id == successState?.anime?.id }
                 .catch { error -> logcat(LogPriority.ERROR, error) }
@@ -691,7 +691,7 @@ class AnimeScreenModel(
      * @throws IllegalStateException if the swipe action is [AnimeLibraryPreferences.EpisodeSwipeAction.Disabled]
      */
     fun episodeSwipe(episodeItem: EpisodeList.Item, swipeAction: AnimeLibraryPreferences.EpisodeSwipeAction) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             executeEpisodeSwipeAction(episodeItem, swipeAction)
         }
     }
@@ -766,7 +766,7 @@ class AnimeScreenModel(
     ) {
         val successState = successState ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             if (startNow) {
                 val episodeId = episodes.singleOrNull()?.id ?: return@launchNonCancellable
                 downloadManager.startDownloadNow(episodeId)
@@ -854,7 +854,7 @@ class AnimeScreenModel(
     fun markEpisodesSeen(episodes: List<Episode>, seen: Boolean) {
         toggleAllSelection(false)
         if (episodes.isEmpty()) return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             setSeenStatus.await(
                 seen = seen,
                 episodes = episodes.toTypedArray(),
@@ -935,7 +935,7 @@ class AnimeScreenModel(
      * @param episodes the list of episodes to bookmark.
      */
     fun bookmarkEpisodes(episodes: List<Episode>, bookmarked: Boolean) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             episodes
                 .filterNot { it.bookmark == bookmarked }
                 .map { EpisodeUpdate(id = it.id, bookmark = bookmarked) }
@@ -949,7 +949,7 @@ class AnimeScreenModel(
      * @param episodes the list of episodes to fillermark.
      */
     fun fillermarkEpisodes(episodes: List<Episode>, fillermarked: Boolean) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             episodes
                 .filterNot { it.fillermark == fillermarked }
                 .map { EpisodeUpdate(id = it.id, fillermark = fillermarked) }
@@ -964,7 +964,7 @@ class AnimeScreenModel(
      * @param episodes the list of episodes to delete.
      */
     fun deleteEpisodes(episodes: List<Episode>) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             try {
                 successState?.let { state ->
                     downloadManager.deleteEpisodes(
@@ -980,7 +980,7 @@ class AnimeScreenModel(
     }
 
     private fun downloadNewEpisodes(episodes: List<Episode>) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             val anime = successState?.anime ?: return@launchNonCancellable
             val episodesToDownload = filterEpisodesForDownload.await(anime, episodes)
 
@@ -1002,7 +1002,7 @@ class AnimeScreenModel(
             TriState.ENABLED_IS -> Anime.EPISODE_SHOW_UNSEEN
             TriState.ENABLED_NOT -> Anime.EPISODE_SHOW_SEEN
         }
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeEpisodeFlags.awaitSetUnseenFilter(anime, flag)
         }
     }
@@ -1020,7 +1020,7 @@ class AnimeScreenModel(
             TriState.ENABLED_NOT -> Anime.EPISODE_SHOW_NOT_DOWNLOADED
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeEpisodeFlags.awaitSetDownloadedFilter(anime, flag)
         }
     }
@@ -1038,7 +1038,7 @@ class AnimeScreenModel(
             TriState.ENABLED_NOT -> Anime.EPISODE_SHOW_NOT_BOOKMARKED
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeEpisodeFlags.awaitSetBookmarkFilter(anime, flag)
         }
     }
@@ -1056,7 +1056,7 @@ class AnimeScreenModel(
             TriState.ENABLED_NOT -> Anime.EPISODE_SHOW_NOT_FILLERMARKED
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeEpisodeFlags.awaitSetFillermarkFilter(anime, flag)
         }
     }
@@ -1068,7 +1068,7 @@ class AnimeScreenModel(
     fun setDisplayMode(mode: Long) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeEpisodeFlags.awaitSetDisplayMode(anime, mode)
         }
     }
@@ -1080,7 +1080,7 @@ class AnimeScreenModel(
     fun setSorting(sort: Long) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeEpisodeFlags.awaitSetSortingModeOrFlipOrder(anime, sort)
         }
     }
@@ -1092,7 +1092,7 @@ class AnimeScreenModel(
     fun showEpisodePreviews(flag: Long) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeEpisodeFlags.awaitShowEpisodePreviews(anime, flag)
         }
     }
@@ -1104,14 +1104,14 @@ class AnimeScreenModel(
     fun showEpisodeSummaries(flag: Long) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeEpisodeFlags.awaitShowEpisodeSummaries(anime, flag)
         }
     }
 
     fun setCurrentSettingsAsDefault(applyToExisting: Boolean) {
         val anime = successState?.anime ?: return
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             animeLibraryPreferences.setEpisodeSettingsDefault(anime)
             if (applyToExisting) {
                 setAnimeDefaultEpisodeFlags.awaitAll()
@@ -1135,7 +1135,7 @@ class AnimeScreenModel(
             TriState.ENABLED_NOT -> Anime.SEASON_SHOW_NOT_DOWNLOADED
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetDownloadedFilter(anime, flag)
         }
     }
@@ -1153,7 +1153,7 @@ class AnimeScreenModel(
             TriState.ENABLED_NOT -> Anime.SEASON_SHOW_SEEN
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetUnseenFilter(anime, flag)
         }
     }
@@ -1171,7 +1171,7 @@ class AnimeScreenModel(
             TriState.ENABLED_NOT -> Anime.SEASON_SHOW_NOT_STARTED
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetStartedFilter(anime, flag)
         }
     }
@@ -1189,7 +1189,7 @@ class AnimeScreenModel(
             TriState.ENABLED_NOT -> Anime.SEASON_SHOW_NOT_BOOKMARKED
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetBookmarkedFilter(anime, flag)
         }
     }
@@ -1207,7 +1207,7 @@ class AnimeScreenModel(
             TriState.ENABLED_NOT -> Anime.SEASON_SHOW_NOT_FILLERMARKED
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetFillermarkedFilter(anime, flag)
         }
     }
@@ -1225,7 +1225,7 @@ class AnimeScreenModel(
             TriState.ENABLED_NOT -> Anime.SEASON_SHOW_NOT_COMPLETED
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetCompletedFilter(anime, flag)
         }
     }
@@ -1237,7 +1237,7 @@ class AnimeScreenModel(
     fun setSeasonSorting(sort: Long) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetSortingModeOrFlipOrder(anime, sort)
         }
     }
@@ -1249,7 +1249,7 @@ class AnimeScreenModel(
     fun setSeasonDisplayGridMode(mode: SeasonDisplayMode) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetGridMode(anime, mode)
         }
     }
@@ -1261,7 +1261,7 @@ class AnimeScreenModel(
     fun setSeasonDisplayGridSize(size: Int) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetGridSize(anime, size)
         }
     }
@@ -1273,7 +1273,7 @@ class AnimeScreenModel(
     fun setSeasonDownloadOverlay(visible: Boolean) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetDownloadedOverlay(anime, visible)
         }
     }
@@ -1285,7 +1285,7 @@ class AnimeScreenModel(
     fun setSeasonUnseenOverlay(visible: Boolean) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetUnseenOverlay(anime, visible)
         }
     }
@@ -1297,7 +1297,7 @@ class AnimeScreenModel(
     fun setSeasonLocalOverlay(visible: Boolean) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetLocalOverlay(anime, visible)
         }
     }
@@ -1309,7 +1309,7 @@ class AnimeScreenModel(
     fun setSeasonLangOverlay(visible: Boolean) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetLangOverlay(anime, visible)
         }
     }
@@ -1321,7 +1321,7 @@ class AnimeScreenModel(
     fun setSeasonContinueOverlay(visible: Boolean) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetContinueOverlay(anime, visible)
         }
     }
@@ -1333,7 +1333,7 @@ class AnimeScreenModel(
     fun setSeasonDisplayMode(mode: Long) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setAnimeSeasonFlags.awaitSetDisplayMode(anime, mode)
         }
     }
@@ -1341,7 +1341,7 @@ class AnimeScreenModel(
     fun setSeasonCurrentSettingsAsDefault(applyToExisting: Boolean) {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             animeLibraryPreferences.setSeasonSettingsDefault(anime)
             if (applyToExisting) {
                 setAnimeDefaultSeasonFlags.awaitAll()
@@ -1447,7 +1447,7 @@ class AnimeScreenModel(
     private fun observeTrackers() {
         val anime = successState?.anime ?: return
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             combine(
                 getTracks.subscribe(anime.id).catch { logcat(LogPriority.ERROR, it) },
                 trackerManager.loggedInTrackersFlow(),
@@ -1472,7 +1472,7 @@ class AnimeScreenModel(
                 }
         }
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             combine(
                 getTracks.subscribe(anime.id).catch { logcat(LogPriority.ERROR, it) },
                 trackerManager.loggedInTrackersFlow(),

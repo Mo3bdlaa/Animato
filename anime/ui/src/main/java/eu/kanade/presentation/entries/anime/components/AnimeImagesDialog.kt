@@ -50,7 +50,7 @@ import coil3.size.Size
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.entries.EditCoverAction
+import animato.ui.entries.EditCoverAction
 import eu.kanade.tachiyomi.data.coil.useBackground
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import kotlinx.collections.immutable.persistentListOf
