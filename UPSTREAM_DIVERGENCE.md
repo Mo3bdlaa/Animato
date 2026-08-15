@@ -89,48 +89,80 @@ read. So `AnimeLibraryPreferences` now declares `ANIME_NON_COMPLETED`, `ANIME_HA
 copies of the literals. Aliasing makes drift impossible: if upstream changes a value, ours changes
 with it and the halves keep agreeing about what the preference means.
 
+### Legacy ORM models — kept by Mihon
+
+Aniyomi's `eu.kanade.tachiyomi.data.database.models.anime.{Episode,EpisodeImpl,AnimeTrack,
+AnimeTrackImpl}` look like leftovers, and `Episode.kt` carries a "remove when all deps are
+migrated" comment.
+
+They are **not** leftovers to delete: Mihon still keeps its own `Chapter`/`ChapterImpl` in the same
+place. Ported as they are, and only the player uses them.
+
+### `requery` — dropped by Mihon
+
+Aniyomi opened its databases through `RequerySQLiteOpenHelperFactory`, a bundled SQLite build that
+existed to get consistent behaviour on old Android versions.
+
+Mihon dropped it in favour of `androidx.sqlite:sqlite-bundled`, which does the same job as a
+first-party library. Our anime database no longer references requery either — see the SQLDelight
+entry below for what it does use, and why that is not yet Mihon's driver.
+
 ---
 
 ## Open
 
-### `CategoryUpdate` — deleted by Mihon
+### `CategoryUpdate` — replaced by named methods
 
-Used by every category interactor to apply a partial update.
+Aniyomi's category interactors applied a partial update by building a `CategoryUpdate` with every
+field nullable. Mihon deleted the class and gave the repository explicit methods instead:
 
-Mihon deleted the class. **What replaced it has not been established.** We kept our own copy — as
-`AnimeCategoryUpdate`, in a package of ours — so the port could proceed, but if Mihon replaced it
-with something better shaped, ours should follow.
+```kotlin
+suspend fun updateName(categoryId: Long, name: String)
+suspend fun updateFlags(categoryId: Long, flags: Long)
+suspend fun updateAllFlags(flags: Long?)
+suspend fun updateAllOrders(orderedIds: List<Long>)
+```
 
-*To check: how Mihon's category interactors apply partial updates now.*
+**Their version is better and we should follow it.** An all-nullable update object can express
+things that are not operations — update nothing, or rename and reorder and reflag at once — so every
+implementation has to defend against combinations no caller intends. A named method says what
+changes, and the compiler enforces that the caller supplies it.
+
+We kept `AnimeCategoryUpdate` to get the port moving. It is now a deliberate carry, not an unknown.
+
+*To do: give `AnimeCategoryRepository` the same four methods and delete `AnimeCategoryUpdate`.*
 
 ### `kotlinx-collections-immutable` — dropped by Mihon
 
 Our ported components take `ImmutableList` and `persistentListOf` in composable parameters. Mihon
-now uses it in only two files and dropped the dependency from its catalogues; we added it to ours
-to keep the port mechanical.
+uses it in two files and dropped the dependency from its catalogues; we added it to ours to keep the
+port mechanical.
 
-The likely reason is Compose strong skipping, which made immutable collection types largely
-unnecessary for recomposition stability. If so this is a genuine simplification: plain `List`
-everywhere, one dependency fewer, and no behaviour change.
+**Resolved: the reason is Compose strong skipping, and it applies to us too.** Strong skipping has
+been on by default since the Compose compiler shipped inside Kotlin 2.0, and this repository is on
+Kotlin 2.4.10 with no setting that turns it off. Under strong skipping, composables skip
+recomposition when their unstable parameters are referentially equal, which is what wrapping a
+`List` in an immutable type used to buy.
 
-*To check: whether strong skipping is on in Mihon's Compose configuration. If it is, drop the
-dependency and use `List`.*
+So the immutable types are no longer earning anything, and the dependency is ours alone to carry.
+
+*To do: use plain `List` in our composable parameters and drop `animato.kotlinx.immutables`.*
 
 ### SQLDelight: Mihon generates async, we still generate sync
 
 Mihon's `:data` sets `generateAsync = true` and drives it with `AndroidxSqliteDriver` over bundled
-SQLite. That driver accepts **only** an async schema, so `:anime:data` — which still generates a
-synchronous one, as Aniyomi's did — cannot use it. The anime database is on SQLDelight's own
-`AndroidSqliteDriver` for now, pinned to the version Mihon's catalogue names so the two cannot
-drift apart.
+SQLite. That driver accepts **only** an async schema — checked against the artifact, not assumed —
+so `:anime:data`, which still generates a synchronous one as Aniyomi's did, cannot use it. The
+anime database runs on SQLDelight's own `AndroidSqliteDriver`, pinned to the version Mihon's
+catalogue names so the two cannot drift apart.
 
-This is worth following: bundled SQLite means one behaviour across every Android version, and it
-drops Aniyomi's requery dependency, which Mihon has already removed.
+Worth following: bundled SQLite means one behaviour across every Android version, and it is what
+let Mihon drop requery.
 
-The work looks contained. Every query in `:anime:data` runs through `AndroidAnimeDatabaseHandler`,
-which is the only place `executeAsList`/`executeAsOne` appear; the repositories call
-`handler.awaitList { … }` and would not change shape. It was not done here because it is a change
-to the data layer, not to dependency injection, and it deserves its own verification.
+The work looks contained. Every query in `:anime:data` goes through `AndroidAnimeDatabaseHandler`,
+the only place `executeAsList`/`executeAsOne` appear; repositories call `handler.awaitList { … }`
+and would not change shape. It was left out of the dependency-injection work because it is a change
+to the data layer and deserves its own verification.
 
 *To do: turn on `generateAsync` in `:anime:data`, convert the handler, move to the androidx driver.*
 
