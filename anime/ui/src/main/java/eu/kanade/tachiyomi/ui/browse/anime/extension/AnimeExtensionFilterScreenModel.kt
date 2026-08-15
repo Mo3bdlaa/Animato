@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.anime.extension
 
 import androidx.compose.runtime.Immutable
-import mihon.core.viewmodel.StateViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionLanguages
 import eu.kanade.domain.source.interactor.ToggleLanguage
@@ -20,6 +19,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

@@ -1,7 +1,5 @@
 package animato.anime.ui.components
 
-import animato.ui.components.EntryDownloadDropdownMenu
-import animato.ui.entries.DownloadAction
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -55,6 +53,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import animato.ui.components.EntryDownloadDropdownMenu
+import animato.ui.entries.DownloadAction
 import eu.kanade.presentation.components.EntryDownloadDropdownMenu
 import eu.kanade.presentation.entries.DownloadAction
 import eu.kanade.tachiyomi.R

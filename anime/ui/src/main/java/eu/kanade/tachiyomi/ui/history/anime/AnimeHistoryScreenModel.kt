@@ -2,9 +2,9 @@ package eu.kanade.tachiyomi.ui.history.anime
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
-import aniyomi.domain.library.service.AnimeLibraryPreferences
-import mihon.core.viewmodel.StateViewModel
 import androidx.lifecycle.viewModelScope
+import animato.domain.category.AnimeCategory
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.track.anime.interactor.AddAnimeTracks
@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
@@ -34,7 +35,6 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.anime.interactor.SetAnimeCategories
-import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.GetDuplicateLibraryAnime
 import tachiyomi.domain.entries.anime.model.Anime
@@ -147,11 +147,11 @@ class AnimeHistoryScreenModel(
      *
      * @return List of categories, not including the default category
      */
-    suspend fun getCategories(): List<Category> {
+    suspend fun getCategories(): List<AnimeCategory> {
         return getCategories.await().filterNot { it.isSystemCategory }
     }
 
-    private fun moveAnimeToCategory(animeId: Long, categories: Category?) {
+    private fun moveAnimeToCategory(animeId: Long, categories: AnimeCategory?) {
         val categoryIds = listOfNotNull(categories).map { it.id }
         moveAnimeToCategory(animeId, categoryIds)
     }
@@ -255,7 +255,7 @@ class AnimeHistoryScreenModel(
         data class DuplicateAnime(val anime: Anime, val duplicate: Anime) : Dialog
         data class ChangeCategory(
             val anime: Anime,
-            val initialSelection: ImmutableList<CheckboxState<Category>>,
+            val initialSelection: ImmutableList<CheckboxState<AnimeCategory>>,
         ) : Dialog
         data class Migrate(val newAnime: Anime, val oldAnime: Anime) : Dialog
     }

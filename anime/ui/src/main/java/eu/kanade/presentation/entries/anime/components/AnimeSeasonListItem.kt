@@ -2,15 +2,15 @@ package eu.kanade.presentation.entries.anime.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import aniyomi.domain.anime.SeasonAnime
-import aniyomi.domain.anime.SeasonDisplayMode
+import animato.domain.items.episode.formatEpisodeNumber
 import animato.ui.library.DownloadsBadge
 import animato.ui.library.EntryComfortableGridItem
 import animato.ui.library.EntryCompactGridItem
 import animato.ui.library.EntryListItem
 import animato.ui.library.LanguageBadge
 import animato.ui.library.UnviewedBadge
-import animato.domain.items.episode.formatEpisodeNumber
+import aniyomi.domain.anime.SeasonAnime
+import aniyomi.domain.anime.SeasonDisplayMode
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeSeasonItem
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.entries.anime.model.AnimeCover

@@ -14,12 +14,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import animato.domain.category.AnimeCategory
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
 import eu.kanade.presentation.category.components.CategoryListItem
 import eu.kanade.tachiyomi.ui.category.anime.AnimeCategoryScreenState
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
@@ -29,10 +29,10 @@ import tachiyomi.presentation.core.screens.EmptyScreen
 fun AnimeCategoryScreen(
     state: AnimeCategoryScreenState.Success,
     onClickCreate: () -> Unit,
-    onClickRename: (Category) -> Unit,
-    onClickHide: (Category) -> Unit,
-    onClickDelete: (Category) -> Unit,
-    onChangeOrder: (Category, Int) -> Unit,
+    onClickRename: (AnimeCategory) -> Unit,
+    onClickHide: (AnimeCategory) -> Unit,
+    onClickDelete: (AnimeCategory) -> Unit,
+    onChangeOrder: (AnimeCategory, Int) -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
     Scaffold(
@@ -65,13 +65,13 @@ fun AnimeCategoryScreen(
 
 @Composable
 private fun CategoryContent(
-    categories: List<Category>,
+    categories: List<AnimeCategory>,
     lazyListState: LazyListState,
     paddingValues: PaddingValues,
-    onClickRename: (Category) -> Unit,
-    onClickHide: (Category) -> Unit,
-    onClickDelete: (Category) -> Unit,
-    onChangeOrder: (Category, Int) -> Unit,
+    onClickRename: (AnimeCategory) -> Unit,
+    onClickHide: (AnimeCategory) -> Unit,
+    onClickDelete: (AnimeCategory) -> Unit,
+    onChangeOrder: (AnimeCategory, Int) -> Unit,
 ) {
     val categoriesState = remember { categories.toMutableStateList() }
     val reorderableState = rememberReorderableLazyListState(lazyListState, paddingValues) { from, to ->
@@ -110,4 +110,4 @@ private fun CategoryContent(
     }
 }
 
-private val Category.key inline get() = "category-$id"
+private val AnimeCategory.key inline get() = "category-$id"

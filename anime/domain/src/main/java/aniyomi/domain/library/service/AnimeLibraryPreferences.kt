@@ -67,6 +67,16 @@ class AnimeLibraryPreferences(
 
     fun lastUsedAnimeCategory() = preferenceStore.getInt(Preference.appStateKey("last_used_anime_category"), 0)
 
+    /**
+     * Whether the category editor hides the categories the user marked hidden.
+     *
+     * Aniyomi kept this next to Mihon's own library preferences, which is where it does not belong:
+     * Mihon's `Category` has no `hidden` field and its library never hides one. Only the anime
+     * category model carries that flag, so the preference that governs it lives with the anime
+     * library. The key is Aniyomi's, so an imported install keeps the setting it had.
+     */
+    fun hideHiddenCategoriesSettings() = preferenceStore.getBoolean("hidden_categories", false)
+
     fun animeUpdateCategories() =
         preferenceStore.getStringSet(LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY, emptySet())
 

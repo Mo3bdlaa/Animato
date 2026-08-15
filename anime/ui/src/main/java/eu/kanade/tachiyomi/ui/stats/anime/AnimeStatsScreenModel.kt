@@ -1,21 +1,21 @@
 package eu.kanade.tachiyomi.ui.stats.anime
 
-import eu.kanade.tachiyomi.data.track.animeService
 import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMapNotNull
-import aniyomi.domain.library.service.AnimeLibraryPreferences
-import mihon.core.viewmodel.StateViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.ui.stats.AnimeStatsData
+import animato.anime.ui.stats.AnimeStatsScreenState
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.core.util.fastCountNot
 import eu.kanade.core.util.fastFilterNot
-import animato.anime.ui.stats.AnimeStatsScreenState
-import animato.anime.ui.stats.AnimeStatsData
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.data.track.animeService
 import kotlinx.coroutines.flow.update
+import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId

@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.history.anime
 
-import animato.anime.player.PlayerLauncher
 import android.content.Context
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteSweep
@@ -11,10 +10,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.player.PlayerLauncher
+import animato.anime.ui.AnimeCategoriesScreen
+import animato.anime.ui.category.visualName
+import animato.ui.category.ChangeCategoryDialog
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.entries.anime.DuplicateAnimeDialog
@@ -24,7 +26,6 @@ import eu.kanade.presentation.history.anime.AnimeHistoryScreen
 import eu.kanade.tachiyomi.ui.browse.anime.migration.anime.season.MigrateSeasonSelectScreen
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialog
 import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeDialogScreenModel
-import animato.anime.ui.AnimeCategoriesScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -128,6 +129,8 @@ fun Screen.animeHistoryTab(
                 is AnimeHistoryScreenModel.Dialog.ChangeCategory -> {
                     ChangeCategoryDialog(
                         initialSelection = dialog.initialSelection,
+                        id = { it.id },
+                        label = { it.visualName },
                         onDismissRequest = onDismissRequest,
                         onEditCategories = { navigator.push(AnimeCategoriesScreen()) },
                         onConfirm = { include, _ ->

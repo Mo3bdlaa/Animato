@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.i18nAnime)
     implementation(libs.injekt)
     implementation(projects.core.common)
+    implementation(projects.core.viewmodel)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.foundation)
@@ -32,5 +33,7 @@ dependencies {
     implementation(libs.androidx.compose.uiUtil)
 
     implementation(libs.bundles.coil)
+    implementation(libs.bundles.kotlinx.coroutines)
+    implementation(libs.androidx.lifecycle.viewmodel)
     implementation(animato.kotlinx.immutables)
 }

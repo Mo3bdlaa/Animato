@@ -42,6 +42,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.view.updatePadding
+import animato.anime.util.useBackground
+import animato.ui.entries.EditCoverAction
 import coil3.asDrawable
 import coil3.imageLoader
 import coil3.request.CachePolicy
@@ -50,8 +52,6 @@ import coil3.size.Size
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.DropdownMenu
-import animato.ui.entries.EditCoverAction
-import animato.anime.util.useBackground
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.common.util.lang.launchUI

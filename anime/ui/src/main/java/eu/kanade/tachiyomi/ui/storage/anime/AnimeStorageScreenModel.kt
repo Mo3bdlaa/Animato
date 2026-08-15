@@ -1,9 +1,12 @@
 package eu.kanade.tachiyomi.ui.storage.anime
 
 import androidx.lifecycle.viewModelScope
+import animato.ui.storage.CommonStorageScreenModel
+import animato.ui.storage.StorageCategory
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.ui.storage.CommonStorageScreenModel
+import kotlinx.coroutines.flow.map
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.anime.interactor.GetVisibleAnimeCategories
@@ -20,16 +23,17 @@ class AnimeStorageScreenModel(
     getVisibleCategories: GetVisibleAnimeCategories = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val sourceManager: AnimeSourceManager = Injekt.get(),
+    libraryPreferences: AnimeLibraryPreferences = Injekt.get(),
 ) : CommonStorageScreenModel<LibraryAnime>(
     downloadCacheChanges = downloadCache.changes,
     downloadCacheIsInitializing = downloadCache.isInitializing,
     libraries = getLibraries.subscribe(),
-    categories = { hideHiddenCategories ->
-        if (hideHiddenCategories) {
-            getVisibleCategories.subscribe()
-        } else {
-            getCategories.subscribe()
-        }
+    categories = if (libraryPreferences.hideHiddenCategoriesSettings().get()) {
+        getVisibleCategories.subscribe()
+    } else {
+        getCategories.subscribe()
+    }.map { categories ->
+        categories.map { StorageCategory(id = it.id, name = it.name) }
     },
     getDownloadSize = { downloadManager.getDownloadSize(anime) },
     getDownloadCount = { downloadManager.getDownloadCount(anime) },

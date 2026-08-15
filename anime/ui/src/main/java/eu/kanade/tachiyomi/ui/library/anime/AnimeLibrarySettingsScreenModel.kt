@@ -1,8 +1,9 @@
 package eu.kanade.tachiyomi.ui.library.anime
 
-import aniyomi.domain.library.service.AnimeLibraryPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.domain.category.AnimeCategory
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,7 +14,6 @@ import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.category.anime.interactor.SetAnimeDisplayMode
 import tachiyomi.domain.category.anime.interactor.SetSortModeForAnimeCategory
-import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.anime.model.AnimeLibrarySort
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -58,7 +58,7 @@ class AnimeLibrarySettingsScreenModel(
     }
 
     fun setSort(
-        category: Category?,
+        category: AnimeCategory?,
         mode: AnimeLibrarySort.Type,
         direction: AnimeLibrarySort.Direction,
     ) {

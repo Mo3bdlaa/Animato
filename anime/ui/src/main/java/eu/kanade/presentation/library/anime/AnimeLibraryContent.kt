@@ -15,12 +15,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
-import eu.kanade.core.preference.PreferenceMutableState
+import animato.anime.ui.category.visualName
+import animato.domain.category.AnimeCategory
 import animato.ui.library.LibraryTabs
+import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.presentation.core.components.material.PullRefresh
@@ -28,7 +29,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun AnimeLibraryContent(
-    categories: List<Category>,
+    categories: List<AnimeCategory>,
     searchQuery: String?,
     selection: List<LibraryAnime>,
     contentPadding: PaddingValues,
@@ -40,9 +41,9 @@ fun AnimeLibraryContent(
     onContinueWatchingClicked: ((LibraryAnime) -> Unit)?,
     onToggleSelection: (LibraryAnime) -> Unit,
     onToggleRangeSelection: (LibraryAnime) -> Unit,
-    onRefresh: (Category?) -> Boolean,
+    onRefresh: (AnimeCategory?) -> Boolean,
     onGlobalSearchClicked: () -> Unit,
-    getNumberOfAnimeForCategory: (Category) -> Int?,
+    getNumberOfAnimeForCategory: (AnimeCategory) -> Int?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
     getAnimeLibraryForPage: (Int) -> List<AnimeLibraryItem>,
@@ -70,7 +71,9 @@ fun AnimeLibraryContent(
                 categories = categories,
                 pagerState = pagerState,
                 getNumberOfItemsForCategory = getNumberOfAnimeForCategory,
-            ) { scope.launch { pagerState.animateScrollToPage(it) } }
+                onTabItemClick = { scope.launch { pagerState.animateScrollToPage(it) } },
+                label = { it.visualName },
+            )
         }
 
         val notSelectionMode = selection.isEmpty()

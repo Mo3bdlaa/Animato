@@ -25,12 +25,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import animato.ui.components.IndicatorModifier
+import animato.ui.components.IndicatorSize
+import animato.ui.components.commonClickable
 import eu.kanade.presentation.components.ArrowModifier
 import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.components.IndicatorModifier
-import animato.ui.components.IndicatorSize
 import eu.kanade.presentation.components.IndicatorStrokeWidth
-import animato.ui.components.commonClickable
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import tachiyomi.i18n.MR

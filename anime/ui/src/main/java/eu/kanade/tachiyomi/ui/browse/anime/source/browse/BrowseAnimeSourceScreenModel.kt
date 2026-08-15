@@ -6,26 +6,26 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
+import animato.anime.ui.ioCoroutineScope
+import animato.anime.util.removeBackgrounds
+import animato.anime.util.removeCovers
+import animato.domain.category.AnimeCategory
 import aniyomi.domain.library.service.AnimeLibraryPreferences
-import mihon.core.viewmodel.StateViewModel
-import androidx.lifecycle.viewModelScope
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.toDomainAnime
 import eu.kanade.domain.source.anime.interactor.GetAnimeIncognitoState
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.anime.interactor.AddAnimeTracks
-import animato.anime.ui.ioCoroutineScope
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.data.cache.AnimeBackgroundCache
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
-import animato.anime.util.removeBackgrounds
-import animato.anime.util.removeCovers
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,12 +37,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.anime.interactor.SetAnimeCategories
-import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.GetDuplicateLibraryAnime
 import tachiyomi.domain.entries.anime.interactor.NetworkToLocalAnime
@@ -285,7 +285,7 @@ class BrowseAnimeSourceScreenModel(
      *
      * @return List of categories, not including the default category
      */
-    suspend fun getCategories(): List<Category> {
+    suspend fun getCategories(): List<AnimeCategory> {
         return getCategories.subscribe()
             .firstOrNull()
             ?.filterNot { it.isSystemCategory }
@@ -296,7 +296,7 @@ class BrowseAnimeSourceScreenModel(
         return getDuplicateAnimelibAnime.await(anime).getOrNull(0)
     }
 
-    private fun moveAnimeToCategories(anime: Anime, vararg categories: Category) {
+    private fun moveAnimeToCategories(anime: Anime, vararg categories: AnimeCategory) {
         moveAnimeToCategories(anime, categories.filter { it.id != 0L }.map { it.id })
     }
 
@@ -352,7 +352,7 @@ class BrowseAnimeSourceScreenModel(
         data class AddDuplicateAnime(val anime: Anime, val duplicate: Anime) : Dialog
         data class ChangeAnimeCategory(
             val anime: Anime,
-            val initialSelection: ImmutableList<CheckboxState.State<Category>>,
+            val initialSelection: ImmutableList<CheckboxState.State<AnimeCategory>>,
         ) : Dialog
         data class Migrate(val newAnime: Anime, val oldAnime: Anime) : Dialog
     }

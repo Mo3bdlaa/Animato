@@ -23,9 +23,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import animato.domain.items.episode.formatEpisodeNumber
 import animato.ui.entries.ItemCover
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import animato.domain.items.episode.formatEpisodeNumber
 import eu.kanade.tachiyomi.util.lang.toTimestampString
 import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
 import tachiyomi.i18n.MR

@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.library.anime
 
-import eu.kanade.tachiyomi.data.track.animeService
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -9,9 +8,13 @@ import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapNotNull
-import aniyomi.domain.library.service.AnimeLibraryPreferences
-import mihon.core.viewmodel.StateViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.services.SEARCH_DEBOUNCE_MILLIS
+import animato.anime.util.removeBackgrounds
+import animato.anime.util.removeCovers
+import animato.domain.category.AnimeCategory
+import animato.ui.entries.DownloadAction
+import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.fastFilterNot
@@ -19,8 +22,6 @@ import eu.kanade.core.util.fastPartition
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
-import animato.anime.services.SEARCH_DEBOUNCE_MILLIS
-import animato.ui.entries.DownloadAction
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
@@ -29,9 +30,8 @@ import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.data.track.animeService
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
-import animato.anime.util.removeBackgrounds
-import animato.anime.util.removeCovers
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import mihon.core.viewmodel.StateViewModel
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.compareToWithCollator
@@ -57,11 +58,9 @@ import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.category.anime.interactor.GetVisibleAnimeCategories
 import tachiyomi.domain.category.anime.interactor.SetAnimeCategories
-import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.entries.anime.model.AnimeUpdate
-import tachiyomi.domain.manga.model.applyFilter
 import tachiyomi.domain.history.anime.interactor.GetNextEpisodes
 import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.items.episode.model.Episode
@@ -70,6 +69,7 @@ import tachiyomi.domain.library.anime.model.AnimeLibrarySort
 import tachiyomi.domain.library.anime.model.sort
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.manga.model.applyFilter
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.track.anime.interactor.GetTracksPerAnime
 import tachiyomi.domain.track.anime.model.AnimeTrack
@@ -81,7 +81,7 @@ import kotlin.random.Random
 /**
  * Typealias for the library anime, using the category as keys, and list of anime as values.
  */
-typealias AnimeLibraryMap = Map<Category, List<AnimeLibraryItem>>
+typealias AnimeLibraryMap = Map<AnimeCategory, List<AnimeLibraryItem>>
 
 class AnimeLibraryScreenModel(
     private val getLibraryAnime: GetLibraryAnime = Injekt.get(),
@@ -140,7 +140,7 @@ class AnimeLibraryScreenModel(
         combine(
             libraryPreferences.categoryTabs.changes(),
             libraryPreferences.categoryNumberOfItems.changes(),
-            libraryPreferences.showContinueViewingButton().changes(),
+            libraryPreferences.showContinueReadingButton.changes(),
         ) { a, b, c -> arrayOf(a, b, c) }
             .onEach { (showCategoryTabs, showAnimeCount, showAnimeContinueButton) ->
                 mutableState.update { state ->
@@ -362,7 +362,8 @@ class AnimeLibraryScreenModel(
                     unseenBadge = it[1] as Boolean,
                     localBadge = it[2] as Boolean,
                     languageBadge = it[3] as Boolean,
-                    skipOutsideReleasePeriod = LibraryPreferences.ENTRY_OUTSIDE_RELEASE_PERIOD in (it[4] as Set<*>),
+                    skipOutsideReleasePeriod =
+                    AnimeLibraryPreferences.ANIME_OUTSIDE_RELEASE_PERIOD in (it[4] as Set<*>),
                     globalFilterDownloaded = it[5] as Boolean,
                     filterDownloaded = it[6] as TriState,
                     filterUnseen = it[7] as TriState,
@@ -442,7 +443,7 @@ class AnimeLibraryScreenModel(
      *
      * @param animes the list of anime.
      */
-    private suspend fun getCommonCategories(animes: List<Anime>): Collection<Category> {
+    private suspend fun getCommonCategories(animes: List<Anime>): Collection<AnimeCategory> {
         if (animes.isEmpty()) return emptyList()
         return animes
             .map { getCategories.await(it.id).toSet() }
@@ -458,7 +459,7 @@ class AnimeLibraryScreenModel(
      *
      * @param animes the list of anime.
      */
-    private suspend fun getMixCategories(animes: List<Anime>): Collection<Category> {
+    private suspend fun getMixCategories(animes: List<Anime>): Collection<AnimeCategory> {
         if (animes.isEmpty()) return emptyList()
         val nimeCategories = animes.map { getCategories.await(it.id).toSet() }
         val common = nimeCategories.reduce { set1, set2 -> set1.intersect(set2) }
@@ -732,7 +733,7 @@ class AnimeLibraryScreenModel(
         data object SettingsSheet : Dialog
         data class ChangeCategory(
             val anime: List<Anime>,
-            val initialSelection: ImmutableList<CheckboxState<Category>>,
+            val initialSelection: ImmutableList<CheckboxState<AnimeCategory>>,
         ) : Dialog
         data class DeleteAnime(val anime: List<Anime>) : Dialog
     }
@@ -787,7 +788,7 @@ class AnimeLibraryScreenModel(
             return library.values.toTypedArray().getOrNull(page).orEmpty()
         }
 
-        fun getAnimeCountForCategory(category: Category): Int? {
+        fun getAnimeCountForCategory(category: AnimeCategory): Int? {
             return if (showAnimeCount || !searchQuery.isNullOrEmpty()) library[category]?.size else null
         }
 

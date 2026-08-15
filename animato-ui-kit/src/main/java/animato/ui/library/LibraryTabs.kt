@@ -10,16 +10,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import eu.kanade.presentation.category.visualName
-import tachiyomi.domain.category.model.Category
 import tachiyomi.presentation.core.components.material.TabText
 
+/**
+ * The category tab strip above a library.
+ *
+ * Generic for the same reason [animato.ui.category.ChangeCategoryDialog] is: manga and anime
+ * categories are separate models, and the strip only ever needs a label and a count. [label] is
+ * composable because the default category's displayed name is a translated string.
+ */
 @Composable
-fun LibraryTabs(
-    categories: List<Category>,
+fun <T> LibraryTabs(
+    categories: List<T>,
     pagerState: PagerState,
-    getNumberOfItemsForCategory: (Category) -> Int?,
+    getNumberOfItemsForCategory: (T) -> Int?,
     onTabItemClick: (Int) -> Unit,
+    label: @Composable (T) -> String,
 ) {
     val currentPageIndex = pagerState.currentPage.coerceAtMost(categories.lastIndex)
     Column(
@@ -38,7 +44,7 @@ fun LibraryTabs(
                     onClick = { onTabItemClick(index) },
                     text = {
                         TabText(
-                            text = category.visualName,
+                            text = label(category),
                             badgeCount = getNumberOfItemsForCategory(category),
                         )
                     },
