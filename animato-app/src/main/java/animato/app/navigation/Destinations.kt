@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.discover.DiscoverContent
 import animato.app.library.UnifiedLibraryContent
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
@@ -91,12 +92,7 @@ data object AnimatoDiscoverTab : Tab {
     override suspend fun onReselect(navigator: Navigator) = toggleContentType()
 
     @Composable
-    override fun Content() {
-        when (contentType()) {
-            ContentType.MANGA -> BrowseTab.Content()
-            ContentType.ANIME -> AnimeBrowseScreen()
-        }
-    }
+    override fun Content() = DiscoverContent()
 }
 
 data object AnimatoUpdatesTab : Tab {
