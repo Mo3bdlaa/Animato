@@ -55,6 +55,7 @@ import animato.app.navigation.setContentType
 import animato.app.settings.AniyomiImportScreen
 import animato.app.updater.AnimatoAppUpdateChecker
 import animato.domain.content.ContentType
+import animato.ui.deeplink.DeepLinkScreenType
 import animato.ui.navigation.AnimatoNavigator
 import animato.ui.navigation.AnimatoTab
 import animato.ui.theme.AnimatoTheme
@@ -76,9 +77,11 @@ import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
+import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
+import eu.kanade.tachiyomi.ui.deeplink.anime.DeepLinkAnimeScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
@@ -533,7 +536,19 @@ class MainActivity : BaseActivity() {
                     ?: intent.getStringExtra(Intent.EXTRA_TEXT)
                 if (!query.isNullOrEmpty()) {
                     navigator.popUntilRoot()
-                    navigator.push(DeepLinkScreen(query))
+                    // Two activities answer these filters and both hand the intent here, where they
+                    // are indistinguishable — so the anime one stamps the intent on the way past.
+                    // Mihon's cannot stamp anything, being Mihon's, which is what makes "no stamp"
+                    // mean manga rather than an unanswered question.
+                    navigator.push(
+                        if (intent.getStringExtra(DeepLinkScreenType.INTENT_SEARCH_TYPE) ==
+                            DeepLinkScreenType.ANIME.toString()
+                        ) {
+                            DeepLinkAnimeScreen(query)
+                        } else {
+                            DeepLinkScreen(query)
+                        },
+                    )
                 }
                 null
             }
@@ -543,6 +558,15 @@ class MainActivity : BaseActivity() {
                     val filter = intent.getStringExtra(INTENT_SEARCH_FILTER)
                     navigator.popUntilRoot()
                     navigator.push(GlobalSearchScreen(query, filter))
+                }
+                null
+            }
+            INTENT_ANIMESEARCH -> {
+                val query = intent.getStringExtra(INTENT_SEARCH_QUERY)
+                if (!query.isNullOrEmpty()) {
+                    val filter = intent.getStringExtra(INTENT_SEARCH_FILTER)
+                    navigator.popUntilRoot()
+                    navigator.push(GlobalAnimeSearchScreen(query, filter))
                 }
                 null
             }
@@ -581,6 +605,9 @@ class MainActivity : BaseActivity() {
 
     companion object {
         const val INTENT_SEARCH = "eu.kanade.tachiyomi.SEARCH"
+
+        /** Aniyomi's action, unchanged, so anything that already sends it keeps working. */
+        const val INTENT_ANIMESEARCH = "eu.kanade.tachiyomi.ANIMESEARCH"
         const val INTENT_SEARCH_QUERY = "query"
         const val INTENT_SEARCH_FILTER = "filter"
     }

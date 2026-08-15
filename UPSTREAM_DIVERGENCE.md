@@ -538,7 +538,7 @@ is different: Aniyomi had added these *inside* Mihon's files.
 | `SetupLibraryUpdateMigration` | Mihon's migration list is fixed and cannot be added to, so the anime job is scheduled from `MainActivity`, watching the same preferences Mihon's settings screen writes |
 | `Constants.SHORTCUT_ANIME*` | `animato.anime.services.AnimeConstants`, action strings unchanged |
 | `MainActivity.startHttpServerService` | `HttpServerService.start` — it starts a service and waits on a flow; nothing in it touched an activity |
-| anime components in Mihon's `AndroidManifest.xml` | `:anime:services`' and `:anime:player`'s own manifests, merged in by the build |
+| anime components in Mihon's `AndroidManifest.xml` | `:anime:services`', `:anime:player`'s and `:anime:ui`'s own manifests, merged in by the build. `:anime:ui`'s was empty for a while and `DeepLinkAnimeActivity` went undeclared with it, so anime search from the Assistant or a share sheet reached nothing — and R8, seeing no reference, removed the class outright |
 | `Preference.MultiLineEditTextPreference`, `MPVConfPreference`, `EditTextInfoPreference` | **cannot be moved** — Mihon's `Preference` hierarchy is `sealed`, so no module of ours may extend it. See the player README |
 | `StorageManager.getMPVConfigDirectory` and friends | `animato.anime.player.PlayerStorage`, resolving the base directory from `StoragePreferences` |
 | `Tracker.animeService` | `eu.kanade.tachiyomi.data.track.animeService`, an extension that looks the anime half up in `AnimeTrackerManager` — it cannot be a cast, since Mihon's trackers are Mihon's |

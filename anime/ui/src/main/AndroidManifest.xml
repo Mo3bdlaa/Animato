@@ -1,3 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Screens only. The activities this module navigates to are declared by :anime:player. -->
-<manifest />
+<!--
+  Screens, and the one activity among them the system has to be able to find by name.
+
+  Everything else this module navigates to is declared by :anime:player.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+
+        <!--
+          "Search Frieren on Animato", said to the Assistant, and text shared here to look for.
+
+          Mihon declares the same three filters for its own DeepLinkActivity, so both appear in the
+          chooser and their labels are what tell them apart — Aniyomi's arrangement, and the reason
+          this one is labelled Global Anime Search rather than Search.
+
+          It draws nothing. It stamps the intent with its DeepLinkScreenType and hands it to the
+          main activity, which is the only place that knows how to route it; NoDisplay is what keeps
+          that pass-through invisible.
+        -->
+        <activity
+            android:name="eu.kanade.tachiyomi.ui.deeplink.anime.DeepLinkAnimeActivity"
+            android:exported="true"
+            android:label="@string/action_global_anime_search"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+                <action android:name="com.google.android.gms.actions.SEARCH_ACTION" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="eu.kanade.tachiyomi.ANIMESEARCH" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>
