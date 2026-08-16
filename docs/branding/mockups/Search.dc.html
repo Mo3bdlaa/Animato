@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./react.js"></script><script src="./react-dom.js"></script><script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
+</style></helmet>
+
+<div style="padding:40px 44px 64px;display:flex;flex-direction:column;gap:28px;align-items:flex-start">
+
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1240px;background:#151516;border-radius:12px;padding:24px 28px;box-shadow:inset 0 0 0 1px #FFFFFF14">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<span style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#08080C;background:#9A9690;border-radius:4px;padding:4px 7px">SCREEN 10</span>
+<span style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Search — one field, library first, then sources</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Decisions</div>
+<div>· <span style="color:#FFFFFF">In your library comes first, always</span> — even when it has one hit and the sources have twelve. The most common search is "where is that thing I already have"; making the shelf win the top of the screen answers it without a filter.</div>
+<div>· <span style="color:#FFFFFF">Library results are rows, source results are a grid.</span> Different shapes because they are different acts: a row is retrieval (title, where you are in it, one tap to resume), a card is appraisal (cover, source, is this the one). Same-shaped results would need a header to tell them apart.</div>
+<div>· Each source answers <span style="color:#FFFFFF">separately and asynchronously</span>. MangaDex has returned 8, Comick 3, Jellyfin is still going — so its group shows three skeleton cards rather than a spinner over everything. One slow source must never hold the fast ones hostage.</div>
+<div>· The lens button sits in the field's trailing edge, not the top bar — here the field <em>is</em> the top bar. Under a filtered lens the source groups of the other medium disappear entirely, which is the visible answer to “I can't search to add an anime”.</div>
+<div>· <a href="#13c">13c</a> is the honest failure: nothing found <em>and</em> no anime sources installed. It names the cause in words and offers <span style="color:#FFFFFF">Add sources</span> — never a shrug.</div>
+</div>
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Notes for you</div>
+<div>· Blue count — <a href="#13a">13a</a> two (the one library row's progress bar, Search tab is not a tab so the bottom bar keeps the caller's tab: Discover here). <a href="#13b">13b</a> two. <a href="#13c">13c</a> two (Add sources, caller's tab).</div>
+<div>· <a href="#13b">13b</a> is the empty-query state: recent searches as plain rows with a clear glyph, then <span style="color:#FFFFFF">Trending searches</span> from the same metadata feed Discover uses — so the screen is never blank, per the never-empty rule.</div>
+<div>· Source group headers carry the source name and the count, and the type chip, because a source is single-medium and that is the fastest place to see which half you are looking at.</div>
+<div style="margin-top:6px;color:#F59E0B">One value not in design.md: the source-result card at 104 × 156 with a 2-line title below (the Library grid is 112 wide; a 3-up grid inside a group with its own 16 dp padding lands at 104). Confirm and I will write it in.</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 13a RESULTS ============ -->
+<div id="13a" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">13a</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Results · library rows, then per-source grids, one still loading</span></div>
+<div data-screen-label="Search results" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:64px;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="flex:1;height:48px;border-radius:24px;background:#151516;display:flex;align-items:center;gap:10px;padding:0 8px 0 16px;box-sizing:border-box">
+      <span style="flex:1;min-width:0;font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">frieren</span>
+      <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+      <div style="width:1px;height:24px;background:#FFFFFF14;flex:none"></div>
+      <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex:none">
+        <sc-if value="{{ isAll }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg></sc-if>
+        <sc-if value="{{ isFiltered }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#4169A1" stroke="none"></path></svg></sc-if>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">In your library</span></div>
+
+  <div style="display:flex;align-items:center;gap:12px;height:72px;padding:0 16px">
+    <div style="position:relative;width:48px;height:48px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden;display:flex;align-items:center;justify-content:center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:3px;background:#FFFFFF14"><div style="width:46%;height:3px;background:#4169A1"></div></div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Frieren</div>
+      <div style="margin-top:2px;display:flex;align-items:center;gap:6px">
+        <span style="height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans',sans-serif;color:#FFFFFF;flex:none">Anime</span>
+        <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ep. 12 of 26 · in progress</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;height:72px;padding:0 16px">
+    <div style="width:48px;height:48px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Frieren</div>
+      <div style="margin-top:2px;display:flex;align-items:center;gap:6px">
+        <span style="height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans',sans-serif;color:#FFFFFF;flex:none">Manga</span>
+        <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ch. 141 · 1 unread</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:1px;background:#FFFFFF14;margin:8px 16px 0"></div>
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">From your sources</span></div>
+
+  <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 16px">
+    <span style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">MangaDex</span>
+    <span style="height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans',sans-serif;color:#FFFFFF">Manga</span>
+    <span style="flex:1;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;text-align:right">8 results</span>
+  </div>
+  <div style="display:flex;gap:12px;padding:8px 16px 0;overflow:hidden">
+    <div style="width:104px;flex:none">
+      <div style="width:104px;height:156px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="margin-top:8px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:40px">Sousou no Frieren</div>
+    </div>
+    <div style="width:104px;flex:none">
+      <div style="width:104px;height:156px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="margin-top:8px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:40px">Frieren: Beyond Journey's End</div>
+    </div>
+    <div style="width:104px;flex:none">
+      <div style="width:104px;height:156px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="margin-top:8px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:40px">Frieren Anthology</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;height:32px;padding:16px 16px 0">
+    <span style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Jellyfin</span>
+    <span style="height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans',sans-serif;color:#FFFFFF">Anime</span>
+    <span style="flex:1;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;text-align:right">searching…</span>
+  </div>
+  <div style="display:flex;gap:12px;padding:8px 16px 0;overflow:hidden">
+    <div style="width:104px;height:156px;flex:none;border-radius:12px;background:#151516"></div>
+    <div style="width:104px;height:156px;flex:none;border-radius:12px;background:#151516"></div>
+    <div style="width:104px;height:156px;flex:none;border-radius:12px;background:#151516"></div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:#151516;box-shadow:inset 0 1px 0 0 #FFFFFF14;display:flex;align-items:center">
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3.6L3.4 10.4V20a1 1 0 0 0 1 1h5v-6h5.2v6h5a1 1 0 0 0 1-1v-9.6L12 3.6z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Home</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><rect x="8" y="3" width="12.5" height="14" rx="2"></rect><path d="M4.5 7v11.5A2 2 0 0 0 6.5 20.5H17"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Library</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M12 3.2a8.8 8.8 0 1 0 0 17.6 8.8 8.8 0 0 0 0-17.6zm3.4 5.4l-2.2 4.6-4.6 2.2 2.2-4.6 4.6-2.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#4169A1">Discover</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path><path d="M12 8v4.3l3 1.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Updates</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6v10.2M7.8 10l4.2 4.2 4.2-4.2M4.6 19.4h14.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Downloads</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="13d" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">13d</span><span style="font:400 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">RTL Arabic · mirrored, same tokens</span></div>
+<div data-screen-label="Search results RTL" dir="rtl" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:64px;display:flex;align-items:center;gap:4px;padding:0 4px 0 8px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5l7 7-7 7"></path></svg></div>
+    <div style="flex:1;height:48px;border-radius:24px;background:#151516;display:flex;align-items:center;gap:10px;padding:0 16px 0 8px;box-sizing:border-box">
+      <span style="flex:1;min-width:0;font:400 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">frieren</span>
+      <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+      <div style="width:1px;height:24px;background:#FFFFFF14;flex:none"></div>
+      <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex:none">
+        <sc-if value="{{ isAll }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg></sc-if>
+        <sc-if value="{{ isFiltered }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#4169A1" stroke="none"></path></svg></sc-if>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">في مكتبتك</span></div>
+
+  <div style="display:flex;align-items:center;gap:12px;height:72px;padding:0 16px">
+    <div style="position:relative;width:48px;height:48px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden;display:flex;align-items:center;justify-content:center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:3px;background:#FFFFFF14"><div style="width:46%;height:3px;background:#4169A1"></div></div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Frieren</div>
+      <div style="margin-top:2px;display:flex;align-items:center;gap:6px">
+        <span style="height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;flex:none">أنمي</span>
+        <span style="font:400 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">الحلقة 12 من 26 · قيد المتابعة</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;height:72px;padding:0 16px">
+    <div style="width:48px;height:48px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Frieren</div>
+      <div style="margin-top:2px;display:flex;align-items:center;gap:6px">
+        <span style="height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;flex:none">مانجا</span>
+        <span style="font:400 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">الفصل 141 · 1 غير مقروء</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:1px;background:#FFFFFF14;margin:8px 16px 0"></div>
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">من مصادرك</span></div>
+
+  <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 16px">
+    <span style="font:500 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF">MangaDex</span>
+    <span style="height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF">مانجا</span>
+    <span style="flex:1;font:400 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690;text-align:left">8 نتائج</span>
+  </div>
+  <div style="display:flex;gap:12px;padding:8px 16px 0;overflow:hidden">
+    <div style="width:104px;flex:none">
+      <div style="width:104px;height:156px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="margin-top:8px;font:500 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:40px">Sousou no Frieren</div>
+    </div>
+    <div style="width:104px;flex:none">
+      <div style="width:104px;height:156px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="margin-top:8px;font:500 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:40px">Frieren: Beyond Journey's End</div>
+    </div>
+    <div style="width:104px;flex:none">
+      <div style="width:104px;height:156px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="margin-top:8px;font:500 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:40px">Frieren Anthology</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;height:32px;padding:16px 16px 0">
+    <span style="font:500 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF">Jellyfin</span>
+    <span style="height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF">أنمي</span>
+    <span style="flex:1;font:400 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690;text-align:left">جارٍ البحث…</span>
+  </div>
+  <div style="display:flex;gap:12px;padding:8px 16px 0;overflow:hidden">
+    <div style="width:104px;height:156px;flex:none;border-radius:12px;background:#151516"></div>
+    <div style="width:104px;height:156px;flex:none;border-radius:12px;background:#151516"></div>
+    <div style="width:104px;height:156px;flex:none;border-radius:12px;background:#151516"></div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:#151516;box-shadow:inset 0 1px 0 0 #FFFFFF14;display:flex;align-items:center">
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3.6L3.4 10.4V20a1 1 0 0 0 1 1h5v-6h5.2v6h5a1 1 0 0 0 1-1v-9.6L12 3.6z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">الرئيسية</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><g transform="translate(24,0) scale(-1,1)"><rect x="8" y="3" width="12.5" height="14" rx="2"></rect><path d="M4.5 7v11.5A2 2 0 0 0 6.5 20.5H17"></path></g></svg>
+      <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">المكتبة</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M12 3.2a8.8 8.8 0 1 0 0 17.6 8.8 8.8 0 0 0 0-17.6zm3.4 5.4l-2.2 4.6-4.6 2.2 2.2-4.6 4.6-2.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#4169A1">استكشاف</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(24,0) scale(-1,1)"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path></g><path d="M12 8v4.3l3 1.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">التحديثات</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6v10.2M7.8 10l4.2 4.2 4.2-4.2M4.6 19.4h14.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">التنزيلات</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 13b EMPTY QUERY ============ -->
+<div id="13b" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">13b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Empty query · recent, then trending — never blank</span></div>
+<div data-screen-label="Search empty query" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:64px;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="flex:1;height:48px;border-radius:24px;background:#151516;display:flex;align-items:center;gap:10px;padding:0 8px 0 16px;box-sizing:border-box">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg>
+      <span style="flex:1;min-width:0;font:400 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Search your library and sources</span>
+      <div style="width:1px;height:24px;background:#FFFFFF14;flex:none"></div>
+      <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg></div>
+    </div>
+  </div>
+
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Recent</span></div>
+
+  <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 8px 0 16px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="8.4"></circle><path d="M12 7.8V12l3 1.8"></path></svg>
+    <span style="flex:1;font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">solo leveling</span>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 8px 0 16px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="8.4"></circle><path d="M12 7.8V12l3 1.8"></path></svg>
+    <span style="flex:1;font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">kingdom</span>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 8px 0 16px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="8.4"></circle><path d="M12 7.8V12l3 1.8"></path></svg>
+    <span style="flex:1;font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">chainsaw man</span>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+  </div>
+
+  <div style="height:1px;background:#FFFFFF14;margin:8px 16px 0"></div>
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Trending searches</span></div>
+
+  <div style="display:flex;gap:12px;padding:8px 16px 0;overflow:hidden">
+    <div style="width:104px;flex:none">
+      <div style="width:104px;height:156px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="margin-top:8px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:40px">Jujutsu Kaisen</div>
+    </div>
+    <div style="width:104px;flex:none">
+      <div style="width:104px;height:156px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="margin-top:8px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:40px">One Piece</div>
+    </div>
+    <div style="width:104px;flex:none">
+      <div style="width:104px;height:156px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="margin-top:8px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:40px">Kingdom</div>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:#151516;box-shadow:inset 0 1px 0 0 #FFFFFF14;display:flex;align-items:center">
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M12 3.2L3 10.4V20a1 1 0 0 0 1 1h5.2v-6h5.6v6H20a1 1 0 0 0 1-1v-9.6L12 3.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#4169A1">Home</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><rect x="8" y="3" width="12.5" height="14" rx="2"></rect><path d="M4.5 7v11.5A2 2 0 0 0 6.5 20.5H17"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Library</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="8.8"></circle><path d="M15.4 8.6l-2.2 4.6-4.6 2.2 2.2-4.6 4.6-2.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Discover</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path><path d="M12 8v4.3l3 1.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Updates</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6v10.2M7.8 10l4.2 4.2 4.2-4.2M4.6 19.4h14.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Downloads</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 13c NOTHING FOUND, NO SOURCES ============ -->
+<div id="13c" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">13c</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Anime lens · nothing found because no anime source is installed</span></div>
+<div data-screen-label="Search no sources" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:64px;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="flex:1;height:48px;border-radius:24px;background:#151516;display:flex;align-items:center;gap:10px;padding:0 8px 0 16px;box-sizing:border-box">
+      <span style="flex:1;min-width:0;font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">frieren</span>
+      <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+      <div style="width:1px;height:24px;background:#FFFFFF14;flex:none"></div>
+      <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#4169A1" stroke="none"></path></svg></div>
+    </div>
+  </div>
+
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">In your library</span></div>
+  <div style="display:flex;align-items:center;gap:12px;height:72px;padding:0 16px">
+    <div style="position:relative;width:48px;height:48px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden;display:flex;align-items:center;justify-content:center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:3px;background:#FFFFFF14"><div style="width:46%;height:3px;background:#4169A1"></div></div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Frieren</div>
+      <div style="margin-top:2px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Ep. 12 of 26 · in progress</div>
+    </div>
+  </div>
+
+  <div style="height:1px;background:#FFFFFF14;margin:8px 16px 0"></div>
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">From your sources</span></div>
+
+  <div style="padding:8px 16px 0">
+    <div style="background:#151516;border-radius:12px;padding:28px 24px 24px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+      <div style="position:relative;width:264px;height:132px;overflow:hidden">
+        <div style="position:absolute;left:76px;top:2px;width:128px;height:128px;border-radius:50%;background-image:radial-gradient(#FFFFFF 1.4px,transparent 1.5px);background-size:9px 9px;opacity:.18;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 36%,transparent 74%);mask-image:radial-gradient(circle at 50% 50%,#000 36%,transparent 74%)"></div>
+        <div style="position:absolute;left:106px;top:34px;width:60px;height:60px;border-radius:30px;border:1.5px solid #9A9690;opacity:.75"></div>
+        <div style="position:absolute;left:154px;top:84px;width:26px;height:2px;background:#9A9690;opacity:.75;transform:rotate(45deg)"></div>
+        <div style="position:absolute;left:6px;top:38px;width:48px;height:2px;background:#9A9690;opacity:.5"></div>
+        <div style="position:absolute;left:22px;top:58px;width:26px;height:2px;background:#9A9690;opacity:.3"></div>
+        <div style="position:absolute;right:6px;top:46px;width:44px;height:2px;background:#9A9690;opacity:.44"></div>
+        <div style="position:absolute;right:24px;top:66px;width:22px;height:2px;background:#9A9690;opacity:.26"></div>
+      </div>
+      <div style="margin-top:8px;max-width:264px;text-align:center;font:400 15px/22px 'Noto Sans',sans-serif;color:#FFFFFF">You don't have any anime sources yet, so there is nowhere to search.</div>
+      <div style="margin-top:20px;height:48px;padding:0 24px;border-radius:24px;background:#4169A1;display:flex;align-items:center;justify-content:center;font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF">Add sources</div>
+      <div style="margin-top:12px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Or switch the lens to look at manga.</div>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:#151516;box-shadow:inset 0 1px 0 0 #FFFFFF14;display:flex;align-items:center">
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3.6L3.4 10.4V20a1 1 0 0 0 1 1h5v-6h5.2v6h5a1 1 0 0 0 1-1v-9.6L12 3.6z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Home</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M8 3h10.5A2 2 0 0 1 20.5 5v12H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M4.5 7v11.5A2 2 0 0 0 6.5 20.5H17" fill="none" stroke="#4169A1" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#4169A1">Library</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="8.8"></circle><path d="M15.4 8.6l-2.2 4.6-4.6 2.2 2.2-4.6 4.6-2.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Discover</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path><path d="M12 8v4.3l3 1.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Updates</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6v10.2M7.8 10l4.2 4.2 4.2-4.2M4.6 19.4h14.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Downloads</span>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;lens&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;All&quot;,&quot;Anime&quot;,&quot;Manga&quot;],&quot;default&quot;:&quot;All&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Lens (global)&quot;},&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const lens = this.props.lens ?? 'All';
+    return {
+      showNotes: this.props.showNotes ?? true,
+      isAll: lens === 'All',
+      isFiltered: lens !== 'All'
+    };
+  }
+}
+</script>
+</body>
+</html>

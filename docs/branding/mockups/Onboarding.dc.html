@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./react.js"></script><script src="./react-dom.js"></script><script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600&family=Noto+Sans+JP:wght@500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
+</style></helmet>
+
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+<div style="padding:40px 44px 0;max-width:1240px">
+<div style="background:#151516;border-radius:12px;padding:24px 28px;box-shadow:inset 0 0 0 1px #FFFFFF14">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<span style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#08080C;background:#9A9690;border-radius:4px;padding:4px 7px">SCREEN 5</span>
+<span style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Onboarding — six steps, brand moment to a living Discover</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Decisions</div>
+<div>· <span style="color:#FFFFFF">Step 2 teaches the lens with the lens.</span> Its three options are the actual glyphs — half-shaded circle for Anime, half-shaded for Manga, full circle for Both — so the first time you meet that icon you are choosing with it, not decoding it later in a top bar.</div>
+<div>· One shared chrome on all six: 56 dp bar with Skip at the trailing edge, 6-step indicator above a single primary. <span style="color:#FFFFFF">Skip is present on every step</span>, including the first — the flow promises skippable and a missing Skip on step 1 would break it before it starts.</div>
+<div>· <span style="color:#FFFFFF">Step 5 has no primary button.</span> Its three cards <em>are</em> the choice; a Continue underneath would make "which of these" and "go" compete. Start fresh is the third card, not a text link, so the honest option is not the quiet one.</div>
+<div>· Manga DNA is loud on steps 1 and 6 and silent on 2–5: the two brand moments book-end four screens of plain forms. Halftone burst on 1, ink splash and speed sweep on 6.</div>
+<div>· Step 4 lists official portals <span style="color:#FFFFFF">by name only</span>, with no install control — per the legal position, nothing is bundled or pre-filled. The paste field is the only way content arrives.</div>
+</div>
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Notes for you</div>
+<div>· Blue per step: 1 → two (dot, Get started) · 2 → three (dot, selected option, Continue) · 3 → three (dot, checkboxes as one repeated system element, Continue) · 4 → two · 5 → one (dot only) · 6 → two.</div>
+<div>· Arabic sits first in step 3 and is pre-checked alongside English, matching the rule that Arabic is prominent rather than alphabetically buried. The list is written in each language's own script.</div>
+<div>· Step 6 lands on <span style="color:#FFFFFF">Discover</span>, and says so out loud — the never-empty promise is the last thing you read before you see it.</div>
+<div style="margin-top:6px;color:#F59E0B">Two values not in design.md: the 6-step indicator (6 dp dots, active 16 × 6 pill, 8 dp gap) and the 72 dp option row. Confirm and I will add them.</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="padding:28px 44px 64px;display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 12a BRAND MOMENT ============ -->
+<div id="12a" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">12a</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">1 · brand moment</span></div>
+<div data-screen-label="Onboarding 1 brand" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+  <div style="height:56px;display:flex;align-items:center;justify-content:flex-end;padding:0 16px">
+    <span style="font:500 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Skip</span>
+  </div>
+
+  <div style="height:584px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box">
+    <div style="position:relative;width:393px;height:236px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <div style="position:absolute;left:0;top:64px;width:60px;height:2px;background:#9A9690;opacity:.5"></div>
+      <div style="position:absolute;left:14px;top:86px;width:34px;height:2px;background:#9A9690;opacity:.28"></div>
+      <div style="position:absolute;left:0;top:108px;width:50px;height:2px;background:#9A9690;opacity:.4"></div>
+      <div style="position:absolute;right:0;top:70px;width:54px;height:2px;background:#9A9690;opacity:.44"></div>
+      <div style="position:absolute;right:16px;top:92px;width:30px;height:2px;background:#9A9690;opacity:.24"></div>
+      <div style="position:absolute;right:0;top:114px;width:58px;height:2px;background:#9A9690;opacity:.36"></div>
+      <div style="position:absolute;left:96px;top:30px;width:200px;height:176px;border-radius:50%;background-image:radial-gradient(#FFFFFF 1.3px,transparent 1.4px);background-size:10px 10px;opacity:.14;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 34%,transparent 72%);mask-image:radial-gradient(circle at 50% 50%,#000 34%,transparent 72%)"></div>
+      <img src="assets/wordmark-blue.png" alt="Animato" style="position:relative;width:216px;height:94px;display:block">
+      <div style="position:relative;margin-top:4px;font:500 20px/26px 'Noto Sans JP',sans-serif;color:#FFFFFF;letter-spacing:.32em;text-indent:.32em">アニマト</div>
+    </div>
+    <div style="margin-top:16px;font:400 15px/22px 'Noto Sans',sans-serif;color:#9A9690">Read. Watch. Track.</div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:0 16px 24px">
+    <div style="height:24px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <div style="width:16px;height:6px;border-radius:3px;background:#4169A1"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+    </div>
+    <div style="margin-top:16px;height:48px;border-radius:24px;background:#4169A1;display:flex;align-items:center;justify-content:center;font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF">Get started</div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 12b LENS ============ -->
+<div id="12b" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">12b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">2 · what do you follow — teaches the lens</span></div>
+<div data-screen-label="Onboarding 2 lens" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+  <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <span style="font:500 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Skip</span>
+  </div>
+
+  <div style="padding:16px 16px 0">
+    <div style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">What do you follow?</div>
+    <div style="margin-top:8px;font:400 15px/22px 'Noto Sans',sans-serif;color:#9A9690;max-width:320px">This sets your lens. One switch in the top bar, and you can flip it any time.</div>
+  </div>
+
+  <div style="padding:24px 16px 0;display:flex;flex-direction:column;gap:12px">
+    <div style="height:72px;border-radius:12px;background:#151516;display:flex;align-items:center;gap:16px;padding:0 16px;box-sizing:border-box">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#9A9690" stroke="none"></path></svg>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Anime</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Episodes only</div>
+      </div>
+    </div>
+    <div style="height:72px;border-radius:12px;background:#151516;display:flex;align-items:center;gap:16px;padding:0 16px;box-sizing:border-box">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#9A9690" stroke="none"></path></svg>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Manga</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Chapters only</div>
+      </div>
+    </div>
+    <div style="height:72px;border-radius:12px;background:#FFFFFF14;display:flex;align-items:center;gap:16px;padding:0 16px;box-sizing:border-box">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Both</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">One shelf, one feed — the full circle</div>
+      </div>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:0 16px 24px">
+    <div style="height:24px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:16px;height:6px;border-radius:3px;background:#4169A1"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+    </div>
+    <div style="margin-top:16px;height:48px;border-radius:24px;background:#4169A1;display:flex;align-items:center;justify-content:center;font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF">Continue</div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 12c LANGUAGES ============ -->
+<div id="12c" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">12c</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">3 · content languages — Arabic first</span></div>
+<div data-screen-label="Onboarding 3 languages" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+  <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <span style="font:500 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Skip</span>
+  </div>
+
+  <div style="padding:16px 16px 0">
+    <div style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Which languages?</div>
+    <div style="margin-top:8px;font:400 15px/22px 'Noto Sans',sans-serif;color:#9A9690;max-width:320px">Used to suggest sources and to rank what search finds.</div>
+  </div>
+
+  <div style="padding:20px 0 0">
+    <div style="display:flex;align-items:center;gap:16px;height:56px;padding:0 16px">
+      <div style="flex:1;font:400 15px/22px 'Noto Sans Arabic','Noto Sans',sans-serif;color:#FFFFFF">العربية <span style="color:#9A9690">· Arabic</span></div>
+      <div style="width:22px;height:22px;border-radius:6px;background:#4169A1;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;height:56px;padding:0 16px">
+      <div style="flex:1;font:400 15px/22px 'Noto Sans',sans-serif;color:#FFFFFF">English</div>
+      <div style="width:22px;height:22px;border-radius:6px;background:#4169A1;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;height:56px;padding:0 16px">
+      <div style="flex:1;font:400 15px/22px 'Noto Sans',sans-serif;color:#FFFFFF">日本語 <span style="color:#9A9690">· Japanese</span></div>
+      <div style="width:22px;height:22px;border-radius:6px;box-shadow:inset 0 0 0 1.5px #9A9690;flex:none"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;height:56px;padding:0 16px">
+      <div style="flex:1;font:400 15px/22px 'Noto Sans',sans-serif;color:#FFFFFF">한국어 <span style="color:#9A9690">· Korean</span></div>
+      <div style="width:22px;height:22px;border-radius:6px;box-shadow:inset 0 0 0 1.5px #9A9690;flex:none"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;height:56px;padding:0 16px">
+      <div style="flex:1;font:400 15px/22px 'Noto Sans',sans-serif;color:#FFFFFF">Français <span style="color:#9A9690">· French</span></div>
+      <div style="width:22px;height:22px;border-radius:6px;box-shadow:inset 0 0 0 1.5px #9A9690;flex:none"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;height:56px;padding:0 16px">
+      <div style="flex:1;font:400 15px/22px 'Noto Sans',sans-serif;color:#FFFFFF">Español <span style="color:#9A9690">· Spanish</span></div>
+      <div style="width:22px;height:22px;border-radius:6px;box-shadow:inset 0 0 0 1.5px #9A9690;flex:none"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;height:56px;padding:0 16px">
+      <div style="flex:1;font:400 15px/22px 'Noto Sans',sans-serif;color:#FFFFFF">Indonesia <span style="color:#9A9690">· Indonesian</span></div>
+      <div style="width:22px;height:22px;border-radius:6px;box-shadow:inset 0 0 0 1.5px #9A9690;flex:none"></div>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:0 16px 24px;background:#08080C">
+    <div style="height:24px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:16px;height:6px;border-radius:3px;background:#4169A1"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+    </div>
+    <div style="margin-top:16px;height:48px;border-radius:24px;background:#4169A1;display:flex;align-items:center;justify-content:center;font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF">Continue</div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 12d SOURCES ============ -->
+<div id="12d" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">12d</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">4 · sources, honestly — names only, paste field</span></div>
+<div data-screen-label="Onboarding 4 sources" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+  <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <span style="font:500 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Skip</span>
+  </div>
+
+  <div style="padding:16px 16px 0">
+    <div style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Where content comes from</div>
+    <div style="margin-top:8px;font:400 15px/22px 'Noto Sans',sans-serif;color:#9A9690;max-width:330px">Animato ships empty by design — you choose where content comes from. Nothing is bundled and nothing is pre-filled.</div>
+  </div>
+
+  <div style="padding:24px 16px 0">
+    <div style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Official portals worth knowing</div>
+  </div>
+  <div style="padding:8px 16px 0;display:flex;flex-direction:column;gap:8px">
+    <div style="height:56px;border-radius:12px;background:#151516;display:flex;align-items:center;gap:12px;padding:0 16px;box-sizing:border-box">
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">MANGA Plus</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Shueisha · free chapters</div>
+      </div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5h5v5M19 5l-8.5 8.5M18 14v4.5A1.5 1.5 0 0 1 16.5 20H6A1.5 1.5 0 0 1 4.5 18.5V8A1.5 1.5 0 0 1 6 6.5h4.5"></path></svg>
+    </div>
+    <div style="height:56px;border-radius:12px;background:#151516;display:flex;align-items:center;gap:12px;padding:0 16px;box-sizing:border-box">
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Manga Arabia</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Arabic · licensed</div>
+      </div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5h5v5M19 5l-8.5 8.5M18 14v4.5A1.5 1.5 0 0 1 16.5 20H6A1.5 1.5 0 0 1 4.5 18.5V8A1.5 1.5 0 0 1 6 6.5h4.5"></path></svg>
+    </div>
+    <div style="height:56px;border-radius:12px;background:#151516;display:flex;align-items:center;gap:12px;padding:0 16px;box-sizing:border-box">
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Jellyfin</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Your own server</div>
+      </div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5h5v5M19 5l-8.5 8.5M18 14v4.5A1.5 1.5 0 0 1 16.5 20H6A1.5 1.5 0 0 1 4.5 18.5V8A1.5 1.5 0 0 1 6 6.5h4.5"></path></svg>
+    </div>
+  </div>
+
+  <div style="padding:24px 16px 0">
+    <div style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Have a repository URL?</div>
+    <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+      <div style="flex:1;height:48px;border-radius:24px;background:#151516;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;font:400 15px/20px 'Noto Sans',sans-serif;color:#9A9690">https://</div>
+      <div style="height:48px;padding:0 20px;border-radius:24px;box-shadow:inset 0 0 0 1px #9A9690;display:flex;align-items:center;font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF;flex:none">Add</div>
+    </div>
+    <div style="margin-top:10px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">You can do this later in Settings › Sources.</div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:0 16px 24px">
+    <div style="height:24px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:16px;height:6px;border-radius:3px;background:#4169A1"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+    </div>
+    <div style="margin-top:16px;height:48px;border-radius:24px;box-shadow:inset 0 0 0 1px #9A9690;display:flex;align-items:center;justify-content:center;font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF">Continue</div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 12e HISTORY ============ -->
+<div id="12e" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">12e</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">5 · bring your history — three cards, no primary</span></div>
+<div data-screen-label="Onboarding 5 history" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+  <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <span style="font:500 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Skip</span>
+  </div>
+
+  <div style="padding:16px 16px 0">
+    <div style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Bring your history</div>
+    <div style="margin-top:8px;font:400 15px/22px 'Noto Sans',sans-serif;color:#9A9690;max-width:320px">Pick one. Whichever you choose, your shelf is not empty when you land.</div>
+  </div>
+
+  <div style="padding:24px 16px 0;display:flex;flex-direction:column;gap:12px">
+    <div style="border-radius:12px;background:#151516;padding:16px;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="M12 15.5V4.5M8 11.5l4 4 4-4M4.6 19.4h14.8"></path></svg>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Import an Aniyomi backup</div>
+        <div style="margin-top:2px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Library, categories, history and read positions from a <span style="font-variant-numeric:tabular-nums">.tachibk</span> file.</div>
+      </div>
+    </div>
+    <div style="border-radius:12px;background:#151516;padding:16px;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="M4.6 8.2A8.4 8.4 0 0 1 19 6.4M19.4 15.8A8.4 8.4 0 0 1 5 17.6"></path><path d="M4.4 4.6v3.6h3.6M19.6 19.4v-3.6H16"></path></svg>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Sign in to a tracker</div>
+        <div style="margin-top:2px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">AniList or MyAnimeList — your lists seed Library and Continue right away.</div>
+      </div>
+    </div>
+    <div style="border-radius:12px;background:#151516;padding:16px;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="M12 5.6v12.8M5.6 12h12.8"></path></svg>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Start fresh</div>
+        <div style="margin-top:2px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Build the shelf as you go. Discover is already full.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:0 16px 24px">
+    <div style="height:24px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:16px;height:6px;border-radius:3px;background:#4169A1"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 12f DONE ============ -->
+<div id="12f" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">12f</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">6 · done → Discover</span></div>
+<div data-screen-label="Onboarding 6 done" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+  <div style="height:56px"></div>
+
+  <div style="height:584px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 16px;box-sizing:border-box">
+    <div style="position:relative;width:296px;height:216px">
+      <div style="position:absolute;left:56px;top:14px;width:184px;height:184px;border-radius:50%;background-image:radial-gradient(#FFFFFF 1.4px,transparent 1.5px);background-size:9px 9px;opacity:.16;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 34%,transparent 74%);mask-image:radial-gradient(circle at 50% 50%,#000 34%,transparent 74%)"></div>
+      <div style="position:absolute;left:98px;top:56px;width:100px;height:100px;border-radius:50%;background:#4169A1;display:flex;align-items:center;justify-content:center">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+      </div>
+      <div style="position:absolute;left:0;top:44px;width:62px;height:2px;background:#9A9690;opacity:.5"></div>
+      <div style="position:absolute;left:16px;top:66px;width:34px;height:2px;background:#9A9690;opacity:.3"></div>
+      <div style="position:absolute;left:0;top:88px;width:48px;height:2px;background:#9A9690;opacity:.4"></div>
+      <div style="position:absolute;right:0;top:52px;width:58px;height:2px;background:#9A9690;opacity:.46"></div>
+      <div style="position:absolute;right:18px;top:74px;width:30px;height:2px;background:#9A9690;opacity:.26"></div>
+      <div style="position:absolute;right:0;top:96px;width:52px;height:2px;background:#9A9690;opacity:.38"></div>
+      <div style="position:absolute;left:120px;bottom:6px;width:56px;height:10px;border-radius:5px;background:#9A9690;opacity:.18"></div>
+    </div>
+    <div style="margin-top:12px;font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF;text-align:center">You're set</div>
+    <div style="margin-top:8px;max-width:280px;text-align:center;font:400 15px/22px 'Noto Sans',sans-serif;color:#9A9690">Next stop is Discover — trending, this season and top rated are already loaded.</div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:0 16px 24px">
+    <div style="height:24px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:6px;height:6px;border-radius:3px;background:#FFFFFF14"></div>
+      <div style="width:16px;height:6px;border-radius:3px;background:#4169A1"></div>
+    </div>
+    <div style="margin-top:16px;height:48px;border-radius:24px;background:#4169A1;display:flex;align-items:center;justify-content:center;font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF">Start exploring</div>
+  </div>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return { showNotes: this.props.showNotes ?? true };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./react.js"></script><script src="./react-dom.js"></script><script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
+</style></helmet>
+
+<div style="padding:40px 44px 64px;display:flex;flex-direction:column;gap:28px;align-items:flex-start">
+
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1240px;background:#151516;border-radius:12px;padding:24px 28px;box-shadow:inset 0 0 0 1px #FFFFFF14">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<span style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#08080C;background:#9A9690;border-radius:4px;padding:4px 7px">THE LENS</span>
+<span style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Carry-over proof — flip it on Home, Library arrives already flipped</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">What this pair proves</div>
+<div>· Both screens carry the <span style="color:#FFFFFF">same half-shaded blue circle</span> in the same slot. Nothing was tapped on Library — the value is global, so the second screen simply opens filtered.</div>
+<div>· <span style="color:#FFFFFF">Type chips are gone from every cover</span> on both. Under Anime they would say Anime nine times, which is why the lens removes them.</div>
+<div>· Captions changed medium with the lens: <span style="color:#FFFFFF">Ep. 1122</span>, not Ch. — a screen filtered to one medium is a single-medium context, so media words are allowed.</div>
+<div>· Counts follow: Home's Continue rail drops the manga titles it was showing, and Library's All chip reads <span style="color:#FFFFFF">All 39</span> instead of 95.</div>
+</div>
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Notes</div>
+<div>· Blue per artboard: two on <a href="#15a">15a</a> (lens glyph, progress) plus the Home tab; two on <a href="#15b">15b</a> (lens glyph, unread pills as one repeated system element) plus the Library tab. The glyph is the only blue that <em>moved</em> here.</div>
+<div>· The full lens menu lives on Home v2 <a href="#2b">2b</a>; this file is the after-state on two screens, not the interaction.</div>
+<div>· Flip the Lens tweak to All to watch both screens repopulate with mixed content and their type chips return.</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 15a HOME, FILTERED ============ -->
+<div id="15a" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">15a</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Home · lens set here</span></div>
+<div data-screen-label="Lens Home filtered" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 16px">
+    <img src="assets/wordmark-paper.png" alt="Animato" style="height:28px;width:65px;display:block">
+    <div style="display:flex;align-items:center">
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg></div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <sc-if value="{{ isAll }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg></sc-if>
+        <sc-if value="{{ isFiltered }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#4169A1" stroke="none"></path></svg></sc-if>
+      </div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M9.9 3.3h4.2l.45 2.35 1.6.93 2.2-.9 2.1 3.64-1.75 1.6v1.86l1.75 1.6-2.1 3.64-2.2-.9-1.6.93-.45 2.35H9.9l-.45-2.35-1.6-.93-2.2.9-2.1-3.64 1.75-1.6v-1.86L3.55 9.32l2.1-3.64 2.2.9 1.6-.93z" stroke-linejoin="round"></path></svg></div>
+    </div>
+  </div>
+
+  <div style="padding:8px 16px 12px"><div style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Continue</div></div>
+  <div style="display:flex;gap:12px;padding:0 16px;overflow:hidden">
+    <sc-for list="{{ rail }}" as="item" hint-placeholder-count="3">
+      <div style="position:relative;width:148px;height:222px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden">
+        <div style="position:absolute;left:0;right:0;top:66px;display:flex;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+        <sc-if value="{{ showTypeChips }}"><div style="position:absolute;top:8px;left:8px;height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans',sans-serif;color:#FFFFFF">{{ item.type }}</div></sc-if>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:112px;background:linear-gradient(180deg,rgba(8,8,12,0) 0%,rgba(8,8,12,.86) 58%,#08080C 100%)"></div>
+        <div style="position:absolute;left:10px;right:10px;bottom:11px">
+          <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.t }}</div>
+          <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.c }}</div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:3px;background:#FFFFFF14"><div style="width:{{ item.p }};height:3px;background:#4169A1"></div></div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="height:24px"></div>
+  <div style="padding:0 16px;margin-bottom:8px;display:flex;align-items:baseline;justify-content:space-between">
+    <div style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Latest updates</div>
+    <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">See all</div>
+  </div>
+
+  <sc-for list="{{ updates }}" as="item" hint-placeholder-count="4">
+    <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 16px">
+      <div style="width:48px;height:48px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.t }}</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.c }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex:none">
+        <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">{{ item.time }}</span>
+        <sc-if value="{{ item.isNew }}"><span style="height:20px;padding:0 7px;border-radius:10px;background:#06B6D4;display:flex;align-items:center;font:600 11px/1 'Noto Sans',sans-serif;color:#08080C">NEW</span></sc-if>
+      </div>
+    </div>
+  </sc-for>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:#151516;box-shadow:inset 0 1px 0 0 #FFFFFF14;display:flex;align-items:center">
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M12 3.2L3 10.4V20a1 1 0 0 0 1 1h5.2v-6h5.6v6H20a1 1 0 0 0 1-1v-9.6L12 3.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#4169A1">Home</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><rect x="8" y="3" width="12.5" height="14" rx="2"></rect><path d="M4.5 7v11.5A2 2 0 0 0 6.5 20.5H17"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Library</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="8.8"></circle><path d="M15.4 8.6l-2.2 4.6-4.6 2.2 2.2-4.6 4.6-2.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Discover</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path><path d="M12 8v4.3l3 1.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Updates</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6v10.2M7.8 10l4.2 4.2 4.2-4.2M4.6 19.4h14.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Downloads</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 15b LIBRARY, ARRIVES FILTERED ============ -->
+<div id="15b" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">15b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Library · nothing tapped, arrives filtered</span></div>
+<div data-screen-label="Lens Library filtered" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:56px;display:flex;align-items:center;padding:0 4px 0 16px">
+    <div style="flex:1;min-width:0;font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Library</div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg></div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none">
+      <sc-if value="{{ isAll }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg></sc-if>
+      <sc-if value="{{ isFiltered }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#4169A1" stroke="none"></path></svg></sc-if>
+    </div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h16M6.5 12h11M10 17h4"></path></svg></div>
+  </div>
+
+  <div style="display:flex;gap:8px;padding:4px 16px 16px;overflow:hidden">
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#FFFFFF14;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#FFFFFF">All</span>
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums">{{ allCount }}</span>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;flex:none"><span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Ongoing</span></div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;flex:none"><span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Backlog</span></div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;flex:none"><span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Finished</span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,112px);gap:12px;padding:0 16px">
+    <sc-for list="{{ grid }}" as="item" hint-placeholder-count="9">
+      <div style="width:112px">
+        <div style="position:relative;width:112px;height:168px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+          <sc-if value="{{ showTypeChips }}"><div style="position:absolute;top:6px;left:6px;height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans',sans-serif;color:#FFFFFF">{{ item.type }}</div></sc-if>
+          <sc-if value="{{ item.unread }}"><div style="position:absolute;top:6px;right:6px;height:20px;padding:0 7px;border-radius:10px;background:#4169A1;display:flex;align-items:center;font:600 11px/1 'Noto Sans',sans-serif;color:#FFFFFF;font-variant-numeric:tabular-nums">{{ item.unread }}</div></sc-if>
+        </div>
+        <div style="margin-top:8px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:40px">{{ item.t }}</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.c }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:#151516;box-shadow:inset 0 1px 0 0 #FFFFFF14;display:flex;align-items:center">
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3.6L3.4 10.4V20a1 1 0 0 0 1 1h5v-6h5.2v6h5a1 1 0 0 0 1-1v-9.6L12 3.6z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Home</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M8 3h10.5A2 2 0 0 1 20.5 5v12H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M4.5 7v11.5A2 2 0 0 0 6.5 20.5H17" fill="none" stroke="#4169A1" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#4169A1">Library</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="8.8"></circle><path d="M15.4 8.6l-2.2 4.6-4.6 2.2 2.2-4.6 4.6-2.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Discover</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path><path d="M12 8v4.3l3 1.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Updates</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6v10.2M7.8 10l4.2 4.2 4.2-4.2M4.6 19.4h14.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Downloads</span>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;lens&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;All&quot;,&quot;Anime&quot;,&quot;Manga&quot;],&quot;default&quot;:&quot;Anime&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Lens (global)&quot;},&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const lens = this.props.lens ?? 'Anime';
+    const anime = lens === 'Anime';
+    const all = lens === 'All';
+    return {
+      showNotes: this.props.showNotes ?? true,
+      isAll: all,
+      isFiltered: !all,
+      showTypeChips: all,
+      allCount: all ? '95' : (anime ? '39' : '56'),
+      rail: all ? [
+        { t: 'Solo Leveling', c: 'Ch. 254 · 2h ago', type: 'Manga', p: '68%' },
+        { t: 'One Piece', c: 'Ep. 1122 · 1d ago', type: 'Anime', p: '34%' },
+        { t: 'Jujutsu Kaisen', c: 'Ch. 236 · 3d ago', type: 'Manga', p: '12%' }
+      ] : anime ? [
+        { t: 'One Piece', c: 'Ep. 1122 · 1d ago', type: 'Anime', p: '34%' },
+        { t: 'Frieren', c: 'Ep. 12 · 4h ago', type: 'Anime', p: '46%' },
+        { t: 'Kaiju No. 8', c: 'Ep. 9 · 6d ago', type: 'Anime', p: '75%' }
+      ] : [
+        { t: 'Solo Leveling', c: 'Ch. 254 · 2h ago', type: 'Manga', p: '68%' },
+        { t: 'Jujutsu Kaisen', c: 'Ch. 236 · 3d ago', type: 'Manga', p: '12%' },
+        { t: 'Kingdom', c: 'Ch. 801 · 5d ago', type: 'Manga', p: '80%' }
+      ],
+      updates: all ? [
+        { t: 'One Piece', c: 'Episode 1123', time: '2m ago', isNew: true },
+        { t: 'Solo Leveling', c: 'Chapter 255', time: '18m ago', isNew: true },
+        { t: 'Frieren', c: 'Chapter 141', time: '1h ago' },
+        { t: 'Chainsaw Man', c: 'Chapter 187', time: '3h ago' }
+      ] : anime ? [
+        { t: 'One Piece', c: 'Episode 1123', time: '2m ago', isNew: true },
+        { t: 'Jujutsu Kaisen', c: 'Episode 24', time: '5h ago', isNew: true },
+        { t: 'Kaiju No. 8', c: 'Episode 9', time: '1d ago' },
+        { t: 'Blue Lock', c: 'Episode 14', time: '2d ago' }
+      ] : [
+        { t: 'Solo Leveling', c: 'Chapter 255', time: '18m ago', isNew: true },
+        { t: 'Frieren', c: 'Chapter 141', time: '1h ago', isNew: true },
+        { t: 'Chainsaw Man', c: 'Chapter 187', time: '3h ago' },
+        { t: 'Dandadan', c: 'Chapter 178', time: '1d ago' }
+      ],
+      grid: all ? [
+        { t: 'Solo Leveling', c: 'Ch. 254', type: 'Manga', unread: 12 },
+        { t: 'One Piece', c: 'Ep. 1122', type: 'Anime', unread: 3 },
+        { t: 'Jujutsu Kaisen', c: 'Ch. 236', type: 'Manga', unread: 4 },
+        { t: 'Kingdom', c: 'Ch. 801', type: 'Manga', unread: 0 },
+        { t: 'Frieren', c: 'Ch. 141', type: 'Manga', unread: 2 },
+        { t: 'Chainsaw Man', c: 'Ep. 12', type: 'Anime', unread: 0 },
+        { t: 'Dandadan', c: 'Ch. 178', type: 'Manga', unread: 7 },
+        { t: 'Kaiju No. 8', c: 'Ep. 9', type: 'Anime', unread: 0 },
+        { t: 'Oshi no Ko', c: 'Ch. 166', type: 'Manga', unread: 1 }
+      ] : anime ? [
+        { t: 'One Piece', c: 'Ep. 1122', type: 'Anime', unread: 3 },
+        { t: 'Frieren', c: 'Ep. 12', type: 'Anime', unread: 1 },
+        { t: 'Jujutsu Kaisen', c: 'Ep. 24', type: 'Anime', unread: 0 },
+        { t: 'Chainsaw Man', c: 'Ep. 12', type: 'Anime', unread: 0 },
+        { t: 'Kaiju No. 8', c: 'Ep. 9', type: 'Anime', unread: 0 },
+        { t: 'Blue Lock', c: 'Ep. 14', type: 'Anime', unread: 2 },
+        { t: 'Dandadan', c: 'Ep. 8', type: 'Anime', unread: 5 },
+        { t: 'Oshi no Ko', c: 'Ep. 21', type: 'Anime', unread: 0 },
+        { t: 'Sakamoto Days', c: 'Ep. 6', type: 'Anime', unread: 0 }
+      ] : [
+        { t: 'Solo Leveling', c: 'Ch. 254', type: 'Manga', unread: 12 },
+        { t: 'Jujutsu Kaisen', c: 'Ch. 236', type: 'Manga', unread: 4 },
+        { t: 'Kingdom', c: 'Ch. 801', type: 'Manga', unread: 0 },
+        { t: 'Frieren', c: 'Ch. 141', type: 'Manga', unread: 2 },
+        { t: 'Dandadan', c: 'Ch. 178', type: 'Manga', unread: 7 },
+        { t: 'Oshi no Ko', c: 'Ch. 166', type: 'Manga', unread: 1 },
+        { t: 'Chainsaw Man', c: 'Ch. 187', type: 'Manga', unread: 0 },
+        { t: 'Sakamoto Days', c: 'Ch. 210', type: 'Manga', unread: 3 },
+        { t: 'Vinland Saga', c: 'Ch. 211', type: 'Manga', unread: 0 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

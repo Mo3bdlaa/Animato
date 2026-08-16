@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./react.js"></script><script src="./react-dom.js"></script><script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
+</style></helmet>
+
+<div style="padding:40px 44px 64px;display:flex;flex-direction:column;gap:28px;align-items:flex-start">
+
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1240px;background:#151516;border-radius:12px;padding:24px 28px;box-shadow:inset 0 0 0 1px #FFFFFF14">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<span style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#08080C;background:#9A9690;border-radius:4px;padding:4px 7px">UX.md EXTRAS</span>
+<span style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Tracking hub · Repositories — the two sub-screens the brief's eleven never covered</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Tracking hub — <a href="#16a">16a</a></div>
+<div>· <span style="color:#FFFFFF">Signed-in and signed-out rows are the same height</span>, and the difference is a caption plus one trailing control: <span style="color:#FFFFFF">Sync now</span> when connected, <span style="color:#FFFFFF">Sign in</span> when not. Two visual languages for one list would imply the disconnected trackers are broken rather than optional.</div>
+<div>· <span style="color:#FFFFFF">Sync state is words, not a ring</span> here — <em>Synced 4m ago</em>, <em>12 titles queued</em>, <em>Failed · token expired</em>. The ring belongs on the title page, where there is one title and no room for a sentence.</div>
+<div>· Per-title binding is deliberately absent: it lives on the title page's Tracking tab, where the title is. This screen is accounts and policy only.</div>
+<div>· The activity feed is capped at four rows and dated in words, because its job is confidence — <em>something happened, recently</em> — not an audit log.</div>
+</div>
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Repositories — <a href="#16b">16b</a></div>
+<div>· <span style="color:#FFFFFF">The trust prompt is inline and in plain words</span>, not a modal: a repository is a stranger's list of code, so the sentence sits under the field, before you paste, where it can still change your mind.</div>
+<div>· Added repositories show <span style="color:#FFFFFF">host and count</span>, never the full URL — a 90-character URL ellipsised into a row tells you nothing. Tapping opens the detail with the full address.</div>
+<div>· Official portals repeat here by name only, identical to onboarding step 4. Nothing is bundled or pre-filled.</div>
+<div style="margin-top:6px">Blue count: <a href="#16a">16a</a> one (Sync now, the only action in progress). <a href="#16b">16b</a> one (Add). Neither screen has a bottom bar — both are sub-screens, per design.md v1.1.</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 16a TRACKING HUB ============ -->
+<div id="16a" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">16a</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Tracking hub · accounts, sync state in words, activity</span></div>
+<div data-screen-label="Tracking hub" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:56px;display:flex;align-items:center;padding:0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="flex:1;min-width:0;font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Tracking</div>
+  </div>
+
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Accounts</span></div>
+
+  <sc-for list="{{ accounts }}" as="item" hint-placeholder-count="7">
+    <div style="display:flex;align-items:center;gap:12px;height:72px;padding:0 16px">
+      <div style="width:40px;height:40px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center;font:600 15px/1 'Noto Sans',sans-serif;color:#9A9690">{{ item.initial }}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.name }}</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:{{ item.stateColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.state }}</div>
+      </div>
+      <sc-if value="{{ item.connected }}"><div style="height:36px;padding:0 14px;border-radius:18px;background:#4169A1;display:flex;align-items:center;font:500 14px/1 'Noto Sans',sans-serif;color:#FFFFFF;flex:none">Sync now</div></sc-if>
+      <sc-if value="{{ item.disconnected }}"><div style="height:36px;padding:0 14px;border-radius:18px;box-shadow:inset 0 0 0 1px #9A9690;display:flex;align-items:center;font:500 14px/1 'Noto Sans',sans-serif;color:#FFFFFF;flex:none">Sign in</div></sc-if>
+    </div>
+  </sc-for>
+
+  <div style="height:1px;background:#FFFFFF14;margin:8px 16px 0"></div>
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Recent activity</span></div>
+
+  <sc-for list="{{ activity }}" as="item" hint-placeholder-count="4">
+    <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 16px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4.6 8.2A8.4 8.4 0 0 1 19 6.4M19.4 15.8A8.4 8.4 0 0 1 5 17.6"></path><path d="M4.4 4.6v3.6h3.6M19.6 19.4v-3.6H16"></path></svg>
+      <div style="flex:1;min-width:0">
+        <div style="font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.t }}</div>
+      </div>
+      <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;flex:none">{{ item.time }}</span>
+    </div>
+  </sc-for>
+
+  <div style="height:1px;background:#FFFFFF14;margin:8px 16px 0"></div>
+  <div style="display:flex;align-items:center;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Sync automatically</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">After finishing an item, on Wi-Fi</div>
+    </div>
+    <div style="width:52px;height:32px;border-radius:16px;background:#4169A1;display:flex;align-items:center;justify-content:flex-end;padding:0 4px;box-sizing:border-box;flex:none"><div style="width:24px;height:24px;border-radius:12px;background:#FFFFFF"></div></div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 16b REPOSITORIES ============ -->
+<div id="16b" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">16b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Repositories · paste field, inline trust prompt, portals by name</span></div>
+<div data-screen-label="Repositories" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:56px;display:flex;align-items:center;padding:0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="flex:1;min-width:0;font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Repositories</div>
+  </div>
+
+  <div style="padding:8px 16px 0">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="flex:1;height:48px;border-radius:24px;background:#151516;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;font:400 15px/20px 'Noto Sans',sans-serif;color:#9A9690">https://</div>
+      <div style="height:48px;padding:0 20px;border-radius:24px;background:#4169A1;display:flex;align-items:center;font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF;flex:none">Add</div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 4.2l8.4 15.2H3.6L12 4.2z"></path><path d="M12 10v4"></path><path d="M12 16.6h.01"></path></svg>
+      <div style="flex:1;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">A repository is someone else's list of extensions. Anything you install from it runs inside Animato and can see the pages it loads. Add only repositories you trust.</div>
+    </div>
+  </div>
+
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px;margin-top:8px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Added</span></div>
+
+  <div style="display:flex;align-items:center;gap:12px;height:72px;padding:0 8px 0 16px">
+    <div style="width:40px;height:40px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h9"></path></svg></div>
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">keiyoushi.github.io</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums">412 manga extensions · checked 6m ago</div>
+    </div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;height:72px;padding:0 8px 0 16px">
+    <div style="width:40px;height:40px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h16M4 12h16M4 16.5h9"></path></svg></div>
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">my-own-list.pages.dev</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums">6 anime extensions · checked 1d ago</div>
+    </div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+  </div>
+
+  <div style="height:1px;background:#FFFFFF14;margin:8px 16px 0"></div>
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Official portals worth knowing</span></div>
+
+  <sc-for list="{{ portals }}" as="item" hint-placeholder-count="3">
+    <div style="display:flex;align-items:center;gap:12px;height:64px;padding:0 16px">
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.name }}</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.sub }}</div>
+      </div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M14 5h5v5M19 5l-8.5 8.5M18 14v4.5A1.5 1.5 0 0 1 16.5 20H6A1.5 1.5 0 0 1 4.5 18.5V8A1.5 1.5 0 0 1 6 6.5h4.5"></path></svg>
+    </div>
+  </sc-for>
+
+  <div style="padding:12px 16px 0"><div style="font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">Animato bundles nothing and pre-fills nothing. These are names, not installs.</div></div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const M = '#9A9690', S = '#22C55E', E = '#EF4444', W = '#F59E0B';
+    return {
+      showNotes: this.props.showNotes ?? true,
+      accounts: [
+        { initial: 'A', name: 'AniList', state: 'Synced 4m ago · 95 titles', stateColor: S, connected: true },
+        { initial: 'M', name: 'MyAnimeList', state: '12 titles queued', stateColor: W, connected: true },
+        { initial: 'K', name: 'Kitsu', state: 'Failed · token expired', stateColor: E, connected: true },
+        { initial: 'S', name: 'Shikimori', state: 'Not signed in', stateColor: M, disconnected: true },
+        { initial: 'B', name: 'Bangumi', state: 'Not signed in', stateColor: M, disconnected: true },
+        { initial: 'S', name: 'Simkl', state: 'Not signed in', stateColor: M, disconnected: true },
+        { initial: 'J', name: 'Jellyfin', state: 'Not signed in', stateColor: M, disconnected: true }
+      ],
+      activity: [
+        { t: 'Frieren · Ep. 12 marked watched', time: '4m ago' },
+        { t: 'Solo Leveling · Ch. 254 marked read', time: '2h ago' },
+        { t: 'Kingdom moved to Finished', time: 'yesterday' },
+        { t: 'AniList list imported · 95 titles', time: '12 Aug' }
+      ],
+      portals: [
+        { name: 'MANGA Plus', sub: 'Shueisha · free chapters' },
+        { name: 'Manga Arabia', sub: 'Arabic · licensed' },
+        { name: 'Jellyfin', sub: 'Your own server' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./react.js"></script><script src="./react-dom.js"></script><script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
+</style></helmet>
+
+<div style="padding:40px 44px 64px;display:flex;flex-direction:column;gap:28px;align-items:flex-start">
+
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1240px;background:#151516;border-radius:12px;padding:24px 28px;box-shadow:inset 0 0 0 1px #FFFFFF14">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<span style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#08080C;background:#9A9690;border-radius:4px;padding:4px 7px">SCREEN 7</span>
+<span style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Settings root — ten entries · search · Reading and Watching as siblings</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Decisions</div>
+<div>· <span style="color:#FFFFFF">No section headers.</span> Ten rows in the UX.md order, one flat list — grouping ten items into three buckets adds a second thing to read before the thing you came for. The order already is the grouping: look → shelf → the two media → where content comes from → what it costs → the outside world → your data → the machine.</div>
+<div>· <span style="color:#FFFFFF">Reading and Watching sit adjacent, identical in height, weight and icon treatment.</span> That symmetry is the entire point of the screen: neither medium is a sub-folder of the other. If one ever gains a badge or a count the other must too.</div>
+<div>· Rows are 72 dp — 24 dp icon, title 15 Medium, subtitle 13 Muted saying what is inside, no chevron. A chevron on every row of a ten-row list is 10 identical arrows carrying no information; the whole row is the target.</div>
+<div>· <span style="color:#FFFFFF">Search is a field, not an icon</span> — 48 dp, Surface, full-round, directly under the title. UX.md says settings search spans everything; a field that is visible teaches that, a magnifier hides it.</div>
+<div>· No blue on this screen at all — nothing here is active or in progress. <a href="#11b">11b</a> spends one, on the switch that is on. That is the honest reading of the blue rule: a settings list is inventory, not state.</div>
+</div>
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Notes for you</div>
+<div>· All ten subtitles name real contents, so this doubles as the migration map: <span style="color:#FFFFFF">Watching</span> explicitly lists player, gestures, subtitles, decoders and external player — the settings that are buried inside today's “Anime” bucket. The word Anime as a settings bucket does not appear anywhere on this screen.</div>
+<div>· <a href="#11b">11b</a> is one level down — <span style="color:#FFFFFF">Watching</span> — included because the sibling claim is only provable if the child screens look alike. It is the M3 switch row, 72 dp, and the section labels there <em>are</em> present, because a leaf screen is a list of controls rather than destinations.</div>
+<div>· Advanced · About is one row, not two: version, licences and logs are the same errand — the row people hit when something is wrong or a reviewer asks what version they have.</div>
+<div style="margin-top:6px;color:#F59E0B">Two values not in design.md: the 72 dp settings row and the 48 dp search field. Both follow from the 4 dp grid and the 48 dp target minimum, but say the word and I will write them in.</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 11a SETTINGS ROOT ============ -->
+<div id="11a" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">11a</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Root · ten entries, no blue, no chevrons</span></div>
+<div data-screen-label="Settings root" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:56px;display:flex;align-items:center;padding:0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="flex:1;min-width:0;font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Settings</div>
+  </div>
+
+  <div style="padding:4px 16px 12px">
+    <div style="height:48px;border-radius:24px;background:#151516;display:flex;align-items:center;gap:10px;padding:0 16px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg>
+      <span style="font:400 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Search settings</span>
+    </div>
+  </div>
+
+  <sc-for list="{{ entries }}" as="item" hint-placeholder-count="10">
+    <div style="display:flex;align-items:flex-start;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+      <div style="width:24px;height:24px;flex:none;display:flex;align-items:center;justify-content:center">{{ item.icon }}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.name }}</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.sub }}</div>
+      </div>
+    </div>
+  </sc-for>
+</div>
+</div>
+
+<!-- ============ 11b WATCHING (one level down) ============ -->
+<div id="11b" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">11b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Watching · the sibling proof, one level down</span></div>
+<div data-screen-label="Settings watching" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:56px;display:flex;align-items:center;padding:0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="flex:1;min-width:0;font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Watching</div>
+  </div>
+
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Playback</span></div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Remember quality</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Reuse the last quality you picked</div>
+    </div>
+    <div style="width:52px;height:32px;border-radius:16px;background:#4169A1;display:flex;align-items:center;justify-content:flex-end;padding:0 4px;box-sizing:border-box;flex:none"><div style="width:24px;height:24px;border-radius:12px;background:#FFFFFF"></div></div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Skip intro automatically</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">When the source marks an intro</div>
+    </div>
+    <div style="width:52px;height:32px;border-radius:16px;background:#FFFFFF14;display:flex;align-items:center;padding:0 4px;box-sizing:border-box;flex:none"><div style="width:24px;height:24px;border-radius:12px;background:#9A9690"></div></div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Play on…</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">External player · VLC</div>
+    </div>
+  </div>
+
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Gestures</span></div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Double-tap to seek</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">10 seconds</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Hold to speed up</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">2×</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Vertical swipe</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Brightness left · volume right</div>
+    </div>
+  </div>
+
+  <div style="height:40px;display:flex;align-items:flex-end;padding:0 16px 6px"><span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Subtitles &amp; audio</span></div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Preferred subtitle language</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">العربية · English</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Subtitle appearance</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Size, colour, background</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;height:72px;padding:16px 16px 0;box-sizing:border-box">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Decoder</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Hardware, fall back to software</div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const e = React.createElement;
+    const ico = (children) => e('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: '#FFFFFF', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }, children);
+    const p = (d, i) => e('path', { d, key: i || 'p' });
+    const entries = [
+      { name: 'Appearance', sub: 'Theme, app language, date and time formats',
+        icon: ico([p('M12 3.4a8.6 8.6 0 1 0 0 17.2c1.1 0 1.7-.7 1.7-1.6 0-.9-.6-1.5-1.5-1.5h-.8a2 2 0 0 1 0-4h3.2a4.6 4.6 0 0 0 4.6-4.6c0-3.1-3.2-5.5-7.2-5.5z'), e('circle', { cx: 8, cy: 10, r: 1.1, fill: '#FFFFFF', stroke: 'none', key: 'c' })] ) },
+      { name: 'Library', sub: 'Categories, auto-update, shelf options for both halves',
+        icon: ico([e('rect', { x: 8, y: 3.5, width: 12, height: 13.5, rx: 2, key: 'r' }), p('M4.5 7.2v11.3A2 2 0 0 0 6.5 20.5H17', 'a')]) },
+      { name: 'Reading', sub: 'Reader layout, page transitions, tap zones, reading direction',
+        icon: ico([p('M12 6.4v13M12 6.4C10.4 5 8.2 4.4 4.6 4.4v13c3.6 0 5.8.6 7.4 2M12 6.4c1.6-1.4 3.8-2 7.4-2v13c-3.6 0-5.8.6-7.4 2')]) },
+      { name: 'Watching', sub: 'Player, gestures, subtitles, decoders, external player',
+        icon: ico([e('rect', { x: 3.4, y: 5, width: 17.2, height: 14, rx: 2.4, key: 'r' }), p('M10.4 9.4l4.6 2.6-4.6 2.6z', 'a')]) },
+      { name: 'Sources', sub: 'Browse options, repositories, NSFW, unblock a source',
+        icon: ico([e('circle', { cx: 12, cy: 12, r: 8.6, key: 'c' }), p('M3.6 12h16.8M12 3.4c2.2 2.3 3.4 5.4 3.4 8.6S14.2 18.3 12 20.6c-2.2-2.3-3.4-5.4-3.4-8.6S9.8 5.7 12 3.4z', 'a')]) },
+      { name: 'Downloads & storage', sub: 'Download rules, auto-delete, orphan cleanup, storage usage',
+        icon: ico([p('M12 4v10M8 10.5l4 4 4-4M5 19h14')]) },
+      { name: 'Tracking', sub: 'AniList, MAL, Kitsu and sync policy',
+        icon: ico([p('M4.6 8.2A8.4 8.4 0 0 1 19 6.4M19.4 15.8A8.4 8.4 0 0 1 5 17.6'), p('M4.4 4.6v3.6h3.6M19.6 19.4v-3.6H16', 'a')]) },
+      { name: 'Backup & data', sub: 'Backup, restore, schedule, import from Aniyomi',
+        icon: ico([e('rect', { x: 3.6, y: 4.6, width: 16.8, height: 5, rx: 1.6, key: 'r' }), e('rect', { x: 3.6, y: 14.4, width: 16.8, height: 5, rx: 1.6, key: 'r2' }), p('M7.2 7.1h.01M7.2 16.9h.01', 'a')]) },
+      { name: 'Privacy & security', sub: 'App lock, secure screen, incognito mode',
+        icon: ico([e('rect', { x: 4.6, y: 10.4, width: 14.8, height: 9.6, rx: 2, key: 'r' }), p('M8.2 10.4V7.6a3.8 3.8 0 0 1 7.6 0v2.8', 'a')]) },
+      { name: 'Advanced · About', sub: 'Logs, battery, network · version 1.0.0, licences',
+        icon: ico([e('circle', { cx: 12, cy: 12, r: 8.6, key: 'c' }), p('M12 10.6v6.2', 'a'), e('circle', { cx: 12, cy: 7.6, r: 1.1, fill: '#FFFFFF', stroke: 'none', key: 'c2' })]) }
+    ];
+    return { showNotes: this.props.showNotes ?? true, entries };
+  }
+}
+</script>
+</body>
+</html>

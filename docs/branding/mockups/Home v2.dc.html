@@ -27,7 +27,7 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
 <div>
 <div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">What changed and why</div>
-<div>· <span style="color:#FFFFFF">The lens left the canvas and became a top-bar icon</span>, and the icon is the state: aperture = All, play = Anime, book = Manga. Filtered is an active state, so Anime/Manga render the glyph blue; All stays white. Tap opens a 184 dp menu with a check on the current lens — <a href="#2b">2b</a>.</div>
+<div>· <span style="color:#FFFFFF">The lens is one circle in two states</span> — full outlined circle in White = All; the same circle <span style="color:#FFFFFF">half-shaded and blue</span> = filtered to Anime or Manga. No text label, ever. Choosing All restores the full circle. The menu (<a href="#2b">2b</a>) previews the states it sets: full circle on All, half-shaded on Anime and Manga — muted until chosen, blue once current.</div>
 <div>· <span style="color:#FFFFFF">Your library is gone.</span> Cards, then a hairline strip — neither earned 132 dp for four counts nobody acts on. Home is now the two things a session actually needs: what you were in the middle of, and what arrived since. The counts belong on Library, where the numbers are the content. All four stat rows now sit above the fold in its place.<br>· Killing the 56 dp chip row paid for bigger covers: <span style="color:#FFFFFF">148 × 222</span> (2:3, r12) instead of 112 × 168. Rail geometry is 16 + 148 + 12 + 148 = 324, so two cards sit whole and the third is a <span style="color:#FFFFFF">57 dp sliver</span> starting at 336 — and the sliver deliberately carries no text overlay, because a partial card would chop its own title mid-word. Three whole cards is only possible at ≤ 112 dp; I chose the bigger cover.</div>
 <div>· Continue cards now carry title + <span style="color:#FFFFFF">Ch. 254 · 2h ago</span> on the cover over an ink scrim (brand sheet), progress flush to the bottom edge. That removes the 40 dp text stack under each card, so three sections plus three update rows sit above the fold instead of two.</div>
 <div>· Update rows put the timestamp on the trailing edge (brand sheet), widening the title column from 200 to 236 dp.</div>
@@ -35,10 +35,10 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
 </div>
 <div>
 <div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Three things this forces you to decide</div>
-<div>· <span style="color:#F59E0B">design.md §Components says the lens is chips “identical on Home, Library, Discover, Updates, Search”.</span> Your call overrides it — the icon has to replace those chips on all five screens, which leaves Library's category chips as the only chip row there. Confirm and I will carry it through and amend design.md.</div>
+<div>· <span style="color:#22C55E">Signed off.</span> The lens button is now design.md law on all five content screens, the half-shaded circle is the only filtered indicator, and Home's stat chips are gone for good.</div>
 <div>· NEW pill: design.md says Accent <span style="color:#06B6D4">#06B6D4</span>, the brand sheet draws it blue. I kept Accent — blue is spoken for.</div>
 <div>· Brand sheet labels the stat chips Reading / Watching; those are media words, banned in shared UI. I kept In progress / Completed / Downloaded / Tracking.</div>
-<div style="margin-top:6px">Blue count — <a href="#2a">2a</a>: two (progress, Home tab). <a href="#2b">2b</a>: three (lens glyph, progress, Home tab). <a href="#2c">2c</a>: two (Discover button, Home tab).</div>
+<div style="margin-top:6px">Blue count — <a href="#2a">2a</a>: two (progress, Home tab). <a href="#2b">2b</a>: three (the menu's current-state row, progress, Home tab — the trigger stays white while the menu is open). <a href="#2c">2c</a>: two (Discover button, Home tab).</div>
 </div>
 </div>
 </div>
@@ -67,9 +67,8 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
-        <sc-if value="{{ isAll }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4v17.2M20.6 12H3.4"></path></svg></sc-if>
-        <sc-if value="{{ isAnime }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M10.2 8.6l5.6 3.4-5.6 3.4z" fill="#4169A1"></path></svg></sc-if>
-        <sc-if value="{{ isManga }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.4v13M12 6.4C10.4 5 8.2 4.4 4.6 4.4v13c3.6 0 5.8.6 7.4 2M12 6.4c1.6-1.4 3.8-2 7.4-2v13c-3.6 0-5.8.6-7.4 2"></path></svg></sc-if>
+        <sc-if value="{{ isAll }}" hint-placeholder-val="{{ true }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg></sc-if>
+        <sc-if value="{{ isFiltered }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#4169A1" stroke="none"></path></svg></sc-if>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M9.9 3.3h4.2l.45 2.35 1.6.93 2.2-.9 2.1 3.64-1.75 1.6v1.86l1.75 1.6-2.1 3.64-2.2-.9-1.6.93-.45 2.35H9.9l-.45-2.35-1.6-.93-2.2.9-2.1-3.64 1.75-1.6v-1.86L3.55 9.32l2.1-3.64 2.2.9 1.6-.93z" stroke-linejoin="round"></path></svg>
@@ -227,7 +226,7 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:24px;background:#151516">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4v17.2M20.6 12H3.4"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M9.9 3.3h4.2l.45 2.35 1.6.93 2.2-.9 2.1 3.64-1.75 1.6v1.86l1.75 1.6-2.1 3.64-2.2-.9-1.6.93-.45 2.35H9.9l-.45-2.35-1.6-.93-2.2.9-2.1-3.64 1.75-1.6v-1.86L3.55 9.32l2.1-3.64 2.2.9 1.6-.93z" stroke-linejoin="round"></path></svg>
@@ -340,16 +339,16 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
 
   <div style="position:absolute;top:78px;right:56px;width:184px;background:#151516;border-radius:12px;padding:8px 0;box-shadow:inset 0 0 0 1px #FFFFFF14, 0 8px 24px rgba(8,8,12,.6)">
     <div style="height:48px;display:flex;align-items:center;gap:12px;padding:0 14px">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4v17.2M20.6 12H3.4"></path></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg>
       <span style="flex:1;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">All</span>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
     </div>
     <div style="height:48px;display:flex;align-items:center;gap:12px;padding:0 14px">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M10.2 8.6l5.6 3.4-5.6 3.4z"></path></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#9A9690" stroke="none"></path></svg>
       <span style="flex:1;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Anime</span>
     </div>
     <div style="height:48px;display:flex;align-items:center;gap:12px;padding:0 14px">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.4v13M12 6.4C10.4 5 8.2 4.4 4.6 4.4v13c3.6 0 5.8.6 7.4 2M12 6.4c1.6-1.4 3.8-2 7.4-2v13c-3.6 0-5.8.6-7.4 2"></path></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2z" fill="#9A9690" stroke="none"></path></svg>
       <span style="flex:1;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Manga</span>
     </div>
     <div style="height:1px;background:#FFFFFF14;margin:8px 0"></div>
@@ -402,7 +401,7 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4v17.2M20.6 12H3.4"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M9.9 3.3h4.2l.45 2.35 1.6.93 2.2-.9 2.1 3.64-1.75 1.6v1.86l1.75 1.6-2.1 3.64-2.2-.9-1.6.93-.45 2.35H9.9l-.45-2.35-1.6-.93-2.2.9-2.1-3.64 1.75-1.6v-1.86L3.55 9.32l2.1-3.64 2.2.9 1.6-.93z" stroke-linejoin="round"></path></svg>
@@ -475,7 +474,7 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" style="transform:scaleX(-1)"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4v17.2M20.6 12H3.4"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M9.9 3.3h4.2l.45 2.35 1.6.93 2.2-.9 2.1 3.64-1.75 1.6v1.86l1.75 1.6-2.1 3.64-2.2-.9-1.6.93-.45 2.35H9.9l-.45-2.35-1.6-.93-2.2.9-2.1-3.64 1.75-1.6v-1.86L3.55 9.32l2.1-3.64 2.2.9 1.6-.93z" stroke-linejoin="round"></path></svg>
@@ -611,8 +610,7 @@ class Component extends DCLogic {
       showNotes: this.props.showNotes ?? true,
       showTypeChips: lens === 'All',
       isAll: lens === 'All',
-      isAnime: lens === 'Anime',
-      isManga: lens === 'Manga'
+      isFiltered: lens !== 'All'
     };
   }
 }

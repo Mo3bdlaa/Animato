@@ -10,7 +10,7 @@
 <helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
 a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
@@ -62,7 +62,7 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
     <span style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Updates</span>
     <div style="display:flex;align-items:center">
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4v17.2M20.6 12H3.4"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path></svg>
@@ -143,6 +143,104 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
 </div>
 </div>
 
+<div id="5d" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">5d</span><span style="font:400 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">RTL Arabic · mirrored, same tokens</span></div>
+<div data-screen-label="Updates feed RTL" dir="rtl" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 8px">
+    <span style="font:700 24px/30px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF">التحديثات</span>
+    <div style="display:flex;align-items:center">
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg>
+      </div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(24,0) scale(-1,1)"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path></g></svg>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:32px;display:flex;align-items:center;padding:0 16px;background:#08080C"><span style="font:500 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">اليوم</span></div>
+  <sc-for list="{{ todayAr }}" as="item" hint-placeholder-count="4">
+    <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 16px">
+      <div style="width:48px;height:48px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.t }}</div>
+        <div style="font:400 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.c }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex:none">
+        <span style="font:400 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">{{ item.time }}</span>
+        <sc-if value="{{ item.isNew }}"><span style="height:20px;padding:0 7px;border-radius:10px;background:#06B6D4;display:flex;align-items:center;font:600 11px/1 'Noto Sans','Noto Sans Arabic',sans-serif;color:#08080C">جديد</span></sc-if>
+        <sc-if value="{{ item.dl }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v10M8 10.5l4 4 4-4M5 19h14"></path></svg></span></sc-if>
+        <sc-if value="{{ item.done }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></sc-if>
+      </div>
+    </div>
+  </sc-for>
+
+  <div style="height:32px;display:flex;align-items:center;padding:0 16px;background:#08080C"><span style="font:500 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">أمس</span></div>
+  <sc-for list="{{ yesterdayAr }}" as="item" hint-placeholder-count="3">
+    <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 16px">
+      <div style="width:48px;height:48px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.t }}</div>
+        <div style="font:400 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.c }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex:none">
+        <span style="font:400 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">{{ item.time }}</span>
+        <sc-if value="{{ item.dl }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v10M8 10.5l4 4 4-4M5 19h14"></path></svg></span></sc-if>
+        <sc-if value="{{ item.done }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></sc-if>
+      </div>
+    </div>
+  </sc-for>
+
+  <div style="height:32px;display:flex;align-items:center;padding:0 16px;background:#08080C"><span style="font:500 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">الثلاثاء 12 أغسطس</span></div>
+  <sc-for list="{{ earlierAr }}" as="item" hint-placeholder-count="3">
+    <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 16px">
+      <div style="width:48px;height:48px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.t }}</div>
+        <div style="font:400 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.c }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex:none">
+        <span style="font:400 13px/18px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">{{ item.time }}</span>
+        <sc-if value="{{ item.done }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></sc-if>
+      </div>
+    </div>
+  </sc-for>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:#151516;box-shadow:inset 0 1px 0 0 #FFFFFF14;display:flex;align-items:center">
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3.9L3.8 10.5V20a1 1 0 0 0 1 1h4.4v-6h5.6v6h4.4a1 1 0 0 0 1-1v-9.5L12 3.9z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">الرئيسية</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><g transform="translate(24,0) scale(-1,1)"><rect x="8" y="3" width="12.5" height="14" rx="2"></rect><path d="M4.5 7v11.5A2 2 0 0 0 6.5 20.5H17"></path></g></svg>
+      <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">المكتبة</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="8.8"></circle><path d="M15.4 8.6l-2.2 4.6-4.6 2.2 2.2-4.6 4.6-2.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">استكشاف</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M12 3.6A8.4 8.4 0 1 0 20.4 12h-1.8a6.6 6.6 0 1 1-6.6-6.6V3.6z"></path><path d="M20.6 3.4v3.2h-3.2z"></path><path d="M11.1 7.8h1.8v4.7l3 1.8-.9 1.5-3.9-2.3z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#4169A1">التحديثات</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6v10.2M7.8 10l4.2 4.2 4.2-4.2M4.6 19.4h14.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans','Noto Sans Arabic',sans-serif;color:#9A9690">التنزيلات</span>
+    </div>
+  </div>
+</div>
+</div>
+
 <!-- ============ 5b SWIPE ============ -->
 <div id="5b" style="display:flex;flex-direction:column;gap:10px">
 <div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">5b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Swipe affordances · leading Opened, trailing Download</span></div>
@@ -161,7 +259,7 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
     <span style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Updates</span>
     <div style="display:flex;align-items:center">
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4v17.2M20.6 12H3.4"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path></svg>
@@ -261,7 +359,7 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
     <span style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Updates</span>
     <div style="display:flex;align-items:center">
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4v17.2M20.6 12H3.4"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><circle cx="12" cy="12" r="8.6"></circle></svg>
       </div>
       <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path></svg>
@@ -318,7 +416,7 @@ a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
 <script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
 class Component extends DCLogic {
   renderVals() {
-    return {
+    const V = {
       showNotes: this.props.showNotes ?? true,
       today: [
         { t: 'One Piece', c: 'Episode 1123', time: '2m ago', isNew: true },
@@ -343,6 +441,26 @@ class Component extends DCLogic {
         { t: 'Kingdom', c: 'Chapter 801', time: '7h ago', done: true }
       ]
     };
+
+    const AR_FIXED = { '2m ago':'قبل دقيقتين','18m ago':'قبل 18 دقيقة','1h ago':'قبل ساعة','3h ago':'قبل 3 ساعات','5h ago':'قبل 5 ساعات','7h ago':'قبل 7 ساعات','yesterday':'أمس','Today':'اليوم' };
+    const arS = (s) => {
+      if (AR_FIXED[s]) return AR_FIXED[s];
+      return s
+        .split('Chapter ').join('الفصل ').split('Episode ').join('الحلقة ')
+        .split('Ch. ').join('الفصل ').split('Ep. ').join('الحلقة ')
+        .split(' MB').join(' ميغابايت').split(' GB').join(' غيغابايت')
+        .split('Manga').join('مانجا').split('Anime').join('أنمي')
+        .split(' ago').join('');
+    };
+    const arList = (l) => l.map((o) => {
+      const n = Object.assign({}, o);
+      Object.keys(n).forEach((k) => { if (k !== 't' && typeof n[k] === 'string') n[k] = arS(n[k]); });
+      return n;
+    });
+    V.todayAr = arList(V.today);
+    V.yesterdayAr = arList(V.yesterday);
+    V.earlierAr = arList(V.earlier);
+    return V;
   }
 }
 </script>
