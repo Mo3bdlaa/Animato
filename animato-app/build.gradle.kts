@@ -77,17 +77,22 @@ android {
      * without this. Splitting brings each one to roughly a quarter of that.
      *
      * **No universal APK.** It was 361 MB, and it was built, zipaligned, signed and then deleted on
-     * every single release — the collect step publishes the four splits and nothing else. That is
-     * nearly half the packaging work in a release doing nothing at all. The four splits cover every
-     * Android device there is, and the one case a universal APK answers — not knowing the
-     * architecture up front — does not arise when the download page can ask.
+     * every single release — the collect step publishes the splits and nothing else. That is nearly
+     * half the packaging work in a release doing nothing at all. The one case a universal APK
+     * answers — not knowing the architecture up front — does not arise when the download page can
+     * ask.
+     *
+     * **No x86 either.** Those two builds exist for emulators, cost 222 MB to produce and sign, and
+     * nobody was going to install one: an emulator is a way to test a phone app, and the phone is
+     * right there. Every physical Android device is ARM. If a desktop build ever happens it will not
+     * be an x86 APK — see ROADMAP.md.
      */
     splits {
         abi {
             isEnable = true
             isUniversalApk = false
             reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            include("armeabi-v7a", "arm64-v8a")
         }
     }
 

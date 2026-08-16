@@ -141,14 +141,15 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: '35.0.1'
 
-      # The four splits cover every Android device there is. There is no universal APK any more —
-      # it was 361 MB, built and signed and then deleted right here, which is why it stopped being
-      # built at all. See the splits block in animato-app/build.gradle.kts.
+      # Two APKs, and they cover every physical Android device: they are all ARM. The universal
+      # APK and the two x86 builds used to be produced here too — 583 MB between them, signed and
+      # then either deleted or published for an emulator nobody uses. See the splits block in
+      # animato-app/build.gradle.kts.
       - name: Collect the APKs
         run: |
           set -e
           mkdir -p upload
-          for abi in arm64-v8a armeabi-v7a x86 x86_64; do
+          for abi in arm64-v8a armeabi-v7a; do
             src=$(ls animato-app/build/outputs/apk/release/*-"$abi"-release*-signed.apk 2>/dev/null | head -1)
             if [ -z "$src" ]; then
               echo "::error::No signed APK for $abi. Signing produced:"
@@ -172,7 +173,7 @@ jobs:
             ${{ inputs.notes }}
 
             **Which file:** `arm64-v8a` for any phone from roughly 2017 onward. `armeabi-v7a` if
-            that one refuses to install. `x86_64` is for emulators.
+            that one refuses to install.
 
             **Coming from a debug build?** Uninstall it first. Android rejects an update signed by a
             different certificate, and this one is signed with the release key. Uninstalling loses
