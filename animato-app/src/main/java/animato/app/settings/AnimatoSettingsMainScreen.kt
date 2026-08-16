@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.MaterialTheme
@@ -153,6 +154,15 @@ object AnimatoSettingsMainScreen : Screen() {
             subtitleRes = MR.strings.pref_browse_summary,
             icon = Icons.Outlined.Explore,
             screen = SettingsBrowseScreen,
+        ),
+        // Also not Mihon's, and next to Browse because that is where a source that will not load
+        // sends someone looking. It covers both halves — Cloudflare blocks a *site*, and the anime
+        // screens and the manga screens are not the same screens.
+        Item(
+            titleRes = AYMR.strings.pref_cloudflare_title,
+            subtitleRes = AYMR.strings.pref_cloudflare_summary,
+            icon = Icons.Outlined.Shield,
+            screen = AnimatoCloudflareScreen,
         ),
         Item(
             titleRes = MR.strings.label_data_storage,

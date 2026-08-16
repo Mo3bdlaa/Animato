@@ -7,15 +7,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import animato.ui.network.CloudflareBlock
 import eu.kanade.presentation.browse.anime.components.BrowseAnimeSourceComfortableGrid
 import eu.kanade.presentation.browse.anime.components.BrowseAnimeSourceCompactGrid
 import eu.kanade.presentation.browse.anime.components.BrowseAnimeSourceList
@@ -29,6 +32,7 @@ import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.anime.model.StubAnimeSource
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
@@ -57,8 +61,19 @@ fun BrowseAnimeSourceContent(
     val errorState = animeList.loadState.refresh.takeIf { it is LoadState.Error }
         ?: animeList.loadState.append.takeIf { it is LoadState.Error }
 
+    // Cloudflare's refusal reaches here as a bare IOException carrying a translated message, since
+    // the exception type that means it is private to Mihon. CloudflareBlock says why that is the
+    // only thing left to match on.
+    val isCloudflareBlocked = remember(errorState) {
+        CloudflareBlock.isBlocked(context, (errorState as? LoadState.Error)?.error)
+    }
+
     val getErrorMessage: (LoadState.Error) -> String = { state ->
-        with(context) { state.error.formattedMessage }
+        if (isCloudflareBlocked) {
+            context.stringResource(AYMR.strings.cloudflare_blocked_title)
+        } else {
+            with(context) { state.error.formattedMessage }
+        }
     }
 
     LaunchedEffect(errorState) {
@@ -85,6 +100,30 @@ fun BrowseAnimeSourceContent(
                         stringRes = MR.strings.local_source_help_guide,
                         icon = Icons.AutoMirrored.Outlined.HelpOutline,
                         onClick = onLocalAnimeSourceHelpClick,
+                    ),
+                )
+            } else if (isCloudflareBlocked) {
+                /*
+                 * The same WebView action, said as what it is.
+                 *
+                 * It was already here, third, labelled "Open in WebView", under whatever text the
+                 * exception happened to carry — and it is not a diagnostic tool, it is the fix. The
+                 * check Cloudflare is running wants a tap on a visible box, Mihon tries it in a
+                 * WebView that is never attached to a window, and the only thing that can finish it
+                 * is a person. Opening that screen is the whole repair: it renders with the same
+                 * user agent the app's requests use, and the cookie it earns goes into Android's
+                 * shared store, so every extension and both halves of the library get it at once.
+                 */
+                persistentListOf(
+                    EmptyScreenAction(
+                        stringRes = AYMR.strings.cloudflare_blocked_action,
+                        icon = Icons.Outlined.Shield,
+                        onClick = onWebViewClick,
+                    ),
+                    EmptyScreenAction(
+                        stringRes = MR.strings.action_retry,
+                        icon = Icons.Outlined.Refresh,
+                        onClick = animeList::refresh,
                     ),
                 )
             } else {

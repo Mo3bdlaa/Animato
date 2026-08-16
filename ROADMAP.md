@@ -44,7 +44,7 @@ nothing else matters.
 | | | State |
 | --- | --- | --- |
 | 1 | Automatic hoster failover (#2156) | ✅ **done** |
-| 2 | **Cloudflare — FlareSolverr** (#1909) | ❌ not started — **not blocked**, see below |
+| 2 | **Cloudflare** (#1909) | 🟡 **the on-device half is done**, see below |
 | 3 | **Onboarding that ends with a working store** | ❌ not started |
 | 4 | The `.pb` store format (#2371, #2372) | ✅ **done** |
 
@@ -89,7 +89,43 @@ One caveat to keep honest: `UserAgentInterceptor` only fills the header in when 
 already carry one, so an extension that sets its own user-agent keeps it and its clearance cookie
 will not match. That is a per-extension limit, not a reason the approach fails.
 
-*No decision needed. It is a task.*
+### And what it actually took: nothing new
+
+Chasing FlareSolverr turned out to be chasing the wrong thing twice over. It cannot be a library —
+it is Python driving a *desktop* Chrome, and its value is not its code but its being a different
+machine on a different IP, which is precisely what an app on the phone cannot be. And the free ways
+to host it are the worst ones for the job: Cloudflare distrusts datacenter addresses, so a free VPS
+is challenged harder than a phone on a home connection.
+
+Which leaves the phone — where the two things that decide this are already in our favour. A
+residential IP, and a person holding it who can tap a box.
+
+And the pieces to use them were all present:
+
+- Mihon's `CloudflareInterceptor` tries the challenge in a WebView **that is never attached to a
+  window**. It can pass a challenge that solves itself, and it can never pass one that wants a tap.
+  Thirty seconds, then failure, forever.
+- `WebViewScreen` shows a real, visible WebView — and sets its user agent to
+  `headers["user-agent"] ?: defaultUserAgentProvider()`, the very agent OkHttp will send. Cookies a
+  WebView earns go into Android's process-wide `CookieManager`, which is what `AndroidCookieJar`
+  reads.
+
+So a check passed there is a check passed for every extension, every tracker, and both halves — with
+nothing copied and nothing configured. **The mechanism already worked. Nobody was ever pointed at
+it.** The repair was a bridge, not an engine:
+
+- `CloudflareBlock` recognises the failure. It has to match on the message: Mihon's
+  `CloudflareBypassException` is `private`, so what escapes is a bare `IOException` of the same type
+  a timeout produces. Tested against timeouts, dead hosts, wrapped chains and a self-referential
+  cause.
+- The anime browse error says *Cloudflare is blocking this source* and offers **Pass the check**
+  first, with a shield. The same WebView action was already there — third, labelled "Open in
+  WebView", under whatever text the exception happened to carry.
+- **Settings → Unblock a source** lists every online source, both halves, and opens any of them.
+  That is the part that reaches manga, whose screens are Mihon's and not ours to change.
+
+*Still open: FlareSolverr as an optional extra for anyone who does run one at home, where it beats
+the phone. It writes to the same two places, so it is an addition rather than a rewrite.*
 
 ### 3 — Onboarding
 

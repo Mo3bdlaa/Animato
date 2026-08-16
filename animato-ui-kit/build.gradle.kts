@@ -35,4 +35,7 @@ dependencies {
     implementation(libs.bundles.kotlinx.coroutines)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(animato.kotlinx.immutables)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

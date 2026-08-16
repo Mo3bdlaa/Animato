@@ -489,6 +489,13 @@
     <string name="pref_show_next_episode_airing_time">Show next episode\'s airing time </string>
     <string name="pref_sync_progress_from_tracker">Sync progress from trackers</string>
     <string name="pref_sync_progress_from_tracker_summary">Mark episodes watched when a tracker is further ahead than the library. Off by default: the first sync of a long-tracked anime can mark a great many at once.</string>
+    <string name="pref_cloudflare_title">Unblock a source</string>
+    <string name="pref_cloudflare_summary">Open a site that Cloudflare is refusing, and pass its check yourself</string>
+    <string name="cloudflare_explainer">Some sites put a Cloudflare check in front of themselves. Animato tries to pass it invisibly and cannot when the check wants you to tap a box — nothing invisible can tap anything.\n\nOpen the site below and pass the check. Animato keeps the result and uses it everywhere afterwards, for both anime and manga.</string>
+    <string name="cloudflare_open">Open</string>
+    <string name="cloudflare_no_sources">No sources are installed yet.</string>
+    <string name="cloudflare_blocked_title">Cloudflare is blocking this source</string>
+    <string name="cloudflare_blocked_action">Pass the check</string>
     <string name="pref_backup_flags_summary">What information to include in the backup file</string>
     <string name="pref_anime_storage_usage">Anime Storage usage</string>
     <string name="pref_manga_storage_usage">Manga Storage usage</string>
