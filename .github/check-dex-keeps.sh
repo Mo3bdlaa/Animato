@@ -101,3 +101,33 @@ if [ -n "$missing" ]; then
 fi
 
 echo "OK: all $(wc -l < "$expected" | tr -d ' ') reflectively-reached classes are in the APK."
+
+# Assets are the same problem in a different alphabet: `assets.open("x")` compiles whatever "x" is,
+# and a file that was never carried across a port is only discovered by whoever opens the screen.
+#
+# The player did exactly this. It opens `aniyomi.lua` — the bridge mpv's Lua scripts call back
+# through — and the file lived in Aniyomi's app module, which nothing here inherits. Every build was
+# green and pressing play died in onCreate with FileNotFoundException.
+echo
+echo "Checking assets opened by name…"
+asset_missing=0
+while IFS= read -r asset; do
+    if unzip -l "$APK" "assets/$asset" > /dev/null 2>&1; then
+        echo "  ok: $asset"
+    else
+        echo "  MISSING: $asset"
+        asset_missing=1
+    fi
+done < <(
+    grep -rho 'assets\.open("[^"]*")' --include=*.kt --include=*.java . |
+        sed 's/.*("//; s/")//' |
+        sort -u
+)
+
+if [ "$asset_missing" -ne 0 ]; then
+    echo
+    echo "An asset is opened by name and is not in the APK. Whichever module owns the code that"
+    echo "opens it needs the file under src/main/assets/ — AGP merges a library module's assets"
+    echo "into the application."
+    exit 1
+fi
