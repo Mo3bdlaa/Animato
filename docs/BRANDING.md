@@ -313,3 +313,66 @@ Two things about the keying are easy to get wrong, and both were, on the way to 
 
 All of this is done by **overriding resource names**, never by editing a Mihon file — the
 application module wins resource merging over its library dependencies. See `ARCHITECTURE.md`.
+
+---
+
+## 10. Asset sizes, for when the artwork changes
+
+Everything below is measured from the files in the tree, not from what a script intends. A rebrand
+replaces the source artwork and re-runs two scripts; this table is what to hand a designer so the
+output lands without a second round.
+
+### What to supply
+
+| Give us | Size | Notes |
+| --- | --- | --- |
+| `docs/branding/icon-light.png` | **512×512**, RGB | The mark on its own background. Everything below is generated from it |
+| `docs/branding/icon-dark.png` | **512×512**, RGB | The dark-mode variant of the same mark |
+
+Both are **flat-coloured artwork with their own background**, not transparent cut-outs. The scripts
+remove the background themselves, by frequency rather than by sampling a corner — section 9 says why
+that distinction cost a wasted attempt.
+
+### What gets generated
+
+| Asset | Size | Where | Built by |
+| --- | --- | --- | --- |
+| Launcher foreground | 108 / 162 / 216 / 324 / 432 px square | `drawable-{m,h,xh,xxh,xxx}dpi/animato_icon_foreground.png` | `build-icon.py` |
+| Launcher monochrome | the same five sizes | `…/animato_icon_monochrome.png` | by hand — the script does **not** touch these |
+| TV banner | **320×180**, RGB, opaque | `drawable-xhdpi/animato_tv_banner.png` | `build-tv-banner.py` |
+
+```
+python3 docs/branding/build-icon.py
+python3 docs/branding/build-tv-banner.py
+```
+
+### The rules the numbers come from
+
+- **The launcher canvas is 108dp and the artwork occupies its inner 72dp.** A 72dp square fully
+  contains the 72dp mask circle, so the whole visible area is artwork whatever shape a launcher
+  applies, and the rounding comes from the launcher rather than from a radius baked into the PNG.
+- **The five densities are 1×, 1.5×, 2×, 3× and 4× of 108.** Nothing chooses them; they are what
+  Android asks for.
+- **The banner is one fixed 320×180 tile, opaque, with no density variants.** A TV launcher scales a
+  single image rather than picking per density. It is composited onto the paper colour rather than
+  keyed onto transparency, because unlike the launcher icon there is no second layer behind it to
+  supply a background.
+- **The banner's artwork covers 72% of the tile height**, centred. TV home screens draw a focus
+  border tight against the banner, and artwork reaching the edge collides with it.
+
+### Assets a rebrand also touches, and no script builds
+
+| Asset | Size | Where |
+| --- | --- | --- |
+| Splash logo | **512×512**, RGB, one per theme | `drawable-nodpi/animato_logo.png`, `drawable-night-nodpi/animato_logo.png` |
+| Splash mark | vector | `drawable/ic_mihon_splash.xml` — overrides Mihon's by name |
+| Launch window colour | — | `@color/splash`, and **its `night` variant too**; overriding one configuration leaves the other on Mihon's grey |
+
+### Two failure modes worth remembering
+
+- **A monochrome layer is not a greyscale copy.** Android draws it as a single-colour mask, so
+  anything relying on a colour difference to be legible disappears. It is drawn by hand and is the
+  one asset the icon script deliberately leaves alone.
+- **A resource override replaces one configuration at a time.** Check the built APK with
+  `aapt2 dump resources` rather than assuming: it lists every configuration of a name and shows
+  which one won.
