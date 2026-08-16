@@ -44,8 +44,9 @@ crossed, and is a bug rather than a merge to resolve.
 | --- | --- |
 | Modules | 23 |
 | Our Kotlin | ~77,500 lines — `anime/` 68,300, `animato-app` 5,800, `animato-ui-kit` 3,400 |
-| Our test files | 14 |
+| Our test files | 16 |
 | Migration phases done | 14 of 17 (`ARCHITECTURE.md` has the table) |
+| Screens that are ours | Home, Library, Discover, Updates, Downloads, Search, Sources, Onboarding, Title page, Tracking hub |
 | Alphas published | 9, `v0.1.0-alpha` through `v0.1.0-alpha.10` |
 | Build time | ~16 minutes for a signed release |
 | Shipped ABIs | `arm64-v8a`, `armeabi-v7a` — no universal APK, no x86 |
@@ -77,6 +78,45 @@ genuinely unknown.
 ---
 
 ## What happened in the last session
+
+### The UI session: every screen the app has, rewritten
+
+The owner sent twelve screenshots and one sentence that framed all of it — *I never liked Mihon
+because the interface does not feel good, and there is a lot of room to rethink the UX so someone
+new can use it*. What followed was a design pass, then eleven commits that rebuilt the app's
+surface. The load-bearing decisions, so they are not relitigated:
+
+- **The lens is one global value with one control.** A `contentType` and a `libraryFilter` used to
+  disagree, which is how a screen headed *Anime* came to show manga chapters. Now: one preference,
+  one top-bar button, and the glyph *is* the state — a full circle for All, the same circle
+  half-shaded when narrowed. A filtered app has to look filtered from across the room.
+- **One control per question, and never two in the same shape.** Library's chip row mixed a medium,
+  a state and a derived state. Now the lens asks which half, the chips ask which shelf, and a sheet
+  asks what state a title is in — because a title can be several states at once and a chip row
+  promises one.
+- **Every destination merged both halves.** Home, Library, Discover, Updates, Downloads, Search,
+  Sources & extensions and the title page were all per-half and are now one screen each. The title
+  page was the last one, and the biggest: it owns the chrome and hands the deep tools — scanlator
+  filters, seasons, notes, migration — back to the original screen through *All options*, because
+  those are six thousand working lines that have nothing to do with how a page looks.
+- **The one exception to the lens rule** is the type chip on *Sources & extensions*, which shows on
+  every row regardless. That screen exists to tell anime and manga extensions apart, so the answer
+  cannot be a thing that sometimes disappears.
+- **Discover works with zero sources**, on AniList's public API. A fresh install used to open on an
+  empty screen and a sentence explaining the emptiness.
+
+Three things the design asks for are deliberately absent, each because the data is not there: the
+download failure reason in words (neither half stores one), *See all* on Discover's rails (it would
+link to a screen that does not exist), and the Categories card in the library quick sheet (the
+picker is per-half and there is no shared one).
+
+### The reader cannot be restyled, and that is a rule rather than a gap
+
+Its chrome is wrapped in `TachiyomiTheme` by Mihon's own `setComposeContent`, inside Mihon's
+`ReaderActivity`. Changing it means editing a Mihon file — the rule that keeps merges working — or
+writing a reader, which means the viewer stack, zoom, page transitions and the webtoon path. The
+same sweep found the **player** drawing itself in Mihon's colours too, and that one *is* our file
+and was a one-line fix.
 
 ### The organisation that was made and then not used
 
@@ -143,11 +183,13 @@ Cosmetic. That view sorts by tag as text, and `"1" < "7"`. Our own updater parse
    the build is up to date rather than reporting a 404. That row reports the real outcome, so it is
    the diagnostic to reach for first — and it is the only part of the updater that has never been
    seen working rather than merely tested.
-2. **`#21`, onboarding, is blocked on a policy answer rather than on code**: which extension store
-   to offer, and whether to offer one at all. `ROADMAP.md` explains why it is the highest-leverage
-   item — today's first run ends in an empty app and a search for an unofficial guide. Worth knowing
-   before deciding: `:anime:source-api` is unchanged from Aniyomi's, so the extension repositories
-   that already exist work here without anything being hosted.
+2. **Put the new UI on a phone.** Eleven commits rebuilt every screen and none of them has been
+   seen on a device. The RTL pass in particular is unverified: the screens were written with
+   mirroring in mind and nobody has looked at one.
+3. **Onboarding shipped and settled the policy question by refusing it.** Official portals are
+   named and nothing else — no install control, no pre-filled repository, nothing bundled. Adding a
+   repository sends you to *Sources & extensions*, which asks which half it serves; a paste field on
+   the onboarding step could not know.
 
 ## Open, unblocked, in rough order of leverage
 
