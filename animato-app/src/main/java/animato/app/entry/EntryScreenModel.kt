@@ -17,18 +17,24 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.domain.source.interactor.UpdateAnimeFromRemote
+import mihon.domain.source.interactor.UpdateMangaFromRemote
+import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.chapter.interactor.GetChapter
 import tachiyomi.domain.chapter.interactor.UpdateChapter
 import tachiyomi.domain.chapter.model.ChapterUpdate
+import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.GetAnimeWithEpisodesAndSeasons
 import tachiyomi.domain.entries.anime.model.AnimeUpdate
 import tachiyomi.domain.entries.anime.model.asAnimeCover
 import tachiyomi.domain.items.episode.interactor.GetEpisode
 import tachiyomi.domain.items.episode.interactor.UpdateEpisode
 import tachiyomi.domain.items.episode.model.EpisodeUpdate
+import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.interactor.GetMangaWithChapters
 import tachiyomi.domain.manga.model.MangaUpdate
 import tachiyomi.domain.manga.model.asMangaCover
@@ -59,6 +65,25 @@ data class EntryItem(
     val downloaded: Boolean,
 )
 
+/**
+ * What asking the source produced, as something to say rather than something to infer.
+ *
+ * A refresh that finds nothing and a refresh that failed both leave the list exactly as it was, so
+ * without this the button is indistinguishable from a button that does nothing — which is what a
+ * device reported about the control that used to sit in its place.
+ */
+@Immutable
+sealed interface RefreshResult {
+    @Immutable
+    data class Found(val count: Int) : RefreshResult
+
+    @Immutable
+    data object UpToDate : RefreshResult
+
+    @Immutable
+    data class Failed(val message: String?) : RefreshResult
+}
+
 @Immutable
 data class EntryState(
     val entryId: Long,
@@ -75,6 +100,9 @@ data class EntryState(
     val inLibrary: Boolean = false,
     val items: List<EntryItem> = emptyList(),
     val trackerCount: Int = 0,
+    val isRefreshing: Boolean = false,
+    /** What the last refresh found, held until the screen shows it once. */
+    val refreshResult: RefreshResult? = null,
 ) {
 
     /** The one the primary button resumes. First unviewed in list order, not lowest number. */
@@ -126,6 +154,10 @@ class EntryScreenModel(
     private val updateEpisode: UpdateEpisode = Injekt.get(),
     private val updateManga: UpdateManga = Injekt.get(),
     private val updateAnime: UpdateAnime = Injekt.get(),
+    private val getManga: GetManga = Injekt.get(),
+    private val getAnime: GetAnime = Injekt.get(),
+    private val updateMangaFromRemote: UpdateMangaFromRemote = Injekt.get(),
+    private val updateAnimeFromRemote: UpdateAnimeFromRemote = Injekt.get(),
     trackRepository: TrackRepository = Injekt.get(),
     animeTrackRepository: AnimeTrackRepository = Injekt.get(),
 ) : ViewModel() {
@@ -268,6 +300,74 @@ class EntryScreenModel(
                     getEpisode.await(item.id)?.let { setSeenStatus.await(viewed, it) }
             }
         }
+    }
+
+    /**
+     * Asks the source whether anything new exists.
+     *
+     * ## Why this had to exist
+     *
+     * The page had no refresh at all. The circular-arrows icon in its place opened the original
+     * screen, which is a different thing entirely — from a device: *"when I press the tracker icon,
+     * expecting it to check whether there is anything new, it opens the old page instead."* The
+     * glyph was right about what it promised and wrong about what it did, so the promise is what
+     * got kept.
+     *
+     * ## Both halves, one interactor each
+     *
+     * `UpdateMangaFromRemote` and `UpdateAnimeFromRemote` are the same paths the library update job
+     * runs, so a manual refresh and an automatic one agree about what counts as new, what happens to
+     * a renamed title, and when a cover is re-fetched. `manualFetch = true` is what distinguishes
+     * them: it re-downloads the cover and ignores the update strategy, because somebody asking by
+     * hand has usually asked *because* the automatic answer looked wrong.
+     *
+     * The result is reported rather than left to be inferred. Nothing new and a source that threw
+     * both leave the list identical, and a button whose success case is indistinguishable from its
+     * failure case is the thing this replaced.
+     */
+    fun refresh() {
+        if (state.value.isRefreshing) return
+        state.update { it.copy(isRefreshing = true, refreshResult = null) }
+
+        viewModelScope.launchIO {
+            val result = when (contentType) {
+                ContentType.MANGA -> getManga.await(entryId)?.let { manga ->
+                    updateMangaFromRemote(
+                        manga = manga,
+                        fetchDetails = true,
+                        fetchChapters = true,
+                        manualFetch = true,
+                    ).map { it.newChapters.size }
+                }
+                ContentType.ANIME -> getAnime.await(entryId)?.let { anime ->
+                    updateAnimeFromRemote.awaitEpisodesUpdate(
+                        anime = anime,
+                        fetchDetails = true,
+                        fetchEpisodes = true,
+                        manualFetch = true,
+                    ).map { it.newEpisodes.size }
+                }
+            }
+
+            state.update {
+                it.copy(
+                    isRefreshing = false,
+                    refreshResult = when {
+                        // The entry vanished from the database while the refresh was in flight,
+                        // which is what removing it from another screen looks like from here.
+                        result == null -> null
+                        result.isFailure -> RefreshResult.Failed(result.exceptionOrNull()?.message)
+                        result.getOrDefault(0) > 0 -> RefreshResult.Found(result.getOrDefault(0))
+                        else -> RefreshResult.UpToDate
+                    },
+                )
+            }
+        }
+    }
+
+    /** Clears the result once the screen has said it, so it is not repeated on every recomposition. */
+    fun refreshResultShown() {
+        state.update { it.copy(refreshResult = null) }
     }
 
     fun toggleBookmark(item: EntryItem) {

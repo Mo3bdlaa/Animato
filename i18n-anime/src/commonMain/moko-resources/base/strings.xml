@@ -773,6 +773,9 @@
     <string name="entry_start">Start · %1$s</string>
     <string name="entry_chapters_count">Chapters · %1$s</string>
     <string name="entry_episodes_count">Episodes · %1$s</string>
+    <string name="entry_tracking">Tracking</string>
+    <string name="entry_up_to_date">Nothing new</string>
+    <string name="entry_refresh_failed">The source did not answer</string>
 
     <!-- Tracking hub -->
     <string name="tracking_sync_all">Sync all</string>

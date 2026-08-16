@@ -690,6 +690,9 @@
     <string name="entry_start">ابدأ · %1$s</string>
     <string name="entry_chapters_count">الفصول · %1$s</string>
     <string name="entry_episodes_count">الحلقات · %1$s</string>
+    <string name="entry_tracking">التتبع</string>
+    <string name="entry_up_to_date">مفيش جديد</string>
+    <string name="entry_refresh_failed">المصدر مردّش</string>
     <string name="tracking_sync_all">زامن الكل</string>
     <string name="tracking_sync_now">زامن دلوقتي</string>
     <string name="tracking_not_signed_in">مش مسجّل دخول</string>

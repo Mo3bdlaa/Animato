@@ -26,15 +26,19 @@ import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,6 +75,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
@@ -114,6 +119,33 @@ class EntryScreen(
         val state by screenModel.state.collectAsStateWithLifecycle()
         var menuOpen by remember { mutableStateOf(false) }
         var showAbout by rememberSaveable { mutableStateOf(false) }
+        val snackbarHostState = remember { SnackbarHostState() }
+
+        // A refresh that found nothing and a refresh that failed both leave the page exactly as it
+        // was, so the outcome has to be said out loud or the button reads as broken.
+        val foundMessage = pluralStringResource(
+            when (contentType) {
+                ContentType.MANGA -> MR.plurals.notification_chapters_generic
+                ContentType.ANIME -> AYMR.plurals.notification_episodes_generic
+            },
+            (state.refreshResult as? RefreshResult.Found)?.count ?: 0,
+            (state.refreshResult as? RefreshResult.Found)?.count ?: 0,
+        )
+        val upToDateMessage = stringResource(AYMR.strings.entry_up_to_date)
+        val failedMessage = stringResource(AYMR.strings.entry_refresh_failed)
+        LaunchedEffect(state.refreshResult) {
+            when (val result = state.refreshResult) {
+                null -> return@LaunchedEffect
+                is RefreshResult.Found -> snackbarHostState.showSnackbar(foundMessage)
+                RefreshResult.UpToDate -> snackbarHostState.showSnackbar(upToDateMessage)
+                // The source's own words when it has any — a 403 and a timeout are different facts
+                // and only the source knows which happened.
+                is RefreshResult.Failed -> snackbarHostState.showSnackbar(
+                    result.message ?: failedMessage,
+                )
+            }
+            screenModel.refreshResultShown()
+        }
 
         val open: (EntryItem) -> Unit = { item ->
             when (contentType) {
@@ -154,6 +186,30 @@ class EntryScreen(
                         }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(
+                                // Here rather than as an icon in the header, where it had no label
+                                // and a glyph that read as refresh. Binding *this* title to a
+                                // tracker is the original screen's dialog, which is where the
+                                // per-title work lives; the hub in Settings is about accounts.
+                                text = { Text(stringResource(AYMR.strings.entry_tracking)) },
+                                trailingIcon = {
+                                    if (state.trackerCount > 0) {
+                                        Text(
+                                            text = state.trackerCount.toString(),
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    menuOpen = false
+                                    navigator.push(
+                                        when (contentType) {
+                                            ContentType.MANGA -> MangaScreen(entryId)
+                                            ContentType.ANIME -> AnimeScreen(entryId)
+                                        },
+                                    )
+                                },
+                            )
+                            DropdownMenuItem(
                                 // Everything this page deliberately does not re-implement is one tap
                                 // away and unchanged.
                                 text = { Text(stringResource(AYMR.strings.entry_all_options)) },
@@ -171,6 +227,7 @@ class EntryScreen(
                     }
                 }
             },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         ) { contentPadding ->
             if (state.isLoading) {
                 LoadingScreen(Modifier.padding(contentPadding))
@@ -185,17 +242,7 @@ class EntryScreen(
                         state = state,
                         onToggleLibrary = screenModel::toggleInLibrary,
                         onResume = { state.nextItem?.let(open) },
-                        // Binding *this* title to a tracker is the original screen's dialog, which
-                        // is where the per-title work lives. The hub is accounts, and is one tap
-                        // from Settings; sending the title page there would be the wrong screen.
-                        onTracking = {
-                            navigator.push(
-                                when (contentType) {
-                                    ContentType.MANGA -> MangaScreen(entryId)
-                                    ContentType.ANIME -> AnimeScreen(entryId)
-                                },
-                            )
-                        },
+                        onRefresh = screenModel::refresh,
                     )
                 }
 
@@ -252,7 +299,7 @@ private fun EntryHeader(
     state: EntryState,
     onToggleLibrary: () -> Unit,
     onResume: () -> Unit,
-    onTracking: () -> Unit,
+    onRefresh: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxWidth().height(BackdropHeight)) {
         AsyncImage(
@@ -375,16 +422,27 @@ private fun EntryHeader(
                 },
             )
         }
-        IconButton(onClick = onTracking) {
-            Icon(
-                imageVector = Icons.Outlined.Sync,
-                contentDescription = stringResource(MR.strings.manga_tracking_tab),
-                tint = if (state.trackerCount > 0) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
+        /*
+         * Circular arrows mean refresh, and for one release they opened the original screen.
+         *
+         * From a device: "when I press the tracker icon, expecting it to check whether there is
+         * anything new, it opens the old page instead." The glyph was telling the truth about what
+         * it looked like and a lie about what it did. So the glyph kept its promise and tracking —
+         * which had no label to say it was tracking — moved into the overflow, where it has a word.
+         */
+        IconButton(onClick = onRefresh, enabled = !state.isRefreshing) {
+            if (state.isRefreshing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(RefreshSpinnerSize),
+                    strokeWidth = RefreshSpinnerStroke,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Refresh,
+                    contentDescription = stringResource(MR.strings.action_webview_refresh),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -512,6 +570,9 @@ private fun ItemRow(
 /** Chapter and episode numbers are doubles; whole ones should not read as `12.0`. */
 private fun formatNumber(number: Double): String =
     if (number % 1.0 == 0.0) number.toInt().toString() else number.toString()
+
+private val RefreshSpinnerSize = 20.dp
+private val RefreshSpinnerStroke = 2.dp
 
 private const val SUBDUED_ALPHA = 0.75f
 private const val PILL_ALPHA = 0.18f
