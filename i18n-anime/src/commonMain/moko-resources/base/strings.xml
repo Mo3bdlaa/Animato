@@ -784,4 +784,11 @@
     <string name="tracking_failed">Failed · %1$s titles did not sync</string>
     <string name="tracking_hub_title">Accounts</string>
     <string name="tracking_hub_summary">Every tracker, what it holds, and when it last synced</string>
+
+    <!-- Casting -->
+    <string name="cast_title">Cast to a screen</string>
+    <string name="cast_searching">Looking for receivers on this network…</string>
+    <string name="cast_needs_headers">This source\'s video only loads with headers a receiver cannot send, so it cannot be cast yet.</string>
+    <string name="cast_leave_playing">Leave it playing</string>
+    <string name="cast_stop">Stop</string>
 </resources>

@@ -699,4 +699,9 @@
     <string name="tracking_failed">فشل · %1$s عمل ما اتزامنوش</string>
     <string name="tracking_hub_title">الحسابات</string>
     <string name="tracking_hub_summary">كل متتبّع، وفيه إيه، وآخر مرة اتزامن إمتى</string>
+    <string name="cast_title">البث لشاشة</string>
+    <string name="cast_searching">بندوّر على أجهزة على الشبكة دي…</string>
+    <string name="cast_needs_headers">فيديو المصدر ده مش بيفتح غير بترويسات الجهاز المستقبل مش بيبعتها، فمينفعش يتبث دلوقتي.</string>
+    <string name="cast_leave_playing">سيبه شغال</string>
+    <string name="cast_stop">إيقاف</string>
 </resources>

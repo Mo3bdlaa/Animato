@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.Cast
+import androidx.compose.material.icons.filled.CastConnected
 import androidx.compose.material.icons.filled.HighQuality
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Subtitles
@@ -53,6 +55,10 @@ fun TopRightPlayerControls(
     // video
     onQualityClick: () -> Unit,
     isEpisodeOnline: Boolean?,
+
+    // cast
+    onCastClick: () -> Unit,
+    isCasting: Boolean,
 
     // more
     onMoreClick: () -> Unit,
@@ -92,6 +98,14 @@ fun TopRightPlayerControls(
                 horizontalSpacing = MaterialTheme.padding.mediumSmall,
             )
         }
+        // Filled and connected once a receiver has it, because "am I casting" is the one question
+        // this row has to answer without being tapped.
+        ControlsButton(
+            icon = if (isCasting) Icons.Default.CastConnected else Icons.Default.Cast,
+            onClick = onCastClick,
+            onLongClick = onCastClick,
+            horizontalSpacing = MaterialTheme.padding.mediumSmall,
+        )
         ControlsButton(
             icon = Icons.Default.MoreVert,
             onClick = onMoreClick,

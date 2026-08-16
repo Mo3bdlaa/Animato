@@ -3,6 +3,7 @@ package animato.di
 import android.app.Application
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import animato.anime.player.PlayerEpisodeVideoResolver
+import animato.anime.player.cast.CastController
 import animato.anime.services.download.EpisodeVideoResolver
 import animato.anime.track.AnimeTrackerManager
 import animato.app.discover.MetadataCatalog
@@ -131,6 +132,11 @@ class AnimeAppModule(val app: Application) : InjektModule {
 
         // Discover's public rails. A singleton so the three rails on one screen share a client.
         addSingletonFactory { MetadataCatalog(get()) }
+
+        // One cast session for the app, and deliberately not scoped to the player: casting is the
+        // case where the phone gets put down, so the session has to outlive the activity that
+        // started it.
+        addSingletonFactory { CastController() }
 
         addSingletonFactory { TorrentServerApi(get(), get()) }
         addSingletonFactory { TorrentServerUtils(get(), get()) }

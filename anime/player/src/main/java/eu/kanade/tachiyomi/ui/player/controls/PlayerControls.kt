@@ -56,6 +56,10 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import animato.anime.player.cast.CastController
+import animato.anime.player.cast.CastRequest
+import animato.anime.player.cast.CastSheet
+import animato.anime.player.cast.CastState
 import animato.anime.player.getButtons
 import animato.anime.player.playerRippleConfiguration
 import eu.kanade.tachiyomi.ui.player.Dialogs
@@ -123,6 +127,13 @@ fun PlayerControls(
 
     val playerTimeToDisappear by playerPreferences.playerTimeToDisappear().collectAsState()
     var resetControls by remember { mutableStateOf(true) }
+
+    // Casting lives beside the player rather than inside it: the session has to survive this
+    // activity, because putting the phone down is the entire point of casting.
+    val castController = remember { Injekt.get<CastController>() }
+    val castState by castController.state.collectAsState()
+    val currentVideo by viewModel.currentVideo.collectAsState()
+    var castSheetOpen by remember { mutableStateOf(false) }
 
     val customButtons by viewModel.customButtons.collectAsState()
     val customButton by viewModel.primaryButton.collectAsState()
@@ -475,6 +486,8 @@ fun PlayerControls(
                         onAudioLongClick = { viewModel.showPanel(Panels.AudioDelay) },
                         onQualityClick = { viewModel.showSheet(Sheets.QualityTracks) },
                         isEpisodeOnline = isEpisodeOnline,
+                        onCastClick = { castSheetOpen = true },
+                        isCasting = castState !is CastState.Disconnected && castState !is CastState.Failed,
                         onMoreClick = { viewModel.showSheet(Sheets.More) },
                         onMoreLongClick = { viewModel.showPanel(Panels.VideoFilters) },
                     )
@@ -679,7 +692,41 @@ fun PlayerControls(
         BrightnessOverlay(
             brightness = currentBrightness,
         )
+
+        if (castSheetOpen) {
+            val video = currentVideo
+            CastSheet(
+                controller = castController,
+                request = CastRequest(
+                    url = video?.videoUrl.orEmpty(),
+                    // The receiver picks a decoder from this, so an HLS playlist and an mp4 must not
+                    // be told apart by guessing at one default.
+                    container = containerTypeOf(video?.videoUrl.orEmpty()),
+                    positionSeconds = position.toDouble(),
+                    // Whether the extension pinned headers to the URL is knowable here and nowhere
+                    // later, so the sheet can refuse before a television goes black.
+                    headerBound = video?.headers?.size?.let { it > 0 } == true,
+                ),
+                onDismissRequest = { castSheetOpen = false },
+            )
+        }
     }
+}
+
+/**
+ * The MIME type for a URL, from its extension.
+ *
+ * Crude on purpose. The alternative is a HEAD request to a host that may only answer with the
+ * extension's own headers, which is the thing that makes the video uncastable in the first place —
+ * so guessing from the path is both cheaper and more likely to succeed. Receivers treat this as a
+ * hint and sniff the stream anyway; getting it roughly right is what stops them refusing outright.
+ */
+private fun containerTypeOf(url: String): String = when {
+    url.contains(".m3u8", ignoreCase = true) -> "application/x-mpegurl"
+    url.contains(".mpd", ignoreCase = true) -> "application/dash+xml"
+    url.contains(".webm", ignoreCase = true) -> "video/webm"
+    url.contains(".mkv", ignoreCase = true) -> "video/x-matroska"
+    else -> "video/mp4"
 }
 
 fun <T> playerControlsExitAnimationSpec(): FiniteAnimationSpec<T> = tween(
