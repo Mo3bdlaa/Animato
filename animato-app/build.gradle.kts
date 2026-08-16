@@ -4,6 +4,18 @@ plugins {
     // The other modules we own are format-checked; this one held only DI wiring and was missed.
     // It has source worth checking now, and `spotlessCheck` at the root gates every release.
     alias(mihonx.plugins.spotless)
+
+    /*
+     * The updater's DTOs are @Serializable and this module had no serialization plugin, so nothing
+     * generated a serializer for them. That compiles perfectly — the annotation is just an
+     * annotation — and throws the first time the response is decoded:
+     *
+     *   SerializationException: Serializer for class 'GithubReleaseSummary' is not found.
+     *
+     * Inside the update check's own catch, which is to say silently. Caught by a test that decodes
+     * a real GitHub response rather than a hand-built object.
+     */
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -32,6 +44,25 @@ android {
         versionName = System.getenv("ANIMATO_VERSION_NAME")?.takeIf(String::isNotBlank) ?: "0.1.0"
 
         buildConfigField("String", "ANIMATO_RELEASE_REPO", "\"Mo3bdlaa/Animato\"")
+
+        /*
+         * On, unless a build says otherwise with `-Panimato-no-updater`.
+         *
+         * Ours rather than Mihon's `UPDATER_ENABLED`, which the update check used to read — and
+         * which is `project.hasProperty("enable-updater")`, so it is **false** unless a build passes
+         * that flag. Mihon's release pipeline passes it; ours never did, so `CheckForUpdates`
+         * returned at its first line and the updater shipped in alpha.6 and alpha.7 without ever
+         * having run. It gated a feature off by default and nothing said so.
+         *
+         * The flag itself is worth keeping — F-Droid forbids an app that updates itself, which is
+         * exactly why Mihon has one — but the default belongs the other way round: an updater that
+         * has to be switched on is an updater that is off.
+         */
+        buildConfigField(
+            "boolean",
+            "UPDATER_ENABLED",
+            "${!project.hasProperty("animato-no-updater")}",
+        )
     }
 
     buildFeatures {

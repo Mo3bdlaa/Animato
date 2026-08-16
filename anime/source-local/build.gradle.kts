@@ -1,6 +1,11 @@
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
+
+    // `AnimeDetails` and `EpisodeDetails` are @Serializable and `LocalAnimeSource` decodes both with
+    // `decodeFromStream`. Without this the annotation generates nothing and the decode throws, so a
+    // local anime's details.json and episodes.json were read as failures rather than as metadata.
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {

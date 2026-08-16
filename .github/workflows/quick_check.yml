@@ -54,6 +54,12 @@ jobs:
       - name: Check no class is declared twice
         run: ./.github/check-duplicate-classes.sh
 
+      # @Serializable without the compiler plugin is an annotation that generates nothing: the
+      # module compiles, and the first encode or decode throws. It happened twice — the updater's
+      # GitHub DTOs and the local anime metadata — and both times inside a catch.
+      - name: Check @Serializable modules apply the plugin
+        run: ./.github/check-serialization-plugin.sh
+
       # Injekt resolves by type at runtime, so a dependency nobody registers compiles perfectly and
       # throws when the screen that needs it opens. Eleven of them were found in the anime side at
       # once, having been written, compiled and merged without ever running. The script has the

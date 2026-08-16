@@ -1,0 +1,70 @@
+[
+  {
+    "id": 371236930,
+    "tag_name": "v0.1.0-alpha.7",
+    "name": "Animato v0.1.0-alpha.7",
+    "body": "Alpha build from `ff0fb4efe`.\n\n**This is the first build the in-app updater should offer you by itself.**\n",
+    "html_url": "https://github.com/Mo3bdlaa/Animato/releases/tag/v0.1.0-alpha.7",
+    "published_at": "2026-08-16T05:09:40Z",
+    "prerelease": true,
+    "draft": false,
+    "author": {
+      "login": "github-actions[bot]",
+      "id": 41898282,
+      "type": "Bot",
+      "site_admin": false
+    },
+    "assets": [
+      {
+        "id": 516022569,
+        "name": "animato-v0.1.0-alpha.7-arm64-v8a.apk",
+        "label": "",
+        "state": "uploaded",
+        "content_type": "application/vnd.android.package-archive",
+        "size": 107409537,
+        "download_count": 1,
+        "browser_download_url": "https://github.com/Mo3bdlaa/Animato/releases/download/v0.1.0-alpha.7/animato-v0.1.0-alpha.7-arm64-v8a.apk"
+      },
+      {
+        "id": 516022568,
+        "name": "animato-v0.1.0-alpha.7-armeabi-v7a.apk",
+        "label": "",
+        "state": "uploaded",
+        "size": 94580917,
+        "browser_download_url": "https://github.com/Mo3bdlaa/Animato/releases/download/v0.1.0-alpha.7/animato-v0.1.0-alpha.7-armeabi-v7a.apk"
+      },
+      {
+        "id": 516022567,
+        "name": "animato-v0.1.0-alpha.7-x86.apk",
+        "label": "",
+        "state": "uploaded",
+        "size": 112320485,
+        "browser_download_url": "https://github.com/Mo3bdlaa/Animato/releases/download/v0.1.0-alpha.7/animato-v0.1.0-alpha.7-x86.apk"
+      },
+      {
+        "id": 516022566,
+        "name": "animato-v0.1.0-alpha.7-x86_64.apk",
+        "label": "",
+        "state": "uploaded",
+        "size": 121126963,
+        "browser_download_url": "https://github.com/Mo3bdlaa/Animato/releases/download/v0.1.0-alpha.7/animato-v0.1.0-alpha.7-x86_64.apk"
+      }
+    ]
+  },
+  {
+    "id": 371143132,
+    "tag_name": "v0.1.0-alpha.6",
+    "name": "Animato v0.1.0-alpha.6",
+    "body": "Alpha build from `e5e88cc1c`.\n",
+    "html_url": "https://github.com/Mo3bdlaa/Animato/releases/tag/v0.1.0-alpha.6",
+    "published_at": "2026-08-15T19:57:37Z",
+    "prerelease": true,
+    "draft": false,
+    "assets": [
+      {
+        "name": "animato-v0.1.0-alpha.6-arm64-v8a.apk",
+        "browser_download_url": "https://github.com/Mo3bdlaa/Animato/releases/download/v0.1.0-alpha.6/animato-v0.1.0-alpha.6-arm64-v8a.apk"
+      }
+    ]
+  }
+]

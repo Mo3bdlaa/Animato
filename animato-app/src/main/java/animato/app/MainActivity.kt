@@ -89,7 +89,6 @@ import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
-import eu.kanade.tachiyomi.util.system.updaterEnabled
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -383,7 +382,7 @@ class MainActivity : BaseActivity() {
         val navigator = LocalNavigator.currentOrThrow
 
         LaunchedEffect(Unit) {
-            if (!updaterEnabled) return@LaunchedEffect
+            if (!AnimatoAppUpdateChecker.isEnabled) return@LaunchedEffect
             try {
                 val release = AnimatoAppUpdateChecker().checkForUpdate() ?: return@LaunchedEffect
                 navigator.push(

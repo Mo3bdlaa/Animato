@@ -63,6 +63,15 @@ class AnimatoAppUpdateChecker(
         private const val GITHUB_API = "https://api.github.com"
         private const val PAGE_SIZE = 30
 
+        /**
+         * Whether this build may update itself.
+         *
+         * Ours, not Mihon's `updaterEnabled`. Theirs is `hasProperty("enable-updater")` and is
+         * therefore false unless a build passes that flag — which ours never did, so the check
+         * shipped twice and returned at its first line both times. See the build file.
+         */
+        val isEnabled: Boolean get() = BuildConfig.UPDATER_ENABLED
+
         val RELEASE_REPO: String get() = BuildConfig.ANIMATO_RELEASE_REPO
 
         val RELEASE_URL: String get() = "https://github.com/$RELEASE_REPO/releases/tag/v${BuildConfig.VERSION_NAME}"
