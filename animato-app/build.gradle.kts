@@ -45,12 +45,16 @@ android {
      * native, and carrying all four architectures in one APK costs 342 MB of the 380 MB it came to
      * without this. Splitting brings each one to roughly a quarter of that.
      *
-     * The universal APK is kept for the cases where the architecture is not known up front.
+     * **No universal APK.** It was 361 MB, and it was built, zipaligned, signed and then deleted on
+     * every single release — the collect step publishes the four splits and nothing else. That is
+     * nearly half the packaging work in a release doing nothing at all. The four splits cover every
+     * Android device there is, and the one case a universal APK answers — not knowing the
+     * architecture up front — does not arise when the download page can ask.
      */
     splits {
         abi {
             isEnable = true
-            isUniversalApk = true
+            isUniversalApk = false
             reset()
             include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }

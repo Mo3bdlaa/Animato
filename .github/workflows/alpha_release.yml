@@ -141,9 +141,10 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: '35.0.1'
 
-      # The universal APK is deliberately not published. It is ~400 MB because it carries all four
-      # architectures, and the four splits below already cover every device that exists.
-      - name: Collect the APKs worth publishing
+      # The four splits cover every Android device there is. There is no universal APK any more —
+      # it was 361 MB, built and signed and then deleted right here, which is why it stopped being
+      # built at all. See the splits block in animato-app/build.gradle.kts.
+      - name: Collect the APKs
         run: |
           set -e
           mkdir -p upload
