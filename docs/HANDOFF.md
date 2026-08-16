@@ -166,6 +166,28 @@ Numbers are the tracked task ids.
 And one that costs almost nothing: **long-press to speed up playback**. Among the most requested
 upstream, absent here, and noticed by every user on their first episode.
 
+## Deferred by decision, not blocked
+
+**Trakt.** Investigated and parked — the owner's call, on the grounds that seven trackers already
+ship and none of them is asking for an eighth. Written down so the next session does not re-derive
+it:
+
+- It would be an **anime-only tracker**: Trakt does shows and films, so it follows the Simkl shape
+  — `AnimeOnlyTracker`, five files, roughly 500 lines.
+- **No credentials to inherit.** Aniyomi has no Trakt (checked the donor branch) and neither does
+  Mihon, so unlike Simkl — whose `client_id` and `client_secret` in `SimklApi.kt` are Aniyomi's,
+  carried over with the port — this one needs an app registered at `trakt.tv/oauth/applications`.
+- `AnimeTrackerIds.TRAKT = 103L` is free. The two ids there carry Aniyomi's numbers so imported
+  backups keep their links; Trakt has no such constraint because no backup can contain one.
+- Trakt supports the **device-code flow**, which needs no redirect URI and no manifest entry, and
+  is the only OAuth shape that works on a television remote. That makes it the cleanest tracker
+  here to sign into, not the worst.
+- The real work is not the API. Trakt has **no anime concept**: it numbers episodes inside seasons
+  while anime sources usually number straight through, so `Frieren episode 12` is not necessarily
+  Trakt's `S1E12`. Either read `seasons` and map, or restrict to single-season shows and say so.
+  Progress is also a watch history rather than a number, the same three-request rewrite `SimklApi`
+  already documents.
+
 ## Things that cannot be settled without a device
 
 Listed so they are not repeatedly re-investigated from the code, which has already been done:
