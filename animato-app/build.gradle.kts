@@ -213,6 +213,9 @@ dependencies {
     implementation(projects.domain)
     implementation(projects.data)
     implementation(projects.core.common)
+    // The download folders the orphan sweep walks are UniFiles, which is how both halves' download
+    // providers hand a directory back.
+    implementation(libs.unifile)
 
     implementation(libs.injekt)
     implementation(libs.bundles.sqldelight)

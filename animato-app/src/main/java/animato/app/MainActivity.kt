@@ -50,6 +50,8 @@ import androidx.lifecycle.lifecycleScope
 import animato.anime.backup.create.AnimatoBackupCreateJob
 import animato.anime.services.AnimeConstants
 import animato.anime.services.AnimeNotifications
+import animato.app.downloads.DownloadCleanupPreferences
+import animato.app.downloads.OrphanedDownloadSweeper
 import animato.app.navigation.AnimatoHomeScreen
 import animato.app.navigation.setContentType
 import animato.app.settings.AniyomiImportScreen
@@ -144,6 +146,7 @@ import uy.kohesive.injekt.injectLazy
 class MainActivity : BaseActivity() {
 
     private val libraryPreferences: LibraryPreferences by injectLazy()
+    private val downloadCleanupPreferences: DownloadCleanupPreferences by injectLazy()
     private val preferences: BasePreferences by injectLazy()
 
     private val downloadCache: DownloadCache by injectLazy()
@@ -211,6 +214,28 @@ class MainActivity : BaseActivity() {
             )
                 .onStart { emit(Unit) }
                 .collect { AnimeLibraryUpdateJob.setupTask(this@MainActivity) }
+        }
+
+        /*
+         * Reclaim the disk left behind by entries that have left the library.
+         *
+         * Once per launch rather than on a schedule: the files are not urgent — they are already
+         * doing nothing — and a periodic job that deletes things has to be right about a great deal
+         * more, including what is happening while nobody is watching. Launch is a moment when the
+         * library is settled and a downloader almost certainly is not running, and the sweep checks
+         * for one anyway.
+         *
+         * On IO because it lists directories, and detached from the result because there is nothing
+         * to tell anyone: a sweep that finds nothing is the normal case, and the settings screen is
+         * where someone who wants a number can ask for one.
+         */
+        lifecycleScope.launchIO {
+            if (downloadCleanupPreferences.deleteWhenRemovedFromLibrary().get()) {
+                val result = OrphanedDownloadSweeper().sweep()
+                if (result.total > 0) {
+                    logcat { "Removed ${result.manga} manga and ${result.anime} anime download folders" }
+                }
+            }
         }
 
         // Do not let the launcher create a new activity http://stackoverflow.com/questions/16283079

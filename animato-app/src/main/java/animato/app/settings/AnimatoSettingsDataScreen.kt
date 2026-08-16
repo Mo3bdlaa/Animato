@@ -18,10 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import animato.anime.backup.create.AnimatoBackupCreateJob
 import animato.anime.backup.restore.AniyomiBackupRestoreJob
+import animato.app.downloads.DownloadCleanupPreferences
+import animato.app.downloads.OrphanedDownloadSweeper
 import animato.ui.settings.PreferenceRowHorizontalPadding
 import animato.ui.settings.PreferenceSubcomponentRow
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -35,6 +38,8 @@ import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
@@ -77,16 +82,70 @@ object AnimatoSettingsDataScreen : SearchableSettings {
     @Composable
     override fun getPreferences(): List<Preference> {
         val backupGroupTitle = stringResource(MR.strings.label_backup)
+        val storageGroupTitle = stringResource(MR.strings.pref_storage_usage)
+        val cleanupItems = getCleanupItems()
 
         return SettingsDataScreen.getPreferences()
             .map { preference ->
-                if (preference is Preference.PreferenceGroup && preference.title == backupGroupTitle) {
-                    getBackupGroup()
-                } else {
-                    preference
+                when {
+                    preference !is Preference.PreferenceGroup -> preference
+
+                    preference.title == backupGroupTitle -> getBackupGroup()
+
+                    // Added to Mihon's storage group rather than put in a second group of the same
+                    // name. Theirs shows what is using the disk; this is how some of it is given
+                    // back, and the two belong together.
+                    preference.title == storageGroupTitle ->
+                        preference.copy(preferenceItems = preference.preferenceItems + cleanupItems)
+
+                    else -> preference
                 }
             }
             .plus(getAniyomiImportGroup())
+    }
+
+    /**
+     * Reclaiming the disk that entries leave behind when they leave the library.
+     *
+     * Items rather than a group of their own, and here rather than in either download settings
+     * screen, because this is the one cleanup that applies to both halves: Mihon's download screen
+     * would only reach manga and ours only anime.
+     */
+    @Composable
+    private fun getCleanupItems(): List<Preference.PreferenceItem<out Any, out Any>> {
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val cleanupPreferences = remember { Injekt.get<DownloadCleanupPreferences>() }
+
+        return listOf(
+            Preference.PreferenceItem.SwitchPreference(
+                preference = cleanupPreferences.deleteWhenRemovedFromLibrary(),
+                title = stringResource(AYMR.strings.pref_delete_removed_downloads),
+                subtitle = stringResource(AYMR.strings.pref_delete_removed_downloads_summary),
+            ),
+            // Runs the same sweep the app runs at launch, for someone who has just turned the
+            // setting on and would otherwise have to restart to see it do anything.
+            Preference.PreferenceItem.TextPreference(
+                title = stringResource(AYMR.strings.pref_delete_removed_downloads_now),
+                onClick = {
+                    scope.launchIO {
+                        val result = OrphanedDownloadSweeper().sweep()
+                        withUIContext {
+                            context.toast(
+                                if (result.total == 0) {
+                                    context.stringResource(AYMR.strings.delete_removed_downloads_none)
+                                } else {
+                                    context.stringResource(
+                                        AYMR.strings.delete_removed_downloads_done,
+                                        result.total,
+                                    )
+                                },
+                            )
+                        }
+                    }
+                },
+            ),
+        )
     }
 
     /**
