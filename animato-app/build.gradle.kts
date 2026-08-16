@@ -253,6 +253,10 @@ dependencies {
     implementation(projects.i18nAnime)
     implementation(libs.bundles.coil)
     implementation(animato.kotlinx.immutables)
+    // Discover's metadata rails POST a GraphQL body to AniList, which needs a RequestBody rather
+    // than the query string a GET takes — so okhttp is named here rather than arriving through
+    // Mihon's network helper.
+    implementation(libs.bundles.okhttp)
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)

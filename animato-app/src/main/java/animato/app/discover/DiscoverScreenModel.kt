@@ -3,18 +3,24 @@ package animato.app.discover
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.domain.content.ContentFilter
+import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
 import aniyomi.domain.source.service.AnimeSourcePreferences
 import eu.kanade.domain.entries.anime.model.toDomainAnime
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.source.CatalogueSource
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.domain.manga.model.toDomainManga
@@ -47,24 +53,47 @@ data class DiscoverRail(
     val failedSources: List<String> = emptyList(),
 )
 
+/** One metadata rail, and what it currently holds. */
+@Immutable
+data class MetadataRailState(
+    val rail: MetadataRail,
+    val isLoading: Boolean = true,
+    val items: List<MetadataItem> = emptyList(),
+)
+
 @Immutable
 data class DiscoverState(
+    val lens: ContentFilter = ContentFilter.ALL,
     val hasPinnedSources: Boolean = true,
+    val metadataRails: List<MetadataRailState> = MetadataRail.entries.map { MetadataRailState(it) },
     val popular: DiscoverRail = DiscoverRail(),
     val latest: DiscoverRail = DiscoverRail(),
 )
 
 /**
- * What to watch or read next, asked of the sources the user pinned.
+ * What to watch or read next.
  *
- * `docs/BRANDING.md` asks for a Trending rail. No extension exposes trending — the contract is
- * popular, latest and search, per source — so this is what the data supports: each pinned source's
- * own popular and latest pages, interleaved so no single source fills the rail.
+ * ## Two kinds of rail, and why the top ones do not need a source
  *
- * Every source is asked in parallel and every failure is contained: a source that is down, rate
- * limited or broken contributes nothing and is named, rather than emptying the rail or throwing.
- * That matters more here than anywhere else in the app, because this is the one screen that reaches
- * the network before the user has asked for anything.
+ * The screen used to be nothing but the pinned sources’ own popular and latest pages, which meant a
+ * fresh install — Animato ships with no sources — opened on an empty screen and a sentence
+ * explaining the emptiness. Discover was the screen that most needed to work before you had
+ * committed to anything, and it was the one that worked least.
+ *
+ * So the top of the screen is [MetadataCatalog]: trending, this season and top rated, from public
+ * metadata, on a phone that has never installed an extension. Under them, *Your sources* is the old
+ * behaviour — each pinned source’s popular and latest, interleaved so no single source fills a
+ * rail — and that block is the only part that goes empty.
+ *
+ * ## Both halves at once
+ *
+ * The model reads the lens rather than being constructed for one content type. Under `ALL` every
+ * rail asks both halves and interleaves them, which is the claim the app makes made visible: one
+ * shelf of things, not a manga screen with an anime mode.
+ *
+ * Every request is contained. A source that is down, rate limited or broken contributes nothing and
+ * is named; a metadata rail that fails comes back empty. This is the one screen that reaches the
+ * network before the user has asked for anything, so nothing on it may throw.
  */
 class DiscoverScreenModel(
     private val sourcePreferences: SourcePreferences = Injekt.get(),
@@ -73,39 +102,83 @@ class DiscoverScreenModel(
     private val animeSourceManager: AnimeSourceManager = Injekt.get(),
     private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
-    private val contentType: ContentType,
+    private val metadataCatalog: MetadataCatalog = Injekt.get(),
+    contentPreferences: ContentPreferences = Injekt.get(),
 ) : ViewModel() {
 
     val state: StateFlow<DiscoverState>
-        field = MutableStateFlow<DiscoverState>(DiscoverState())
+        field = MutableStateFlow<DiscoverState>(DiscoverState(lens = contentPreferences.contentFilter.get()))
 
     init {
         viewModelScope.launch {
-            pinnedSourceIds().collectLatest { pinned ->
-                state.value = DiscoverState(hasPinnedSources = pinned.isNotEmpty())
-                if (pinned.isEmpty()) return@collectLatest
+            contentPreferences.contentFilter.changes().collectLatest { lens ->
+                state.value = DiscoverState(lens = lens)
+                loadMetadata(lens)
+                loadSourceRails(lens)
+            }
+        }
+    }
+
+    /**
+     * The three public rails, each loading on its own.
+     *
+     * Separate launches rather than one sequential pass: the rails are independent, and a screen
+     * that waits for the slowest of three before drawing any of them looks broken on a slow
+     * connection when in fact two of the three arrived.
+     */
+    private fun CoroutineScope.loadMetadata(lens: ContentFilter) {
+        MetadataRail.entries.forEach { rail ->
+            launch {
+                val types = buildList {
+                    if (lens.includesAnime) add(ContentType.ANIME)
+                    if (lens.includesManga) add(ContentType.MANGA)
+                }
+                val perType = types.map { type -> async { metadataCatalog.fetch(rail, type) } }.awaitAll()
+                state.value = state.value.copy(
+                    metadataRails = state.value.metadataRails.map { existing ->
+                        if (existing.rail == rail) {
+                            existing.copy(isLoading = false, items = perType.interleaveBy { it.key })
+                        } else {
+                            existing
+                        }
+                    },
+                )
+            }
+        }
+    }
+
+    private fun CoroutineScope.loadSourceRails(lens: ContentFilter) {
+        launch {
+            pinnedSourceIds(lens).collectLatest { pinnedByType ->
+                val anyPinned = pinnedByType.values.any { it.isNotEmpty() }
+                state.value = state.value.copy(hasPinnedSources = anyPinned)
+                if (!anyPinned) return@collectLatest
 
                 launch {
-                    val rail = load(pinned, latest = false)
-                    state.value = state.value.copy(popular = rail)
+                    state.value = state.value.copy(popular = load(pinnedByType, latest = false))
                 }
                 launch {
-                    val rail = load(pinned, latest = true)
-                    state.value = state.value.copy(latest = rail)
+                    state.value = state.value.copy(latest = load(pinnedByType, latest = true))
                 }
             }
         }
     }
 
-    private fun pinnedSourceIds() = when (contentType) {
-        ContentType.MANGA -> sourcePreferences.pinnedSources.changes()
-        ContentType.ANIME -> animeSourcePreferences.pinnedAnimeSources.changes()
+    /** The pinned sources of each half the lens admits, as one flow that emits when either does. */
+    private fun pinnedSourceIds(lens: ContentFilter): Flow<Map<ContentType, Set<String>>> = combine(
+        if (lens.includesManga) sourcePreferences.pinnedSources.changes() else flowOf(emptySet()),
+        if (lens.includesAnime) animeSourcePreferences.pinnedAnimeSources.changes() else flowOf(emptySet()),
+    ) { manga, anime ->
+        mapOf(ContentType.MANGA to manga, ContentType.ANIME to anime)
     }
 
-    private suspend fun load(pinned: Set<String>, latest: Boolean): DiscoverRail = coroutineScope {
-        val results = pinned
-            .mapNotNull { it.toLongOrNull() }
-            .map { sourceId -> async { fetch(sourceId, latest) } }
+    private suspend fun load(
+        pinnedByType: Map<ContentType, Set<String>>,
+        latest: Boolean,
+    ): DiscoverRail = coroutineScope {
+        val results = pinnedByType
+            .flatMap { (type, ids) -> ids.mapNotNull { it.toLongOrNull() }.map { type to it } }
+            .map { (type, sourceId) -> async { fetch(type, sourceId, latest) } }
             .awaitAll()
 
         DiscoverRail(
@@ -115,8 +188,12 @@ class DiscoverScreenModel(
         )
     }
 
-    private suspend fun fetch(sourceId: Long, latest: Boolean): Result<List<DiscoverItem>> {
-        val sourceName = sourceNameOf(sourceId)
+    private suspend fun fetch(
+        contentType: ContentType,
+        sourceId: Long,
+        latest: Boolean,
+    ): Result<List<DiscoverItem>> {
+        val sourceName = sourceNameOf(contentType, sourceId)
         return runCatching {
             when (contentType) {
                 ContentType.MANGA -> {
@@ -159,7 +236,7 @@ class DiscoverScreenModel(
         }.recoverCatching { throw SourceFailure(sourceName, it) }
     }
 
-    private fun sourceNameOf(sourceId: Long): String = when (contentType) {
+    private fun sourceNameOf(contentType: ContentType, sourceId: Long): String = when (contentType) {
         ContentType.MANGA -> sourceManager.getOrStub(sourceId).name
         ContentType.ANIME -> animeSourceManager.getOrStub(sourceId).name
     }
@@ -205,11 +282,31 @@ private val Throwable.sourceName: String?
     get() = (this as? SourceFailure)?.sourceName
 
 /**
- * One from each source, then the next from each, and so on.
+ * One from each list, then the next from each, and so on.
  *
- * Concatenating instead would let the first pinned source fill the whole rail, which is the
- * source-led browsing this screen exists to replace.
+ * Used for both kinds of rail and for the same reason. Concatenating the source lists would let the
+ * first pinned source fill the whole rail — the source-led browsing this screen exists to replace —
+ * and concatenating the metadata lists would put every anime before every manga, which is two rails
+ * pretending to be one.
  */
+private fun <T> List<List<T>>.interleaveBy(key: (T) -> Any): List<T> {
+    if (isEmpty()) return emptyList()
+    val seen = HashSet<Any>()
+    val result = ArrayList<T>(sumOf { it.size })
+    var index = 0
+    while (true) {
+        var added = false
+        forEach { items ->
+            items.getOrNull(index)?.let {
+                if (seen.add(key(it))) result += it
+                added = true
+            }
+        }
+        if (!added) return result
+        index++
+    }
+}
+
 private fun List<List<DiscoverItem>>.interleave(): List<DiscoverItem> {
     if (isEmpty()) return emptyList()
     val result = ArrayList<DiscoverItem>(sumOf { it.size })

@@ -1,5 +1,6 @@
 package animato.app.library
 
+import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.domain.content.LibraryEntry
 import io.kotest.matchers.shouldBe
@@ -17,46 +18,88 @@ class UnifiedLibraryStateTest {
 
     private val all = listOf(onePieceInProgress, frierenFinished, dandadanUnstarted, kaijuFinished)
 
-    @Test
-    fun `reading is manga in progress, watching is anime in progress`() {
-        titles(LibraryStatusFilter.READING) shouldBe listOf("One Piece")
-        titles(LibraryStatusFilter.WATCHING) shouldBe emptyList()
+    private val ongoing = LibraryCategory("Ongoing", mangaIds = setOf(10), animeIds = setOf(10))
+    private val backlog = LibraryCategory("Backlog", mangaIds = setOf(11), animeIds = emptySet())
 
-        val started = state(
-            entries = listOf(entry(5, ContentType.ANIME, "Chainsaw Man", total = 12, viewed = 3)),
-            filter = LibraryStatusFilter.WATCHING,
-        )
-        started.visibleEntries.map { it.title } shouldBe listOf("Chainsaw Man")
+    @Test
+    fun `the lens decides which half is listed at all`() {
+        state(lens = ContentFilter.ANIME).visibleEntries.map { it.title } shouldBe
+            listOf("Frieren", "Dandadan")
+        state(lens = ContentFilter.MANGA).visibleEntries.map { it.title } shouldBe
+            listOf("One Piece", "Kaiju No. 8")
     }
 
     @Test
-    fun `completed means everything viewed, and needs something to have viewed`() {
-        titles(LibraryStatusFilter.COMPLETED) shouldBe listOf("Frieren", "Kaiju No. 8")
+    fun `a category chip is a name and answers for both tables`() {
+        // Same id in both tables, which is the ordinary case: two shelves both called Ongoing.
+        val scoped = state(categories = listOf(ongoing), selected = "Ongoing")
+        scoped.visibleEntries.map { it.title } shouldBe
+            listOf("One Piece", "Frieren", "Dandadan", "Kaiju No. 8")
+    }
 
-        val empty = state(
-            entries = listOf(entry(6, ContentType.MANGA, "Just added", total = 0, viewed = 0)),
-            filter = LibraryStatusFilter.COMPLETED,
+    @Test
+    fun `a category with no ids on the lensed half is not offered`() {
+        // Backlog exists only in the manga table, so under the anime lens it has nothing to say.
+        state(categories = listOf(ongoing, backlog), lens = ContentFilter.ANIME)
+            .visibleCategories.map { it.name } shouldBe listOf("Ongoing")
+    }
+
+    @Test
+    fun `a selection the lens has hidden falls back to everything`() {
+        val stranded = state(
+            categories = listOf(ongoing, backlog),
+            selected = "Backlog",
+            lens = ContentFilter.ANIME,
         )
-        empty.visibleEntries shouldBe emptyList()
+        stranded.activeCategory shouldBe null
+        stranded.visibleEntries.map { it.title } shouldBe listOf("Frieren", "Dandadan")
+    }
+
+    @Test
+    fun `unread only keeps what has something waiting`() {
+        state(filters = LibraryFilters(unviewedOnly = true)).visibleEntries.map { it.title } shouldBe
+            listOf("One Piece", "Dandadan")
     }
 
     @Test
     fun `downloaded reads the cache rather than the entry`() {
         val downloaded = state(
-            filter = LibraryStatusFilter.DOWNLOADED,
+            filters = LibraryFilters(downloadedOnly = true),
             downloadedKeys = setOf(ContentType.ANIME to 3L),
         )
         downloaded.visibleEntries.map { it.title } shouldBe listOf("Dandadan")
     }
 
     @Test
-    fun `a category scope only accepts its own library`() {
-        val mangaScope = state(categoryScope = CategoryScope.Manga(10))
-        mangaScope.visibleEntries.map { it.title } shouldBe listOf("One Piece", "Kaiju No. 8")
+    fun `tracked reads the track tables rather than the entry`() {
+        val tracked = state(
+            filters = LibraryFilters(trackedOnly = true),
+            trackedKeys = setOf(ContentType.MANGA to 1L),
+        )
+        tracked.visibleEntries.map { it.title } shouldBe listOf("One Piece")
+    }
 
-        // The same id in the other table is a different shelf and matches nothing here.
-        val animeScope = state(categoryScope = CategoryScope.Anime(10))
-        animeScope.visibleEntries.map { it.title } shouldBe listOf("Frieren", "Dandadan")
+    @Test
+    fun `filters combine rather than replacing one another`() {
+        val both = state(
+            filters = LibraryFilters(unviewedOnly = true, downloadedOnly = true),
+            downloadedKeys = setOf(ContentType.ANIME to 3L, ContentType.MANGA to 4L),
+        )
+        // Kaiju is downloaded but finished; Dandadan is both unread and downloaded.
+        both.visibleEntries.map { it.title } shouldBe listOf("Dandadan")
+    }
+
+    @Test
+    fun `the chip count is the shelf, not what survived the filters`() {
+        val filtered = state(filters = LibraryFilters(unviewedOnly = true))
+        filtered.shelfEntries.size shouldBe 4
+        filtered.visibleEntries.size shouldBe 2
+    }
+
+    @Test
+    fun `an empty grid distinguishes a filter from an empty library`() {
+        state(filters = LibraryFilters(trackedOnly = true)).emptiedBySettings shouldBe true
+        state(entries = emptyList()).emptiedBySettings shouldBe false
     }
 
     @Test
@@ -76,21 +119,25 @@ class UnifiedLibraryStateTest {
         state(entries = listOf(twice, twice)).visibleEntries.size shouldBe 1
     }
 
-    private fun titles(filter: LibraryStatusFilter) = state(filter = filter).visibleEntries.map { it.title }
-
     private fun state(
         entries: List<LibraryEntry> = all,
-        filter: LibraryStatusFilter = LibraryStatusFilter.ALL,
-        categoryScope: CategoryScope = CategoryScope.All,
+        lens: ContentFilter = ContentFilter.ALL,
+        categories: List<LibraryCategory> = emptyList(),
+        selected: String? = null,
+        filters: LibraryFilters = LibraryFilters(),
         sort: LibrarySortMode = LibrarySortMode.RECENTLY_ADDED,
         searchQuery: String? = null,
         downloadedKeys: Set<Pair<ContentType, Long>> = emptySet(),
+        trackedKeys: Set<Pair<ContentType, Long>> = emptySet(),
     ) = UnifiedLibraryState(
         isLoading = false,
         entries = entries,
         downloadedEntryKeys = downloadedKeys,
-        statusFilter = filter,
-        categoryScope = categoryScope,
+        trackedEntryKeys = trackedKeys,
+        categories = categories,
+        lens = lens,
+        selectedCategory = selected,
+        filters = filters,
         sortMode = sort,
         searchQuery = searchQuery,
     )

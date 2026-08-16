@@ -624,4 +624,11 @@
     <string name="label_available">المتاحة</string>
     <string name="extensions_ships_empty">أنيماتو بيجي فاضي عن قصد — انت اللي بتختار المحتوى بيجي منين.</string>
     <string name="action_browse_available">تصفّح المتاح</string>
+    <string name="discover_search_hint">ابحث في الأنمي والمانجا</string>
+    <string name="rail_trending">الأكثر رواجًا</string>
+    <string name="rail_this_season">هذا الموسم</string>
+    <string name="rail_top_rated">الأعلى تقييمًا</string>
+    <string name="label_your_sources">مصادرك</string>
+    <string name="discover_no_sources">كل اللي فوق شغال من غير مصادر — ضيف مصدر لما تحب تفتح حاجة.</string>
+    <string name="action_add_sources">إضافة مصادر</string>
 </resources>

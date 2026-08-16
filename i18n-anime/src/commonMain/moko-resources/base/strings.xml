@@ -693,4 +693,13 @@
     <string name="label_nsfw" translatable="false">NSFW</string>
     <string name="extensions_ships_empty">Animato ships empty by design — you choose where content comes from.</string>
     <string name="action_browse_available">Browse available</string>
+
+    <!-- Discover -->
+    <string name="discover_search_hint">Search anime and manga</string>
+    <string name="rail_trending">Trending now</string>
+    <string name="rail_this_season">This season</string>
+    <string name="rail_top_rated">Top rated</string>
+    <string name="label_your_sources">Your sources</string>
+    <string name="discover_no_sources">Everything above works without sources — add one when you want to open something.</string>
+    <string name="action_add_sources">Add sources</string>
 </resources>

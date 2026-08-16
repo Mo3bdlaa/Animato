@@ -5,6 +5,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import animato.anime.player.PlayerEpisodeVideoResolver
 import animato.anime.services.download.EpisodeVideoResolver
 import animato.anime.track.AnimeTrackerManager
+import animato.app.discover.MetadataCatalog
 import animato.data.AnimeUpdateStrategyColumnAdapter
 import animato.data.FetchTypeColumnAdapter
 import aniyomi.core.common.torrent.TorrentServerApi
@@ -127,6 +128,9 @@ class AnimeAppModule(val app: Application) : InjektModule {
 
         // The downloader asks for this by interface; the player is what can answer.
         addSingletonFactory<EpisodeVideoResolver> { PlayerEpisodeVideoResolver() }
+
+        // Discover's public rails. A singleton so the three rails on one screen share a client.
+        addSingletonFactory { MetadataCatalog(get()) }
 
         addSingletonFactory { TorrentServerApi(get(), get()) }
         addSingletonFactory { TorrentServerUtils(get(), get()) }
