@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.entry.EntryScreen
 import animato.app.extension.ExtensionsScreen
 import animato.app.navigation.LensButton
 import animato.app.search.AnimatoSearchScreen
@@ -97,12 +98,7 @@ internal fun DiscoverContent() {
     val openSourceItem: (DiscoverItem) -> Unit = { item ->
         scope.launch {
             val id = withIOContext { screenModel.resolveEntryId(item) }
-            navigator.push(
-                when (item.contentType) {
-                    ContentType.MANGA -> MangaScreen(id, true)
-                    ContentType.ANIME -> AnimeScreen(id, true)
-                },
-            )
+            navigator.push(EntryScreen(id, item.contentType, fromSource = true))
         }
     }
 

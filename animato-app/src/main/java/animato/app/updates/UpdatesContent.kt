@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.entry.EntryScreen
 import animato.app.navigation.LensButton
 import animato.domain.content.ContentType
 import animato.ui.components.NewPill
@@ -152,12 +153,7 @@ internal fun UpdatesContent() {
                             item = item,
                             onClick = { open(item) },
                             onCoverClick = {
-                                navigator.push(
-                                    when (item.contentType) {
-                                        ContentType.MANGA -> MangaScreen(item.entryId)
-                                        ContentType.ANIME -> AnimeScreen(item.entryId)
-                                    },
-                                )
+                                navigator.push(EntryScreen(item.entryId, item.contentType))
                             },
                             onDownload = { screenModel.download(item) },
                         )

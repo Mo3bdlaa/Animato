@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.entry.EntryScreen
 import animato.app.extension.ExtensionsScreen
 import animato.app.navigation.LensButton
 import animato.domain.content.ContentFilter
@@ -96,23 +97,13 @@ class AnimatoSearchScreen(
         }
 
         val openLibraryHit: (LibraryHit) -> Unit = { hit ->
-            navigator.push(
-                when (hit.contentType) {
-                    ContentType.MANGA -> MangaScreen(hit.entryId)
-                    ContentType.ANIME -> AnimeScreen(hit.entryId)
-                },
-            )
+            navigator.push(EntryScreen(hit.entryId, hit.contentType))
         }
 
         val openSourceHit: (SourceHit) -> Unit = { hit ->
             scope.launch {
                 val id = withIOContext { screenModel.resolveEntryId(hit) }
-                navigator.push(
-                    when (hit.contentType) {
-                        ContentType.MANGA -> MangaScreen(id, true)
-                        ContentType.ANIME -> AnimeScreen(id, true)
-                    },
-                )
+                navigator.push(EntryScreen(id, hit.contentType, fromSource = true))
             }
         }
 

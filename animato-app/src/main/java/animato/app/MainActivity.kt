@@ -52,6 +52,7 @@ import animato.anime.services.AnimeConstants
 import animato.anime.services.AnimeNotifications
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.downloads.OrphanedDownloadSweeper
+import animato.app.entry.EntryScreen
 import animato.app.extension.ExtensionUpdateCheck
 import animato.app.navigation.AnimatoHomeScreen
 import animato.app.navigation.setContentLens
@@ -345,8 +346,12 @@ class MainActivity : BaseActivity() {
                                 .filter { !it }
                                 .onEach {
                                     val currentScreen = navigator.lastItem
+                                    // EntryScreen is ours and replaced Mihon's as the page a source
+                                    // result opens, so the rule has to name it too — otherwise
+                                    // leaving incognito quietly stopped popping anything.
                                     if (currentScreen is BrowseSourceScreen ||
-                                        (currentScreen is MangaScreen && currentScreen.fromSource)
+                                        (currentScreen is MangaScreen && currentScreen.fromSource) ||
+                                        (currentScreen is EntryScreen && currentScreen.fromSource)
                                     ) {
                                         navigator.popUntilRoot()
                                     }

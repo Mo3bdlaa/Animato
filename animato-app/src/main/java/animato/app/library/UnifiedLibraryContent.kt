@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.player.PlayerLauncher
+import animato.app.entry.EntryScreen
 import animato.app.navigation.LensButton
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
@@ -103,12 +104,7 @@ internal fun UnifiedLibraryContent() {
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
 
     val openEntry: (LibraryEntry) -> Unit = { entry ->
-        navigator.push(
-            when (entry.contentType) {
-                ContentType.MANGA -> MangaScreen(entry.entryId)
-                ContentType.ANIME -> AnimeScreen(entry.entryId)
-            },
-        )
+        navigator.push(EntryScreen(entry.entryId, entry.contentType))
     }
 
     Scaffold(

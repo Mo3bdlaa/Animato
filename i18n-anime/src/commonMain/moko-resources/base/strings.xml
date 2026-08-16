@@ -766,4 +766,11 @@
     <string name="quick_remove_caption">Keeps %1$s downloaded items — asks first</string>
     <string name="quick_remove_confirm">Take %1$s off your shelf?</string>
     <string name="quick_remove_delete_downloads">Also delete %1$s downloaded items</string>
+
+    <!-- Title page -->
+    <string name="entry_all_options">All options</string>
+    <string name="entry_resume">Resume · %1$s</string>
+    <string name="entry_start">Start · %1$s</string>
+    <string name="entry_chapters_count">Chapters · %1$s</string>
+    <string name="entry_episodes_count">Episodes · %1$s</string>
 </resources>

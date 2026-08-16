@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.entry.EntryScreen
 import animato.app.search.AnimatoSearchScreen
 import animato.app.settings.AnimatoSettingsScreen
 import animato.app.updates.UpdateItem
@@ -147,12 +148,7 @@ internal fun HomeScreenContent() {
                             ContinueCard(
                                 item = item,
                                 onClick = {
-                                    navigator.push(
-                                        when (item.contentType) {
-                                            ContentType.MANGA -> MangaScreen(item.entryId)
-                                            ContentType.ANIME -> AnimeScreen(item.entryId)
-                                        },
-                                    )
+                                    navigator.push(EntryScreen(item.entryId, item.contentType))
                                 },
                             )
                         }
@@ -175,12 +171,7 @@ internal fun HomeScreenContent() {
                     UpdateRow(
                         item = item,
                         onClick = {
-                            navigator.push(
-                                when (item.contentType) {
-                                    ContentType.MANGA -> MangaScreen(item.entryId)
-                                    ContentType.ANIME -> AnimeScreen(item.entryId)
-                                },
-                            )
+                            navigator.push(EntryScreen(item.entryId, item.contentType))
                         },
                     )
                 }

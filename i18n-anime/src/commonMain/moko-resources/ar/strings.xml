@@ -685,4 +685,9 @@
     <string name="quick_remove_caption">هيسيب %1$s عنصر منزّل — هيسأل الأول</string>
     <string name="quick_remove_confirm">تشيل %1$s من رفّك؟</string>
     <string name="quick_remove_delete_downloads">امسح كمان %1$s عنصر منزّل</string>
+    <string name="entry_all_options">كل الخيارات</string>
+    <string name="entry_resume">أكمل · %1$s</string>
+    <string name="entry_start">ابدأ · %1$s</string>
+    <string name="entry_chapters_count">الفصول · %1$s</string>
+    <string name="entry_episodes_count">الحلقات · %1$s</string>
 </resources>
