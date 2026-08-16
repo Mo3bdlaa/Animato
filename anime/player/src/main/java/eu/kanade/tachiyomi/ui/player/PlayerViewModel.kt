@@ -2076,32 +2076,45 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     /**
-     * Returns the response of the AniSkipApi for this episode.
-     * just works if tracking is enabled.
+     * The skip timestamps for this episode, or null when there are none to be had.
+     *
+     * AniSkip is keyed on MyAnimeList ids, so this needs a MAL track, or an AniList one it can
+     * translate. Only tracking supplies that, which is why nothing happens for an untracked anime.
+     *
+     * ## What this used to do, and why it looked like AniSkip not working
+     *
+     * The loop over the tracks was `.map { … return … }` — a non-local return, on the first
+     * iteration. So exactly one track was ever consulted: the first one. Track an anime on Kitsu
+     * *and* MyAnimeList, with Kitsu first, and `malId` came out null, the elvis returned null, and
+     * AniSkip silently never worked — with a MAL track sitting right there in the list. The `.map`
+     * built a list nothing read and could not complete a second element if it had.
+     *
+     * It also asked for the tracks twice, once to test for emptiness and once to iterate, which is
+     * two database round trips for one answer.
      */
     suspend fun aniSkipResponse(playerDuration: Int?): List<TimeStamp>? {
         val animeId = currentAnime.value?.id ?: return null
-        val trackerManager = Injekt.get<TrackerManager>()
-        var malId: Long?
         val episodeNumber = currentEpisode.value?.episode_number?.toInt() ?: return null
-        if (getTracks.await(animeId).isEmpty()) {
+        val duration = playerDuration ?: return null
+
+        val tracks = getTracks.await(animeId)
+        if (tracks.isEmpty()) {
             logcat { "AniSkip: No tracks found for anime $animeId" }
             return null
         }
 
-        getTracks.await(animeId).map { track ->
-            val tracker = trackerManager.get(track.trackerId)
-            malId = when (tracker) {
+        val trackerManager = Injekt.get<TrackerManager>()
+        // Every track, in order, until one yields a MyAnimeList id. A tracker AniSkip cannot use no
+        // longer hides the one behind it.
+        val malId = tracks.firstNotNullOfOrNull { track ->
+            when (trackerManager.get(track.trackerId)) {
                 is MyAnimeList -> track.remoteId
                 is Anilist -> AniSkipApi().getMalIdFromAL(track.remoteId)
                 else -> null
             }
-            val duration = playerDuration ?: return null
-            return malId?.let {
-                AniSkipApi().getResult(it.toInt(), episodeNumber, duration.toLong())
-            }
-        }
-        return null
+        } ?: return null
+
+        return AniSkipApi().getResult(malId.toInt(), episodeNumber, duration.toLong())
     }
 
     val introSkipEnabled = playerPreferences.enableSkipIntro().get()

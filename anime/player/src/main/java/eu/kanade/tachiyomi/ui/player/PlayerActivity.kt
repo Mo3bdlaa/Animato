@@ -1317,7 +1317,21 @@ class PlayerActivity : BaseActivity() {
 
         // aniSkip stuff
         viewModel.waitingSkipIntro = playerPreferences.waitingTimeIntroSkip().get()
-        runBlocking {
+
+        /*
+         * Off this thread, which is not ours to block.
+         *
+         * `fileLoaded` is reached from `MPVLib.event`, a callback on mpv's own event thread. What
+         * used to be here was `runBlocking` around a database query and up to two synchronous HTTP
+         * requests to api.aniskip.com — so every event mpv had to deliver waited on the network,
+         * and on a bad connection waited for the client's timeouts. A player that freezes for
+         * several seconds the instant a file loads is the visible half of that.
+         *
+         * Launched rather than awaited: the result only adds chapter markers, so arriving a moment
+         * later costs nothing, and arriving never — no network, no tracks — has to be survivable
+         * anyway.
+         */
+        lifecycleScope.launchIO {
             if (
                 viewModel.introSkipEnabled &&
                 playerPreferences.aniSkipEnabled().get() &&
