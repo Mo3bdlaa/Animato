@@ -160,7 +160,6 @@ Numbers are the tracked task ids.
 | #19 | Delete downloads no longer in the library | small, asked for often |
 | #17 | Android TV | the highest-reacted issue in the donor |
 | #15 | Extension update check | absent in both halves; `ExtensionApi` is `internal` to Mihon's `:app` |
-| #25 | FlareSolverr as an optional extra | writes to the same cookie jar and user-agent preference the on-device path uses, so it is an addition rather than a rewrite |
 | #24 | Verify the donor's player bugs | **needs a phone.** Cannot be closed from a repository |
 
 And one that costs almost nothing: **long-press to speed up playback**. Among the most requested
@@ -187,6 +186,18 @@ it:
   Trakt's `S1E12`. Either read `seasons` and map, or restrict to single-season shows and say so.
   Progress is also a watch history rather than a number, the same three-request rewrite `SimklApi`
   already documents.
+
+**FlareSolverr.** Parked further out than Trakt, and for a better reason than priority: *the
+problem it was wanted for is already solved.* ROADMAP §2 has the full analysis — the short version
+is that Cloudflare is beaten on the phone, by a visible WebView earning a clearance cookie into
+Android's process-wide `CookieManager`, which every extension, every tracker and both halves then
+send. That shipped with #20.
+
+What is left is an optional extra for the minority who already run a FlareSolverr at home, where a
+second machine on a second IP does beat a phone. It writes to the same two public places the
+on-device path writes to — `networkHelper.cookieJar` and `networkPreferences.defaultUserAgent` —
+so it stays an addition rather than a rewrite whenever it is picked up. Nothing about it decays
+while it waits.
 
 ## Things that cannot be settled without a device
 

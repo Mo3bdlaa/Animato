@@ -124,8 +124,11 @@ it.** The repair was a bridge, not an engine:
 - **Settings → Unblock a source** lists every online source, both halves, and opens any of them.
   That is the part that reaches manga, whose screens are Mihon's and not ours to change.
 
-*Still open: FlareSolverr as an optional extra for anyone who does run one at home, where it beats
-the phone. It writes to the same two places, so it is an addition rather than a rewrite.*
+*Parked by decision: FlareSolverr as an optional extra for anyone who does run one at home,
+where it beats the phone. Deferred precisely because the section above closed the problem it
+was wanted for — what remains serves a minority who already own the second machine. It writes
+to the same two public places, so it stays an addition rather than a rewrite whenever it is
+picked up, and nothing about it decays while it waits.*
 
 ### 3 — Onboarding
 
