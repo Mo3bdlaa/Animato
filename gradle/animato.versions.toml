@@ -19,6 +19,9 @@ media = "1.7.0"
 seeker = "1.2.2"
 truetypeparser = "2.1.4"
 
+# Not a feature — a hole. See the declaration in :animato-app for what falls through it.
+localBroadcastManager = "1.1.0"
+
 [libraries]
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 kotlinx-immutables = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxImmutables" }
@@ -32,3 +35,4 @@ constraintlayout = { module = "androidx.constraintlayout:constraintlayout", vers
 mediasession = { module = "androidx.media:media", version.ref = "media" }
 seeker = { module = "io.github.2307vivek:seeker", version.ref = "seeker" }
 truetypeparser = { module = "io.github.yubyf:truetypeparser-light", version.ref = "truetypeparser" }
+localbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "localBroadcastManager" }

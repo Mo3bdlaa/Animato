@@ -264,6 +264,22 @@ dependencies {
     // beside them rather than inventing a second way to run something periodically.
     implementation(libs.androidx.work)
 
+    /*
+     * Nothing in this module touches LocalBroadcastManager. Mihon's `ExtensionInstaller` does, and
+     * that is enough — installing an extension died with NoClassDefFoundError on a device while
+     * every build here was green.
+     *
+     * Mihon never declares it either. It reaches it through `dynamicanimation:1.0.0`, which brings
+     * `legacy-support-core-utils`, which brings this. Resolved on its own, `:app` gets 1.0.0 and
+     * compiles. Resolved as part of this application, something else raises `dynamicanimation` to
+     * 1.1.0 — a version that dropped the legacy dependency — and the class simply is not there.
+     *
+     * So the failure is invisible to every check we have: the code compiles against a graph that
+     * differs from the one it ships in, and only the running app resolves the version that loses.
+     * Declaring it here states the requirement in the module that has to satisfy it.
+     */
+    implementation(animato.localbroadcastmanager)
+
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
 }

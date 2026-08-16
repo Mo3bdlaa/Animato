@@ -67,6 +67,13 @@ jobs:
       - name: Check every Injekt dependency is registered
         run: ./.github/check-injekt-bindings.sh
 
+      # A library Mihon compiles against can vanish from the app that ships it: the two are resolved
+      # separately, and a version bump anywhere can drop a transitive dependency Mihon's code calls
+      # into. Installing an extension died that way while every check above was green. The script
+      # has the details.
+      - name: Check nothing Mihon compiles against is missing at runtime
+        run: ./.github/check-runtime-classpath.sh
+
       # R8 runs on the release build and removes anything it cannot see being used — which includes
       # every class only ever found by name: WorkManager's jobs, manifest components, and whatever
       # native code calls back into. Those fail on a device, in the one case that reaches them, so
