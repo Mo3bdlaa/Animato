@@ -52,6 +52,7 @@ import animato.anime.services.AnimeConstants
 import animato.anime.services.AnimeNotifications
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.downloads.OrphanedDownloadSweeper
+import animato.app.extension.ExtensionUpdateCheck
 import animato.app.navigation.AnimatoHomeScreen
 import animato.app.navigation.setContentType
 import animato.app.settings.AniyomiImportScreen
@@ -421,6 +422,23 @@ class MainActivity : BaseActivity() {
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e)
             }
+        }
+
+        /*
+         * And whether the extensions have updates waiting.
+         *
+         * Mihon runs this from its own `MainActivity` on every cold start. Ours is an adapted copy
+         * of that file and the block was not in it, because the class it calls — `ExtensionApi` —
+         * is `internal` to Mihon's module and cannot be named from ours. So it was dropped during
+         * the port, silently, and neither half has checked since. [ExtensionUpdateCheck] rebuilds
+         * it on the public pieces and covers both.
+         *
+         * Separate from the app update above rather than folded into it: that one pushes a screen
+         * and this one posts a notification, and an extension repository being down should not stop
+         * someone being told about a new build of the app.
+         */
+        LaunchedEffect(Unit) {
+            ExtensionUpdateCheck().check(this@MainActivity)
         }
     }
 
