@@ -165,8 +165,19 @@ works", and the remaining questions are about receivers, not about video:
 
 - Google's Cast SDK pulls in Play Services, which is at odds with a FOSS build. **FCast is the way
   in** — open, no Play Services, and it takes a plain URL.
-- The server binds `localhost`. Serving a TV on the same network means binding the LAN interface,
-  which is a real change and a real security question.
+- ~~The server binds `localhost`. Serving a TV on the same network means binding the LAN interface,
+  which is a real change and a real security question.~~ **Backwards, and worth leaving visible.**
+  The server was `NanoHTTPD(0)`, whose constructor is `this(null, port)` — a null hostname, which
+  NanoHTTPD binds as `InetSocketAddress(port)`, the **wildcard** address. Confirmed in the library's
+  bytecode rather than assumed. So it listened on every interface including Wi-Fi, while every URL
+  built from it says `localhost` and every consumer is on this device.
+
+  That is not a change casting needs. It is an exposure that already shipped: during external
+  playback, anything on the same network could read the stream, unauthenticated, behind nothing but
+  an ephemeral port number. It now binds `127.0.0.1` explicitly.
+
+  So the security question is real but points the other way — casting has to **open** the interface,
+  deliberately and visibly, rather than quietly inherit it from a constructor default.
 
 **This moves up.** It was scored as medium-and-risky when the risk was the video pipeline. The video
 pipeline is done.
