@@ -10,9 +10,12 @@ import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
 import animato.domain.content.LibraryEntry
 import animato.domain.content.interactor.GetUnifiedLibrary
+import aniyomi.domain.source.service.AnimeSourcePreferences
 import eu.kanade.domain.entries.anime.model.toDomainAnime
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.source.CatalogueSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -70,6 +73,13 @@ data class SourceHit(
 data class SourceGroup(
     val sourceId: Long,
     val sourceName: String,
+    /**
+     * Shown beside the name, because a name is not an identity here.
+     *
+     * A site that publishes in ten languages is ten sources with one name, and a screen listing all
+     * of them without this reads as the same source repeated ten times.
+     */
+    val lang: String,
     val contentType: ContentType,
     val isSearching: Boolean = true,
     val hits: List<SourceHit> = emptyList(),
@@ -145,6 +155,8 @@ class SearchScreenModel(
     preferenceStore: PreferenceStore = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val animeSourceManager: AnimeSourceManager = Injekt.get(),
+    private val sourcePreferences: SourcePreferences = Injekt.get(),
+    private val animeSourcePreferences: AnimeSourcePreferences = Injekt.get(),
     private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
     private val metadataCatalog: MetadataCatalog = Injekt.get(),
@@ -160,22 +172,40 @@ class SearchScreenModel(
 
     private var searchJob: Job? = null
 
+    /*
+     * Three collectors, not one combine, because only one of the three is a reason to search again.
+     *
+     * They used to be combined, and the search re-ran on every emission of any of them. Two of the
+     * three fire *because* a search ran:
+     *
+     *   - `search` records the query in the history, so `recent` emits, so the search restarts and
+     *     cancels the one that had just begun
+     *   - opening a source result inserts the entry, so the library emits, so the search restarts
+     *
+     * The visible symptom was source rows reading `StandaloneCoroutine was cancelled` where their
+     * results should have been: those are the sources that were still answering the first search
+     * when the second one killed it.
+     *
+     * The lens is the only one that genuinely changes the answer, because it changes which sources
+     * are asked.
+     */
     init {
-        combine(
-            getUnifiedLibrary.subscribe(),
-            contentPreferences.contentFilter.changes(),
-            recent.changes(),
-        ) { library, lens, recentQueries ->
-            entries = library
-            Triple(library, lens, recentQueries)
-        }
-            .onEach { (_, lens, recentQueries) ->
-                state.value = state.value.copy(
-                    lens = lens,
-                    recentQueries = recentQueries.sorted(),
-                )
-                state.value = state.value.copy(libraryHits = libraryHits(state.value.query))
-                if (state.value.query.isNotBlank()) search(state.value.query)
+        getUnifiedLibrary.subscribe()
+            .onEach { library ->
+                entries = library
+                state.update { it.copy(libraryHits = libraryHits(it.query, it)) }
+            }
+            .launchIn(viewModelScope)
+
+        recent.changes()
+            .onEach { queries -> state.update { it.copy(recentQueries = queries.sorted()) } }
+            .launchIn(viewModelScope)
+
+        contentPreferences.contentFilter.changes()
+            .onEach { lens ->
+                state.update { it.copy(lens = lens) }
+                state.update { it.copy(libraryHits = libraryHits(it.query, it)) }
+                state.value.query.takeIf { it.isNotBlank() }?.let(::search)
             }
             .launchIn(viewModelScope)
 
@@ -208,11 +238,11 @@ class SearchScreenModel(
     }
 
     fun onQueryChange(query: String) {
-        state.value = state.value.copy(query = query)
-        state.value = state.value.copy(libraryHits = libraryHits(query))
+        state.update { it.copy(query = query) }
+        state.update { it.copy(libraryHits = libraryHits(query, it)) }
         if (query.isBlank()) {
             searchJob?.cancel()
-            state.value = state.value.copy(sourceGroups = emptyList())
+            state.update { it.copy(sourceGroups = emptyList()) }
         }
     }
 
@@ -226,37 +256,86 @@ class SearchScreenModel(
         if (query.isBlank()) return
         searchJob?.cancel()
 
-        val sources = buildList {
-            if (state.value.admits(ContentType.MANGA)) {
-                sourceManager.getOnlineSources()
-                    .filterIsInstance<CatalogueSource>()
-                    .forEach { add(SearchTarget.Manga(it)) }
-            }
-            if (state.value.admits(ContentType.ANIME)) {
-                animeSourceManager.getOnlineSources()
-                    .filterIsInstance<AnimeCatalogueSource>()
-                    .forEach { add(SearchTarget.Anime(it)) }
-            }
-        }
+        val targets = searchTargets()
 
-        state.value = state.value.copy(
-            query = query,
-            hasSearchableSources = sources.isNotEmpty(),
-            sourceGroups = sources.map { it.emptyGroup() },
-        )
+        state.update {
+            it.copy(
+                query = query,
+                hasSearchableSources = targets.isNotEmpty(),
+                sourceGroups = targets.map { target -> target.emptyGroup() },
+            )
+        }
         remember(query)
 
         searchJob = viewModelScope.launch(SEARCH_DISPATCHER) {
             coroutineScope {
-                sources.forEach { target ->
+                targets.forEach { target ->
                     async { runSearch(target, query) }
                 }
             }
         }
     }
 
+    /**
+     * The sources this search asks, in the order they appear.
+     *
+     * ## What the screen looked like without the filters
+     *
+     * Eight rows saying *Dragon Ball Multiverse*, four saying *The Library of Ohara*, and the
+     * results buried underneath. Those are not duplicates: an extension for a site that publishes in
+     * ten languages registers ten sources, one per language, all with the same name. Nothing on the
+     * row said which was which, and every one of them was asked.
+     *
+     * So the same two settings the rest of the app respects apply here — the enabled languages,
+     * which is the control on the Sources screen, and the disabled sources, because hiding a source
+     * and then being asked to read its results is the setting not working. The language is on the
+     * row as well, since two sources may still share a name legitimately.
+     *
+     * Pinned sources come first. Whoever pinned one wants its answer before the other nineteen, and
+     * this is the only place in the app where twenty answers arrive in an order somebody has to sit
+     * and watch.
+     */
+    private fun searchTargets(): List<SearchTarget> {
+        val languages = sourcePreferences.enabledLanguages.get()
+        val disabledManga = sourcePreferences.disabledSources.get()
+        val disabledAnime = animeSourcePreferences.disabledAnimeSources.get()
+        val pinned = sourcePreferences.pinnedSources.get() +
+            animeSourcePreferences.pinnedAnimeSources.get()
+
+        return buildList {
+            if (state.value.admits(ContentType.MANGA)) {
+                sourceManager.getOnlineSources()
+                    .filterIsInstance<CatalogueSource>()
+                    .filter { it.lang in languages && it.id.toString() !in disabledManga }
+                    .forEach { add(SearchTarget.Manga(it)) }
+            }
+            if (state.value.admits(ContentType.ANIME)) {
+                animeSourceManager.getOnlineSources()
+                    .filterIsInstance<AnimeCatalogueSource>()
+                    .filter { it.lang in languages && it.id.toString() !in disabledAnime }
+                    .forEach { add(SearchTarget.Anime(it)) }
+            }
+        }
+            .distinctBy { it.contentType to it.id }
+            .sortedWith(
+                compareBy<SearchTarget> { it.id.toString() !in pinned }
+                    .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }
+                    .thenBy { it.lang },
+            )
+    }
+
     private suspend fun runSearch(target: SearchTarget, query: String) {
-        val result = runCatching { target.search(query) }
+        // Not `runCatching`, which catches CancellationException as though it were a failure. A
+        // cancelled search would then report itself on the row as "StandaloneCoroutine was
+        // cancelled" — which is what a device saw — and, worse, would go on writing state after the
+        // job that owned it was gone.
+        val result = try {
+            Result.success(target.search(query))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 
         // Cancelling a job does not unwind a source that is already answering, so a search left
         // behind by a faster second one can still arrive here. Without this it writes its hits into
@@ -282,12 +361,14 @@ class SearchScreenModel(
         }
     }
 
-    private fun libraryHits(query: String): List<LibraryHit> {
+    // Takes the state it filters against rather than reading `state.value`, so it can be called
+    // from inside an `update` block without reading a value that block is about to replace.
+    private fun libraryHits(query: String, against: SearchState): List<LibraryHit> {
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return emptyList()
         return entries
             .asSequence()
-            .filter { state.value.admits(it.contentType) }
+            .filter { against.admits(it.contentType) }
             .filter { it.title.contains(trimmed, ignoreCase = true) }
             .distinctBy { it.contentType to it.entryId }
             .take(LIBRARY_LIMIT)
@@ -343,15 +424,22 @@ class SearchScreenModel(
 
         val id: Long
         val name: String
+        val lang: String
         val contentType: ContentType
 
         suspend fun search(query: String): List<SourceHit>
 
-        fun emptyGroup() = SourceGroup(sourceId = id, sourceName = name, contentType = contentType)
+        fun emptyGroup() = SourceGroup(
+            sourceId = id,
+            sourceName = name,
+            lang = lang,
+            contentType = contentType,
+        )
 
         class Manga(private val source: CatalogueSource) : SearchTarget {
             override val id = source.id
             override val name = source.name
+            override val lang = source.lang
             override val contentType = ContentType.MANGA
 
             override suspend fun search(query: String): List<SourceHit> =
@@ -373,6 +461,7 @@ class SearchScreenModel(
         class Anime(private val source: AnimeCatalogueSource) : SearchTarget {
             override val id = source.id
             override val name = source.name
+            override val lang = source.lang
             override val contentType = ContentType.ANIME
 
             override suspend fun search(query: String): List<SourceHit> =

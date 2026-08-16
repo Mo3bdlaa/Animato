@@ -372,6 +372,13 @@ private fun SourceGroupHeader(group: SourceGroup) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        // A name is not an identity: a site published in ten languages is ten sources called the
+        // same thing, and without this the list reads as one source repeated ten times.
+        Text(
+            text = group.lang.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Pill(
             text = stringResource(group.contentType.labelRes()),
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
