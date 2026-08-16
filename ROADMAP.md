@@ -248,9 +248,35 @@ either way would be dishonest. They need a session with a phone, not a session w
 ## Downloads
 
 Incomplete downloads that never finish (#1326, open since 2024), downloaded content not recognised
-(#1917), SD-card problems. And **resume is missing from both halves** — checked, not assumed; the
-`resume` hits in both downloaders are coroutine continuations, not HTTP ranges. The research said
-Mihon had it and Aniyomi did not; on this base neither does.
+(#1917), SD-card problems.
+
+~~And **resume is missing from both halves** — checked, not assumed; the `resume` hits in both
+downloaders are coroutine continuations, not HTTP ranges.~~ **Wrong on both counts**, and the truth
+is more useful.
+
+**Manga resumes.** `Downloader.downloadImage` keeps `$filename.tmp` between attempts, passes
+`file.length()` to `source.getImage(page, offset)`, appends when the response is `206`, and deletes
+the file on `416`. That is a complete implementation and it was there all along.
+
+**Anime does not, and cannot be fixed the same way.** `AnimeDownloader.downloadVideo` opens with
+`tmpDir.findFile("$filename.tmp")?.delete()` — every attempt starts from zero, including each of the
+three retries. So a 300 MB episode dropping at 95% costs 300 MB again, three times over.
+
+The reason it is not a Range header away: the anime path is **ffmpeg**, not OkHttp. It muxes into an
+`.mkv` rather than copying bytes, so a truncated output cannot be appended to — the muxer state is
+gone — and for HLS the input is a playlist of segments where no byte offset means anything.
+
+There is a shape that works: download plain files (`.mp4`, `.mkv`) over HTTP with ranges, which
+resumes for free and skips a remux nobody needed, and keep ffmpeg for HLS and DASH. Segment-level
+resume for HLS is a larger piece on top.
+
+**Not attempted from here.** It rewrites the core of the download path, and it cannot be verified
+without a device and real sources. A mistake produces corrupt video files or downloads that stop
+working, which is worse than re-downloading. This needs the phone.
+
+One more finding worth keeping: **`AnimeDownloadPart` is dead code.** A whole class modelling
+`http range download part`, with ranges and `.part.tmp` files, referenced by nothing. Somebody
+started this and stopped.
 
 ---
 
@@ -262,16 +288,19 @@ cheaper rather than harder:
 
 | | Reality |
 | --- | --- |
-| Arabic UI strings | **901 of 1088 already translated (83%)** on the manga side |
-| Arabic anime strings | **473 of 636 (74%)** |
+| Arabic UI strings | 896 of 941 (95%) on the manga side — **Mihon's module, and not ours to fill**: those come from Weblate upstream and every string added here would conflict on the next sync |
+| Arabic anime strings | ~~468 of 608~~ → **complete**. All 123 untranslated strings done; the remaining 17 are `translatable="false"` and correctly absent |
 | RTL | `android:supportsRtl="true"` is declared |
 
-So this is not a translation project. What is actually missing is the last fifth of the strings, a
-real RTL pass on a device with the layouts we built ourselves, and — the part that decides it —
+So this is not a translation project. The last fifth of the anime strings is now done, which leaves
+a real RTL pass on a device against the layouts we built ourselves, and — the part that decides it —
 **Arabic sources that work out of the box**, which lands squarely on the onboarding item above.
 
-The research noted that i18n is untested and that the donor's player crashed on a broken translated
-string. That failure mode is real, cheap to guard, and untested here too.
+The research noted that the donor's player crashed on a broken translated string. That failure mode
+is a format specifier that disagrees with its English original — `%1$s` becoming `%s`, or a `%2$d`
+going missing — which throws at the moment the screen is drawn rather than at build time. Every
+string added here was checked against its base version for exactly that, and the check is worth
+repeating on any future batch: it is the one translation mistake that is a crash rather than a typo.
 
 ---
 
