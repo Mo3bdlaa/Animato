@@ -606,4 +606,8 @@
     <string name="pref_backup_data">النسخ الاحتياطي والبيانات</string>
     <string name="pref_backup_data_summary">نسخ، استعادة، جدولة، استيراد من أنيومي</string>
     <string name="pref_privacy_security">الخصوصية والأمان</string>
+    <string name="label_latest_updates">آخر التحديثات</string>
+    <string name="action_see_all">عرض الكل</string>
+    <string name="label_new">جديد</string>
+    <string name="home_empty_shelf">رفّك فاضي. دوّر على حاجة تستاهل تحتفظ بيها.</string>
 </resources>

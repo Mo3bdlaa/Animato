@@ -148,6 +148,10 @@
     <string name="pref_backup_data">Backup &amp; data</string>
     <string name="pref_backup_data_summary">Backup, restore, schedule, import from Aniyomi</string>
     <string name="pref_privacy_security">Privacy &amp; security</string>
+    <string name="label_latest_updates">Latest updates</string>
+    <string name="action_see_all">See all</string>
+    <string name="label_new">New</string>
+    <string name="home_empty_shelf">Your shelf is empty. Find something worth keeping.</string>
     <string name="lens_all">All</string>
     <string name="lens_applies_everywhere">Applies everywhere</string>
     <!-- Data and storage - orphaned downloads -->
