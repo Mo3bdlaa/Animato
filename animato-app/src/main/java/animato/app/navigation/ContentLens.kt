@@ -24,6 +24,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentPreferences
@@ -51,11 +53,12 @@ import uy.kohesive.injekt.api.get
  *
  * ## Why the icon carries the state
  *
- * The control is a single top-bar button rather than a chip row, and the glyph is the state: a full
- * outlined circle for `ALL`, the same circle **half-filled in blue** when the lens is narrowed. That
- * is the answer to the hidden-filter problem — a filtered app has to *look* filtered from across the
- * room, or the first question anyone asks is why their library is empty — without spending a whole
- * 56 dp row on three words. See docs/branding/design.md.
+ * The control is a single top-bar button rather than a chip row, and the glyph is the state: a solid
+ * disc for `ALL`, and one **half of it filled in blue** — a different half for each — when the lens
+ * is narrowed. That is the answer to the hidden-filter problem — a filtered app has to *look*
+ * filtered from across the room, or the first question anyone asks is why their library is empty —
+ * without spending a whole 56 dp row on three words. [LensGlyph] has the three states and what a
+ * device session found wrong with the first attempt. See docs/branding/design.md.
  */
 @Composable
 fun contentLens(): ContentFilter {
@@ -132,15 +135,32 @@ fun LensButton(modifier: Modifier = Modifier) {
 }
 
 /**
- * A circle, half-filled when the lens is narrowed.
+ * One circle in three states, and all three have to be told apart at a glance.
  *
- * Drawn rather than assembled from two icons because the two states have to be the *same* circle —
- * an outline that gains a filled half, not one shape swapped for another. Anything that changes
- * silhouette reads as a different control rather than the same control in a different state.
+ * ## What the first device session found
  *
- * The filled half is on the leading side in both directions: the drawing is mirrored under RTL by
- * Compose's layout direction, which is why the arc starts at 90° and sweeps 180° rather than being
- * positioned by hand.
+ * The first version had two states, not three: `ALL` was a bare outline and *both* narrowed states
+ * shaded the same half. So Anime and Manga were pixel-identical — the control could tell you that
+ * you were filtered and never which way — and `ALL` read as an empty circle, which is to say as
+ * nothing at all.
+ *
+ * ## The three states now
+ *
+ * - **All** — a full muted disc inside the ring. Solid, because *everything* is the state where
+ *   nothing has been taken away, and an outline with nothing in it says the opposite.
+ * - **Anime** — the leading half filled in the accent.
+ * - **Manga** — the trailing half filled in the accent.
+ *
+ * Which half is arbitrary and that is fine; what matters is that they are opposites, so the two are
+ * distinguishable without reading anything. The pair also mirrors under RTL along with the rest of
+ * the layout, which is why the halves are described as leading and trailing rather than left and
+ * right, and why the arcs are chosen from the layout direction rather than fixed.
+ *
+ * ## Why not a word inside the circle
+ *
+ * Because the same glyph is drawn at 24 dp in a top bar and inside onboarding's option rows, and a
+ * three-letter word at 24 dp is a smudge. Shape survives the size; text does not. If this still
+ * does not read on a device, the fix is a label *beside* the icon rather than inside it.
  *
  * Public because onboarding teaches the lens *with* the lens: its three options are drawn with this
  * glyph, so the first time anyone meets the icon they are choosing with it rather than decoding it
@@ -152,6 +172,12 @@ fun LensGlyph(lens: ContentFilter, modifier: Modifier = Modifier) {
     val active = MaterialTheme.colorScheme.primary
     val narrowed = lens != ContentFilter.ALL
     val ring = if (narrowed) active else outline
+    val mirrored = LocalLayoutDirection.current == LayoutDirection.Rtl
+
+    // 0° is at three o'clock and sweeps clockwise, so 90° starts at six and covers the left half.
+    // Under RTL the leading side is the right one, so the two swap.
+    val leadingHalf = if (mirrored) TRAILING_HALF_DEGREES else LEADING_HALF_DEGREES
+    val trailingHalf = if (mirrored) LEADING_HALF_DEGREES else TRAILING_HALF_DEGREES
 
     Box(
         modifier = modifier
@@ -161,10 +187,31 @@ fun LensGlyph(lens: ContentFilter, modifier: Modifier = Modifier) {
                 val inset = LENS_STROKE.toPx() / 2f
                 val diameter = size.minDimension - LENS_STROKE.toPx()
 
-                if (narrowed) {
-                    drawArc(
+                when (lens) {
+                    // Solid, and in the ring's own colour so it reads as one object rather than as
+                    // something switched on. "Everything" is not an active state, it is the absence
+                    // of a narrowing.
+                    ContentFilter.ALL -> drawArc(
+                        color = outline.copy(alpha = ALL_FILL_ALPHA),
+                        startAngle = 0f,
+                        sweepAngle = 360f,
+                        useCenter = true,
+                        topLeft = Offset(inset, inset),
+                        size = Size(diameter, diameter),
+                    )
+
+                    ContentFilter.ANIME -> drawArc(
                         color = active,
-                        startAngle = 90f,
+                        startAngle = leadingHalf,
+                        sweepAngle = 180f,
+                        useCenter = true,
+                        topLeft = Offset(inset, inset),
+                        size = Size(diameter, diameter),
+                    )
+
+                    ContentFilter.MANGA -> drawArc(
+                        color = active,
+                        startAngle = trailingHalf,
                         sweepAngle = 180f,
                         useCenter = true,
                         topLeft = Offset(inset, inset),
@@ -187,6 +234,15 @@ fun LensGlyph(lens: ContentFilter, modifier: Modifier = Modifier) {
 
 private val LENS_GLYPH_SIZE = 24.dp
 private val LENS_STROKE = 2.dp
+
+/** Six o'clock, sweeping clockwise to twelve: the left half. */
+private const val LEADING_HALF_DEGREES = 90f
+
+/** Twelve o'clock, sweeping clockwise to six: the right half. */
+private const val TRAILING_HALF_DEGREES = 270f
+
+/** Present enough to read as filled, quiet enough not to compete with a narrowed state. */
+private const val ALL_FILL_ALPHA = 0.35f
 
 private fun ContentFilter.labelRes() = when (this) {
     ContentFilter.ALL -> AYMR.strings.lens_all
