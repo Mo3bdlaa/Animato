@@ -71,6 +71,7 @@ Android 8.0 (API 26).
 | | |
 | --- | --- |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | how the app is put together, and what is built so far |
+| [ROADMAP.md](ROADMAP.md) | what is worth building next, and why — with the evidence |
 | [docs/BRANDING.md](docs/BRANDING.md) | brand and interface specification |
 | [UPSTREAM_DIVERGENCE.md](UPSTREAM_DIVERGENCE.md) | where Animato differs from the code it builds on |
 
