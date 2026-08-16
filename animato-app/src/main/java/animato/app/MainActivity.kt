@@ -54,9 +54,10 @@ import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.downloads.OrphanedDownloadSweeper
 import animato.app.extension.ExtensionUpdateCheck
 import animato.app.navigation.AnimatoHomeScreen
-import animato.app.navigation.setContentType
+import animato.app.navigation.setContentLens
 import animato.app.settings.AniyomiImportScreen
 import animato.app.updater.AnimatoAppUpdateChecker
+import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.deeplink.DeepLinkScreenType
 import animato.ui.navigation.AnimatoNavigator
@@ -527,11 +528,11 @@ class MainActivity : BaseActivity() {
                 val idToOpen = intent.extras?.getLong(Constants.MANGA_EXTRA) ?: return false
                 navigator.popUntilRoot()
                 navigator.push(MangaScreen(idToOpen))
-                setContentType(ContentType.MANGA)
+                setContentLens(ContentFilter.MANGA)
                 AnimatoTab.LIBRARY
             }
             AnimeConstants.SHORTCUT_ANIMELIB -> {
-                setContentType(ContentType.ANIME)
+                setContentLens(ContentFilter.ANIME)
                 AnimatoTab.LIBRARY
             }
             // The anime notifications carry the id under Mihon's own extra key, which is what
@@ -540,7 +541,7 @@ class MainActivity : BaseActivity() {
                 val idToOpen = intent.extras?.getLong(Constants.MANGA_EXTRA) ?: return false
                 navigator.popUntilRoot()
                 navigator.push(AnimeScreen(idToOpen))
-                setContentType(ContentType.ANIME)
+                setContentLens(ContentFilter.ANIME)
                 AnimatoTab.LIBRARY
             }
             Constants.SHORTCUT_UPDATES -> AnimatoTab.UPDATES
@@ -549,21 +550,21 @@ class MainActivity : BaseActivity() {
             Constants.SHORTCUT_SOURCES -> AnimatoTab.DISCOVER
             Constants.SHORTCUT_EXTENSIONS -> {
                 BrowseTab.showExtension()
-                setContentType(ContentType.MANGA)
+                setContentLens(ContentFilter.MANGA)
                 AnimatoTab.DISCOVER
             }
             AnimeConstants.SHORTCUT_ANIMEEXTENSIONS -> {
-                setContentType(ContentType.ANIME)
+                setContentLens(ContentFilter.ANIME)
                 AnimatoTab.DISCOVER
             }
             Constants.SHORTCUT_DOWNLOADS -> {
                 navigator.popUntilRoot()
-                setContentType(ContentType.MANGA)
+                setContentLens(ContentFilter.MANGA)
                 AnimatoTab.DOWNLOADS
             }
             AnimeConstants.SHORTCUT_ANIME_DOWNLOADS -> {
                 navigator.popUntilRoot()
-                setContentType(ContentType.ANIME)
+                setContentLens(ContentFilter.ANIME)
                 AnimatoTab.DOWNLOADS
             }
             Intent.ACTION_APPLICATION_PREFERENCES -> {

@@ -30,7 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import animato.app.navigation.contentType
+import animato.app.navigation.contentTypeOrDefault
 import animato.domain.content.ContentType
 import animato.ui.entries.ItemCover
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -63,7 +63,7 @@ import tachiyomi.presentation.core.util.plus
 internal fun DiscoverContent() {
     val navigator = LocalNavigator.currentOrThrow
     val scope = rememberCoroutineScope()
-    val type = contentType()
+    val type = contentTypeOrDefault()
     val screenModel = viewModel(key = "discover-$type") { DiscoverScreenModel(contentType = type) }
     val state by screenModel.state.collectAsStateWithLifecycle()
 

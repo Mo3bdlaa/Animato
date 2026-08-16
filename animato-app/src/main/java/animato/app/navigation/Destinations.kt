@@ -58,11 +58,13 @@ data object AnimatoLibraryTab : Tab {
             )
         }
 
-    override suspend fun onReselect(navigator: Navigator) = cycleLibraryFilter()
+    // Re-selecting the tab no longer cycles the lens. The lens is a labelled control in the top
+    // bar now, and a gesture that silently changes what you are looking at is the thing that
+    // control exists to replace.
 
     @Composable
     override fun Content() {
-        when (libraryFilter()) {
+        when (contentLens()) {
             // Both halves in one grid. Re-selecting the destination narrows to one, where the
             // per-library screens still hold everything the unified grid does not do yet.
             ContentFilter.ALL -> UnifiedLibraryContent()
@@ -89,8 +91,6 @@ data object AnimatoDiscoverTab : Tab {
             )
         }
 
-    override suspend fun onReselect(navigator: Navigator) = toggleContentType()
-
     @Composable
     override fun Content() = DiscoverContent()
 }
@@ -109,11 +109,9 @@ data object AnimatoUpdatesTab : Tab {
             )
         }
 
-    override suspend fun onReselect(navigator: Navigator) = toggleContentType()
-
     @Composable
     override fun Content() {
-        when (contentType()) {
+        when (contentTypeOrDefault()) {
             ContentType.MANGA -> {
                 MirrorSelectionMode(viewModel<UpdatesViewModel>().state.collectAsState().value.selectionMode)
                 UpdatesTab.Content()
@@ -133,11 +131,9 @@ data object AnimatoDownloadsTab : Tab {
             icon = rememberVectorPainter(Icons.Outlined.Download),
         )
 
-    override suspend fun onReselect(navigator: Navigator) = toggleContentType()
-
     @Composable
     override fun Content() {
-        when (contentType()) {
+        when (contentTypeOrDefault()) {
             ContentType.MANGA -> DownloadQueueScreen.Content()
             ContentType.ANIME -> AnimeDownloadsScreen()
         }

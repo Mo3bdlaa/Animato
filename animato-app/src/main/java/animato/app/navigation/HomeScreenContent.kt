@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -58,16 +59,28 @@ import tachiyomi.presentation.core.util.plus
  * you were already part-way through — and mixes both content types in one rail, because at the
  * moment of resuming nobody is thinking about which app half they are in.
  *
- * The content-type switch lives here because this is the one screen Animato owns end to end. The
- * other destinations delegate to screens whose toolbars belong to their libraries, and re-selecting
- * their tab flips the same setting.
+ * Two sections and no more: what you were in the middle of, and what arrived since. The library
+ * counts that used to sit under them are gone — four numbers nobody acts on, paid for in the space
+ * a session actually needs. The counts belong to Library, where the numbers are the content.
+ *
+ * The lens is the button in the top bar, and the Continue rail is filtered through it. That rail is
+ * where both halves meet, so it is the one list in the app where "which medium" has to be asked
+ * rather than assumed — and not asking is exactly how a screen headed *Anime* came to show manga
+ * chapters.
  */
 @Composable
 internal fun HomeScreenContent() {
     val navigator = LocalNavigator.currentOrThrow
     val screenModel = viewModel { HomeScreenModel() }
     val state by screenModel.state.collectAsState()
-    val selectedType = contentType()
+    val lens = contentLens()
+    val searchType = contentTypeOrDefault()
+
+    // The rail is the one place both halves meet, so it is the one place the lens has to be applied
+    // rather than assumed. Every item already carries its own type; nothing used to read it.
+    val continueItems = remember(state.continueItems, lens) {
+        state.continueItems.filter { lens.admits(it.contentType) }
+    }
 
     Scaffold(
         topBar = { scrollBehavior ->
@@ -77,7 +90,7 @@ internal fun HomeScreenContent() {
                     IconButton(
                         onClick = {
                             navigator.push(
-                                when (selectedType) {
+                                when (searchType) {
                                     ContentType.MANGA -> GlobalSearchScreen()
                                     ContentType.ANIME -> GlobalAnimeSearchScreen()
                                 },
@@ -89,6 +102,7 @@ internal fun HomeScreenContent() {
                             contentDescription = stringResource(MR.strings.action_global_search),
                         )
                     }
+                    LensButton()
                     IconButton(onClick = { navigator.push(AnimatoSettingsScreen()) }) {
                         Icon(
                             imageVector = Icons.Outlined.Settings,
@@ -109,15 +123,7 @@ internal fun HomeScreenContent() {
             contentPadding = contentPadding + PaddingValues(vertical = MaterialTheme.padding.medium),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
-            item {
-                ContentTypeSwitch(
-                    selected = selectedType,
-                    onSelect = { setContentType(it) },
-                    modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-                )
-            }
-
-            if (state.continueItems.isNotEmpty()) {
+            if (continueItems.isNotEmpty()) {
                 item {
                     SectionHeader(stringResource(AYMR.strings.label_continue))
                 }
@@ -127,7 +133,7 @@ internal fun HomeScreenContent() {
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                     ) {
                         items(
-                            items = state.continueItems,
+                            items = continueItems,
                             key = { "${it.contentType}-${it.entryId}" },
                         ) { item ->
                             ContinueCard(
@@ -143,37 +149,6 @@ internal fun HomeScreenContent() {
                             )
                         }
                     }
-                }
-            }
-
-            item {
-                SectionHeader(stringResource(MR.strings.label_library))
-            }
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = MaterialTheme.padding.medium),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                ) {
-                    LibraryCountTile(
-                        label = stringResource(AYMR.strings.label_manga),
-                        count = state.mangaCount,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            setContentType(ContentType.MANGA)
-                            AnimatoNavigator.openTab(AnimatoTab.LIBRARY)
-                        },
-                    )
-                    LibraryCountTile(
-                        label = stringResource(AYMR.strings.label_anime),
-                        count = state.animeCount,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            setContentType(ContentType.ANIME)
-                            AnimatoNavigator.openTab(AnimatoTab.LIBRARY)
-                        },
-                    )
                 }
             }
         }
@@ -223,40 +198,6 @@ private fun ContinueCard(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
         )
-    }
-}
-
-@Composable
-private fun LibraryCountTile(
-    label: String,
-    count: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier,
-        onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(MaterialTheme.padding.medium),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)) {
-                Text(
-                    text = count.toString(),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
     }
 }
 

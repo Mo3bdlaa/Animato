@@ -593,4 +593,6 @@
     <string name="aniyomi_import_error_log_header">عناصر تعذّر استيرادها. كل ما ليس مذكورًا هنا تم نقله.</string>
     <string name="backup_format_info">النسخ الاحتياطية تحتوي على المكتبتين وتُكتب بصيغة أنيومي، فيستطيع أنيومي قراءتها كاملة ويستطيع ميهون قراءة المانجا التي فيها.</string>
     <string name="backup_chapters_and_episodes">الفصول والحلقات</string>
+    <string name="lens_all">الكل</string>
+    <string name="lens_applies_everywhere">ينطبق في كل مكان</string>
 </resources>

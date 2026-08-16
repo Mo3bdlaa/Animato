@@ -3,7 +3,7 @@ package animato.app.discover
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import animato.app.navigation.AnimeBrowseScreen
-import animato.app.navigation.contentType
+import animato.app.navigation.contentTypeOrDefault
 import animato.domain.content.ContentType
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
@@ -26,7 +26,7 @@ class BrowseCatalogScreen(
         LaunchedEffect(toExtensions) {
             if (toExtensions) BrowseTab.showExtension()
         }
-        when (contentType()) {
+        when (contentTypeOrDefault()) {
             ContentType.MANGA -> BrowseTab.Content()
             ContentType.ANIME -> AnimeBrowseScreen()
         }

@@ -136,6 +136,9 @@
     <string name="long_press_screenshot">Take a screenshot</string>
     <string name="pref_long_press_speed">Speed while held</string>
     <string name="player_sheets_screenshot_title">Screenshot</string>
+    <!-- The content lens -->
+    <string name="lens_all">All</string>
+    <string name="lens_applies_everywhere">Applies everywhere</string>
     <!-- Data and storage - orphaned downloads -->
     <string name="pref_delete_removed_downloads">Delete downloads of removed entries</string>
     <string name="pref_delete_removed_downloads_summary">When an anime or manga is no longer in your library, its downloaded files are removed too. Files belonging to a source you have uninstalled are always kept.</string>

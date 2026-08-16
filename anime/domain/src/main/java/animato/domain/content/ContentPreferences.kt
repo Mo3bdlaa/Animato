@@ -4,32 +4,37 @@ import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
 
 /**
- * Which half of the library the user is currently looking at.
+ * The lens: which half of the app the user is currently looking at.
  *
  * Animato has one set of destinations rather than one per content type, so "am I looking at anime
- * or manga" is a lens over the whole app rather than a place in it. Library, Discover, Updates and
- * Downloads all read this, which is why it is one stored value and not four screen states: switch
- * on one screen and the others agree with you when you get there.
+ * or manga" is a lens over the whole app rather than a place in it. Home, Library, Discover,
+ * Updates and Search all read this one value, which is the point: change it anywhere and every
+ * other screen agrees when you arrive.
  *
  * It is persisted because it is a preference in the ordinary sense — someone who only watches anime
  * should not have to say so again every launch.
  *
- * [contentType] is a [ContentType] and not a [ContentFilter] on purpose: `ALL` only means something
- * on a screen that can draw both halves at once, and those destinations cannot. The library can,
- * so it has its own setting that does have one.
+ * ## Why there is one value here and there used to be two
+ *
+ * This was a pair: a `ContentType` for the destinations that can only draw one half, and a
+ * `ContentFilter` with an `ALL` for the library, which can draw both. Two stored answers to one
+ * question, kept in step by hand — and they came apart exactly where you would expect. The home
+ * screen's switch wrote one of them while its Continue rail read neither, so the toggle could say
+ * Anime over a list of manga chapters.
+ *
+ * So the filter is the whole of it. A screen that cannot draw both halves resolves `ALL` to a
+ * default when it renders, without writing that choice back.
  */
 class ContentPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
 
-    val contentType = preferenceStore.getEnum("animato_content_type", ContentType.MANGA)
-
     /**
-     * What the library destination shows.
+     * A new key rather than a migration of the old pair.
      *
-     * Separate from [contentType], and a [ContentFilter] rather than a [ContentType], because the
-     * library is the one destination with a screen that can draw both halves at once. It defaults
-     * to `ALL`, since one library is the point.
+     * The old `animato_content_type` could not express `ALL`, so there is nothing faithful to carry
+     * across: every existing install would have to be assigned a third state it never chose. `ALL`
+     * is both the honest default and the one people want — one library is the product.
      */
-    val libraryFilter = preferenceStore.getEnum("animato_library_filter", ContentFilter.ALL)
+    val contentFilter = preferenceStore.getEnum("animato_content_lens", ContentFilter.ALL)
 }

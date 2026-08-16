@@ -228,7 +228,7 @@ object AnimatoHomeScreen : Screen(), AnimatoRoot {
      */
     @Composable
     private fun NavigationIconItem(tab: Tab) {
-        val contentType = contentType()
+        val contentType = contentTypeOrDefault()
         BadgedBox(
             badge = {
                 when (tab) {
