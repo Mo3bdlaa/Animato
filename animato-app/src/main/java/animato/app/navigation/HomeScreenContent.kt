@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.settings.AnimatoSettingsScreen
+import animato.app.updates.UpdateItem
 import animato.domain.content.ContentType
 import animato.ui.components.NewPill
 import animato.ui.entries.ItemCover

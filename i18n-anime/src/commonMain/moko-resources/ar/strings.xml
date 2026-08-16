@@ -631,4 +631,7 @@
     <string name="label_your_sources">مصادرك</string>
     <string name="discover_no_sources">كل اللي فوق شغال من غير مصادر — ضيف مصدر لما تحب تفتح حاجة.</string>
     <string name="action_add_sources">إضافة مصادر</string>
+    <string name="relative_time_yesterday">أمس</string>
+    <string name="updates_nothing_new">مفيش جديد من آخر مرة اتفحصت.</string>
+    <string name="action_check_now">افحص دلوقتي</string>
 </resources>

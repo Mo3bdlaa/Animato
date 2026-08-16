@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.discover.DiscoverContent
 import animato.app.library.UnifiedLibraryContent
+import animato.app.updates.UpdatesContent
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.navigation.AnimatoNavigator
@@ -109,16 +110,10 @@ data object AnimatoUpdatesTab : Tab {
             )
         }
 
+    // One feed for both halves. The per-library screens are gone from here rather than delegated
+    // to: a day on which one chapter and one episode arrived was two screens holding one row each.
     @Composable
-    override fun Content() {
-        when (contentTypeOrDefault()) {
-            ContentType.MANGA -> {
-                MirrorSelectionMode(viewModel<UpdatesViewModel>().state.collectAsState().value.selectionMode)
-                UpdatesTab.Content()
-            }
-            ContentType.ANIME -> AnimeUpdatesScreen()
-        }
-    }
+    override fun Content() = UpdatesContent()
 }
 
 data object AnimatoDownloadsTab : Tab {

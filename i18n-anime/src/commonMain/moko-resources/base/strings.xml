@@ -702,4 +702,9 @@
     <string name="label_your_sources">Your sources</string>
     <string name="discover_no_sources">Everything above works without sources — add one when you want to open something.</string>
     <string name="action_add_sources">Add sources</string>
+
+    <!-- Updates feed -->
+    <string name="relative_time_yesterday">Yesterday</string>
+    <string name="updates_nothing_new">Nothing new since your last check.</string>
+    <string name="action_check_now">Check now</string>
 </resources>

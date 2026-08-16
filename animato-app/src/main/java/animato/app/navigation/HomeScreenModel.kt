@@ -3,6 +3,8 @@ package animato.app.navigation
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.app.updates.UpdateItem
+import animato.app.updates.toUpdateItem
 import animato.domain.content.ContentType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,23 +36,6 @@ data class ContinueItem(
     val title: String,
     val itemNumber: Double,
     val lastViewedAt: Long,
-    val coverData: Any?,
-)
-
-/**
- * Something that arrived since you last looked, whichever library it came from.
- *
- * [isNew] is unread or unseen — the pill on the row. It is the state that makes the section worth
- * having: a feed of things you have already dealt with is a log, not news.
- */
-@Immutable
-data class UpdateItem(
-    val entryId: Long,
-    val contentType: ContentType,
-    val title: String,
-    val itemName: String,
-    val fetchedAt: Long,
-    val isNew: Boolean,
     val coverData: Any?,
 )
 
@@ -136,34 +121,9 @@ class HomeScreenModel(
                 .distinctBy { it.contentType to it.entryId }
                 .take(CONTINUE_LIMIT)
 
-            val updateItems = buildList {
-                mangaUpdates.forEach {
-                    add(
-                        UpdateItem(
-                            entryId = it.mangaId,
-                            contentType = ContentType.MANGA,
-                            title = it.mangaTitle,
-                            itemName = it.chapterName,
-                            fetchedAt = it.dateFetch,
-                            isNew = !it.read,
-                            coverData = it.coverData,
-                        ),
-                    )
-                }
-                animeUpdates.forEach {
-                    add(
-                        UpdateItem(
-                            entryId = it.animeId,
-                            contentType = ContentType.ANIME,
-                            title = it.animeTitle,
-                            itemName = it.episodeName,
-                            fetchedAt = it.dateFetch,
-                            isNew = !it.seen,
-                            coverData = it.coverData,
-                        ),
-                    )
-                }
-            }
+            // The same row object the Updates feed draws — Home is the first five of it, not a
+            // second thing that happens to look similar.
+            val updateItems = (mangaUpdates.map { it.toUpdateItem() } + animeUpdates.map { it.toUpdateItem() })
                 .sortedByDescending { it.fetchedAt }
                 .take(UPDATE_LIMIT)
 
