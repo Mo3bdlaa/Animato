@@ -642,4 +642,14 @@
     <string name="action_clean_up">تنظيف</string>
     <string name="cleanup_removed">اتشال %1$s مجلد مش موجود في مكتبتك</string>
     <string name="downloads_nothing_downloading">مفيش حاجة بتتنزل. اضغط مطوّلًا على أي قائمة عشان تضيف دفعة.</string>
+    <string name="search_placeholder">ابحث في مكتبتك ومصادرك</string>
+    <string name="search_in_your_library">في مكتبتك</string>
+    <string name="search_from_your_sources">من مصادرك</string>
+    <string name="search_recent">الأخيرة</string>
+    <string name="search_trending">عمليات بحث رائجة</string>
+    <string name="search_progress">%1$s من %2$s</string>
+    <string name="search_no_anime_sources">لسه مفيش عندك مصادر أنمي، فمفيش مكان نبحث فيه.</string>
+    <string name="search_no_manga_sources">لسه مفيش عندك مصادر مانجا، فمفيش مكان نبحث فيه.</string>
+    <string name="search_no_sources">لسه مفيش عندك مصادر، فمفيش مكان نبحث فيه.</string>
+    <string name="search_switch_lens">أو غيّر العدسة عشان تبص على النص التاني.</string>
 </resources>

@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.search.AnimatoSearchScreen
 import animato.app.settings.AnimatoSettingsScreen
 import animato.app.updates.UpdateItem
 import animato.domain.content.ContentType
@@ -49,8 +50,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
-import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import tachiyomi.i18n.MR
@@ -102,12 +101,7 @@ internal fun HomeScreenContent() {
                 actions = {
                     IconButton(
                         onClick = {
-                            navigator.push(
-                                when (searchType) {
-                                    ContentType.MANGA -> GlobalSearchScreen()
-                                    ContentType.ANIME -> GlobalAnimeSearchScreen()
-                                },
-                            )
+                            navigator.push(AnimatoSearchScreen())
                         },
                     ) {
                         Icon(

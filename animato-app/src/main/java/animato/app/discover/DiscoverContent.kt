@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.extension.ExtensionsScreen
 import animato.app.navigation.LensButton
+import animato.app.search.AnimatoSearchScreen
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.components.Pill
@@ -50,8 +51,6 @@ import animato.ui.entries.ItemCover
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import kotlinx.coroutines.launch
@@ -87,15 +86,11 @@ internal fun DiscoverContent() {
 
     var query by rememberSaveable { mutableStateOf("") }
 
-    val search: (String, ContentType) -> Unit = { text, type ->
-        if (text.isNotBlank()) {
-            navigator.push(
-                when (type) {
-                    ContentType.MANGA -> GlobalSearchScreen(text)
-                    ContentType.ANIME -> GlobalAnimeSearchScreen(text)
-                },
-            )
-        }
+    // One search screen for the whole app: the library first, then every source separately. The
+    // per-half global searches this used to push are what made "I can't search to add an anime"
+    // true, since which one you got depended on where you had come from.
+    val search: (String) -> Unit = { text ->
+        if (text.isNotBlank()) navigator.push(AnimatoSearchScreen(text))
     }
 
     val openSourceItem: (DiscoverItem) -> Unit = { item ->
@@ -119,19 +114,12 @@ internal fun DiscoverContent() {
                 SearchRow(
                     query = query,
                     onQueryChange = { query = it },
-                    // Under All a query still has to pick a half, because global search is per half
-                    // in both codebases. Manga is the fallback the rest of the app already uses.
-                    onSearch = {
-                        search(
-                            query,
-                            if (state.lens == ContentFilter.ANIME) ContentType.ANIME else ContentType.MANGA,
-                        )
-                    },
+                    onSearch = { search(query) },
                 )
             }
 
             state.metadataRails.forEach { rail ->
-                metadataRail(rail) { item -> search(item.title, item.contentType) }
+                metadataRail(rail) { item -> search(item.title) }
             }
 
             item(key = "your-sources") {

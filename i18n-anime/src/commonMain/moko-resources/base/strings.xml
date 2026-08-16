@@ -717,4 +717,16 @@
     <string name="action_clean_up">Clean up</string>
     <string name="cleanup_removed">Removed %1$s folders no longer in your library</string>
     <string name="downloads_nothing_downloading">Nothing downloading. Long-press any list to queue a batch.</string>
+
+    <!-- Unified search -->
+    <string name="search_placeholder">Search your library and sources</string>
+    <string name="search_in_your_library">In your library</string>
+    <string name="search_from_your_sources">From your sources</string>
+    <string name="search_recent">Recent</string>
+    <string name="search_trending">Trending searches</string>
+    <string name="search_progress">%1$s of %2$s</string>
+    <string name="search_no_anime_sources">You don\'t have any anime sources yet, so there is nowhere to search.</string>
+    <string name="search_no_manga_sources">You don\'t have any manga sources yet, so there is nowhere to search.</string>
+    <string name="search_no_sources">You don\'t have any sources yet, so there is nowhere to search.</string>
+    <string name="search_switch_lens">Or switch the lens to look at the other half.</string>
 </resources>
