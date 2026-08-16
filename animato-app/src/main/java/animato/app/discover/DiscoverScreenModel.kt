@@ -53,22 +53,49 @@ data class DiscoverRail(
     val failedSources: List<String> = emptyList(),
 )
 
-/** One metadata rail, and what it currently holds. */
+/** One metadata rail — one question, about one medium — and what it currently holds. */
 @Immutable
 data class MetadataRailState(
     val rail: MetadataRail,
+    val contentType: ContentType,
     val isLoading: Boolean = true,
     val items: List<MetadataItem> = emptyList(),
-)
+) {
+    val key: String get() = "${rail.name}-${contentType.name}"
+}
 
 @Immutable
 data class DiscoverState(
     val lens: ContentFilter = ContentFilter.ALL,
     val hasPinnedSources: Boolean = true,
-    val metadataRails: List<MetadataRailState> = MetadataRail.entries.map { MetadataRailState(it) },
+    val metadataRails: List<MetadataRailState> = emptyList(),
     val popular: DiscoverRail = DiscoverRail(),
     val latest: DiscoverRail = DiscoverRail(),
 )
+
+/**
+ * The rails this lens asks for: every question, once per medium it applies to.
+ *
+ * ## Why not one rail holding both
+ *
+ * It used to ask both halves for each question and interleave the answers, which sounds like the
+ * unified screen the app is about and was not. Trending anime and trending manga are two different
+ * lists in the world, and shuffling them together produced one rail where the manga were whatever
+ * happened to land between the anime — from a device: *"trending brings anime and manga, and this
+ * season is anime only, so we want something for manga on its own."*
+ *
+ * Separating them is also what lets the covers drop their type marks. A rail is one medium now, its
+ * header says which, and nothing on the cards has to repeat it.
+ *
+ * Anime leads each pair because *This season* is anime-only, so a mixed screen that put manga first
+ * would alternate media in an order no rule explains.
+ */
+private fun railsFor(lens: ContentFilter): List<MetadataRailState> =
+    MetadataRail.entries.flatMap { rail ->
+        listOf(ContentType.ANIME, ContentType.MANGA)
+            .filter { it in rail.media && lens.accepts(it) }
+            .map { MetadataRailState(rail = rail, contentType = it) }
+    }
 
 /**
  * What to watch or read next.
@@ -87,9 +114,10 @@ data class DiscoverState(
  *
  * ## Both halves at once
  *
- * The model reads the lens rather than being constructed for one content type. Under `ALL` every
- * rail asks both halves and interleaves them, which is the claim the app makes made visible: one
- * shelf of things, not a manga screen with an anime mode.
+ * The model reads the lens rather than being constructed for one content type. Under `ALL` the
+ * public rails come in pairs — trending anime and trending manga, each its own shelf — while *Your
+ * sources* interleaves, because there a rail is a set of sources rather than a medium. See
+ * [railsFor] for why the metadata rails stopped interleaving.
  *
  * Every request is contained. A source that is down, rate limited or broken contributes nothing and
  * is named; a metadata rail that fails comes back empty. This is the one screen that reaches the
@@ -107,37 +135,38 @@ class DiscoverScreenModel(
 ) : ViewModel() {
 
     val state: StateFlow<DiscoverState>
-        field = MutableStateFlow<DiscoverState>(DiscoverState(lens = contentPreferences.contentFilter.get()))
+        field = MutableStateFlow<DiscoverState>(
+            contentPreferences.contentFilter.get().let {
+                DiscoverState(lens = it, metadataRails = railsFor(it))
+            },
+        )
 
     init {
         viewModelScope.launch {
             contentPreferences.contentFilter.changes().collectLatest { lens ->
-                state.value = DiscoverState(lens = lens)
-                loadMetadata(lens)
+                val rails = railsFor(lens)
+                state.value = DiscoverState(lens = lens, metadataRails = rails)
+                loadMetadata(rails)
                 loadSourceRails(lens)
             }
         }
     }
 
     /**
-     * The three public rails, each loading on its own.
+     * The public rails, each loading on its own.
      *
      * Separate launches rather than one sequential pass: the rails are independent, and a screen
-     * that waits for the slowest of three before drawing any of them looks broken on a slow
-     * connection when in fact two of the three arrived.
+     * that waits for the slowest before drawing any of them looks broken on a slow connection when
+     * in fact all but one arrived.
      */
-    private fun CoroutineScope.loadMetadata(lens: ContentFilter) {
-        MetadataRail.entries.forEach { rail ->
+    private fun CoroutineScope.loadMetadata(rails: List<MetadataRailState>) {
+        rails.forEach { slot ->
             launch {
-                val types = buildList {
-                    if (lens.includesAnime) add(ContentType.ANIME)
-                    if (lens.includesManga) add(ContentType.MANGA)
-                }
-                val perType = types.map { type -> async { metadataCatalog.fetch(rail, type) } }.awaitAll()
+                val items = metadataCatalog.fetch(slot.rail, slot.contentType)
                 state.value = state.value.copy(
                     metadataRails = state.value.metadataRails.map { existing ->
-                        if (existing.rail == rail) {
-                            existing.copy(isLoading = false, items = perType.interleaveBy { it.key })
+                        if (existing.key == slot.key) {
+                            existing.copy(isLoading = false, items = items)
                         } else {
                             existing
                         }
@@ -284,29 +313,9 @@ private val Throwable.sourceName: String?
 /**
  * One from each list, then the next from each, and so on.
  *
- * Used for both kinds of rail and for the same reason. Concatenating the source lists would let the
- * first pinned source fill the whole rail — the source-led browsing this screen exists to replace —
- * and concatenating the metadata lists would put every anime before every manga, which is two rails
- * pretending to be one.
+ * Concatenating instead would let the first pinned source fill the whole rail, which is the
+ * source-led browsing this screen exists to replace.
  */
-private fun <T> List<List<T>>.interleaveBy(key: (T) -> Any): List<T> {
-    if (isEmpty()) return emptyList()
-    val seen = HashSet<Any>()
-    val result = ArrayList<T>(sumOf { it.size })
-    var index = 0
-    while (true) {
-        var added = false
-        forEach { items ->
-            items.getOrNull(index)?.let {
-                if (seen.add(key(it))) result += it
-                added = true
-            }
-        }
-        if (!added) return result
-        index++
-    }
-}
-
 private fun List<List<DiscoverItem>>.interleave(): List<DiscoverItem> {
     if (isEmpty()) return emptyList()
     val result = ArrayList<DiscoverItem>(sumOf { it.size })

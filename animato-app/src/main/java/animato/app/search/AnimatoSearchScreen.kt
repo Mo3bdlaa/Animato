@@ -80,6 +80,15 @@ import tachiyomi.presentation.core.util.plus
  */
 class AnimatoSearchScreen(
     private val initialQuery: String = "",
+    /**
+     * Narrows this one search to a single medium, without touching the lens.
+     *
+     * Set when the query came from somewhere that already knew what it was asking about — a
+     * trending *anime* cover, say. Searching every manga source for it as well is work nobody asked
+     * for and a screenful of empty groups to scroll past. The lens is a standing preference and a
+     * tap on one cover is not the place to change it, so this is passed rather than written.
+     */
+    private val restrictTo: ContentType? = null,
 ) : Screen() {
 
     @Composable
@@ -89,7 +98,8 @@ class AnimatoSearchScreen(
         val screenModel = viewModel { SearchScreenModel() }
         val state by screenModel.state.collectAsStateWithLifecycle()
 
-        LaunchedEffect(initialQuery) {
+        LaunchedEffect(initialQuery, restrictTo) {
+            screenModel.restrictTo(restrictTo)
             if (initialQuery.isNotBlank()) {
                 screenModel.onQueryChange(initialQuery)
                 screenModel.search(initialQuery)
@@ -149,7 +159,11 @@ class AnimatoSearchScreen(
                 if (!state.hasSearchableSources) {
                     item(key = "no-sources") {
                         NoSourcesToSearch(
-                            lens = state.lens,
+                            lens = state.effectiveLens,
+                            // Only when the lens is the reason. A search narrowed by where it came
+                            // from would still find nothing after switching it, and advice that
+                            // does not work is worse than none.
+                            canSwitchLens = state.restrictTo == null,
                             onAddSources = { navigator.push(ExtensionsScreen()) },
                         )
                     }
@@ -425,6 +439,7 @@ private fun SourceHitRail(hits: List<SourceHit>, onClick: (SourceHit) -> Unit) {
 @Composable
 private fun NoSourcesToSearch(
     lens: ContentFilter,
+    canSwitchLens: Boolean,
     onAddSources: () -> Unit,
 ) {
     Column(
@@ -447,7 +462,7 @@ private fun NoSourcesToSearch(
         Button(onClick = onAddSources) {
             Text(stringResource(AYMR.strings.action_add_sources))
         }
-        if (lens != ContentFilter.ALL) {
+        if (canSwitchLens && lens != ContentFilter.ALL) {
             Text(
                 text = stringResource(AYMR.strings.search_switch_lens),
                 style = MaterialTheme.typography.bodySmall,

@@ -2,7 +2,6 @@ package animato.app.discover
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -47,7 +46,6 @@ import animato.app.navigation.LensButton
 import animato.app.search.AnimatoSearchScreen
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
-import animato.ui.components.Pill
 import animato.ui.entries.ItemCover
 import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -68,16 +66,16 @@ import tachiyomi.presentation.core.util.plus
  * Discovery that works before you have installed anything.
  *
  * Mihon's Browse opens on a list of sources, which asks you to pick a website before you can look
- * for a story. This screen opens on what the world is watching and reading — three rails of public
- * metadata that need no extension at all — with the search field above them, because Discover
- * begins with a query rather than with a title.
+ * for a story. This screen opens on what the world is watching and reading — rails of public
+ * metadata that need no extension at all, one per question per medium — with the search field above
+ * them, because Discover begins with a query rather than with a title.
  *
  * *Your sources* sits underneath and is the only part that can be empty. That ordering is the whole
  * design: a fresh install used to open here on nothing but a sentence explaining the nothing.
  *
  * A metadata title has no source, so tapping one cannot open it. It searches instead, across
- * whatever is installed — which is honest, and is also the moment where wanting a source becomes
- * the user's own idea rather than a thing the app demanded up front.
+ * whatever is installed of that medium — which is honest, and is also the moment where wanting a
+ * source becomes the user's own idea rather than a thing the app demanded up front.
  */
 @Composable
 internal fun DiscoverContent() {
@@ -91,8 +89,8 @@ internal fun DiscoverContent() {
     // One search screen for the whole app: the library first, then every source separately. The
     // per-half global searches this used to push are what made "I can't search to add an anime"
     // true, since which one you got depended on where you had come from.
-    val search: (String) -> Unit = { text ->
-        if (text.isNotBlank()) navigator.push(AnimatoSearchScreen(text))
+    val search: (String, ContentType?) -> Unit = { text, restrictTo ->
+        if (text.isNotBlank()) navigator.push(AnimatoSearchScreen(text, restrictTo))
     }
 
     val openSourceItem: (DiscoverItem) -> Unit = { item ->
@@ -111,12 +109,18 @@ internal fun DiscoverContent() {
                 SearchRow(
                     query = query,
                     onQueryChange = { query = it },
-                    onSearch = { search(query) },
+                    onSearch = { search(query, null) },
                 )
             }
 
             state.metadataRails.forEach { rail ->
-                metadataRail(rail) { item -> search(item.title) }
+                // A metadata title has no source, so the only thing a tap can mean is "find me this
+                // in what I have". Restricted to the rail's own medium: a trending anime has no
+                // business being looked for in a manga source, and asking every source of both
+                // halves is how a search takes twice as long to say nothing.
+                metadataRail(rail, showMedium = state.lens == ContentFilter.ALL) { item ->
+                    search(item.title, rail.contentType)
+                }
             }
 
             item(key = "your-sources") {
@@ -186,7 +190,13 @@ private fun SearchRow(
 }
 
 /**
- * One public rail.
+ * One public rail: one question, about one medium.
+ *
+ * ## The medium is in the header, not on the covers
+ *
+ * Each rail holds a single medium now, so the header carries the mark — *Trending · Anime* — and the
+ * cards carry none. Under a narrowed lens even the header drops it, which is the same rule the rest
+ * of the app follows: when everything on screen is the same kind, saying so on each item is noise.
  *
  * No *See all*. The design sheet puts one on each header, and it would have to open a screen that
  * does not exist — a link that goes nowhere is worse than a header that promises nothing. It comes
@@ -194,14 +204,22 @@ private fun SearchRow(
  */
 private fun LazyListScope.metadataRail(
     rail: MetadataRailState,
+    showMedium: Boolean,
     onClick: (MetadataItem) -> Unit,
 ) {
     if (!rail.isLoading && rail.items.isEmpty()) return
 
-    item(key = "header-${rail.rail}") {
-        SectionHeader(stringResource(rail.rail.labelRes()))
+    item(key = "header-${rail.key}") {
+        val question = stringResource(rail.rail.labelRes())
+        SectionHeader(
+            if (showMedium) {
+                "$question · ${stringResource(rail.contentType.labelRes())}"
+            } else {
+                question
+            },
+        )
     }
-    item(key = "rail-${rail.rail}") {
+    item(key = "rail-${rail.key}") {
         LazyRow(
             contentPadding = PaddingValues(horizontal = MaterialTheme.padding.medium),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
@@ -220,29 +238,12 @@ private fun MetadataCard(item: MetadataItem, onClick: () -> Unit) {
             .width(RailItemWidth)
             .tvClickable(onClick = onClick),
     ) {
-        Box {
-            ItemCover.Book(
-                modifier = Modifier.fillMaxWidth(),
-                data = item.coverUrl,
-                contentDescription = item.title,
-                shape = RoundedCornerShape(CoverRadius),
-            )
-            // These rails mix both halves under the All lens, so the mark is what tells you whether
-            // you are looking at something you would watch or something you would read.
-            Pill(
-                text = stringResource(
-                    when (item.contentType) {
-                        ContentType.MANGA -> AYMR.strings.label_manga
-                        ContentType.ANIME -> AYMR.strings.label_anime
-                    },
-                ),
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(PillInset),
-            )
-        }
+        ItemCover.Book(
+            modifier = Modifier.fillMaxWidth(),
+            data = item.coverUrl,
+            contentDescription = item.title,
+            shape = RoundedCornerShape(CoverRadius),
+        )
         Text(
             text = item.title,
             modifier = Modifier.padding(top = MaterialTheme.padding.extraSmall),
@@ -368,7 +369,11 @@ private fun MetadataRail.labelRes(): StringResource = when (this) {
     MetadataRail.TOP_RATED -> AYMR.strings.rail_top_rated
 }
 
+private fun ContentType.labelRes(): StringResource = when (this) {
+    ContentType.MANGA -> AYMR.strings.label_manga
+    ContentType.ANIME -> AYMR.strings.label_anime
+}
+
 private val RailItemWidth = 112.dp
 private val CoverRadius = 12.dp
-private val PillInset = 6.dp
 private val SearchFieldRadius = 24.dp

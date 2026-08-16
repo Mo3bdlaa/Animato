@@ -83,8 +83,20 @@ data class SearchState(
     val recentQueries: List<String> = emptyList(),
     val trendingQueries: List<String> = emptyList(),
     val hasSearchableSources: Boolean = true,
+    /** Set when the caller already knew the medium. See `AnimatoSearchScreen.restrictTo`. */
+    val restrictTo: ContentType? = null,
 ) {
     val isIdle: Boolean get() = query.isBlank()
+
+    /** The lens as this search sees it: the standing preference, unless the caller narrowed it. */
+    val effectiveLens: ContentFilter
+        get() = when (restrictTo) {
+            ContentType.ANIME -> ContentFilter.ANIME
+            ContentType.MANGA -> ContentFilter.MANGA
+            null -> lens
+        }
+
+    fun admits(type: ContentType): Boolean = effectiveLens.accepts(type)
 }
 
 /**
@@ -148,8 +160,8 @@ class SearchScreenModel(
                 state.value = state.value.copy(
                     lens = lens,
                     recentQueries = recentQueries.sorted(),
-                    libraryHits = libraryHits(state.value.query, lens),
                 )
+                state.value = state.value.copy(libraryHits = libraryHits(state.value.query))
                 if (state.value.query.isNotBlank()) search(state.value.query)
             }
             .launchIn(viewModelScope)
@@ -171,11 +183,20 @@ class SearchScreenModel(
         state.value = state.value.copy(trendingQueries = titles)
     }
 
+    /**
+     * Narrows this screen to one medium for as long as it is open.
+     *
+     * Separate from [search] because it has to be in place before the first query runs, and because
+     * clearing it — a screen opened with no restriction, reusing the model of one that had one — is
+     * as much a part of it as setting it.
+     */
+    fun restrictTo(contentType: ContentType?) {
+        state.value = state.value.copy(restrictTo = contentType)
+    }
+
     fun onQueryChange(query: String) {
-        state.value = state.value.copy(
-            query = query,
-            libraryHits = libraryHits(query, state.value.lens),
-        )
+        state.value = state.value.copy(query = query)
+        state.value = state.value.copy(libraryHits = libraryHits(query))
         if (query.isBlank()) {
             searchJob?.cancel()
             state.value = state.value.copy(sourceGroups = emptyList())
@@ -192,14 +213,13 @@ class SearchScreenModel(
         if (query.isBlank()) return
         searchJob?.cancel()
 
-        val lens = state.value.lens
         val sources = buildList {
-            if (lens.includesManga) {
+            if (state.value.admits(ContentType.MANGA)) {
                 sourceManager.getOnlineSources()
                     .filterIsInstance<CatalogueSource>()
                     .forEach { add(SearchTarget.Manga(it)) }
             }
-            if (lens.includesAnime) {
+            if (state.value.admits(ContentType.ANIME)) {
                 animeSourceManager.getOnlineSources()
                     .filterIsInstance<AnimeCatalogueSource>()
                     .forEach { add(SearchTarget.Anime(it)) }
@@ -239,12 +259,12 @@ class SearchScreenModel(
         )
     }
 
-    private fun libraryHits(query: String, lens: ContentFilter): List<LibraryHit> {
+    private fun libraryHits(query: String): List<LibraryHit> {
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return emptyList()
         return entries
             .asSequence()
-            .filter { lens.accepts(it.contentType) }
+            .filter { state.value.admits(it.contentType) }
             .filter { it.title.contains(trimmed, ignoreCase = true) }
             .distinctBy { it.contentType to it.entryId }
             .take(LIBRARY_LIMIT)

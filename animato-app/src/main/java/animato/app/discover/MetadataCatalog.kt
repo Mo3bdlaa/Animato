@@ -30,11 +30,20 @@ data class MetadataItem(
     val contentType: ContentType,
 )
 
-/** The three questions Discover opens with. */
-enum class MetadataRail {
-    TRENDING,
-    THIS_SEASON,
-    TOP_RATED,
+/**
+ * The three questions Discover opens with, and which mediums each one can be asked about.
+ *
+ * Seasons are an anime idea and AniList models them that way — `season` is not a field on a manga —
+ * so *This season* has one medium where the others have two. Stating that here is what lets the
+ * screen build one rail per medium per question instead of asking for a rail that cannot exist.
+ */
+enum class MetadataRail(val media: Set<ContentType>) {
+    // Spelled out rather than sharing a constant: a top-level `val` is initialised with the file's
+    // facade class, and an enum constructor runs with the enum's, so the shared one is null half
+    // the time depending on which is touched first.
+    TRENDING(setOf(ContentType.ANIME, ContentType.MANGA)),
+    THIS_SEASON(setOf(ContentType.ANIME)),
+    TOP_RATED(setOf(ContentType.ANIME, ContentType.MANGA)),
 }
 
 /**
