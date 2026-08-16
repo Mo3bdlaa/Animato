@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.category.anime.interactor.GetVisibleAnimeCategories
 import tachiyomi.domain.category.interactor.GetCategories
@@ -48,7 +49,10 @@ class UnifiedLibraryScreenModel(
     private val downloadCache: DownloadCache = Injekt.get(),
     private val animeDownloadCache: AnimeDownloadCache = Injekt.get(),
     private val preferences: UnifiedLibraryPreferences = Injekt.get(),
+    private val quickActions: LibraryQuickActions = LibraryQuickActions(),
 ) : ViewModel() {
+
+    val quickSheet: MutableStateFlow<QuickSheetState?> = MutableStateFlow(null)
 
     val state: StateFlow<UnifiedLibraryState>
         field = MutableStateFlow<UnifiedLibraryState>(
@@ -164,6 +168,41 @@ class UnifiedLibraryScreenModel(
             }
             (entry.contentType to entry.entryId).takeIf { count > 0 }
         }
+
+    /**
+     * The long-press sheet, which opens empty and fills in.
+     *
+     * Its captions state consequences — which chapter is next, how many rows a mark-done would
+     * change, how many downloads a removal keeps — and none of that is in the library row. So the
+     * sheet appears immediately and reads afterwards, rather than the press appearing to do nothing
+     * while a query runs.
+     */
+    fun openQuickSheet(entry: LibraryEntry) {
+        quickSheet.value = QuickSheetState(entry = entry)
+        viewModelScope.launch {
+            val loaded = quickActions.inspect(entry)
+            if (quickSheet.value?.entry?.entryId == entry.entryId) quickSheet.value = loaded
+        }
+    }
+
+    fun closeQuickSheet() {
+        quickSheet.value = null
+    }
+
+    fun markDoneUpToHere(entry: LibraryEntry) {
+        closeQuickSheet()
+        viewModelScope.launch { quickActions.markDoneUpToHere(entry) }
+    }
+
+    fun downloadNext(entry: LibraryEntry) {
+        closeQuickSheet()
+        viewModelScope.launch { quickActions.downloadNext(entry, LibraryQuickActions.DOWNLOAD_BATCH) }
+    }
+
+    fun remove(entry: LibraryEntry, deleteDownloads: Boolean) {
+        closeQuickSheet()
+        viewModelScope.launch { quickActions.remove(entry, deleteDownloads) }
+    }
 
     /** Tapping the chip you are already on goes back to All, the way a toggle does. */
     fun selectCategory(name: String?) {

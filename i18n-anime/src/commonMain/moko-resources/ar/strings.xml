@@ -676,4 +676,13 @@
     <string name="onboarding_done_title">تمام، جاهز</string>
     <string name="onboarding_done_subtitle">المحطة الجاية استكشاف — الأكثر رواجًا وهذا الموسم والأعلى تقييمًا محمّلين خلاص.</string>
     <string name="onboarding_action_next">متابعة</string>
+    <string name="quick_unviewed">%1$s غير مقروء</string>
+    <string name="quick_nothing_left">مفيش حاجة فاضلة — انت لاحق</string>
+    <string name="quick_mark_done">علّم كمقروء لحد هنا</string>
+    <string name="quick_mark_done_caption">هيعلّم %1$s عنصر كمقروء، وهيسيب اللي بعدهم زي ما هو</string>
+    <string name="quick_download_next">نزّل الـ%1$s الجايين</string>
+    <string name="quick_download_caption">هيضيف %1$s عنصر للطابور</string>
+    <string name="quick_remove_caption">هيسيب %1$s عنصر منزّل — هيسأل الأول</string>
+    <string name="quick_remove_confirm">تشيل %1$s من رفّك؟</string>
+    <string name="quick_remove_delete_downloads">امسح كمان %1$s عنصر منزّل</string>
 </resources>

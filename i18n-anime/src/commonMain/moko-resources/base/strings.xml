@@ -755,4 +755,15 @@
     <string name="onboarding_done_title">You\'re set</string>
     <string name="onboarding_done_subtitle">Next stop is Discover — trending, this season and top rated are already loaded.</string>
     <string name="onboarding_action_next">Continue</string>
+
+    <!-- Library quick sheet -->
+    <string name="quick_unviewed">%1$s unread</string>
+    <string name="quick_nothing_left">Nothing left — you are caught up</string>
+    <string name="quick_mark_done">Mark done up to here</string>
+    <string name="quick_mark_done_caption">Marks %1$s items as done, and leaves the next one alone</string>
+    <string name="quick_download_next">Download next %1$s</string>
+    <string name="quick_download_caption">Queues %1$s items</string>
+    <string name="quick_remove_caption">Keeps %1$s downloaded items — asks first</string>
+    <string name="quick_remove_confirm">Take %1$s off your shelf?</string>
+    <string name="quick_remove_delete_downloads">Also delete %1$s downloaded items</string>
 </resources>

@@ -1,6 +1,8 @@
 package animato.app.library
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,15 +38,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.player.PlayerLauncher
 import animato.app.navigation.LensButton
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
@@ -60,6 +65,8 @@ import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
+import eu.kanade.tachiyomi.ui.reader.ReaderActivity
+import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -90,7 +97,19 @@ internal fun UnifiedLibraryContent() {
     val navigator = LocalNavigator.currentOrThrow
     val screenModel = viewModel { UnifiedLibraryScreenModel() }
     val state by screenModel.state.collectAsStateWithLifecycle()
+    val quickSheet by screenModel.quickSheet.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
+
+    val openEntry: (LibraryEntry) -> Unit = { entry ->
+        navigator.push(
+            when (entry.contentType) {
+                ContentType.MANGA -> MangaScreen(entry.entryId)
+                ContentType.ANIME -> AnimeScreen(entry.entryId)
+            },
+        )
+    }
 
     Scaffold(
         topBar = { scrollBehavior ->
@@ -169,18 +188,45 @@ internal fun UnifiedLibraryContent() {
                         entry = entry,
                         showTypeChip = state.lens == ContentFilter.ALL,
                         showUnviewedCount = state.showUnviewedCount,
-                        onClick = {
-                            navigator.push(
-                                when (entry.contentType) {
-                                    ContentType.MANGA -> MangaScreen(entry.entryId)
-                                    ContentType.ANIME -> AnimeScreen(entry.entryId)
-                                },
-                            )
-                        },
+                        onClick = { openEntry(entry) },
+                        onLongClick = { screenModel.openQuickSheet(entry) },
                     )
                 }
             }
         }
+    }
+
+    quickSheet?.let { sheet ->
+        LibraryQuickSheet(
+            sheet = sheet,
+            onDismiss = screenModel::closeQuickSheet,
+            onContinue = { itemId ->
+                screenModel.closeQuickSheet()
+                // The reader and the player are activities, the same way the updates feed opens an
+                // item — a quick action that resumed to a title page would not be resuming.
+                when (sheet.entry.contentType) {
+                    ContentType.MANGA -> context.startActivity(
+                        ReaderActivity.newIntent(context, sheet.entry.entryId, itemId),
+                    )
+                    ContentType.ANIME -> scope.launch {
+                        PlayerLauncher.startPlayerActivity(
+                            context = context,
+                            animeId = sheet.entry.entryId,
+                            episodeId = itemId,
+                            extPlayer = false,
+                            sourceId = sheet.entry.sourceId,
+                        )
+                    }
+                }
+            },
+            onOpen = {
+                screenModel.closeQuickSheet()
+                openEntry(sheet.entry)
+            },
+            onMarkDone = { screenModel.markDoneUpToHere(sheet.entry) },
+            onDownloadNext = { screenModel.downloadNext(sheet.entry) },
+            onRemove = { deleteDownloads -> screenModel.remove(sheet.entry, deleteDownloads) },
+        )
     }
 
     if (sheetOpen) {
@@ -280,8 +326,14 @@ private fun LibraryGridItem(
     showTypeChip: Boolean,
     showUnviewedCount: Boolean,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
-    Column(modifier = Modifier.tvClickable(onClick = onClick)) {
+    // combinedClickable rather than tvClickable here: the quick sheet is a long press, and the
+    // television focus modifier owns the click. A remote reaches the same actions through the
+    // title page, which is where a D-pad can get to all of them anyway.
+    Column(
+        modifier = Modifier.combinedClickable(onLongClick = onLongClick, onClick = onClick),
+    ) {
         Box {
             ItemCover.Book(
                 modifier = Modifier.fillMaxWidth(),
