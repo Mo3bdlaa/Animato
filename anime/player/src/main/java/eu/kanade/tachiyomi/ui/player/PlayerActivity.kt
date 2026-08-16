@@ -65,11 +65,11 @@ import animato.anime.player.getScriptsDirectory
 import animato.anime.player.getShadersDirectory
 import animato.anime.services.AnimeNotificationReceiver
 import animato.anime.services.AnimeNotifications
+import animato.ui.theme.AnimatoTheme
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.core.common.torrent.TorrentServerApi
 import aniyomi.core.common.torrent.TorrentServerUtils
 import com.hippo.unifile.UniFile
-import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.animesource.model.ChapterType
 import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.HttpServer
@@ -273,7 +273,11 @@ class PlayerActivity : BaseActivity() {
             .launchIn(lifecycleScope)
 
         binding.controls.setContent {
-            TachiyomiTheme {
+            // Animato's palette, not Mihon's. This activity is ours and was still drawing its
+            // controls in the upstream colours — which nothing surfaced, because a player's
+            // controls are white on a scrim and only the accents differ. The accents are the seek
+            // bar and every active state on this screen.
+            AnimatoTheme {
                 PlayerControls(
                     viewModel = viewModel,
                     onBackPress = {
