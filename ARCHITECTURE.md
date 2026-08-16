@@ -220,7 +220,7 @@ to resolve.
 | 6b | `:anime:ui` — the anime screens | done |
 | 6c | the Animato tab bar and a home screen combining both content types | done |
 | 6d | settings structure — unblocks 5c | done |
-| 7 | Importer for Aniyomi backups | |
+| 7 | Importer for Aniyomi backups | done — decoder, validator, format, models, restore job, screen and tests |
 
 ### Why the player is not next
 

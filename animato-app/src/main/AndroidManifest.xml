@@ -7,7 +7,33 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <application>
+    <!--
+      Installable on a television.
+
+      Both are `required="false"`, and that is the whole of it: the lines widen what the app runs on
+      rather than narrowing it. Android assumes an app needs a touchscreen unless told otherwise, and
+      a device without one then filters it out — so a TV refuses to install this without the second
+      line, and the first is what lets a TV launcher list it at all.
+
+      This is the declaration half of Android TV support, and it is only that. What a remote still
+      cannot do is drive the screens: focus order, focus that is visible from three metres away, and
+      a player whose controls can be reached without a finger. That work is deliberately not here —
+      ROADMAP.md says why.
+    -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <!--
+      A television launcher draws a banner rather than an icon: one flat 320×180 tile, with no
+      adaptive layers and no mask. Without one the app installs and then cannot be found on the home
+      screen, which is a worse failure than looking wrong. Built by docs/branding/build-tv-banner.py
+      from the same artwork as the launcher icon.
+    -->
+    <application android:banner="@drawable/animato_tv_banner">
 
         <!--
           Animato's entry point.
@@ -26,10 +52,16 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/Theme.Tachiyomi.SplashScreen">
+            <!--
+              LEANBACK_LAUNCHER is what a television home screen actually queries; LAUNCHER alone is
+              invisible to it. Both categories sit on one filter rather than two, so a phone and a
+              TV start the same activity and there is no second entry point to keep in step.
+            -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
 
             <!-- Legacy deeplink to add extension store -->

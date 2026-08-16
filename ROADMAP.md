@@ -189,7 +189,7 @@ pipeline is done.
 | | Demand | State | Size |
 | --- | --- | --- | --- |
 | **Cross-device sync** | 69 upstream; highest-voted unbuilt feature in the donor | ❌ no sync package | large |
-| **Android TV** | #162, the highest-reacted issue in the donor, open since 2021 | ❌ no leanback, no TV launcher | medium |
+| **Android TV** | #162, the highest-reacted issue in the donor, open since 2021 | 🟡 **installs and appears on a TV**; a remote still cannot drive it — see below | medium |
 | **Casting** | #78, third most requested, open 5 years | ❌ — but see above | **medium, and the hard part is done** |
 | **F-Droid** | 34 + 17 | ❌ `isFossBuildType` exists, unused | packaging, not code |
 | **Light novels** | 28 | ❌ | a different app, honestly |
@@ -304,7 +304,28 @@ repeating on any future batch: it is the one translation mistake that is a crash
 
 ---
 
-## Tier 3 — noticed, unclaimed
+## Android TV — the half that is done, and why the other half waits
+
+**Done: it installs, and it can be found.** Four declarations, and each fixes a different failure.
+
+- `android.hardware.touchscreen` `required="false"` — Android assumes every app needs a touchscreen
+  unless told otherwise, and a device without one filters it out. Without this line a TV *refuses to
+  install* the app.
+- `android.software.leanback` `required="false"` — what lets a TV launcher list it.
+- `LEANBACK_LAUNCHER` on the main intent filter — the category a television home screen actually
+  queries. `LAUNCHER` alone is invisible to it.
+- A **320×180 banner**. A TV launcher draws a banner, not an icon. Without one the app installs and
+  then cannot be found on the home screen, which is worse than looking wrong.
+
+All four were checked in the *merged* manifest rather than in ours, because manifest merging can
+drop things silently.
+
+**Not done: a remote cannot drive it.** Focus order, focus visible from three metres, a player whose
+controls can be reached without a finger.
+
+That is not deferred because it is hard. It is deferred because it is a screen-by-screen pass over
+**the same screens the UI redesign is about to change**. Doing it now means doing it twice — once
+against the current arrangement and again against the new one. It follows the redesign.
 
 - Recommendations from AniList and MAL; a "recently added" tab; Trakt.
 - Sub-categories in the library.
