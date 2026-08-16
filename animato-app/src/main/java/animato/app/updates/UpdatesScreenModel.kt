@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
+import eu.kanade.domain.chapter.interactor.SetReadStatus
+import eu.kanade.domain.items.episode.interactor.SetSeenStatus
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
@@ -82,6 +84,8 @@ class UpdatesScreenModel(
     contentPreferences: ContentPreferences = Injekt.get(),
     private val getManga: GetManga = Injekt.get(),
     private val getChapter: GetChapter = Injekt.get(),
+    private val setReadStatus: SetReadStatus = Injekt.get(),
+    private val setSeenStatus: SetSeenStatus = Injekt.get(),
     private val getAnime: GetAnime = Injekt.get(),
     private val getEpisode: GetEpisode = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
@@ -137,6 +141,23 @@ class UpdatesScreenModel(
         val manga = state.value.lens.includesManga && LibraryUpdateJob.startNow(context)
         val anime = state.value.lens.includesAnime && AnimeLibraryUpdateJob.startNow(context)
         return manga || anime
+    }
+
+    /**
+     * Marks a row opened, or puts it back.
+     *
+     * Both halves take the item itself rather than its id — they write progress and a history row
+     * beside the flag — so this fetches it first, the same way the title page does.
+     */
+    fun toggleViewed(item: UpdateItem) {
+        viewModelScope.launchNonCancellable {
+            when (item.contentType) {
+                ContentType.MANGA ->
+                    getChapter.await(item.itemId)?.let { setReadStatus.await(item.isNew, it) }
+                ContentType.ANIME ->
+                    getEpisode.await(item.itemId)?.let { setSeenStatus.await(item.isNew, it) }
+            }
+        }
     }
 
     /**

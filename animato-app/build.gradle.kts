@@ -257,6 +257,9 @@ dependencies {
     // than the query string a GET takes — so okhttp is named here rather than arriving through
     // Mihon's network helper.
     implementation(libs.bundles.okhttp)
+    // The swipe box Mihon's own chapter rows use. Reused rather than reimplemented so a swipe on
+    // the updates feed feels identical to a swipe on a title page.
+    implementation(libs.swipe)
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)

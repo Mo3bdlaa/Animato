@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.RemoveDone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,12 +25,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,6 +55,8 @@ import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import kotlinx.coroutines.launch
+import me.saket.swipe.SwipeAction
+import me.saket.swipe.SwipeableActionsBox
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -156,6 +164,7 @@ internal fun UpdatesContent() {
                                 navigator.push(EntryScreen(item.entryId, item.contentType))
                             },
                             onDownload = { screenModel.download(item) },
+                            onToggleViewed = { screenModel.toggleViewed(item) },
                         )
                     }
                 }
@@ -198,6 +207,17 @@ private fun DayHeader(date: LocalDate) {
  * Tapping the row opens the chapter or episode; tapping the cover opens the title it belongs to.
  * Those are two different intentions and a feed that only offers the first makes the second a
  * three-step detour.
+ *
+ * ## The two swipes
+ *
+ * Leading marks it opened, trailing downloads it — the two things anybody does to a feed row
+ * without wanting to look at it yet. Both are the same `SwipeableActionsBox` Mihon's own chapter
+ * rows use, so the gesture feels identical wherever it is performed rather than being a second
+ * dialect of the same idea.
+ *
+ * The action backgrounds are the surface colour and not blue. A swipe is a gesture in progress and
+ * not a state that has been reached, and the brand spends blue on things that *are* — progress,
+ * active tabs, the one download that is running.
  */
 @Composable
 private fun UpdateRow(
@@ -205,46 +225,70 @@ private fun UpdateRow(
     onClick: () -> Unit,
     onCoverClick: () -> Unit,
     onDownload: () -> Unit,
+    onToggleViewed: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .tvClickable(onClick = onClick)
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
+    val background = MaterialTheme.colorScheme.surfaceContainerHighest
+    val markAction = swipeAction(
+        icon = if (item.isNew) Icons.Outlined.Done else Icons.Outlined.RemoveDone,
+        background = background,
+        // Undo runs the animation backwards, which is what says "you have just reversed something"
+        // rather than "you have done a second thing".
+        isUndo = !item.isNew,
+        onSwipe = onToggleViewed,
+    )
+    val downloadAction = swipeAction(
+        icon = Icons.Outlined.Download,
+        background = background,
+        onSwipe = onDownload,
+    )
+
+    SwipeableActionsBox(
+        modifier = Modifier.clipToBounds(),
+        startActions = listOf(markAction),
+        endActions = listOf(downloadAction),
+        backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
-        ItemCover.Square(
-            data = item.coverData,
-            contentDescription = item.title,
-            modifier = Modifier.size(ThumbSize),
-            shape = RoundedCornerShape(ThumbRadius),
-            onClick = onCoverClick,
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background)
+                .tvClickable(onClick = onClick)
+                .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
+        ) {
+            ItemCover.Square(
+                data = item.coverData,
+                contentDescription = item.title,
+                modifier = Modifier.size(ThumbSize),
+                shape = RoundedCornerShape(ThumbRadius),
+                onClick = onCoverClick,
             )
-            Text(
-                text = item.itemName,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        if (item.isNew) {
-            NewPill()
-        }
-        IconButton(onClick = onDownload) {
-            Icon(
-                imageVector = Icons.Outlined.Download,
-                contentDescription = stringResource(MR.strings.manga_download),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = item.itemName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (item.isNew) {
+                NewPill()
+            }
+            IconButton(onClick = onDownload) {
+                Icon(
+                    imageVector = Icons.Outlined.Download,
+                    contentDescription = stringResource(MR.strings.manga_download),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -280,6 +324,32 @@ private fun NothingNew(
     }
 }
 
+/**
+ * One swipe action, drawn the way Mihon draws its own.
+ *
+ * A local copy because theirs is `private` to their chapter row. Sixteen lines is a cheaper price
+ * than a swipe on this feed looking subtly unlike a swipe two screens away.
+ */
+private fun swipeAction(
+    onSwipe: () -> Unit,
+    icon: ImageVector,
+    background: Color,
+    isUndo: Boolean = false,
+): SwipeAction = SwipeAction(
+    icon = {
+        Icon(
+            modifier = Modifier.padding(SwipeIconPadding),
+            imageVector = icon,
+            tint = contentColorFor(background),
+            contentDescription = null,
+        )
+    },
+    background = background,
+    onSwipe = onSwipe,
+    isUndo = isUndo,
+)
+
+private val SwipeIconPadding = 16.dp
 private val ThumbSize = 48.dp
 private val ThumbRadius = 12.dp
 private val EmptyTopSpace = 96.dp
