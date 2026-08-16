@@ -12,6 +12,7 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.source.CatalogueSource
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.domain.manga.model.toDomainManga
@@ -163,15 +165,19 @@ class DiscoverScreenModel(
         rails.forEach { slot ->
             launch {
                 val items = metadataCatalog.fetch(slot.rail, slot.contentType)
-                state.value = state.value.copy(
-                    metadataRails = state.value.metadataRails.map { existing ->
-                        if (existing.key == slot.key) {
-                            existing.copy(isLoading = false, items = items)
-                        } else {
-                            existing
-                        }
-                    },
-                )
+                // `update` rather than an assignment: five of these are in flight at once, and
+                // read-modify-write on a shared value loses whichever two land closest together.
+                state.update { current ->
+                    current.copy(
+                        metadataRails = current.metadataRails.map { existing ->
+                            if (existing.key == slot.key) {
+                                existing.copy(isLoading = false, items = items)
+                            } else {
+                                existing
+                            }
+                        },
+                    )
+                }
             }
         }
     }
@@ -180,14 +186,20 @@ class DiscoverScreenModel(
         launch {
             pinnedSourceIds(lens).collectLatest { pinnedByType ->
                 val anyPinned = pinnedByType.values.any { it.isNotEmpty() }
-                state.value = state.value.copy(hasPinnedSources = anyPinned)
+                state.update { it.copy(hasPinnedSources = anyPinned) }
                 if (!anyPinned) return@collectLatest
 
-                launch {
-                    state.value = state.value.copy(popular = load(pinnedByType, latest = false))
+                // On [SOURCE_DISPATCHER], and never on the main thread. `viewModelScope` is the
+                // main dispatcher, and an extension is free to implement its popular page with a
+                // blocking request — so this used to stop the whole app until every pinned source
+                // had answered or timed out.
+                launch(SOURCE_DISPATCHER) {
+                    val rail = load(pinnedByType, latest = false)
+                    state.update { it.copy(popular = rail) }
                 }
-                launch {
-                    state.value = state.value.copy(latest = load(pinnedByType, latest = true))
+                launch(SOURCE_DISPATCHER) {
+                    val rail = load(pinnedByType, latest = true)
+                    state.update { it.copy(latest = rail) }
                 }
             }
         }
@@ -301,6 +313,15 @@ class DiscoverScreenModel(
     companion object {
         /** A rail is scrolled, not paged; past this many nobody is still looking. */
         private const val RAIL_LIMIT = 30
+
+        /**
+         * Off the main thread, and a few sources at a time.
+         *
+         * Both rails fan out to every pinned source at once and this screen loads without anybody
+         * asking it to, so it is the last place that should be opening twenty connections on
+         * arrival — a pinned list is short, but *popular* and *latest* each walk all of it.
+         */
+        private val SOURCE_DISPATCHER = Dispatchers.IO.limitedParallelism(5)
     }
 }
 

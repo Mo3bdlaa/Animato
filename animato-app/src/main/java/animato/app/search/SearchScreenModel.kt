@@ -13,6 +13,7 @@ import animato.domain.content.interactor.GetUnifiedLibrary
 import eu.kanade.domain.entries.anime.model.toDomainAnime
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.source.CatalogueSource
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.domain.manga.model.toDomainManga
 import tachiyomi.core.common.preference.PreferenceStore
@@ -119,6 +121,17 @@ data class SearchState(
  * whole reason a group appears in the *searching* state rather than being added on completion: a
  * spinner over the screen would mean the fastest source's eight results wait for the slowest one's
  * timeout.
+ *
+ * ## Where the asking happens, which froze the app
+ *
+ * On [SEARCH_DISPATCHER], and never on the main thread. `viewModelScope` is the main dispatcher, so
+ * launching the searches on it ran every source's network call on the UI thread — and an extension
+ * is free to implement its search with a blocking request, so the whole app stopped until the last
+ * of them returned. From a device: *"clicking on any of trending makes the app get stuck."*
+ *
+ * The cap is the other half. A search asks every installed source of both halves at once, and
+ * twenty simultaneous requests is how a phone gets itself rate limited by the same host three times
+ * over. Five at a time is what Mihon's own global search settled on.
  *
  * ## What the lens does here
  *
@@ -233,7 +246,7 @@ class SearchScreenModel(
         )
         remember(query)
 
-        searchJob = viewModelScope.launch {
+        searchJob = viewModelScope.launch(SEARCH_DISPATCHER) {
             coroutineScope {
                 sources.forEach { target ->
                     async { runSearch(target, query) }
@@ -244,19 +257,29 @@ class SearchScreenModel(
 
     private suspend fun runSearch(target: SearchTarget, query: String) {
         val result = runCatching { target.search(query) }
-        state.value = state.value.copy(
-            sourceGroups = state.value.sourceGroups.map { group ->
-                if (group.sourceId != target.id || group.contentType != target.contentType) {
-                    group
-                } else {
-                    group.copy(
-                        isSearching = false,
-                        hits = result.getOrDefault(emptyList()),
-                        failure = result.exceptionOrNull()?.let { it.message ?: it::class.simpleName },
-                    )
-                }
-            },
-        )
+
+        // Cancelling a job does not unwind a source that is already answering, so a search left
+        // behind by a faster second one can still arrive here. Without this it writes its hits into
+        // the group belonging to the query on screen — the right source, the wrong question.
+        if (state.value.query != query) return
+
+        // `update` rather than an assignment: these run concurrently now, and read-modify-write on
+        // a shared value loses whichever two sources answer closest together.
+        state.update { current ->
+            current.copy(
+                sourceGroups = current.sourceGroups.map { group ->
+                    if (group.sourceId != target.id || group.contentType != target.contentType) {
+                        group
+                    } else {
+                        group.copy(
+                            isSearching = false,
+                            hits = result.getOrDefault(emptyList()),
+                            failure = result.exceptionOrNull()?.let { it.message ?: it::class.simpleName },
+                        )
+                    }
+                },
+            )
+        }
     }
 
     private fun libraryHits(query: String): List<LibraryHit> {
@@ -374,5 +397,8 @@ class SearchScreenModel(
         const val RECENT_LIMIT = 8
         const val LIBRARY_LIMIT = 10
         const val TRENDING_LIMIT = 6
+
+        /** Five sources at a time, off the main thread. See the class comment. */
+        val SEARCH_DISPATCHER = Dispatchers.IO.limitedParallelism(5)
     }
 }
