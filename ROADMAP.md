@@ -44,37 +44,52 @@ nothing else matters.
 | | | State |
 | --- | --- | --- |
 | 1 | Automatic hoster failover (#2156) | ✅ **done** |
-| 2 | **Cloudflare — FlareSolverr** (#1909) | ❌ **blocked on a decision**, below |
+| 2 | **Cloudflare — FlareSolverr** (#1909) | ❌ not started — **not blocked**, see below |
 | 3 | **Onboarding that ends with a working store** | ❌ not started |
 | 4 | The `.pb` store format (#2371, #2372) | ✅ **done** |
 
-### 2 — Cloudflare, and why it is not simply "write an interceptor"
+### 2 — Cloudflare, and the seam that was there all along
 
 The most common bug class in the donor by a distance, and no longer only about sources: it takes
 trackers down too. FlareSolverr is among the most-reacted requests upstream.
 
-The integration is small — a preference holding a FlareSolverr address, and an interceptor that on a
-challenge posts the URL there and takes back the cookies and user-agent. The problem is where to put
-it.
+**An earlier version of this entry said it was blocked and needed a decision about editing a Mihon
+source file. That was wrong**, and worth leaving the correction visible rather than quietly
+rewriting, because the mistake has a shape worth remembering: the question was framed as *"where do
+we add an interceptor?"* — and FlareSolverr does not need one.
 
-`NetworkHelper` builds one `OkHttpClient` and hands it to everything. Its interceptor list is
-assembled inside a `private val clientBuilder` on a **final class in a Mihon file**, with no
-constructor parameter and no override point. Every extension ultimately draws from that client, and
-most extensions build their own on top of it with `network.client.newBuilder()` — so an interceptor
-added anywhere downstream, `AnimeHttpSource.client` included, is bypassed by exactly the extensions
-that need it most.
+`NetworkHelper` does assemble its interceptors in a `private val` on a final Mihon class with no
+override point, and every extension draws from that client, and most rebuild on top of it with
+`newBuilder()`. All true. All irrelevant, because what FlareSolverr returns is **a cookie and a
+user-agent**, and both of those already live in shared, writable state:
 
-Three ways out, in preference order:
+```kotlin
+class AndroidCookieJar : CookieJar {
+    private val manager = CookieManager.getInstance()   // Android's global cookie store
+}
+```
 
-1. **Upstream a seam to Mihon** — an injectable builder, or a list of extra interceptors. Small,
-   general, and Mihon gets Cloudflare relief from it too. Slow, because it depends on them.
-2. **A third documented exception, editing `NetworkHelper.kt`.** Two exist already, both in
-   `app/build.gradle.kts`, both forced by Mihon being a library here. This would be the first in a
-   Mihon *source* file — a line worth naming out loud before crossing.
-3. **Ours only** — trackers and our own requests, not extensions. Fixes "AniList blocked by
-   Cloudflare" and leaves the main case.
+- The cookie jar is not a private jar. It is Android's process-wide `CookieManager`, and
+  `NetworkHelper.cookieJar` is a **public val** whose `saveFromResponse` is a public interface
+  method. Every client derived with `newBuilder()` inherits it, so a cookie written once is sent by
+  every extension.
+- The user-agent is `NetworkPreferences.defaultUserAgent`, a **public `Preference<String>`**, read
+  through `defaultUserAgentProvider()` on *every request* rather than captured at build time. So
+  setting it takes effect immediately, everywhere. That matters because Cloudflare binds a
+  clearance cookie to the user-agent that earned it — a cookie without a matching agent is useless.
 
-*A decision, not a task.*
+So the whole integration is ours, in our own files, touching nothing of Mihon's:
+
+1. a preference holding the FlareSolverr address;
+2. `POST /v1` with `{"cmd": "request.get", "url": …}`;
+3. write `solution.cookies` through `networkHelper.cookieJar.saveFromResponse(url, …)`;
+4. set `networkPreferences.defaultUserAgent` to `solution.userAgent`.
+
+One caveat to keep honest: `UserAgentInterceptor` only fills the header in when a request does not
+already carry one, so an extension that sets its own user-agent keeps it and its clearance cookie
+will not match. That is a per-extension limit, not a reason the approach fails.
+
+*No decision needed. It is a task.*
 
 ### 3 — Onboarding
 
@@ -243,7 +258,7 @@ Debts with a known cost, tracked in UPSTREAM_DIVERGENCE.md.
 
 1. **Onboarding that installs a working store** — fixes the first run, and it is what makes the
    Arabic position real rather than aspirational.
-2. **Cloudflare** — the largest source of failures. Needs the decision above first.
+2. **Cloudflare** — the largest source of failures, and no longer blocked on anything.
 3. **Casting over FCast** — five years open, and the part everyone assumed was hard is already
    running in this repository.
 4. **Cross-device sync** — the highest-voted unbuilt feature anywhere, and the backup half of it is
