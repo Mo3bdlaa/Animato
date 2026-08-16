@@ -10,7 +10,9 @@ import aniyomi.domain.source.service.AnimeSourcePreferences
 import eu.kanade.domain.entries.anime.model.toDomainAnime
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
+import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.source.CatalogueSource
+import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -69,7 +71,8 @@ data class MetadataRailState(
 @Immutable
 data class DiscoverState(
     val lens: ContentFilter = ContentFilter.ALL,
-    val hasPinnedSources: Boolean = true,
+    /** Whether any source can be asked at all. See `railSources`, which is not about pinning. */
+    val hasSources: Boolean = true,
     val metadataRails: List<MetadataRailState> = emptyList(),
     val popular: DiscoverRail = DiscoverRail(),
     val latest: DiscoverRail = DiscoverRail(),
@@ -184,41 +187,93 @@ class DiscoverScreenModel(
 
     private fun CoroutineScope.loadSourceRails(lens: ContentFilter) {
         launch {
-            pinnedSourceIds(lens).collectLatest { pinnedByType ->
-                val anyPinned = pinnedByType.values.any { it.isNotEmpty() }
-                state.update { it.copy(hasPinnedSources = anyPinned) }
-                if (!anyPinned) return@collectLatest
+            railSources(lens).collectLatest { sourcesByType ->
+                val anySources = sourcesByType.values.any { it.isNotEmpty() }
+                state.update { it.copy(hasSources = anySources) }
+                if (!anySources) return@collectLatest
 
                 // On [SOURCE_DISPATCHER], and never on the main thread. `viewModelScope` is the
                 // main dispatcher, and an extension is free to implement its popular page with a
-                // blocking request — so this used to stop the whole app until every pinned source
-                // had answered or timed out.
+                // blocking request — so this used to stop the whole app until every source had
+                // answered or timed out.
                 launch(SOURCE_DISPATCHER) {
-                    val rail = load(pinnedByType, latest = false)
+                    val rail = load(sourcesByType, latest = false)
                     state.update { it.copy(popular = rail) }
                 }
                 launch(SOURCE_DISPATCHER) {
-                    val rail = load(pinnedByType, latest = true)
+                    val rail = load(sourcesByType, latest = true)
                     state.update { it.copy(latest = rail) }
                 }
             }
         }
     }
 
-    /** The pinned sources of each half the lens admits, as one flow that emits when either does. */
-    private fun pinnedSourceIds(lens: ContentFilter): Flow<Map<ContentType, Set<String>>> = combine(
-        if (lens.includesManga) sourcePreferences.pinnedSources.changes() else flowOf(emptySet()),
-        if (lens.includesAnime) animeSourcePreferences.pinnedAnimeSources.changes() else flowOf(emptySet()),
+    /**
+     * Which sources *Your sources* asks, per half the lens admits.
+     *
+     * ## It used to mean "pinned", and pinning is opt-in
+     *
+     * From a device: *"I have sources but the sources section shows no sources at all."* Exactly
+     * right — the rails read the pinned set, which is empty until somebody goes and pins something,
+     * and nothing on the screen said that was the question being asked. So a phone with a dozen
+     * working extensions got the same *you have no sources* card as a fresh install, under a heading
+     * that claims to be about the sources you have, next to a button offering to install more.
+     *
+     * Pinning still wins when it exists: it is the one explicit statement of which sources somebody
+     * actually wants asked. It is a preference now rather than a precondition.
+     *
+     * ## Why the unpinned case is capped
+     *
+     * Both rails walk the whole list, so an unpinned phone with thirty extensions would open this
+     * screen by starting sixty requests it did not ask for. [UNPINNED_SOURCES] is what it takes
+     * instead — a rail shows [RAIL_LIMIT] items regardless, so asking more sources mostly buys
+     * failure modes. Pinning is how somebody says which ones; this is only the answer before they
+     * have.
+     *
+     * Disabled sources are dropped in both cases: hiding a source and then being shown its popular
+     * page is the setting not working.
+     */
+    private fun railSources(lens: ContentFilter): Flow<Map<ContentType, List<Long>>> = combine(
+        if (lens.includesManga) mangaRailSources() else flowOf(emptyList()),
+        if (lens.includesAnime) animeRailSources() else flowOf(emptyList()),
     ) { manga, anime ->
-        mapOf(ContentType.MANGA to manga, ContentType.ANIME to anime)
+        buildMap {
+            if (lens.includesManga) put(ContentType.MANGA, manga)
+            if (lens.includesAnime) put(ContentType.ANIME, anime)
+        }
+    }
+
+    // Built on the manager's own flow rather than a snapshot, so installing an extension makes its
+    // source appear here without leaving the screen and coming back. `HttpSource` is what excludes
+    // the local library, whose "popular" page is a folder on the phone.
+    private fun mangaRailSources(): Flow<List<Long>> = combine(
+        sourceManager.sources,
+        sourcePreferences.pinnedSources.changes(),
+        sourcePreferences.disabledSources.changes(),
+    ) { sources, pinned, disabled ->
+        choose(sources.filterIsInstance<HttpSource>().map { it.id }, pinned, disabled)
+    }
+
+    private fun animeRailSources(): Flow<List<Long>> = combine(
+        animeSourceManager.sources,
+        animeSourcePreferences.pinnedAnimeSources.changes(),
+        animeSourcePreferences.disabledAnimeSources.changes(),
+    ) { sources, pinned, disabled ->
+        choose(sources.filterIsInstance<AnimeHttpSource>().map { it.id }, pinned, disabled)
+    }
+
+    private fun choose(available: List<Long>, pinned: Set<String>, disabled: Set<String>): List<Long> {
+        val allowed = available.filter { it.toString() !in disabled }
+        val pinnedIds = allowed.filter { it.toString() in pinned }
+        return pinnedIds.ifEmpty { allowed.take(UNPINNED_SOURCES) }
     }
 
     private suspend fun load(
-        pinnedByType: Map<ContentType, Set<String>>,
+        sourcesByType: Map<ContentType, List<Long>>,
         latest: Boolean,
     ): DiscoverRail = coroutineScope {
-        val results = pinnedByType
-            .flatMap { (type, ids) -> ids.mapNotNull { it.toLongOrNull() }.map { type to it } }
+        val results = sourcesByType
+            .flatMap { (type, ids) -> ids.map { type to it } }
             .map { (type, sourceId) -> async { fetch(type, sourceId, latest) } }
             .awaitAll()
 
@@ -313,6 +368,9 @@ class DiscoverScreenModel(
     companion object {
         /** A rail is scrolled, not paged; past this many nobody is still looking. */
         private const val RAIL_LIMIT = 30
+
+        /** How many sources to ask when nobody has pinned any. See `railSources`. */
+        private const val UNPINNED_SOURCES = 5
 
         /**
          * Off the main thread, and a few sources at a time.

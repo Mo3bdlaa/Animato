@@ -127,7 +127,7 @@ internal fun DiscoverContent() {
                 SectionHeader(stringResource(AYMR.strings.label_your_sources))
             }
 
-            if (!state.hasPinnedSources) {
+            if (!state.hasSources) {
                 item(key = "no-sources") {
                     NoSourcesCard(onAddSources = { navigator.push(ExtensionsScreen()) })
                 }
