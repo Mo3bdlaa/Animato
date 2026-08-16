@@ -686,4 +686,11 @@
     <string name="caption_episodes">Ep. %1$s</string>
     <string name="library_empty">Your library is empty. Anything you save from Discover shows up here.</string>
     <string name="library_empty_filtered">Nothing on this shelf matches the filters you set.</string>
+
+    <!-- Sources and extensions -->
+    <string name="label_sources_extensions">Sources &amp; extensions</string>
+    <string name="label_available">Available</string>
+    <string name="label_nsfw" translatable="false">NSFW</string>
+    <string name="extensions_ships_empty">Animato ships empty by design — you choose where content comes from.</string>
+    <string name="action_browse_available">Browse available</string>
 </resources>

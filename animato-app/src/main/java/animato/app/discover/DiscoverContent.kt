@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.extension.ExtensionsScreen
 import animato.app.navigation.contentTypeOrDefault
 import animato.domain.content.ContentType
 import animato.ui.entries.ItemCover
@@ -123,17 +124,20 @@ internal fun DiscoverContent() {
             }
 
             item {
+                // One row, because they are one screen now. Sources and extensions were two
+                // entries pointing at two tabs of the same thing, which is how someone ends up
+                // asking which of the two lists an extension is missing from.
                 DestinationRow(
-                    labelRes = MR.strings.label_sources,
-                    icon = Icons.Outlined.TravelExplore,
-                    onClick = { navigator.push(BrowseCatalogScreen()) },
+                    labelRes = AYMR.strings.label_sources_extensions,
+                    icon = Icons.Outlined.Extension,
+                    onClick = { navigator.push(ExtensionsScreen()) },
                 )
             }
             item {
                 DestinationRow(
-                    labelRes = MR.strings.label_extensions,
-                    icon = Icons.Outlined.Extension,
-                    onClick = { navigator.push(BrowseCatalogScreen(toExtensions = true)) },
+                    labelRes = MR.strings.label_sources,
+                    icon = Icons.Outlined.TravelExplore,
+                    onClick = { navigator.push(BrowseCatalogScreen()) },
                 )
             }
         }

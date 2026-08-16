@@ -620,4 +620,8 @@
     <string name="caption_episodes">حلقة %1$s</string>
     <string name="library_empty">مكتبتك فاضية. أي حاجة تحفظها من استكشاف هتبان هنا.</string>
     <string name="library_empty_filtered">مفيش حاجة على الرف ده مطابقة للفلاتر اللي اخترتها.</string>
+    <string name="label_sources_extensions">المصادر والإضافات</string>
+    <string name="label_available">المتاحة</string>
+    <string name="extensions_ships_empty">أنيماتو بيجي فاضي عن قصد — انت اللي بتختار المحتوى بيجي منين.</string>
+    <string name="action_browse_available">تصفّح المتاح</string>
 </resources>

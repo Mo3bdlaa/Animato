@@ -2,6 +2,7 @@ package animato.app.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import animato.app.extension.ExtensionsScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
@@ -121,7 +122,17 @@ object AnimatoSettingsSourcesScreen : SearchableSettings {
     @Composable
     override fun getPreferences(): List<Preference> {
         val navigator = LocalNavigator.currentOrThrow
-        return SettingsBrowseScreen.getPreferences() + Preference.PreferenceGroup(
+        return listOf(
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.label_extensions),
+                preferenceItems = persistentListOf(
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(AYMR.strings.label_sources_extensions),
+                        onClick = { navigator.push(ExtensionsScreen()) },
+                    ),
+                ),
+            ),
+        ) + SettingsBrowseScreen.getPreferences() + Preference.PreferenceGroup(
             title = stringResource(AYMR.strings.label_anime),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.TextPreference(
