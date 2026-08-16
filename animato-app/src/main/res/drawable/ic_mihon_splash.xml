@@ -6,9 +6,16 @@
   The name is theirs, which is why this file is worth a comment: it is an override, not a new
   resource, and it disappears the moment we own the splash theme.
 
-  The splash screen renders a 288dp icon with the inner 192dp as content — the same 2:3 ratio the
-  adaptive foreground is drawn at, so it is reused verbatim.
+  It points at the unframed lockup rather than the launcher foreground, and the difference is the
+  whole fix. The launcher artwork carries the brand's panel frame — a dark rectangle edged in white
+  sketch lines — which works on a launcher because a paper-coloured background layer sits behind it.
+  A splash has no background layer, so on ink black that frame's interior merges with the screen and
+  the frame itself reads as a grey slab floating in the void.
+
+  Built by docs/branding/build-splash.py, which also writes the night and notnight variants: an
+  override replaces one configuration at a time, and the Japanese line has to change colour between
+  them or it disappears into whichever background it was not drawn for.
 -->
 <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
     android:gravity="fill"
-    android:src="@drawable/animato_icon_foreground" />
+    android:src="@drawable/animato_splash_mark" />
