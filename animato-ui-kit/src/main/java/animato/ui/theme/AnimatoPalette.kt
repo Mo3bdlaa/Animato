@@ -66,6 +66,19 @@ data class AnimatoPalette(
     val warning: Color,
 
     val info: Color,
+
+    /**
+     * The one colour that is neither the accent nor a state.
+     *
+     * It marks a thing as *new* — the pill on a Continue card, the badge on a source that has just
+     * appeared — and it is deliberately not [accent]: the accent means "act here", and a NEW pill
+     * is not asking to be tapped, it is telling you something arrived. Reusing the accent for it
+     * would put two different meanings on one colour on a screen where both appear at once.
+     *
+     * Used sparingly enough that it does not get a container or an on-colour: everything drawn on
+     * it is [ink].
+     */
+    val highlight: Color,
 )
 
 object AnimatoPalettes {
@@ -93,6 +106,7 @@ object AnimatoPalettes {
         success = Color(0xFF22C55E),
         warning = Color(0xFFF59E0B),
         info = Color(0xFF8B5CF6),
+        highlight = Color(0xFF06B6D4),
     )
 
     /** Every palette the app knows about. A theme picker would iterate this. */

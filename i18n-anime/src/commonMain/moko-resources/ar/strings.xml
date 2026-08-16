@@ -610,4 +610,14 @@
     <string name="action_see_all">عرض الكل</string>
     <string name="label_new">جديد</string>
     <string name="home_empty_shelf">رفّك فاضي. دوّر على حاجة تستاهل تحتفظ بيها.</string>
+    <string name="sort_recently_updated">آخر تحديث</string>
+    <string name="sort_recently_opened">آخر فتح</string>
+    <string name="sort_title_az">الاسم أ–ي</string>
+    <string name="filter_unviewed_only">غير المقروء فقط</string>
+    <string name="label_columns">الأعمدة</string>
+    <string name="pref_show_unviewed_count">إظهار عدد غير المقروء</string>
+    <string name="caption_chapters">فصل %1$s</string>
+    <string name="caption_episodes">حلقة %1$s</string>
+    <string name="library_empty">مكتبتك فاضية. أي حاجة تحفظها من استكشاف هتبان هنا.</string>
+    <string name="library_empty_filtered">مفيش حاجة على الرف ده مطابقة للفلاتر اللي اخترتها.</string>
 </resources>

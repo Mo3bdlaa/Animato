@@ -1,6 +1,7 @@
 package animato.app.library
 
 import androidx.compose.runtime.Immutable
+import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.domain.content.LibraryEntry
 import dev.icerock.moko.resources.StringResource
@@ -8,84 +9,77 @@ import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 
 /**
- * The chip row above the unified library.
+ * One chip in the row above the grid: a category, by name.
  *
- * These are states, not categories: what someone is in the middle of, what they have finished,
- * what is waiting for them. Categories answer a different question and get their own control.
+ * ## Why a name and not an id
  *
- * [READING] and [WATCHING] are the same state on the two content types, kept apart because that is
- * how people talk about them and because it is the fastest way to see one library at a time.
+ * Manga categories and anime categories are separate tables with separate id spaces, so "category
+ * 3" is two different shelves depending on which half you ask. The chip row cannot show that and
+ * stay a row — it would have to read *Ongoing · Manga* and *Ongoing · Anime* side by side, which is
+ * the anime-annex shape the whole app is trying to leave behind.
  *
- * `docs/BRANDING.md` also lists a `Paused` chip. Nothing in either database records a paused entry
- * — that is a tracker's status, not the library's — so it is absent rather than always empty, and
- * arrives with the tracking work.
+ * So a chip is a name, and it carries every id that answers to that name in either table. The
+ * databases stay separate — nothing is merged, migrated or renamed — but the control above them
+ * asks the question a person actually has: *show me the things I filed under Ongoing.* Someone who
+ * deliberately keeps two unrelated shelves under the same name in the two halves gets them
+ * together here; that is a fair reading of having given them the same name.
  */
-enum class LibraryStatusFilter(val labelRes: StringResource) {
-    ALL(AYMR.strings.label_all),
-    READING(MR.strings.reading),
-    WATCHING(AYMR.strings.watching),
-    COMPLETED(MR.strings.completed),
-    UNREAD(MR.strings.action_filter_unread),
-    DOWNLOADED(MR.strings.label_downloaded),
-    ;
+@Immutable
+data class LibraryCategory(
+    val name: String,
+    val mangaIds: Set<Long>,
+    val animeIds: Set<Long>,
+) {
 
-    /**
-     * Whether an entry belongs under this chip.
-     *
-     * [downloaded] is passed in rather than read off the entry: whether anything is downloaded
-     * lives in a cache keyed by source and title, not in the library row.
-     */
-    fun accepts(entry: LibraryEntry, downloaded: Boolean): Boolean = when (this) {
-        ALL -> true
-        READING -> entry.contentType == ContentType.MANGA && entry.hasStarted && !entry.isFinished
-        WATCHING -> entry.contentType == ContentType.ANIME && entry.hasStarted && !entry.isFinished
-        COMPLETED -> entry.isFinished
-        UNREAD -> entry.unviewedItems > 0
-        DOWNLOADED -> downloaded
+    fun accepts(entry: LibraryEntry): Boolean {
+        val ids = when (entry.contentType) {
+            ContentType.MANGA -> mangaIds
+            ContentType.ANIME -> animeIds
+        }
+        return entry.categoryIds.any { it in ids }
     }
-}
 
-/** Everything read, and something to have read — an entry with no items yet is not finished. */
-private val LibraryEntry.isFinished: Boolean
-    get() = totalItems > 0 && viewedItems >= totalItems
+    /** Whether this category has anything to say under [lens] at all. */
+    fun visibleUnder(lens: ContentFilter): Boolean =
+        (lens.includesManga && mangaIds.isNotEmpty()) ||
+            (lens.includesAnime && animeIds.isNotEmpty())
+}
 
 /**
- * Which categories the grid is scoped to.
+ * The derived states, which are not categories.
  *
- * Manga categories and anime categories are separate tables with separate id spaces, so a scope
- * has to say which table it means. They are deliberately not merged by name: two categories that
- * happen to share a name are not necessarily the same shelf, and a rule that silently joins them
- * would split again the moment one is renamed.
+ * A title can be unread *and* downloaded *and* tracked at once, so these cannot be a chip row — a
+ * row of chips promises one at a time and a shelf you can point at. They are checkboxes in the
+ * filter sheet, where several being on together reads as what it is.
  */
 @Immutable
-sealed interface CategoryScope {
+data class LibraryFilters(
+    val unviewedOnly: Boolean = false,
+    val downloadedOnly: Boolean = false,
+    val trackedOnly: Boolean = false,
+) {
 
-    data object All : CategoryScope
+    val any: Boolean get() = unviewedOnly || downloadedOnly || trackedOnly
 
-    data class Manga(val id: Long) : CategoryScope
-
-    data class Anime(val id: Long) : CategoryScope
-
-    fun accepts(entry: LibraryEntry): Boolean = when (this) {
-        All -> true
-        is Manga -> entry.contentType == ContentType.MANGA && id in entry.categoryIds
-        is Anime -> entry.contentType == ContentType.ANIME && id in entry.categoryIds
+    fun accepts(entry: LibraryEntry, downloaded: Boolean, tracked: Boolean): Boolean {
+        if (unviewedOnly && entry.unviewedItems <= 0) return false
+        if (downloadedOnly && !downloaded) return false
+        if (trackedOnly && !tracked) return false
+        return true
     }
 }
 
-/** One entry of the category picker: a scope, and what to call it. */
-@Immutable
-data class CategoryScopeOption(
-    val scope: CategoryScope,
-    val name: String,
-    val contentType: ContentType?,
-)
-
+/**
+ * The sort options, in neutral words.
+ *
+ * No sort here says "chapter" or "episode": the grid holds both, and a control that names one
+ * medium over a mixed list is what makes an app feel like two apps.
+ */
 enum class LibrarySortMode(val labelRes: StringResource) {
-    RECENTLY_UPDATED(MR.strings.action_sort_latest_chapter),
+    RECENTLY_UPDATED(AYMR.strings.sort_recently_updated),
     RECENTLY_ADDED(MR.strings.action_sort_date_added),
-    LAST_VIEWED(MR.strings.action_sort_last_read),
-    TITLE(MR.strings.action_sort_alpha),
+    LAST_VIEWED(AYMR.strings.sort_recently_opened),
+    TITLE(AYMR.strings.sort_title_az),
     UNVIEWED_COUNT(MR.strings.action_sort_unread_count),
     ;
 
@@ -103,23 +97,65 @@ data class UnifiedLibraryState(
     val isLoading: Boolean = true,
     val entries: List<LibraryEntry> = emptyList(),
     val downloadedEntryKeys: Set<Pair<ContentType, Long>> = emptySet(),
-    val categoryOptions: List<CategoryScopeOption> = emptyList(),
-    val statusFilter: LibraryStatusFilter = LibraryStatusFilter.ALL,
-    val categoryScope: CategoryScope = CategoryScope.All,
+    val trackedEntryKeys: Set<Pair<ContentType, Long>> = emptySet(),
+    val categories: List<LibraryCategory> = emptyList(),
+    val lens: ContentFilter = ContentFilter.ALL,
+    val selectedCategory: String? = null,
+    val filters: LibraryFilters = LibraryFilters(),
     val sortMode: LibrarySortMode = LibrarySortMode.RECENTLY_UPDATED,
+    val columns: Int = UnifiedLibraryPreferences.DEFAULT_COLUMNS,
+    val showUnviewedCount: Boolean = true,
     val searchQuery: String? = null,
 ) {
+
+    /** Categories worth drawing a chip for, in the order the two halves reported them. */
+    val visibleCategories: List<LibraryCategory> by lazy {
+        categories.filter { it.visibleUnder(lens) }
+    }
+
+    /**
+     * The chip actually in effect.
+     *
+     * A selection survives a lens change only if it still means something: narrowing to Anime while
+     * standing inside a manga-only category has to land somewhere, and All is the only landing
+     * place that is not a lie.
+     */
+    val activeCategory: LibraryCategory? by lazy {
+        visibleCategories.firstOrNull { it.name == selectedCategory }
+    }
+
+    /**
+     * Everything on the selected shelf, before the derived filters and the search box.
+     *
+     * This is the number on the chip. It is the size of the shelf you are standing in — not the
+     * count of what survived a checkbox, which would change under you as you tick things and make
+     * the chip read as a result rather than a place.
+     */
+    val shelfEntries: List<LibraryEntry> by lazy {
+        val category = activeCategory
+        entries
+            .asSequence()
+            .filter { lens.accepts(it.contentType) }
+            .filter { category == null || category.accepts(it) }
+            .distinctBy { it.contentType to it.entryId }
+            .toList()
+    }
 
     /** The entries actually drawn, in order. */
     val visibleEntries: List<LibraryEntry> by lazy {
         val query = searchQuery?.trim()?.takeIf { it.isNotEmpty() }
-        entries
+        shelfEntries
             .asSequence()
-            .filter { categoryScope.accepts(it) }
-            .filter { statusFilter.accepts(it, downloaded = (it.contentType to it.entryId) in downloadedEntryKeys) }
+            .filter {
+                val key = it.contentType to it.entryId
+                filters.accepts(it, downloaded = key in downloadedEntryKeys, tracked = key in trackedEntryKeys)
+            }
             .filter { query == null || it.title.contains(query, ignoreCase = true) }
-            .distinctBy { it.contentType to it.entryId }
             .sortedWith(sortMode.comparator())
             .toList()
     }
+
+    /** Whether the grid is empty because of something that was set, rather than because it is. */
+    val emptiedBySettings: Boolean
+        get() = entries.isNotEmpty() && visibleEntries.isEmpty()
 }

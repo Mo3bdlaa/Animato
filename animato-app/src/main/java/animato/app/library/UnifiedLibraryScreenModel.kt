@@ -2,6 +2,7 @@ package animato.app.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
 import animato.domain.content.LibraryEntry
 import animato.domain.content.interactor.GetUnifiedLibrary
@@ -15,62 +16,134 @@ import kotlinx.coroutines.flow.onEach
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.category.anime.interactor.GetVisibleAnimeCategories
 import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
+import tachiyomi.domain.track.repository.TrackRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /**
  * One library, both content types.
  *
- * The chips filter by state and the scope filters by category, and they are separate controls
- * because they answer different questions — "what am I in the middle of" and "which shelf". Both
- * are applied in [UnifiedLibraryState], over a list that is already in memory, so changing either
- * costs no query.
+ * The screen has three controls and they answer three different questions. The **lens** asks which
+ * half of the collection — it is global, lives in the top bar, and is not this screen's to own. The
+ * **category chips** ask which shelf. The **filter sheet** asks what state a title is in. Keeping
+ * them apart is the whole design: a control that mixes "anime" with "unread" with "Ongoing" is the
+ * one Aniyomi had, and nobody could predict what it would do.
  *
- * Whether an entry has downloads is not in the library row; it lives in a cache keyed by source and
- * title. That is why it is collected separately and joined by entry id, and why the download chip
- * updates when the cache does rather than when the library does.
+ * All three are applied in [UnifiedLibraryState] over a list already in memory, so changing any of
+ * them costs no query.
+ *
+ * Two things a library row does not know about itself are joined in here. Whether anything is
+ * downloaded lives in a cache keyed by source and title; whether anything is tracked lives in the
+ * track tables. Both are collected separately and matched by entry id, which is why those two
+ * filters update when their own source changes rather than when the library does.
  */
 class UnifiedLibraryScreenModel(
     getUnifiedLibrary: GetUnifiedLibrary = Injekt.get(),
     getCategories: GetCategories = Injekt.get(),
     getAnimeCategories: GetVisibleAnimeCategories = Injekt.get(),
+    trackRepository: TrackRepository = Injekt.get(),
+    animeTrackRepository: AnimeTrackRepository = Injekt.get(),
+    contentPreferences: ContentPreferences = Injekt.get(),
     private val downloadCache: DownloadCache = Injekt.get(),
     private val animeDownloadCache: AnimeDownloadCache = Injekt.get(),
+    private val preferences: UnifiedLibraryPreferences = Injekt.get(),
 ) : ViewModel() {
 
     val state: StateFlow<UnifiedLibraryState>
-        field = MutableStateFlow<UnifiedLibraryState>(UnifiedLibraryState())
+        field = MutableStateFlow<UnifiedLibraryState>(
+            UnifiedLibraryState(
+                lens = contentPreferences.contentFilter.get(),
+                sortMode = preferences.sortMode.get(),
+                filters = LibraryFilters(
+                    unviewedOnly = preferences.unviewedOnly.get(),
+                    downloadedOnly = preferences.downloadedOnly.get(),
+                    trackedOnly = preferences.trackedOnly.get(),
+                ),
+                columns = preferences.columns.get(),
+                showUnviewedCount = preferences.showUnviewedCount.get(),
+            ),
+        )
 
     init {
-        combine(
-            getUnifiedLibrary.subscribe(),
+        val chipsFlow = combine(
             getCategories.subscribe(),
             getAnimeCategories.subscribe(),
-            // Both already replay their latest value, so this does not wait for a download to change.
-            downloadCache.changes,
-            animeDownloadCache.changes,
-        ) { entries, mangaCategories, animeCategories, _, _ ->
-            val options = buildList {
-                add(CategoryScopeOption(CategoryScope.All, name = "", contentType = null))
-                mangaCategories.forEach {
-                    add(CategoryScopeOption(CategoryScope.Manga(it.id), it.name, ContentType.MANGA))
-                }
-                animeCategories.forEach {
-                    add(CategoryScopeOption(CategoryScope.Anime(it.id), it.name, ContentType.ANIME))
-                }
-            }
-            entries to options
+        ) { mangaCategories, animeCategories ->
+            mergeCategories(
+                // The uncategorised pseudo-category is not a shelf anyone filed anything under.
+                manga = mangaCategories.filterNot { it.isSystemCategory }.map { it.name to it.id },
+                anime = animeCategories.filterNot { it.isSystemCategory }.map { it.name to it.id },
+            )
         }
-            .onEach { (entries, options) ->
-                val downloaded = withIOContext { entries.filterDownloaded() }
+
+        val trackedFlow = combine(
+            trackRepository.getTracksAsFlow(),
+            animeTrackRepository.getAnimeTracksAsFlow(),
+        ) { mangaTracks, animeTracks ->
+            buildSet {
+                mangaTracks.forEach { add(ContentType.MANGA to it.mangaId) }
+                animeTracks.forEach { add(ContentType.ANIME to it.animeId) }
+            }
+        }
+
+        // Both already replay their latest value, so this does not wait for a download to change.
+        val downloadsFlow = combine(downloadCache.changes, animeDownloadCache.changes) { _, _ -> }
+
+        combine(
+            getUnifiedLibrary.subscribe(),
+            chipsFlow,
+            trackedFlow,
+            downloadsFlow,
+        ) { entries, categories, tracked, _ ->
+            LibrarySnapshot(entries, categories, tracked)
+        }
+            .onEach { snapshot ->
+                val downloaded = withIOContext { snapshot.entries.filterDownloaded() }
                 state.value = state.value.copy(
                     isLoading = false,
-                    entries = entries,
+                    entries = snapshot.entries,
                     downloadedEntryKeys = downloaded,
-                    categoryOptions = options,
+                    trackedEntryKeys = snapshot.tracked,
+                    categories = snapshot.categories,
                 )
             }
             .launchIn(viewModelScope)
+
+        contentPreferences.contentFilter.changes()
+            .onEach { lens -> state.value = state.value.copy(lens = lens) }
+            .launchIn(viewModelScope)
+    }
+
+    private data class LibrarySnapshot(
+        val entries: List<LibraryEntry>,
+        val categories: List<LibraryCategory>,
+        val tracked: Set<Pair<ContentType, Long>>,
+    )
+
+    /**
+     * One chip per category name, carrying every id that answers to it.
+     *
+     * Manga order first, then anime names not already seen, so an install with categories in only
+     * one half gets exactly that half's order and an install with both gets a stable one.
+     */
+    private fun mergeCategories(
+        manga: List<Pair<String, Long>>,
+        anime: List<Pair<String, Long>>,
+    ): List<LibraryCategory> {
+        val mangaIds = mutableMapOf<String, MutableSet<Long>>()
+        val animeIds = mutableMapOf<String, MutableSet<Long>>()
+        manga.forEach { (name, id) -> mangaIds.getOrPut(name) { mutableSetOf() } += id }
+        anime.forEach { (name, id) -> animeIds.getOrPut(name) { mutableSetOf() } += id }
+
+        val names = manga.map { it.first }.distinct() + anime.map { it.first }.distinct()
+        return names.distinct().map { name ->
+            LibraryCategory(
+                name = name,
+                mangaIds = mangaIds[name].orEmpty(),
+                animeIds = animeIds[name].orEmpty(),
+            )
+        }
     }
 
     /**
@@ -92,16 +165,41 @@ class UnifiedLibraryScreenModel(
             (entry.contentType to entry.entryId).takeIf { count > 0 }
         }
 
-    fun setStatusFilter(filter: LibraryStatusFilter) {
-        state.value = state.value.copy(statusFilter = filter)
-    }
-
-    fun setCategoryScope(scope: CategoryScope) {
-        state.value = state.value.copy(categoryScope = scope)
+    /** Tapping the chip you are already on goes back to All, the way a toggle does. */
+    fun selectCategory(name: String?) {
+        state.value = state.value.copy(
+            selectedCategory = name?.takeIf { it != state.value.selectedCategory },
+        )
     }
 
     fun setSortMode(mode: LibrarySortMode) {
+        preferences.sortMode.set(mode)
         state.value = state.value.copy(sortMode = mode)
+    }
+
+    fun setFilters(filters: LibraryFilters) {
+        preferences.unviewedOnly.set(filters.unviewedOnly)
+        preferences.downloadedOnly.set(filters.downloadedOnly)
+        preferences.trackedOnly.set(filters.trackedOnly)
+        state.value = state.value.copy(filters = filters)
+    }
+
+    fun setColumns(columns: Int) {
+        preferences.columns.set(columns)
+        state.value = state.value.copy(columns = columns)
+    }
+
+    fun setShowUnviewedCount(show: Boolean) {
+        preferences.showUnviewedCount.set(show)
+        state.value = state.value.copy(showUnviewedCount = show)
+    }
+
+    /** Everything the sheet can change, back to how it shipped. The lens is not the sheet's. */
+    fun resetDisplay() {
+        setSortMode(LibrarySortMode.RECENTLY_UPDATED)
+        setFilters(LibraryFilters())
+        setColumns(UnifiedLibraryPreferences.DEFAULT_COLUMNS)
+        setShowUnviewedCount(true)
     }
 
     fun search(query: String?) {

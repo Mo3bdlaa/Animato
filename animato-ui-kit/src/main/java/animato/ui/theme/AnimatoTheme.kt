@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import eu.kanade.domain.ui.UiPreferences
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -72,7 +73,18 @@ private fun BaseAnimatoTheme(
         CompositionLocalProvider(
             LocalTextStyle provides MaterialTheme.typography.bodySmall,
             LocalContentColor provides MaterialTheme.colorScheme.onBackground,
+            LocalAnimatoPalette provides palette,
             content = content,
         )
     }
 }
+
+/**
+ * The palette itself, for the few brand colours Material has no role for.
+ *
+ * `MaterialTheme.colorScheme` is the right answer for nearly everything and stays the default
+ * answer. This exists for the handful of values that are ours rather than Material's — the
+ * highlight the NEW pill is drawn in, the state colours — so that they are read from the theme
+ * instead of typed as a hex literal into whichever screen needed one that day.
+ */
+val LocalAnimatoPalette = staticCompositionLocalOf { AnimatoPalettes.Default }

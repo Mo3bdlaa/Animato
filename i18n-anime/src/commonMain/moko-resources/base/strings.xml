@@ -674,4 +674,16 @@
     <!-- Creating a backup -->
     <string name="backup_format_info">Backups hold both libraries and are written in Aniyomi\'s format, so Aniyomi can read them in full and Mihon can read the manga in them.</string>
     <string name="backup_chapters_and_episodes">Chapters and episodes</string>
+
+    <!-- Library -->
+    <string name="sort_recently_updated">Recently updated</string>
+    <string name="sort_recently_opened">Recently opened</string>
+    <string name="sort_title_az">Title A–Z</string>
+    <string name="filter_unviewed_only">Unread only</string>
+    <string name="label_columns">Columns</string>
+    <string name="pref_show_unviewed_count">Show unread count</string>
+    <string name="caption_chapters">Ch. %1$s</string>
+    <string name="caption_episodes">Ep. %1$s</string>
+    <string name="library_empty">Your library is empty. Anything you save from Discover shows up here.</string>
+    <string name="library_empty_filtered">Nothing on this shelf matches the filters you set.</string>
 </resources>

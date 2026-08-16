@@ -83,13 +83,6 @@ fun contentTypeOrDefault(fallback: ContentType = ContentType.MANGA): ContentType
         ContentFilter.MANGA -> ContentType.MANGA
     }
 
-/** Whether [type] passes the current lens. `ALL` passes everything. */
-fun ContentFilter.admits(type: ContentType): Boolean = when (this) {
-    ContentFilter.ALL -> true
-    ContentFilter.ANIME -> type == ContentType.ANIME
-    ContentFilter.MANGA -> type == ContentType.MANGA
-}
-
 /**
  * The lens button: one icon that is its own state, and a menu behind it.
  *

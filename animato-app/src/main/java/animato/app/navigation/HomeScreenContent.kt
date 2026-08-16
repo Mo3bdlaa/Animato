@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.settings.AnimatoSettingsScreen
 import animato.domain.content.ContentType
+import animato.ui.components.NewPill
 import animato.ui.entries.ItemCover
 import animato.ui.navigation.AnimatoNavigator
 import animato.ui.navigation.AnimatoTab
@@ -87,10 +88,10 @@ internal fun HomeScreenContent() {
     // The rail is the one place both halves meet, so it is the one place the lens has to be applied
     // rather than assumed. Every item already carries its own type; nothing used to read it.
     val continueItems = remember(state.continueItems, lens) {
-        state.continueItems.filter { lens.admits(it.contentType) }
+        state.continueItems.filter { lens.accepts(it.contentType) }
     }
     val updateItems = remember(state.updateItems, lens) {
-        state.updateItems.filter { lens.admits(it.contentType) }
+        state.updateItems.filter { lens.accepts(it.contentType) }
     }
 
     Scaffold(
@@ -343,26 +344,6 @@ private fun UpdateRow(
             NewPill()
         }
     }
-}
-
-/**
- * The one place the accent colour is used.
- *
- * Not blue: blue means active or in progress everywhere else in the app, and something you have not
- * opened yet is neither.
- */
-@Composable
-private fun NewPill() {
-    Text(
-        text = stringResource(AYMR.strings.label_new).uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        fontWeight = FontWeight.Bold,
-        color = Color(0xFF08080C),
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(Color(0xFF06B6D4))
-            .padding(horizontal = MaterialTheme.padding.small, vertical = 2.dp),
-    )
 }
 
 /** No library at all: one sentence and the one button that fixes it. */
