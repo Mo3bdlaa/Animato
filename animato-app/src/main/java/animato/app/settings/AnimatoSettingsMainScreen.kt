@@ -28,6 +28,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import animato.anime.player.settings.PlayerSettingsMainScreen
 import animato.app.updater.AnimatoAppUpdateChecker
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -36,14 +37,10 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.SettingsAdvancedScreen
 import eu.kanade.presentation.more.settings.screen.SettingsAppearanceScreen
-import eu.kanade.presentation.more.settings.screen.SettingsBrowseScreen
 import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
-import eu.kanade.presentation.more.settings.screen.SettingsDownloadScreen
-import eu.kanade.presentation.more.settings.screen.SettingsLibraryScreen
 import eu.kanade.presentation.more.settings.screen.SettingsReaderScreen
 import eu.kanade.presentation.more.settings.screen.SettingsSearchScreen
 import eu.kanade.presentation.more.settings.screen.SettingsSecurityScreen
-import eu.kanade.presentation.more.settings.screen.SettingsTrackingScreen
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
@@ -207,6 +204,15 @@ object AnimatoSettingsMainScreen : Screen() {
         val screen: VoyagerScreen,
     )
 
+    /**
+     * Ten entries, organised by what someone is doing rather than by which half they are in.
+     *
+     * The old list was Mihon's with anime bolted on: a *Reader* entry at the top level and a
+     * *Player* buried three taps down inside a bucket called *Anime*, plus a stray *Unblock a
+     * source* sitting as a peer of Library. Reading and Watching are siblings here, which is the
+     * whole point — neither medium is the main one — and each shared section now answers for both
+     * halves rather than one, through the wrappers in AnimatoSettingsSections.kt.
+     */
     private val items = listOf(
         Item(
             titleRes = MR.strings.pref_category_appearance,
@@ -218,58 +224,48 @@ object AnimatoSettingsMainScreen : Screen() {
             titleRes = MR.strings.pref_category_library,
             subtitleRes = MR.strings.pref_library_summary,
             icon = Icons.Outlined.CollectionsBookmark,
-            screen = SettingsLibraryScreen,
+            screen = AnimatoSettingsLibraryScreen,
         ),
+        // Reading and Watching, adjacent and equal. The pair is the fix: whichever medium someone
+        // came for, the other one is visibly right there rather than nested somewhere else.
         Item(
-            titleRes = MR.strings.pref_category_reader,
-            subtitleRes = MR.strings.pref_reader_summary,
+            titleRes = AYMR.strings.pref_category_reading,
+            subtitleRes = AYMR.strings.pref_reading_summary,
             icon = Icons.Outlined.ChromeReaderMode,
             screen = SettingsReaderScreen,
         ),
-        // The one row that is not Mihon's. It sits after the reader because that is where someone
-        // looking for "how the player behaves" will look next.
         Item(
-            titleRes = AYMR.strings.label_anime,
-            subtitleRes = AYMR.strings.pref_anime_summary,
+            titleRes = AYMR.strings.pref_category_watching,
+            subtitleRes = AYMR.strings.pref_watching_summary,
             icon = Icons.Outlined.PlayCircleOutline,
-            screen = SettingsAnimeScreen,
+            screen = PlayerSettingsMainScreen(mainSettings = false),
         ),
         Item(
-            titleRes = MR.strings.pref_category_downloads,
-            subtitleRes = MR.strings.pref_downloads_summary,
+            titleRes = AYMR.strings.pref_category_sources,
+            subtitleRes = AYMR.strings.pref_sources_summary,
+            icon = Icons.Outlined.Explore,
+            screen = AnimatoSettingsSourcesScreen,
+        ),
+        Item(
+            titleRes = AYMR.strings.pref_downloads_storage,
+            subtitleRes = AYMR.strings.pref_downloads_storage_summary,
             icon = Icons.Outlined.GetApp,
-            screen = SettingsDownloadScreen,
+            screen = AnimatoSettingsDownloadsScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_tracking,
             subtitleRes = MR.strings.pref_tracking_summary,
             icon = Icons.Outlined.Sync,
-            screen = SettingsTrackingScreen,
+            screen = AnimatoSettingsTrackingScreen,
         ),
         Item(
-            titleRes = MR.strings.browse,
-            subtitleRes = MR.strings.pref_browse_summary,
-            icon = Icons.Outlined.Explore,
-            screen = SettingsBrowseScreen,
-        ),
-        // Also not Mihon's, and next to Browse because that is where a source that will not load
-        // sends someone looking. It covers both halves — Cloudflare blocks a *site*, and the anime
-        // screens and the manga screens are not the same screens.
-        Item(
-            titleRes = AYMR.strings.pref_cloudflare_title,
-            subtitleRes = AYMR.strings.pref_cloudflare_summary,
-            icon = Icons.Outlined.Shield,
-            screen = AnimatoCloudflareScreen,
-        ),
-        Item(
-            titleRes = MR.strings.label_data_storage,
-            subtitleRes = MR.strings.pref_backup_summary,
+            titleRes = AYMR.strings.pref_backup_data,
+            subtitleRes = AYMR.strings.pref_backup_data_summary,
             icon = Icons.Outlined.Storage,
-            // Mihon's screen with one group appended — see AnimatoSettingsDataScreen.
             screen = AnimatoSettingsDataScreen,
         ),
         Item(
-            titleRes = MR.strings.pref_category_security,
+            titleRes = AYMR.strings.pref_privacy_security,
             subtitleRes = MR.strings.pref_security_summary,
             icon = Icons.Outlined.Security,
             screen = SettingsSecurityScreen,

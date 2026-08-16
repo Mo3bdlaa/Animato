@@ -137,6 +137,17 @@
     <string name="pref_long_press_speed">Speed while held</string>
     <string name="player_sheets_screenshot_title">Screenshot</string>
     <!-- The content lens -->
+    <string name="pref_category_reading">Reading</string>
+    <string name="pref_reading_summary">Reader layout, page transitions, tap zones</string>
+    <string name="pref_category_watching">Watching</string>
+    <string name="pref_watching_summary">Player, gestures, subtitles, decoders, external player</string>
+    <string name="pref_category_sources">Sources</string>
+    <string name="pref_sources_summary">Browse options, repositories, NSFW, unblock a source</string>
+    <string name="pref_downloads_storage">Downloads &amp; storage</string>
+    <string name="pref_downloads_storage_summary">Download rules, auto-delete, cleanup, storage usage</string>
+    <string name="pref_backup_data">Backup &amp; data</string>
+    <string name="pref_backup_data_summary">Backup, restore, schedule, import from Aniyomi</string>
+    <string name="pref_privacy_security">Privacy &amp; security</string>
     <string name="lens_all">All</string>
     <string name="lens_applies_everywhere">Applies everywhere</string>
     <!-- Data and storage - orphaned downloads -->

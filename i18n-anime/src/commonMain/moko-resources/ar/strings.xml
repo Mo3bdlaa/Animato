@@ -595,4 +595,15 @@
     <string name="backup_chapters_and_episodes">الفصول والحلقات</string>
     <string name="lens_all">الكل</string>
     <string name="lens_applies_everywhere">ينطبق في كل مكان</string>
+    <string name="pref_category_reading">القراءة</string>
+    <string name="pref_reading_summary">تخطيط القارئ، انتقال الصفحات، مناطق اللمس</string>
+    <string name="pref_category_watching">المشاهدة</string>
+    <string name="pref_watching_summary">المشغل، الإيماءات، الترجمات، فك الترميز، مشغل خارجي</string>
+    <string name="pref_category_sources">المصادر</string>
+    <string name="pref_sources_summary">خيارات التصفح، المستودعات، المحتوى الحساس، فتح مصدر محجوب</string>
+    <string name="pref_downloads_storage">التنزيلات والتخزين</string>
+    <string name="pref_downloads_storage_summary">قواعد التنزيل، الحذف التلقائي، التنظيف، مساحة التخزين</string>
+    <string name="pref_backup_data">النسخ الاحتياطي والبيانات</string>
+    <string name="pref_backup_data_summary">نسخ، استعادة، جدولة، استيراد من أنيومي</string>
+    <string name="pref_privacy_security">الخصوصية والأمان</string>
 </resources>
