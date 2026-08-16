@@ -43,7 +43,30 @@ android {
          */
         versionName = System.getenv("ANIMATO_VERSION_NAME")?.takeIf(String::isNotBlank) ?: "0.1.0"
 
-        buildConfigField("String", "ANIMATO_RELEASE_REPO", "\"Mo3bdlaa/Animato\"")
+        /*
+         * Where the updater looks for releases, and what the release links point at.
+         *
+         * Read from the environment rather than written down here, because the environment already
+         * knows: GitHub Actions sets GITHUB_REPOSITORY to `owner/name` for every run, so a build
+         * always names the repository it was actually built from.
+         *
+         * Writing it down was a quiet trap. Renaming the project, or moving it to an organisation,
+         * would leave every shipped APK asking a repository that no longer answers — and that
+         * failure does not surface at the transfer. It surfaces months later as a 404 on somebody's
+         * phone, which is exactly how this file's previous value announced itself.
+         *
+         * A local build has no such variable and falls back to the property, which only affects
+         * development builds: those are never distributed, so the value barely matters.
+         */
+        buildConfigField(
+            "String",
+            "ANIMATO_RELEASE_REPO",
+            "\"${
+                providers.environmentVariable("GITHUB_REPOSITORY")
+                    .orElse(providers.gradleProperty("animato.releaseRepo"))
+                    .get()
+            }\"",
+        )
 
         /*
          * On, unless a build says otherwise with `-Panimato-no-updater`.

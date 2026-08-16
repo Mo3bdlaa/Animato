@@ -23,19 +23,24 @@ on:
         required: false
         type: string
 
-env:
-  RELEASE_REPO: Mo3bdlaa/Animato
-
 jobs:
   build:
     name: Build and publish alpha
     runs-on: ubuntu-latest
 
+    # Asked of the event rather than compared against a repository named here.
+    #
+    # The name used to be written down, and the check was "am I that repository". That is the same
+    # question in the case it was written for and the wrong question in every other: renaming the
+    # project, or moving it to an organisation, turns the guard into a wall across the release path
+    # — a workflow that refuses to publish the repository it is sitting in.
+    #
+    # `fork` is what was meant, and GitHub already answers it.
     steps:
       - name: Refuse to publish from a fork
-        if: github.repository != env.RELEASE_REPO
+        if: github.event.repository.fork
         run: |
-          echo "::error::This workflow publishes releases to ${{ env.RELEASE_REPO }} and must not run elsewhere."
+          echo "::error::This is a fork. Releases are published from the upstream repository."
           exit 1
 
       - name: Clone repo
