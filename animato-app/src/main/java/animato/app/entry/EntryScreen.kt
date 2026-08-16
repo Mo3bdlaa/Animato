@@ -185,6 +185,9 @@ class EntryScreen(
                         state = state,
                         onToggleLibrary = screenModel::toggleInLibrary,
                         onResume = { state.nextItem?.let(open) },
+                        // Binding *this* title to a tracker is the original screen's dialog, which
+                        // is where the per-title work lives. The hub is accounts, and is one tap
+                        // from Settings; sending the title page there would be the wrong screen.
                         onTracking = {
                             navigator.push(
                                 when (contentType) {

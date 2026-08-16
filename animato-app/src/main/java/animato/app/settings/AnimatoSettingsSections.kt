@@ -3,6 +3,7 @@ package animato.app.settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import animato.app.extension.ExtensionsScreen
+import animato.app.tracking.TrackingHubScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
@@ -95,7 +96,18 @@ object AnimatoSettingsTrackingScreen : SearchableSettings {
     @Composable
     override fun getPreferences(): List<Preference> {
         val navigator = LocalNavigator.currentOrThrow
-        return SettingsTrackingScreen.getPreferences() + Preference.PreferenceGroup(
+        return listOf(
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.manga_tracking_tab),
+                preferenceItems = persistentListOf(
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(AYMR.strings.tracking_hub_title),
+                        subtitle = stringResource(AYMR.strings.tracking_hub_summary),
+                        onClick = { navigator.push(TrackingHubScreen()) },
+                    ),
+                ),
+            ),
+        ) + SettingsTrackingScreen.getPreferences() + Preference.PreferenceGroup(
             title = stringResource(AYMR.strings.label_anime),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.TextPreference(

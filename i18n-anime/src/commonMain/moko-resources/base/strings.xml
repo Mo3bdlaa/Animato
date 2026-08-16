@@ -773,4 +773,15 @@
     <string name="entry_start">Start · %1$s</string>
     <string name="entry_chapters_count">Chapters · %1$s</string>
     <string name="entry_episodes_count">Episodes · %1$s</string>
+
+    <!-- Tracking hub -->
+    <string name="tracking_sync_all">Sync all</string>
+    <string name="tracking_sync_now">Sync now</string>
+    <string name="tracking_not_signed_in">Not signed in</string>
+    <string name="tracking_no_titles">Signed in · nothing tracked yet</string>
+    <string name="tracking_titles">%1$s titles</string>
+    <string name="tracking_titles_synced">%1$s titles · synced %2$s ago</string>
+    <string name="tracking_failed">Failed · %1$s titles did not sync</string>
+    <string name="tracking_hub_title">Accounts</string>
+    <string name="tracking_hub_summary">Every tracker, what it holds, and when it last synced</string>
 </resources>

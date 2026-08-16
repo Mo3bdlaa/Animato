@@ -690,4 +690,13 @@
     <string name="entry_start">ابدأ · %1$s</string>
     <string name="entry_chapters_count">الفصول · %1$s</string>
     <string name="entry_episodes_count">الحلقات · %1$s</string>
+    <string name="tracking_sync_all">زامن الكل</string>
+    <string name="tracking_sync_now">زامن دلوقتي</string>
+    <string name="tracking_not_signed_in">مش مسجّل دخول</string>
+    <string name="tracking_no_titles">مسجّل دخول · لسه مفيش حاجة متتبّعة</string>
+    <string name="tracking_titles">%1$s عمل</string>
+    <string name="tracking_titles_synced">%1$s عمل · اتزامن من %2$s</string>
+    <string name="tracking_failed">فشل · %1$s عمل ما اتزامنوش</string>
+    <string name="tracking_hub_title">الحسابات</string>
+    <string name="tracking_hub_summary">كل متتبّع، وفيه إيه، وآخر مرة اتزامن إمتى</string>
 </resources>
