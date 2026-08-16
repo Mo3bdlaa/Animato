@@ -55,6 +55,7 @@ import animato.app.downloads.OrphanedDownloadSweeper
 import animato.app.extension.ExtensionUpdateCheck
 import animato.app.navigation.AnimatoHomeScreen
 import animato.app.navigation.setContentLens
+import animato.app.onboarding.AnimatoOnboardingScreen
 import animato.app.settings.AniyomiImportScreen
 import animato.app.updater.AnimatoAppUpdateChecker
 import animato.domain.content.ContentFilter
@@ -89,7 +90,6 @@ import eu.kanade.tachiyomi.ui.deeplink.anime.DeepLinkAnimeScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
-import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
@@ -448,8 +448,11 @@ class MainActivity : BaseActivity() {
         val navigator = LocalNavigator.currentOrThrow
 
         LaunchedEffect(Unit) {
-            if (!preferences.shownOnboardingFlow.get() && navigator.lastItem !is OnboardingScreen) {
-                navigator.push(OnboardingScreen())
+            // Ours, not Mihon's. Theirs is four steps about the device and knows nothing about the
+            // lens, which is the one idea somebody has to meet before the rest of the app makes
+            // sense. See AnimatoOnboardingScreen for what was kept from theirs and where it went.
+            if (!preferences.shownOnboardingFlow.get() && navigator.lastItem !is AnimatoOnboardingScreen) {
+                navigator.push(AnimatoOnboardingScreen())
             }
         }
     }

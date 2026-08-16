@@ -729,4 +729,30 @@
     <string name="search_no_manga_sources">You don\'t have any manga sources yet, so there is nowhere to search.</string>
     <string name="search_no_sources">You don\'t have any sources yet, so there is nowhere to search.</string>
     <string name="search_switch_lens">Or switch the lens to look at the other half.</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_tagline">Read. Watch. Track.</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_start_exploring">Start exploring</string>
+    <string name="onboarding_lens_title">What do you follow?</string>
+    <string name="onboarding_lens_subtitle">This sets your lens. One switch in the top bar, and you can flip it any time.</string>
+    <string name="onboarding_lens_both">Both</string>
+    <string name="onboarding_lens_anime_hint">Episodes only</string>
+    <string name="onboarding_lens_manga_hint">Chapters only</string>
+    <string name="onboarding_lens_both_hint">One shelf, one feed — the full circle</string>
+    <string name="onboarding_languages_title">Which languages?</string>
+    <string name="onboarding_languages_subtitle">Used to suggest sources and to rank what search finds.</string>
+    <string name="onboarding_sources_title">Where content comes from</string>
+    <string name="onboarding_portals_header">Official portals worth knowing</string>
+    <string name="onboarding_sources_later">You can do this later in Settings › Sources.</string>
+    <string name="onboarding_history_title">Bring your history</string>
+    <string name="onboarding_history_subtitle">Pick one. Whichever you choose, your shelf is not empty when you land.</string>
+    <string name="onboarding_history_import">Library, categories, history and read positions from a .tachibk file.</string>
+    <string name="onboarding_history_tracker">Sign in to a tracker</string>
+    <string name="onboarding_history_tracker_hint">AniList or MyAnimeList — your lists seed Library and Continue right away.</string>
+    <string name="onboarding_history_fresh">Start fresh</string>
+    <string name="onboarding_history_fresh_hint">Build the shelf as you go. Discover is already full.</string>
+    <string name="onboarding_done_title">You\'re set</string>
+    <string name="onboarding_done_subtitle">Next stop is Discover — trending, this season and top rated are already loaded.</string>
+    <string name="onboarding_action_next">Continue</string>
 </resources>

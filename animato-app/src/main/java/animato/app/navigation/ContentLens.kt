@@ -141,16 +141,20 @@ fun LensButton(modifier: Modifier = Modifier) {
  * The filled half is on the leading side in both directions: the drawing is mirrored under RTL by
  * Compose's layout direction, which is why the arc starts at 90° and sweeps 180° rather than being
  * positioned by hand.
+ *
+ * Public because onboarding teaches the lens *with* the lens: its three options are drawn with this
+ * glyph, so the first time anyone meets the icon they are choosing with it rather than decoding it
+ * later in a top bar.
  */
 @Composable
-private fun LensGlyph(lens: ContentFilter) {
+fun LensGlyph(lens: ContentFilter, modifier: Modifier = Modifier) {
     val outline = MaterialTheme.colorScheme.onSurfaceVariant
     val active = MaterialTheme.colorScheme.primary
     val narrowed = lens != ContentFilter.ALL
     val ring = if (narrowed) active else outline
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(LENS_GLYPH_SIZE)
             .clip(CircleShape)
             .drawBehind {
