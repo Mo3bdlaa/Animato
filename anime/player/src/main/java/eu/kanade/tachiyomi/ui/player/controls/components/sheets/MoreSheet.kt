@@ -38,6 +38,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardAlt
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -90,6 +91,7 @@ fun MoreSheet(
     onStartTimer: (Int) -> Unit,
     onDismissRequest: () -> Unit,
     onEnterFiltersPanel: () -> Unit,
+    onEnterScreenshot: () -> Unit,
     customButtons: ImmutableList<CustomButton>,
     modifier: Modifier = Modifier,
 ) {
@@ -146,6 +148,19 @@ fun MoreSheet(
                                     onTimeSelect = onStartTimer,
                                 )
                             }
+                        }
+                    }
+                    // The second way to the screenshot sheet, and the reason press-and-hold could
+                    // be given to the speed boost. Holding the video used to be the only route to
+                    // it, so changing that default without this would have deleted the feature
+                    // rather than moved it.
+                    TextButton(onClick = onEnterScreenshot) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                        ) {
+                            Icon(imageVector = Icons.Outlined.PhotoCamera, contentDescription = null)
+                            Text(text = stringResource(AYMR.strings.player_sheets_screenshot_title))
                         }
                     }
                     TextButton(onClick = onEnterFiltersPanel) {

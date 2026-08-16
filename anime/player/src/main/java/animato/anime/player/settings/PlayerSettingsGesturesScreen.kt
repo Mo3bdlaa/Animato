@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
+import eu.kanade.tachiyomi.ui.player.LongPressGesture
 import eu.kanade.tachiyomi.ui.player.SingleActionGesture
 import eu.kanade.tachiyomi.ui.player.settings.GesturePreferences
 import kotlinx.collections.immutable.persistentListOf
@@ -46,7 +47,45 @@ object PlayerSettingsGesturesScreen : SearchableSettings {
             getSlidersGroup(gesturePreferences = gesturePreferences),
             getSeekingGroup(gesturePreferences = gesturePreferences),
             getDoubleTapGroup(gesturePreferences = gesturePreferences),
+            getLongPressGroup(gesturePreferences = gesturePreferences),
             getMediaControlsGroup(gesturePreferences = gesturePreferences),
+        )
+    }
+
+    /**
+     * What holding a finger on the video does, and how fast.
+     *
+     * The speed is offered as a list rather than a slider because every value people actually want
+     * is on it, and because a slider for a number this coarse costs a drag to land on 2.0.
+     */
+    @Composable
+    private fun getLongPressGroup(gesturePreferences: GesturePreferences): Preference.PreferenceGroup {
+        val longPress = gesturePreferences.longPressGesture()
+        val longPressSpeed = gesturePreferences.longPressSpeed()
+        val selectedGesture by longPress.collectAsState()
+
+        return Preference.PreferenceGroup(
+            title = stringResource(AYMR.strings.pref_category_long_press),
+            preferenceItems = persistentListOf(
+                Preference.PreferenceItem.ListPreference(
+                    preference = longPress,
+                    entries = LongPressGesture.entries
+                        .associateWith { stringResource(it.stringRes) }
+                        .toPersistentMap(),
+                    title = stringResource(AYMR.strings.pref_long_press),
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = longPressSpeed,
+                    entries = listOf(1.25f, 1.5f, 1.75f, 2f, 2.5f, 3f)
+                        .associateWith { "$it×" }
+                        .toPersistentMap(),
+                    title = stringResource(AYMR.strings.pref_long_press_speed),
+                    // No subtitle override: the default one shows the chosen speed, which is more
+                    // use here than a sentence explaining what "speed while held" means.
+                    // Nothing to configure when holding does something else, or nothing at all.
+                    enabled = selectedGesture == LongPressGesture.SpeedBoost,
+                ),
+            ),
         )
     }
 

@@ -93,6 +93,8 @@ fun PlayerSheets(
     onSave: (() -> InputStream) -> Unit,
     takeScreenshot: (String, Boolean) -> InputStream?,
     onDismissScreenshot: () -> Unit,
+    /** Opens the screenshot sheet from the more sheet, for when holding the video does not. */
+    onEnterScreenshot: () -> Unit,
 
     onOpenPanel: (Panels) -> Unit,
     onDismissRequest: () -> Unit,
@@ -168,6 +170,7 @@ fun PlayerSheets(
                 onStartTimer = onStartSleepTimer,
                 onDismissRequest = onDismissRequest,
                 onEnterFiltersPanel = { onOpenPanel(Panels.VideoFilters) },
+                onEnterScreenshot = onEnterScreenshot,
                 customButtons = buttons,
             )
         }

@@ -291,7 +291,10 @@ fun PlayerControls(
                 val currentPlayerUpdate by viewModel.playerUpdate.collectAsState()
                 val aspectRatio by playerPreferences.aspectState().collectAsState()
                 LaunchedEffect(currentPlayerUpdate, aspectRatio) {
-                    if (currentPlayerUpdate is PlayerUpdates.DoubleSpeed || currentPlayerUpdate is PlayerUpdates.None) {
+                    // Everything else is a notice that has been read after two seconds. The speed
+                    // boost is a state rather than a notice: it lasts exactly as long as the finger
+                    // does, and the release handler is what clears it.
+                    if (currentPlayerUpdate is PlayerUpdates.SpeedBoost || currentPlayerUpdate is PlayerUpdates.None) {
                         return@LaunchedEffect
                     }
                     delay(2000)
@@ -307,7 +310,9 @@ fun PlayerControls(
                     },
                 ) {
                     when (currentPlayerUpdate) {
-                        // is PlayerUpdates.DoubleSpeed -> DoubleSpeedPlayerUpdate()
+                        is PlayerUpdates.SpeedBoost -> TextPlayerUpdate(
+                            "${(currentPlayerUpdate as PlayerUpdates.SpeedBoost).speed}×",
+                        )
                         is PlayerUpdates.AspectRatio -> TextPlayerUpdate(stringResource(aspectRatio.titleRes))
                         is PlayerUpdates.ShowText -> TextPlayerUpdate(
                             (currentPlayerUpdate as PlayerUpdates.ShowText).value,
@@ -632,6 +637,13 @@ fun PlayerControls(
             onDismissScreenshot = {
                 viewModel.showSheet(Sheets.None)
                 viewModel.unpause()
+            },
+            // Pauses on the way in, because dismissing the sheet unpauses on the way out and
+            // because a screenshot is of a frame someone chose rather than whichever one was
+            // showing when the sheet opened.
+            onEnterScreenshot = {
+                viewModel.pause()
+                viewModel.showSheet(Sheets.Screenshot)
             },
             onOpenPanel = viewModel::showPanel,
             onDismissRequest = { viewModel.showSheet(Sheets.None) },

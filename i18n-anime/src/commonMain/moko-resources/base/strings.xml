@@ -130,6 +130,12 @@
     <string name="single_action_playpause">Play/Pause</string>
     <string name="single_action_switch">Change episode</string>
     <string name="single_action_custom">Custom</string>
+    <string name="pref_category_long_press">Press and hold</string>
+    <string name="pref_long_press">Press and hold</string>
+    <string name="long_press_speed_boost">Speed up playback</string>
+    <string name="long_press_screenshot">Take a screenshot</string>
+    <string name="pref_long_press_speed">Speed while held</string>
+    <string name="player_sheets_screenshot_title">Screenshot</string>
     <string name="pref_category_media_controls">Media controls</string>
     <string name="pref_media_previous">Previous</string>
     <string name="pref_media_playpause">Play/Pause</string>

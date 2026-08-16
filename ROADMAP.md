@@ -216,9 +216,18 @@ either way would be dishonest. They need a session with a phone, not a session w
 
 **Wanted, and absent:**
 
-- **Long-press to speed up** — among the seven most requested, and a basic expectation set by
-  YouTube and Netflix. Nothing implements it; the only `longPress` in the player is the custom-button
-  Lua hook. Small, obvious, high notice-per-line.
+- ~~**Long-press to speed up**~~ — **done**, and the entry it replaces was wrong in a way worth
+  leaving visible. It said *"nothing implements it; the only `longPress` in the player is the
+  custom-button Lua hook"*. There was a long-press on the video surface all along — bound to the
+  screenshot sheet — and around it sat the remains of a speed boost: a `DoubleSpeed` update whose UI
+  was a commented-out line, and a release handler restoring a speed nothing raised, read once inside
+  a `pointerInput(Unit)` that never restarts and therefore frozen at whatever the speed was when the
+  player opened. Live, that would have snapped playback back to the wrong speed on release.
+
+  Holding is now a **choice** — speed up (default), screenshot, or nothing — with the speed itself a
+  setting, because 2× suits dialogue and is far too fast for a fight. Changing the default was only
+  honest once the screenshot had somewhere else to live: that gesture was the **only** route to it,
+  so the more sheet now opens it too.
 - **OpenSubtitles** (#441, #1762, #142, since 2022) — confirmed absent. Its value is that it works
   *regardless of extension quality*, so it fixes missing subtitles at the root rather than per source.
 - True black for OLED (#2271), one-handed reachability (#2062).
@@ -302,5 +311,5 @@ Debts with a known cost, tracked in UPSTREAM_DIVERGENCE.md.
 5. **Android TV** — the highest-reacted issue in the donor, and an anime app on a television is the
    obvious place to want one.
 
-And one that costs almost nothing: **long-press to speed up playback**. Small enough to be noise on
-this list, noticed by every single user on the first episode.
+**Long-press to speed up playback** used to sit here as the cheap one worth doing anyway. It is
+done — see the player section, including what the entry describing it got wrong.

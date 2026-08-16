@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import animato.anime.player.playerRippleConfiguration
 import eu.kanade.presentation.player.components.LeftSideOvalShape
 import eu.kanade.presentation.player.components.RightSideOvalShape
+import eu.kanade.tachiyomi.ui.player.LongPressGesture
 import eu.kanade.tachiyomi.ui.player.Panels
 import eu.kanade.tachiyomi.ui.player.PlayerUpdates
 import eu.kanade.tachiyomi.ui.player.PlayerViewModel
@@ -108,6 +109,16 @@ fun GestureHandler(
     val preciseSeeking by gesturePreferences.playerSmoothSeek().collectAsState()
     val showSeekbar by gesturePreferences.showSeekBar().collectAsState()
     var isLongPressing by remember { mutableStateOf(false) }
+
+    /**
+     * The speed to go back to when the finger comes up, or null when nothing was sped up.
+     *
+     * Held here rather than read once inside the gesture block, which is what the code this
+     * replaced did: `pointerInput(Unit)` never restarts, so the value it captured was whatever the
+     * speed happened to be when the player opened. Change the speed from the sheet, then hold, and
+     * releasing would have snapped playback back to the old speed instead of the chosen one.
+     */
+    var speedBeforeBoost by remember { mutableStateOf<Float?>(null) }
     val currentVolume by viewModel.currentVolume.collectAsState()
     val currentMPVVolume by viewModel.currentMPVVolume.collectAsState()
     val currentBrightness by viewModel.currentBrightness.collectAsState()
@@ -119,7 +130,6 @@ fun GestureHandler(
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.safeGestures)
             .pointerInput(Unit) {
-                val originalSpeed = viewModel.playbackSpeed.value
                 detectTapGestures(
                     onTap = {
                         if (controlsShown) viewModel.hideControls() else viewModel.showControls()
@@ -162,18 +172,39 @@ fun GestureHandler(
                         tryAwaitRelease()
                         if (isLongPressing) {
                             isLongPressing = false
-                            MPVLib.setPropertyDouble("speed", originalSpeed.toDouble())
-                            viewModel.playerUpdate.update { PlayerUpdates.None }
+                            // Only the speed boost has anything to undo. The screenshot sheet stays
+                            // open after the finger leaves, which is the whole point of it.
+                            speedBeforeBoost?.let { previous ->
+                                MPVLib.setPropertyDouble("speed", previous.toDouble())
+                                speedBeforeBoost = null
+                                viewModel.playerUpdate.update { PlayerUpdates.None }
+                            }
                         }
                         interactionSource.emit(PressInteraction.Release(press))
                     },
                     onLongPress = {
-                        if (areControlsLocked) return@detectTapGestures
-                        if (!isLongPressing) {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            isLongPressing = true
-                            viewModel.pause()
-                            viewModel.sheetShown.update { Sheets.Screenshot }
+                        if (areControlsLocked || isLongPressing) return@detectTapGestures
+                        // Read now rather than captured above: this block is keyed on `Unit` and so
+                        // runs exactly once for the life of the player, and a setting changed in
+                        // the meantime has to be the one that applies.
+                        when (gesturePreferences.longPressGesture().get()) {
+                            LongPressGesture.None -> return@detectTapGestures
+
+                            LongPressGesture.Screenshot -> {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isLongPressing = true
+                                viewModel.pause()
+                                viewModel.sheetShown.update { Sheets.Screenshot }
+                            }
+
+                            LongPressGesture.SpeedBoost -> {
+                                val boosted = gesturePreferences.longPressSpeed().get()
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isLongPressing = true
+                                speedBeforeBoost = viewModel.playbackSpeed.value
+                                MPVLib.setPropertyDouble("speed", boosted.toDouble())
+                                viewModel.playerUpdate.update { PlayerUpdates.SpeedBoost(boosted) }
+                            }
                         }
                     },
                 )

@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.player.settings
 
+import eu.kanade.tachiyomi.ui.player.LongPressGesture
 import eu.kanade.tachiyomi.ui.player.SingleActionGesture
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
@@ -27,6 +28,19 @@ class GesturePreferences(
     fun leftDoubleTapGesture() = preferenceStore.getEnum("pref_left_double_tap", SingleActionGesture.Seek)
     fun centerDoubleTapGesture() = preferenceStore.getEnum("pref_center_double_tap", SingleActionGesture.PlayPause)
     fun rightDoubleTapGesture() = preferenceStore.getEnum("pref_right_double_tap", SingleActionGesture.Seek)
+
+    // Press and hold
+
+    fun longPressGesture() = preferenceStore.getEnum("pref_long_press", LongPressGesture.SpeedBoost)
+
+    /**
+     * How fast playback runs while held.
+     *
+     * A float rather than a fixed doubling, because the useful value depends on what is playing:
+     * 2× is right for dialogue and far too fast for action, and the people who want this most are
+     * the ones re-watching something.
+     */
+    fun longPressSpeed() = preferenceStore.getFloat("pref_long_press_speed", 2f)
 
     // Media controls
 

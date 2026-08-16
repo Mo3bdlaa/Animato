@@ -67,6 +67,29 @@ enum class SingleActionGesture(val stringRes: StringResource) {
 }
 
 /**
+ * What holding a finger on the video does.
+ *
+ * Kept apart from [SingleActionGesture] because it shares none of its options: seeking and changing
+ * episode are things a tap does and are over instantly, while a hold is a state that lasts exactly
+ * as long as the finger does.
+ *
+ * [SpeedBoost] is the default, and is what someone arrives already expecting — YouTube, Netflix and
+ * the rest all speed up on hold. It was also half-present here already: a `DoubleSpeed` update and a
+ * release handler that restores the speed were both still in the code, wired to nothing, from before
+ * the gesture was given to the screenshot sheet.
+ *
+ * [Screenshot] keeps that behaviour for anyone who prefers it. Changing the default was only
+ * reasonable because the more sheet now opens the same screen — before that, this gesture was the
+ * one and only way to reach it, and switching the default would have removed the feature rather
+ * than moved it.
+ */
+enum class LongPressGesture(val stringRes: StringResource) {
+    SpeedBoost(stringRes = AYMR.strings.long_press_speed_boost),
+    Screenshot(stringRes = AYMR.strings.long_press_screenshot),
+    None(stringRes = AYMR.strings.single_action_none),
+}
+
+/**
  * Key codes sent through the `Custom` option in gestures
  */
 enum class CustomKeyCodes(val keyCode: String) {
@@ -132,7 +155,15 @@ sealed class Dialogs {
 
 sealed class PlayerUpdates {
     data object None : PlayerUpdates()
-    data object DoubleSpeed : PlayerUpdates()
+
+    /**
+     * Shown while the video is held down and running fast.
+     *
+     * Carries the speed because it is a setting rather than a constant. This replaced a
+     * `DoubleSpeed` object whose only reference was a commented-out line — it could not say what
+     * speed it meant, which was fine when the answer was always two.
+     */
+    data class SpeedBoost(val speed: Float) : PlayerUpdates()
     data object AspectRatio : PlayerUpdates()
     data class ShowText(val value: String) : PlayerUpdates()
     data class ShowTextResource(val textResource: StringResource) : PlayerUpdates()
