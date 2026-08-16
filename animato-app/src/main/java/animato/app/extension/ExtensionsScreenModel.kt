@@ -9,6 +9,7 @@ import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
 import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionsByType
 import eu.kanade.domain.extension.interactor.GetExtensionsByType
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
@@ -70,10 +71,31 @@ data class ExtensionRow(
     val isUntrusted: Boolean,
     val isInstalled: Boolean,
     val installStep: InstallStep,
+    /**
+     * A `Drawable` once installed, an icon URL before that, and null for an untrusted package.
+     *
+     * `Any?` because those are genuinely two things and the image loader takes either. An installed
+     * extension's icon comes from the package manager and has no URL; an available one is a file on
+     * a repository and is not on the device at all.
+     */
+    val icon: Any?,
     val handle: ExtensionHandle,
 ) {
     val contentType: ContentType get() = handle.contentType
 }
+
+/**
+ * One language, and whether extensions written in it are being listed.
+ *
+ * Both halves read the same preference — hiding French hides it for anime and manga alike — which is
+ * why this is one list rather than one per content type.
+ */
+@Immutable
+data class ExtensionLanguage(
+    val code: String,
+    val name: String,
+    val enabled: Boolean,
+)
 
 /** Available extensions, grouped by the language they serve. */
 @Immutable
@@ -91,8 +113,17 @@ data class ExtensionsState(
     val installed: List<ExtensionRow> = emptyList(),
     val available: List<ExtensionLanguageGroup> = emptyList(),
     val storeCount: Int = 0,
+    val languages: List<ExtensionLanguage> = emptyList(),
 ) {
     val hasUpdates: Boolean get() = installed.any { it.hasUpdate }
+
+    /**
+     * Whether the language filter is hiding anything.
+     *
+     * Marked on the filter button, because a list shortened by a filter and a list that is short
+     * look identical — and this screen defaults to hiding every language but the device's.
+     */
+    val isLanguageFiltered: Boolean get() = languages.any { !it.enabled }
 }
 
 /**
@@ -127,6 +158,7 @@ class ExtensionsScreenModel(
     contentPreferences: ContentPreferences = Injekt.get(),
     private val extensionManager: ExtensionManager = Injekt.get(),
     private val animeExtensionManager: AnimeExtensionManager = Injekt.get(),
+    private val sourcePreferences: SourcePreferences = Injekt.get(),
 ) : ViewModel() {
 
     val state: StateFlow<ExtensionsState>
@@ -201,7 +233,54 @@ class ExtensionsScreenModel(
             .onEach { count -> state.update { it.copy(storeCount = count) } }
             .launchIn(viewModelScope)
 
+        /*
+         * The languages, read from the *unfiltered* lists.
+         *
+         * `GetExtensionsByType` has already applied the filter by the time the rows arrive, so
+         * asking it which languages exist would only ever return the ones already enabled — a
+         * filter that can be turned off and never on again. The managers' own flows are what the
+         * interactors filter, so they are what the control has to be built from.
+         */
+        combine(
+            extensionManager.availableExtensionsFlow,
+            animeExtensionManager.availableExtensionsFlow,
+            sourcePreferences.enabledLanguages.changes(),
+        ) { manga, anime, enabled ->
+            val offered = manga.flatMap { ext -> ext.sources.map { it.lang } } +
+                anime.flatMap { ext -> ext.sources.map { it.lang } }
+            // Union with the enabled set, not just what is on offer: a language somebody turned on
+            // before their repository went down would otherwise vanish from the list while still
+            // filtering, which is a control that cannot be reached to undo.
+            (offered + enabled)
+                .distinct()
+                .map {
+                    ExtensionLanguage(
+                        code = it,
+                        name = LocaleHelper.getSourceDisplayName(it, context),
+                        enabled = it in enabled,
+                    )
+                }
+                .sortedWith(languageChoiceOrder)
+        }
+            .onEach { languages -> state.update { it.copy(languages = languages) } }
+            .launchIn(viewModelScope)
+
         viewModelScope.launchIO { refresh() }
+    }
+
+    /**
+     * Turns one language on or off.
+     *
+     * Writes the shared preference rather than a screen-local set, so it is the same filter Mihon's
+     * own browse screens read and it survives leaving the screen. That is also why it is not called
+     * a "filter" in the interface: it is a standing choice about which languages this install is
+     * about, not a temporary narrowing of a list.
+     */
+    fun toggleLanguage(code: String) {
+        val enabled = sourcePreferences.enabledLanguages.get()
+        sourcePreferences.enabledLanguages.set(
+            if (code in enabled) enabled - code else enabled + code,
+        )
     }
 
     fun search(query: String?) {
@@ -287,9 +366,23 @@ class ExtensionsScreenModel(
          * whose language is buried under twenty others concludes there is nothing for them.
          */
         val languageOrder = compareBy<ExtensionLanguageGroup>(
-            { if (it.languageCode == "ar") 0 else 1 },
+            { if (it.languageCode == ARABIC) 0 else 1 },
             { it.languageName },
         )
+
+        /**
+         * The same rule for the filter itself, and deliberately blind to whether one is enabled.
+         *
+         * Putting the enabled ones first would be useful in a list of forty — and would move the
+         * row out from under the finger that just ticked it, every single time. A control that
+         * rearranges itself as you use it is worse than one that makes you scroll.
+         */
+        val languageChoiceOrder = compareBy<ExtensionLanguage>(
+            { if (it.code == ARABIC) 0 else 1 },
+            { it.name },
+        )
+
+        const val ARABIC = "ar"
     }
 }
 
@@ -304,8 +397,29 @@ private fun Extension.toRow(steps: Map<String, InstallStep>) = ExtensionRow(
     isUntrusted = this is Extension.Untrusted,
     isInstalled = this !is Extension.Available,
     installStep = steps[pkgName] ?: InstallStep.Idle,
+    icon = extensionIcon(),
     handle = ExtensionHandle.Manga(this),
 )
+
+/**
+ * Where an extension's logo comes from, which is a different place before and after installing.
+ *
+ * Once installed it is a `Drawable` the package manager already holds; before that it is a file on
+ * the repository and the only thing on the device is its URL. An untrusted package has neither: it
+ * is on disk but deliberately not loaded, and reading an icon out of it would be the one thing
+ * being untrusted is supposed to prevent.
+ */
+private fun Extension.extensionIcon(): Any? = when (this) {
+    is Extension.Installed -> icon
+    is Extension.Available -> iconUrl
+    is Extension.Untrusted -> null
+}
+
+private fun AnimeExtension.extensionIcon(): Any? = when (this) {
+    is AnimeExtension.Installed -> icon
+    is AnimeExtension.Available -> iconUrl
+    is AnimeExtension.Untrusted -> null
+}
 
 private fun AnimeExtension.toRow(steps: Map<String, InstallStep>) = ExtensionRow(
     key = "anime-$pkgName",
@@ -318,6 +432,7 @@ private fun AnimeExtension.toRow(steps: Map<String, InstallStep>) = ExtensionRow
     isUntrusted = this is AnimeExtension.Untrusted,
     isInstalled = this !is AnimeExtension.Available,
     installStep = steps[pkgName] ?: InstallStep.Idle,
+    icon = extensionIcon(),
     handle = ExtensionHandle.Anime(this),
 )
 

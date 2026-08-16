@@ -5,25 +5,33 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.FilterAlt
+import androidx.compose.material.icons.outlined.FilterAltOff
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,6 +60,7 @@ import animato.ui.theme.LocalAnimatoPalette
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import coil3.compose.AsyncImage
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.DropdownMenu
@@ -90,6 +100,15 @@ class ExtensionsScreen : Screen() {
         val screenModel = viewModel { ExtensionsScreenModel() }
         val state by screenModel.state.collectAsStateWithLifecycle()
         var segment by rememberSaveable { mutableStateOf(ExtensionSegment.INSTALLED) }
+        var languagesOpen by rememberSaveable { mutableStateOf(false) }
+
+        if (languagesOpen) {
+            LanguageSheet(
+                languages = state.languages,
+                onToggle = screenModel::toggleLanguage,
+                onDismiss = { languagesOpen = false },
+            )
+        }
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -101,6 +120,26 @@ class ExtensionsScreen : Screen() {
                     scrollBehavior = scrollBehavior,
                     actions = {
                         LensButton()
+                        // Only once there is something to filter. On a first run the languages are
+                        // whatever the repositories have not been asked for yet, and a control that
+                        // opens an empty sheet is worse than one that is not there.
+                        if (state.languages.isNotEmpty()) {
+                            IconButton(onClick = { languagesOpen = true }) {
+                                Icon(
+                                    imageVector = if (state.isLanguageFiltered) {
+                                        Icons.Outlined.FilterAlt
+                                    } else {
+                                        Icons.Outlined.FilterAltOff
+                                    },
+                                    contentDescription = stringResource(MR.strings.ext_info_language),
+                                    tint = if (state.isLanguageFiltered) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        LocalContentColor.current
+                                    },
+                                )
+                            }
+                        }
                         if (state.hasUpdates) {
                             TextButton(onClick = screenModel::updateAll) {
                                 Text(stringResource(MR.strings.ext_update_all))
@@ -226,6 +265,14 @@ private fun RepositoriesRow(
  * Not a chip row and not a TabRow: a chip row would collide with the lens and category chips used
  * everywhere else, and Material's TabRow insists on filling the width and carrying its own ripple,
  * which is a lot of furniture for two words.
+ *
+ * ## The width, which was wrong
+ *
+ * On a device, *Available* rendered as a narrow vertical strip with one letter per line. The
+ * underline is a `Box` with `fillMaxWidth`, and inside a `Row` that means *the whole width the row
+ * has left* — so the first segment's column took everything and the second was laid out in what
+ * remained, which was a few dp. `IntrinsicSize.Min` measures each column against the widest thing in
+ * it, which is the label, and the underline then fills that instead.
  */
 @Composable
 private fun SegmentRow(
@@ -241,7 +288,9 @@ private fun SegmentRow(
         ExtensionSegment.entries.forEach { entry ->
             val active = entry == selected
             Column(
-                modifier = Modifier.clickable { onSelect(entry) },
+                modifier = Modifier
+                    .width(IntrinsicSize.Min)
+                    .clickable { onSelect(entry) },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
@@ -261,6 +310,86 @@ private fun SegmentRow(
                         .height(SegmentUnderline)
                         .clip(RoundedCornerShape(SegmentUnderline))
                         .background(if (active) MaterialTheme.colorScheme.primary else Color.Transparent),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * An extension's own logo, from wherever it is.
+ *
+ * A source icon is a logo rather than artwork, so it is 40 dp rather than the 48 dp an update thumb
+ * gets, and it is never cropped — a logo trimmed to a square is a different logo.
+ *
+ * The placeholder is drawn behind the image rather than instead of it, so a row keeps its shape
+ * while the icon loads and does not move when it arrives. It stays visible for an untrusted package,
+ * which has no icon anybody should be reading.
+ */
+@Composable
+private fun ExtensionIcon(icon: Any?) {
+    Box(
+        modifier = Modifier
+            .size(SourceIconSize)
+            .clip(RoundedCornerShape(SourceIconRadius))
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Extension,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (icon != null) {
+            AsyncImage(
+                model = icon,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit,
+            )
+        }
+    }
+}
+
+/**
+ * Which languages this install is about.
+ *
+ * Not a temporary narrowing of a list: it writes the same preference Mihon's own browse screens
+ * read, so turning Arabic on here turns it on everywhere and it is still on tomorrow. It lives on
+ * this screen because this is where its absence was felt — the Available list defaults to the
+ * device's language alone, and with nothing saying so a list of four extensions reads as a
+ * repository with four extensions in it.
+ */
+@Composable
+private fun LanguageSheet(
+    languages: List<ExtensionLanguage>,
+    onToggle: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Text(
+            text = stringResource(MR.strings.ext_info_language),
+            modifier = Modifier.padding(
+                start = MaterialTheme.padding.medium,
+                end = MaterialTheme.padding.medium,
+                bottom = MaterialTheme.padding.small,
+            ),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+        LazyColumn {
+            items(items = languages, key = { it.code }) { language ->
+                ListItem(
+                    modifier = Modifier.clickable { onToggle(language.code) },
+                    headlineContent = { Text(language.name) },
+                    leadingContent = {
+                        Checkbox(
+                            checked = language.enabled,
+                            // The row is the control; a checkbox that also takes taps gives one
+                            // choice two hit targets that report different things on a fast tap.
+                            onCheckedChange = null,
+                        )
+                    },
                 )
             }
         }
@@ -305,24 +434,7 @@ private fun ExtensionListItem(
     var menuOpen by remember { mutableStateOf(false) }
 
     ListItem(
-        leadingContent = {
-            // A source icon is a logo, not artwork, so it is 40 dp rather than the 48 dp an update
-            // thumb gets. Extensions that are not installed have no icon in the package manager, so
-            // every row uses the same glyph rather than half the list showing artwork and half not.
-            Box(
-                modifier = Modifier
-                    .size(SourceIconSize)
-                    .clip(RoundedCornerShape(SourceIconRadius))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Extension,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        },
+        leadingContent = { ExtensionIcon(icon = row.icon) },
         headlineContent = {
             Text(text = row.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
