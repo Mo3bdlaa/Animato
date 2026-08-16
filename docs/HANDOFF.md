@@ -1,6 +1,6 @@
 # Handoff — where the project stands
 
-A snapshot taken 2026-08-16, at the point the repository moved to the `Animato-app` organisation.
+A snapshot taken 2026-08-16, the day the repository became public.
 
 This file is deliberately short on things that are written down properly elsewhere, and long on the
 things that are only true right now and would otherwise be re-derived expensively. When it disagrees
@@ -78,22 +78,26 @@ genuinely unknown.
 
 ## What happened in the last session
 
-### The repository moved — as a push, not a transfer
+### The organisation that was made and then not used
 
-`Animato-app/Animato` is a **new repository** with the history pushed into it. The old
-`Mo3bdlaa/Animato` still exists and is still private. This is not the same as a GitHub transfer, and
-three consequences follow:
+`Animato-app/Animato` exists on GitHub and is not the project. It was created while working out how
+to make releases publicly readable, and abandoned once the cost was clear.
 
-- **No 301 redirect** from the old path. A transfer leaves one; a push does not.
-- **The published releases did not come across.** Releases are GitHub metadata, not git objects —
-  `git push` carries commits, branches and tags, and nothing else. The nine alphas and their APKs
-  are still attached to the old repository only.
-- **Builds already installed cannot update themselves.** `v0.1.0-alpha.10` carries
-  `Mo3bdlaa/Animato` in its `BuildConfig`, that repository is private, and there is no redirect. The
-  fix is one manual install of the next alpha; everything after that is automatic.
+It was made as a **new repository with the history pushed into it**, which is not the same as a
+GitHub transfer, and the difference is the whole story:
 
-Do not delete the old repository, and do not create anything at its name — nothing depends on it
-today, but the name is free to keep and awkward to lose.
+- a transfer leaves a **301 redirect** behind; a push does not;
+- a transfer **carries the releases**; a push carries commits, branches and tags and nothing else,
+  because releases are GitHub metadata rather than git objects.
+
+So the organisation copy had the code and none of the nine alphas, and every installed build — which
+names `Mo3bdlaa/Animato` in its `BuildConfig` — would have been stranded with no redirect to follow.
+Making this repository public instead cost one settings toggle, kept the releases, and let the builds
+already on phones update themselves.
+
+Leave the organisation repository alone rather than deleting it: it is harmless, and it is the reason
+anyone finding it should not assume it is a mirror. If the project ever does move there, do it with
+**Transfer**, which keeps both things a push threw away.
 
 ### The updater: what "HTTP error 404" meant
 
@@ -135,17 +139,15 @@ Cosmetic. That view sorts by tag as text, and `"1" < "7"`. Our own updater parse
 
 ## Open immediately
 
-1. **Add the signing secrets to the new repository** — `SIGNING_KEY`, `KEY_STORE_PASSWORD`,
-   `KEY_PASSWORD`. Leave `ALIAS` unset. `check_signing.yml` verifies all of it in about a minute.
-2. **Check the organisation's Actions policy.** The workflows use third-party actions pinned by SHA
-   (`softprops/action-gh-release`, `r0adkll/sign-android-release`, `gradle/actions`). An
-   organisation restricted to GitHub-authored actions will block them. If publishing fails with a
-   403, look at the workflow permissions setting instead.
-3. **Publish `alpha.11`** and install it by hand once, for the reason above.
-4. **The next feature is `#21`, onboarding** — and it is blocked on a policy answer, not on code:
-   which extension store to offer, and whether to offer one at all. `ROADMAP.md` explains why this
-   is the highest-leverage item: today's first run ends in an empty app and a search for an
-   unofficial guide.
+1. **Confirm the updater on a device.** `Settings → Check for updates` on `alpha.10` should now say
+   the build is up to date rather than reporting a 404. That row reports the real outcome, so it is
+   the diagnostic to reach for first — and it is the only part of the updater that has never been
+   seen working rather than merely tested.
+2. **`#21`, onboarding, is blocked on a policy answer rather than on code**: which extension store
+   to offer, and whether to offer one at all. `ROADMAP.md` explains why it is the highest-leverage
+   item — today's first run ends in an empty app and a search for an unofficial guide. Worth knowing
+   before deciding: `:anime:source-api` is unchanged from Aniyomi's, so the extension repositories
+   that already exist work here without anything being hosted.
 
 ## Open, unblocked, in rough order of leverage
 
