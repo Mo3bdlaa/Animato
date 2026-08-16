@@ -634,4 +634,12 @@
     <string name="relative_time_yesterday">أمس</string>
     <string name="updates_nothing_new">مفيش جديد من آخر مرة اتفحصت.</string>
     <string name="action_check_now">افحص دلوقتي</string>
+    <string name="label_downloading">جارٍ التنزيل</string>
+    <string name="label_queued">في الطابور</string>
+    <string name="label_failed">فشلت</string>
+    <string name="download_failed">دي مانزلتش.</string>
+    <string name="storage_items">%1$s عنصر منزّل</string>
+    <string name="action_clean_up">تنظيف</string>
+    <string name="cleanup_removed">اتشال %1$s مجلد مش موجود في مكتبتك</string>
+    <string name="downloads_nothing_downloading">مفيش حاجة بتتنزل. اضغط مطوّلًا على أي قائمة عشان تضيف دفعة.</string>
 </resources>

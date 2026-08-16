@@ -707,4 +707,14 @@
     <string name="relative_time_yesterday">Yesterday</string>
     <string name="updates_nothing_new">Nothing new since your last check.</string>
     <string name="action_check_now">Check now</string>
+
+    <!-- Downloads queue -->
+    <string name="label_downloading">Downloading</string>
+    <string name="label_queued">Queued</string>
+    <string name="label_failed">Failed</string>
+    <string name="download_failed">This one did not download.</string>
+    <string name="storage_items">%1$s items downloaded</string>
+    <string name="action_clean_up">Clean up</string>
+    <string name="cleanup_removed">Removed %1$s folders no longer in your library</string>
+    <string name="downloads_nothing_downloading">Nothing downloading. Long-press any list to queue a batch.</string>
 </resources>

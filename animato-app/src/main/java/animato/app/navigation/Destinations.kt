@@ -12,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.discover.DiscoverContent
+import animato.app.downloads.DownloadsContent
 import animato.app.library.UnifiedLibraryContent
 import animato.app.updates.UpdatesContent
 import animato.domain.content.ContentFilter
@@ -126,13 +127,9 @@ data object AnimatoDownloadsTab : Tab {
             icon = rememberVectorPainter(Icons.Outlined.Download),
         )
 
+    // One queue. Two of them cannot both be a claim about what the device is doing right now.
     @Composable
-    override fun Content() {
-        when (contentTypeOrDefault()) {
-            ContentType.MANGA -> DownloadQueueScreen.Content()
-            ContentType.ANIME -> AnimeDownloadsScreen()
-        }
-    }
+    override fun Content() = DownloadsContent()
 }
 
 data object AnimatoHomeTab : Tab {
