@@ -84,9 +84,9 @@ the brand: an app that shouts everywhere emphasises nothing.
 - **Continue card** — cover card + 3 dp blue progress bar flush at the bottom edge + one-line title
   below + caption `Ch. 254 · 2h ago` / `Ep. 12 · yesterday` + `NEW` pill (Accent) when something
   newer than the position exists.
-- **Lens chips** — `All · Anime · Manga` as one segmented chip group, directly under the top bar.
-  Active segment: blue fill, white label. Identical placement on every content screen.
-- **Stat chip** — big number (20 SemiBold) over a label (13 Muted), on Surface, 12 dp radius. Tappable.
+- **Lens button** — one top-bar icon: full outlined circle = All; half-shaded blue circle =
+  filtered to Anime or Manga. Tap opens a three-item menu (All / Anime / Manga, check on current,
+  caption *Applies everywhere*). No text label accompanies the icon.
 - **Update row** — 48 dp thumbnail (12 dp radius), title (15 Medium), one caption line
   (`Chapter 1187 · 2m ago`), trailing NEW pill or download glyph.
 - **Buttons** — primary: blue fill, full-round, white 15 Medium label; secondary: outlined,
@@ -103,9 +103,10 @@ the brand: an app that shouts everywhere emphasises nothing.
 ## The lens — the one concept the design must teach
 
 Three states, **one global value**: flip it on Home and Library arrives already flipped. It renders
-as the same chips in the same slot on Home, Library, Discover, Updates and Search. Under `Anime` or
-`Manga`, type chips vanish from covers (redundant); under `All` they appear. Mock at least one pair
-of screens that shows the lens carrying over.
+as the **lens button** in the top bar of Home, Library, Discover, Updates and Search — the icon
+itself is the state (full circle = All, half-shaded blue = filtered). Under `Anime` or `Manga`,
+type chips vanish from covers (redundant); under `All` they appear. Mock at least one pair of
+screens that shows the lens carrying over.
 
 ---
 
@@ -114,13 +115,13 @@ of screens that shows the lens carrying over.
 Real-ish content throughout (e.g. Solo Leveling, One Piece, Jujutsu Kaisen, Kingdom, Frieren,
 Chainsaw Man). Show dark theme by default.
 
-1. **Home** — top bar (wordmark left, search, settings) · lens chips · *Continue* rail ·
-   *Your library* stat chips (In progress / Completed / Downloaded / Tracking) · *Latest updates*
-   list (5 rows + See all). **States:** populated · empty (single card + Discover button) ·
+1. **Home** — top bar (wordmark left, search, lens button, settings) · *Continue* rail ·
+   *Latest updates* list (5 rows + See all). No stat chips — Home is what you were in the middle
+   of, and what arrived since. **States:** populated · empty (single card + Discover button) ·
    **RTL Arabic variant**.
-2. **Library** — title, search, filter icon · lens chips · category chips · 3-column cover grid.
+2. **Library** — title, search, lens button, filter icon · category chips · 3-column cover grid.
    **States:** All lens (type chips visible) · Anime lens · filter sheet open.
-3. **Discover** — search field · lens chips · *Trending now* rail · *This season / Popular now* ·
+3. **Discover** — search field · lens button · *Trending now* rail · *This season / Popular now* ·
    *Top rated* · *Your sources* cards · Manage row. State: works-with-zero-sources (rails full,
    sources row empty with "Add sources" card).
 4. **Title page** — blurred backdrop header, cover, title/author/source/status · resume-aware
@@ -131,16 +132,16 @@ Chainsaw Man). Show dark theme by default.
    prominent) · sources explainer (official-portal names as suggestions + "paste a repo URL"
    field, skippable) · bring your history (Aniyomi import / tracker sign-in / start fresh) ·
    done → Discover.
-6. **Sources & extensions** — one screen, segments Installed · Available · lens chips · source
+6. **Sources & extensions** — one screen, segments Installed · Available · lens button · source
    rows (icon, name, language, type chip, pin, gear, Update pill) · Repositories row on top.
 7. **Settings root** — ten entries with subtitles: Appearance · Library · **Reading** ·
    **Watching** · Sources · Downloads & storage · Tracking · Backup & data · Privacy & security ·
    Advanced/About. (Reading and Watching are siblings — this symmetry is the point.)
-8. **Updates** — lens chips · day-grouped feed · rows with NEW pill and download glyph · swipe
+8. **Updates** — lens button · day-grouped feed · rows with NEW pill and download glyph · swipe
    affordances.
 9. **Downloads** — storage header (`1.2 GB in downloads · Clean up`) · Active with progress ·
    Queued · Failed.
-10. **Search** — one field, lens chips, results grouped *In your library* then *From your sources*.
+10. **Search** — one field, the lens button, results grouped *In your library* then *From your sources*.
 11. **Splash** — Ink Black, centered unframed wordmark (blue ANIMATO + white アニマト, speed-line
     accents), no panel, no spinner. Light variant on Paper.
 

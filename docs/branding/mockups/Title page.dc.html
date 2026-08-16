@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./react.js"></script><script src="./react-dom.js"></script><script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
+</style></helmet>
+
+<div style="padding:40px 44px 64px;display:flex;flex-direction:column;gap:28px;align-items:flex-start">
+
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1240px;background:#151516;border-radius:12px;padding:24px 28px;box-shadow:inset 0 0 0 1px #FFFFFF14">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<span style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#08080C;background:#9A9690;border-radius:4px;padding:4px 7px">SCREEN 4</span>
+<span style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Title page — manga (chapters + range toolbar + scrubber) · anime (episodes)</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Decisions</div>
+<div>· Header is a 260 dp backdrop: the cover blurred and darkened behind a 112 × 168 cover at 16, with an Ink Black gradient carrying the text. Backdrop is the <em>same</em> art, not a second image to fetch.</div>
+<div>· <span style="color:#FFFFFF">The primary is resume-aware</span> — <span style="color:#FFFFFF">Resume · Ch. 184</span> / <span style="color:#FFFFFF">Resume · Ep. 12</span>. One primary per screen, so heart / tracking / WebView / share are icon buttons, and the tracking ring is a 3 dp arc around its glyph, not a fifth pill.</div>
+<div>· Tabs are About / Chapters / Tracking / Also on — <span style="color:#FFFFFF">Chapters</span> is the landing tab, because the reason people come here is the next unread item.</div>
+<div>· Manga gets the sticky range toolbar (<span style="color:#FFFFFF">184–160 ▾</span>, unread filter, sort) and the fast scrubber on the right edge: 4 dp track, 44 dp thumb, tabular label. Anime does not — 24 episodes need no scrubber, and 1187 chapters do.</div>
+<div>· Anime rows are 16:9 thumbs (96 × 54, r8) with a 3 dp progress bar on the watched one; manga rows are 40 dp numbered squares. Same row height (64), same trailing states.</div>
+</div>
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Notes for you</div>
+<div>· Blue budget — <a href="#6a">6a</a> three: Resume, the read-progress bar under the header, the active tab underline. Chapter rows use <span style="color:#22C55E">Success</span> for read and Muted for unread; the unread <em>count</em> pill stays blue because that is the design.md cover-card rule carried inward.</div>
+<div>· The heart is filled + white for <span style="color:#FFFFFF">In library</span>. Never the word "favorite", per design.md.</div>
+<div>· “Also on” lists other sources for the same title — the recovery feature the brand sheet calls Smart Recovery.</div>
+<div style="margin-top:6px;color:#F59E0B">Two values design.md does not define: the 16:9 episode thumb (96 × 54, r8) and the scrubber (4 dp track, 44 dp thumb). Confirm or give me numbers.</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 6a MANGA ============ -->
+<div id="6a" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">6a</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Manga · Solo Leveling · chapters, range toolbar, scrubber</span></div>
+<div data-screen-label="Title page manga" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="position:absolute;left:0;right:0;top:0;height:260px;overflow:hidden">
+    <div style="position:absolute;inset:0;background:#151516"></div>
+    <div style="position:absolute;inset:0;background-image:radial-gradient(#FFFFFF 1.2px,transparent 1.3px);background-size:10px 10px;opacity:.05"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;height:200px;background:linear-gradient(180deg,rgba(8,8,12,0) 0%,rgba(8,8,12,.78) 48%,#08080C 100%)"></div>
+  </div>
+
+  <div style="position:relative;height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="position:relative;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 8px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="display:flex;align-items:center">
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="6" r="2.6"></circle><circle cx="6" cy="12" r="2.6"></circle><circle cx="18" cy="18" r="2.6"></circle><path d="M8.4 10.8l7.2-3.6M8.4 13.2l7.2 3.6"></path></svg></div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="5.6" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="18.4" r="1.4"></circle></svg></div>
+    </div>
+  </div>
+
+  <div style="position:relative;display:flex;gap:16px;padding:8px 16px 0">
+    <div style="position:relative;width:112px;height:168px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+    </div>
+    <div style="flex:1;min-width:0;padding-top:4px">
+      <div style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Solo Leveling</div>
+      <div style="margin-top:4px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Chugong · Dubu</div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:6px">
+        <span style="height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans',sans-serif;color:#FFFFFF">Manga</span>
+        <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">MangaDex</span>
+      </div>
+      <div style="margin-top:6px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Ongoing · Action, Fantasy</div>
+      <div style="margin-top:10px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">★ 9.1 · 12 unread</div>
+    </div>
+  </div>
+
+  <div style="position:relative;display:flex;align-items:center;gap:8px;padding:16px 16px 0">
+    <div style="flex:1;height:48px;border-radius:24px;background:#4169A1;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.4v13M12 6.4C10.4 5 8.2 4.4 4.6 4.4v13c3.6 0 5.8.6 7.4 2M12 6.4c1.6-1.4 3.8-2 7.4-2v13c-3.6 0-5.8.6-7.4 2"></path></svg>
+      <span style="font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF">Resume · Ch. 184</span>
+    </div>
+    <div style="width:48px;height:48px;border-radius:24px;box-shadow:inset 0 0 0 1px #9A9690;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 20.3l-1.6-1.45C5.7 14.6 3 12.2 3 9.05 3 6.5 5 4.5 7.5 4.5c1.5 0 2.9.7 3.8 1.8l.7.85.7-.85c.9-1.1 2.3-1.8 3.8-1.8C19 4.5 21 6.5 21 9.05c0 3.15-2.7 5.55-7.4 9.8L12 20.3z"></path></svg></div>
+    <div style="position:relative;width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="position:absolute;inset:0"><circle cx="24" cy="24" r="22.5" stroke="#FFFFFF14" stroke-width="3"></circle><path d="M24 1.5a22.5 22.5 0 0 1 19.5 33.7" stroke="#4169A1" stroke-width="3" stroke-linecap="round"></path></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 8.2A8.4 8.4 0 0 1 19 6.4M19.4 15.8A8.4 8.4 0 0 1 5 17.6"></path><path d="M4.4 4.6v3.6h3.6M19.6 19.4v-3.6H16"></path></svg>
+    </div>
+  </div>
+
+  <div style="position:relative;padding:16px 16px 0">
+    <div style="height:3px;background:#FFFFFF14"><div style="width:82%;height:3px;background:#4169A1"></div></div>
+    <div style="margin-top:6px;display:flex;align-items:baseline;justify-content:space-between">
+      <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">184 of 224</span>
+      <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums">82%</span>
+    </div>
+  </div>
+
+  <div style="position:relative;display:flex;padding:12px 16px 0;gap:24px">
+    <div style="padding-bottom:8px;font:400 15px/20px 'Noto Sans',sans-serif;color:#9A9690">About</div>
+    <div style="padding-bottom:8px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;box-shadow:inset 0 -2px 0 0 #4169A1">Chapters</div>
+    <div style="padding-bottom:8px;font:400 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Tracking</div>
+    <div style="padding-bottom:8px;font:400 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Also on</div>
+  </div>
+  <div style="position:relative;height:1px;background:#FFFFFF14"></div>
+
+  <div style="position:relative;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 16px;background:#151516">
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;font-variant-numeric:tabular-nums">184–160</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"></path></svg>
+    </div>
+    <div style="display:flex;align-items:center">
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M3.6 12h5M15.4 12h5"></path></svg></div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5v15M4 16.5l3 3 3-3M17 19.5v-15M14 7.5l3-3 3 3"></path></svg></div>
+    </div>
+  </div>
+
+  <sc-for list="{{ chapters }}" as="item" hint-placeholder-count="5">
+    <div style="position:relative;display:flex;align-items:center;gap:12px;height:64px;padding:0 16px">
+      <div style="width:40px;height:40px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;justify-content:center;font:600 13px/1 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums">{{ item.n }}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:{{ item.titleColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.t }}</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.meta }}</div>
+      </div>
+      <sc-if value="{{ item.read }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></sc-if>
+      <sc-if value="{{ item.dl }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v10M8 10.5l4 4 4-4M5 19h14"></path></svg></span></sc-if>
+    </div>
+  </sc-for>
+
+  <div style="position:absolute;right:6px;top:600px;display:flex;align-items:center;gap:8px">
+    <div style="height:28px;padding:0 10px;border-radius:14px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;display:flex;align-items:center;font:600 13px/1 'Noto Sans',sans-serif;color:#FFFFFF;font-variant-numeric:tabular-nums">Ch. 160</div>
+    <div style="width:20px;height:44px;border-radius:10px;background:#FFFFFF;opacity:.92"></div>
+  </div>
+  <div style="position:absolute;right:14px;top:400px;bottom:16px;width:4px;border-radius:2px;background:#FFFFFF14"></div>
+</div>
+</div>
+
+<!-- ============ 6b ANIME ============ -->
+<div id="6b" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">6b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Anime · Frieren · episode rows with 16:9 thumbs</span></div>
+<div data-screen-label="Title page anime" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="position:absolute;left:0;right:0;top:0;height:260px;overflow:hidden">
+    <div style="position:absolute;inset:0;background:#151516"></div>
+    <div style="position:absolute;inset:0;background-image:radial-gradient(#FFFFFF 1.2px,transparent 1.3px);background-size:10px 10px;opacity:.05"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;height:200px;background:linear-gradient(180deg,rgba(8,8,12,0) 0%,rgba(8,8,12,.78) 48%,#08080C 100%)"></div>
+  </div>
+
+  <div style="position:relative;height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="position:relative;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 8px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="display:flex;align-items:center">
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="6" r="2.6"></circle><circle cx="6" cy="12" r="2.6"></circle><circle cx="18" cy="18" r="2.6"></circle><path d="M8.4 10.8l7.2-3.6M8.4 13.2l7.2 3.6"></path></svg></div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="5.6" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="18.4" r="1.4"></circle></svg></div>
+    </div>
+  </div>
+
+  <div style="position:relative;display:flex;gap:16px;padding:8px 16px 0">
+    <div style="position:relative;width:112px;height:168px;flex:none;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+    </div>
+    <div style="flex:1;min-width:0;padding-top:4px">
+      <div style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Frieren</div>
+      <div style="margin-top:4px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Kanehito Yamada</div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:6px">
+        <span style="height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans',sans-serif;color:#FFFFFF">Anime</span>
+        <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Local folder</span>
+      </div>
+      <div style="margin-top:6px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">Airing · Adventure, Drama</div>
+      <div style="margin-top:10px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">★ 9.4 · 1 unread</div>
+    </div>
+  </div>
+
+  <div style="position:relative;display:flex;align-items:center;gap:8px;padding:16px 16px 0">
+    <div style="flex:1;height:48px;border-radius:24px;background:#4169A1;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M8.5 5.6l10 6.4-10 6.4z"></path></svg>
+      <span style="font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF">Resume · Ep. 12</span>
+    </div>
+    <div style="width:48px;height:48px;border-radius:24px;box-shadow:inset 0 0 0 1px #9A9690;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round"><path d="M12 19.6l-1.5-1.35C6.1 14.3 3.6 12 3.6 9.05 3.6 6.7 5.5 4.8 7.85 4.8c1.4 0 2.75.65 3.6 1.7l.55.7.55-.7c.85-1.05 2.2-1.7 3.6-1.7 2.35 0 4.25 1.9 4.25 4.25 0 2.95-2.5 5.25-6.9 9.2L12 19.6z"></path></svg></div>
+    <div style="position:relative;width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="position:absolute;inset:0"><circle cx="24" cy="24" r="22.5" stroke="#FFFFFF14" stroke-width="3"></circle><path d="M24 1.5a22.5 22.5 0 0 1 14.6 39.6" stroke="#4169A1" stroke-width="3" stroke-linecap="round"></path></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 8.2A8.4 8.4 0 0 1 19 6.4M19.4 15.8A8.4 8.4 0 0 1 5 17.6"></path><path d="M4.4 4.6v3.6h3.6M19.6 19.4v-3.6H16"></path></svg>
+    </div>
+  </div>
+
+  <div style="position:relative;padding:16px 16px 0">
+    <div style="height:3px;background:#FFFFFF14"><div style="width:46%;height:3px;background:#4169A1"></div></div>
+    <div style="margin-top:6px;display:flex;align-items:baseline;justify-content:space-between">
+      <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690">12 of 26</span>
+      <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums">46%</span>
+    </div>
+  </div>
+
+  <div style="position:relative;display:flex;padding:12px 16px 0;gap:24px">
+    <div style="padding-bottom:8px;font:400 15px/20px 'Noto Sans',sans-serif;color:#9A9690">About</div>
+    <div style="padding-bottom:8px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;box-shadow:inset 0 -2px 0 0 #4169A1">Episodes</div>
+    <div style="padding-bottom:8px;font:400 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Tracking</div>
+    <div style="padding-bottom:8px;font:400 15px/20px 'Noto Sans',sans-serif;color:#9A9690">Also on</div>
+  </div>
+  <div style="position:relative;height:1px;background:#FFFFFF14"></div>
+
+  <sc-for list="{{ episodes }}" as="item" hint-placeholder-count="5">
+    <div style="position:relative;display:flex;align-items:center;gap:12px;height:78px;padding:0 16px">
+      <div style="position:relative;width:96px;height:54px;flex:none;border-radius:8px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+        <sc-if value="{{ item.progress }}"><div style="position:absolute;left:0;right:0;bottom:0;height:3px;background:#FFFFFF14"><div style="width:{{ item.progress }};height:3px;background:#4169A1"></div></div></sc-if>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:{{ item.titleColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.t }}</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.meta }}</div>
+      </div>
+      <sc-if value="{{ item.read }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></sc-if>
+      <sc-if value="{{ item.dl }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v10M8 10.5l4 4 4-4M5 19h14"></path></svg></span></sc-if>
+    </div>
+  </sc-for>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const W = '#FFFFFF', M = '#9A9690';
+    return {
+      showNotes: this.props.showNotes ?? true,
+      chapters: [
+        { n: '184', t: 'The Demon Monarch', meta: 'Today · 12 MB', titleColor: W, dl: true },
+        { n: '183', t: 'The Last Nation', meta: 'Yesterday', titleColor: W, read: true },
+        { n: '182', t: 'The Dignity of the Strong', meta: '12 Aug', titleColor: M, read: true },
+        { n: '181', t: "The Shadow's Resolve", meta: '10 Aug', titleColor: M, read: true },
+        { n: '180', t: 'A Turning Point', meta: '8 Aug', titleColor: M, read: true }
+      ],
+      episodes: [
+        { t: 'Episode 12 · The Land Where the Soul Rests', meta: '24 min · 18 min in', titleColor: W, progress: '74%' },
+        { t: 'Episode 11 · Frieren the Slayer', meta: '24 min · 320 MB', titleColor: W, dl: true },
+        { t: 'Episode 10 · The Hero of the Village', meta: '24 min', titleColor: M, read: true },
+        { t: 'Episode 9 · Aura the Guillotine', meta: '24 min', titleColor: M, read: true },
+        { t: 'Episode 8 · Frieren the Great Mage', meta: '24 min', titleColor: M, read: true }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -43,11 +43,14 @@ Five tabs, labelled with single words that cannot truncate in any locale:
 
 Today's "Download ..." truncation is a defect against this table — the label is **Downloads**.
 
-**The lens.** Three chips — `All · Anime · Manga` — directly under the top bar on Home, Library,
-Discover, Updates and Search. One preference behind all of them. The two-state toggle on today's
-Home and the hidden third state in today's Library filter both go away. When the lens is Anime or
-Manga, type badges vanish from covers (they would be redundant); under All, a small type chip sits
-on each cover corner — the one place mixing needs disambiguation.
+**The lens.** Three states — `All · Anime · Manga` — one global preference, carried by a single
+**top-bar icon** on Home, Library, Discover, Updates and Search: a full outlined circle for All,
+the same circle **half-shaded and blue** when filtered to one medium — the icon itself says you are
+looking at part of the collection, with no text label. Tapping it opens a three-item menu (check on
+the current state, captioned *Applies everywhere*); choosing All restores the full circle. The
+two-state toggle on today's Home and the hidden third state in today's Library filter both go away.
+When the lens is Anime or Manga, type badges vanish from covers (they would be redundant); under
+All, a small type chip sits on each cover corner — the one place mixing needs disambiguation.
 
 **Search.** The magnifier appears on every tab and opens the *same* screen: query field, lens
 chips, results in two groups — **In your library** first, then **From your sources**. This is the
@@ -93,16 +96,17 @@ slab floating in the void. Replace it:
 
 ## Home
 
-Top bar: wordmark left, magnifier, gear. Lens chips.
+Top bar: wordmark left, magnifier, lens button, gear.
 
 1. **Continue** — horizontal rail. Card: 2:3 cover, a 3 dp blue progress bar flush along the bottom
    edge, one-line title, subtitle `Ch. 254 · 2h ago` / `Ep. 12 · yesterday`. A `NEW` pill when
    something newer than your position exists. **Tap opens the reader/player at your position** —
    not the title page. Long-press opens the quick sheet (below).
-2. **Your library** — four stat chips: *In progress · Completed · Downloaded · Tracking*. Each
-   deep-links into Library with that filter applied. Counts respect the lens.
-3. **Latest updates** — up to five rows (thumbnail, title, `Chapter 1187 · NEW`), then *See all* →
+2. **Latest updates** — up to five rows (thumbnail, title, `Chapter 1187 · NEW`), then *See all* →
    Updates tab. Tap opens the content.
+
+No stat chips: Home is the two things a session actually needs — what you were in the middle of,
+and what arrived since. The counts live in Library, where the numbers are the content.
 
 Empty state (no library at all): one card — *Your shelf is empty. Find something worth keeping* —
 with a **Discover** button.
@@ -115,7 +119,7 @@ Manga row appears under an Anime toggle.
 
 ## Library
 
-Top bar: title, magnifier, **one** filter icon, overflow. Lens chips. Category chips (horizontal,
+Top bar: title, magnifier, lens button, **one** filter icon, overflow. Category chips (horizontal,
 only when more than one category exists — never a dropdown).
 
 Grid of covers. Unread count badge top-right. Type chip only under the All lens. Covers stay clean
@@ -144,7 +148,7 @@ Empty states are lens-aware and honest about the cause:
 
 The proof that the app is never empty.
 
-Top bar: title, magnifier. Lens chips.
+Top bar: title, magnifier, lens button.
 
 1. **Trending now** — rail fed by public tracker metadata (AniList's open GraphQL; Jikan as
    fallback). Renders with zero sources installed.
@@ -198,7 +202,7 @@ Both inherited designs are competent; the changes are trims, not rebuilds.
 
 ## Updates
 
-Lens chips. Feed grouped by day (*Today · Yesterday · date*). Row: thumbnail, title, item name
+Lens button in the top bar. Feed grouped by day (*Today · Yesterday · date*). Row: thumbnail, title, item name
 (`Episode 12` / `Chapter 291`), `NEW` pill, download glyph. **Tap opens the content directly.**
 Swipe right — mark done; swipe left — download. Top bar: refresh, calendar (a later, optional
 upcoming-episodes view fed by the same metadata as Discover).
@@ -222,7 +226,7 @@ Empty: *Nothing downloading. Long-press any chapter list to queue a batch.*
 
 ## Sources & extensions — one screen, was two
 
-Segments: **Installed · Available**. Lens chips apply here too — this is the direct answer to
+Segments: **Installed · Available**. The lens applies here too — this is the direct answer to
 "there is no way to tell anime and manga extensions apart": the list obeys the lens, **and** every
 card carries a type chip regardless.
 
@@ -302,8 +306,7 @@ follow-up.
 
 ## Brand sheet: adopted and departed
 
-**Adopted:** the five-tab bar; Continue cards with on-card progress; library stat chips; the
-Latest-updates list; Discover's rail structure; title-page tabs; the downloads layout; source
+**Adopted:** the five-tab bar; Continue cards with on-card progress; the Latest-updates list; Discover's rail structure; title-page tabs; the downloads layout; source
 type segmentation; Paper light mode.
 
 **Departed, with reasons:**
@@ -316,3 +319,7 @@ type segmentation; Paper light mode.
 - The mock Sources screen lists **named third-party repositories** → suggestions stay
   official-portals-by-name only, nothing bundled or pre-filled, per the legal position taken for
   onboarding.
+
+**Round-one design decisions** (from the first Claude Design pass, confirmed): the lens moved from
+a chip row to the top-bar icon with the half-shaded filtered state; Home's stat chips were removed
+outright; the NEW pill stays Accent. All three documents were amended to match.

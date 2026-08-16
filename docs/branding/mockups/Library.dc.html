@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./react.js"></script><script src="./react-dom.js"></script><script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
+</style></helmet>
+
+<div style="padding:40px 44px 64px;display:flex;flex-direction:column;gap:28px;align-items:flex-start">
+
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1240px;background:#151516;border-radius:12px;padding:24px 28px;box-shadow:inset 0 0 0 1px #FFFFFF14">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<span style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#08080C;background:#9A9690;border-radius:4px;padding:4px 7px">SCREEN 2</span>
+<span style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Library — All lens · Anime lens · filter sheet</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Decisions</div>
+<div>· The lens is the same top-bar icon as Home v2 — aperture / play / book — so Library's only chip row is <span style="color:#FFFFFF">categories</span>. That is what the second row was always for; two chip rows was the thing design.md bans.</div>
+<div>· <span style="color:#FFFFFF">The counts I pulled off Home live in those chips</span> — on the selected chip only (All 95, and 39 under the Anime lens). Four chips each carrying a count came to 435 dp and sliced the last number at the 393 edge; the count belongs to the category you are actually in.. A number next to the thing it filters is content; a number in a card of its own was decoration.</div>
+<div>· Grid is 3 × 112 with 12 dp gaps (16 + 3×112 + 2×12 + 16 = 393 exactly). Titles sit <em>below</em> the cover here, 2-line clamp, 40 dp reserved on every card — a grid ellipsizes titles constantly, and Compose needs one row height, not a text-dependent one.</div>
+<div>· Category selection is <span style="color:#FFFFFF">#FFFFFF14 fill + white label</span>, not blue. Blue on this screen is the unread pills (one repeated system element) and the Library tab. <a href="#3c">3c</a> spends it on the selected sort radio and the switch instead.</div>
+</div>
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Notes for you</div>
+<div>· <a href="#3b">3b</a> proves the lens: type chips vanish, captions turn into <span style="color:#FFFFFF">Ep.</span>, and the count in <span style="color:#FFFFFF">All 39</span> drops to the anime subset. Flip Home's lens tweak and this is the pair the brief asks for.</div>
+<div>· Sheet is 618 dp (measured content, not estimated — top edge at 234), 28 dp top radius, three titled sections. It has <span style="color:#FFFFFF">no Apply button</span> — filters apply live and the scrim dismisses, so the one primary slot stays free. Reset is the outlined secondary.</div>
+<div>· Sort options avoid media words: Recently updated · Recently opened · Title A–Z.</div>
+<div style="margin-top:6px;color:#F59E0B">Still open from Screen 1: lens-icon-replaces-chips needs your sign-off for all five content screens, and NEW pill Accent vs brand-sheet blue.</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 3a ALL LENS ============ -->
+<div id="3a" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">3a</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">All lens · type chips visible</span></div>
+<div data-screen-label="Library all lens" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 16px">
+    <span style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Library</span>
+    <div style="display:flex;align-items:center">
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg>
+      </div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4v17.2M20.6 12H3.4"></path></svg>
+      </div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h8M16 17h4"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="14" cy="17" r="2"></circle></svg>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;padding:6px 16px 16px;overflow:hidden">
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#FFFFFF14;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#FFFFFF">All</span>
+      <span style="font:400 13px/1 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums">95</span>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Ongoing</span>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Backlog</span>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Finished</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,112px);gap:12px;padding:0 16px">
+    <sc-for list="{{ gridAll }}" as="item" hint-placeholder-count="9">
+      <div style="width:112px">
+        <div style="position:relative;width:112px;height:168px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+          <sc-if value="{{ item.type }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;top:6px;left:6px;height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans',sans-serif;color:#FFFFFF">{{ item.type }}</div></sc-if>
+          <sc-if value="{{ item.unread }}"><div style="position:absolute;top:6px;right:6px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#4169A1;display:flex;align-items:center;justify-content:center;font:600 11px/1 'Noto Sans',sans-serif;color:#FFFFFF;font-variant-numeric:tabular-nums">{{ item.unread }}</div></sc-if>
+        </div>
+        <div style="margin-top:8px;height:40px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">{{ item.t }}</div>
+        <div style="margin-top:2px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.c }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:#151516;box-shadow:inset 0 1px 0 0 #FFFFFF14;display:flex;align-items:center">
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3.9L3.8 10.5V20a1 1 0 0 0 1 1h4.4v-6h5.6v6h4.4a1 1 0 0 0 1-1v-9.5L12 3.9z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Home</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M8 3h10.5A2 2 0 0 1 20.5 5v12H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M4.5 7v11.5A2 2 0 0 0 6.5 20.5H17" fill="none" stroke="#4169A1" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#4169A1">Library</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="8.8"></circle><path d="M15.4 8.6l-2.2 4.6-4.6 2.2 2.2-4.6 4.6-2.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Discover</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path><path d="M12 8v4.3l3 1.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Updates</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6v10.2M7.8 10l4.2 4.2 4.2-4.2M4.6 19.4h14.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Downloads</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 3b ANIME LENS ============ -->
+<div id="3b" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">3b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Anime lens · type chips gone, counts and captions follow</span></div>
+<div data-screen-label="Library anime lens" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 16px">
+    <span style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Library</span>
+    <div style="display:flex;align-items:center">
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg>
+      </div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4169A1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M10.2 8.6l5.6 3.4-5.6 3.4z" fill="#4169A1"></path></svg>
+      </div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h8M16 17h4"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="14" cy="17" r="2"></circle></svg>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;padding:6px 16px 16px;overflow:hidden">
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#FFFFFF14;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#FFFFFF">All</span>
+      <span style="font:400 13px/1 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums">39</span>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Ongoing</span>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Backlog</span>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Finished</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,112px);gap:12px;padding:0 16px">
+    <sc-for list="{{ gridAnime }}" as="item" hint-placeholder-count="9">
+      <div style="width:112px">
+        <div style="position:relative;width:112px;height:168px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+          <sc-if value="{{ item.unread }}"><div style="position:absolute;top:6px;right:6px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#4169A1;display:flex;align-items:center;justify-content:center;font:600 11px/1 'Noto Sans',sans-serif;color:#FFFFFF;font-variant-numeric:tabular-nums">{{ item.unread }}</div></sc-if>
+        </div>
+        <div style="margin-top:8px;height:40px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">{{ item.t }}</div>
+        <div style="margin-top:2px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.c }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:#151516;box-shadow:inset 0 1px 0 0 #FFFFFF14;display:flex;align-items:center">
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3.9L3.8 10.5V20a1 1 0 0 0 1 1h4.4v-6h5.6v6h4.4a1 1 0 0 0 1-1v-9.5L12 3.9z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Home</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M8 3h10.5A2 2 0 0 1 20.5 5v12H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M4.5 7v11.5A2 2 0 0 0 6.5 20.5H17" fill="none" stroke="#4169A1" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#4169A1">Library</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="8.8"></circle><path d="M15.4 8.6l-2.2 4.6-4.6 2.2 2.2-4.6 4.6-2.2z"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Discover</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 12A8.4 8.4 0 1 1 18 6.1"></path><path d="M20.6 3.4v3.2h-3.2"></path><path d="M12 8v4.3l3 1.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Updates</span>
+    </div>
+    <div style="flex:1;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6v10.2M7.8 10l4.2 4.2 4.2-4.2M4.6 19.4h14.8"></path></svg>
+      <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Downloads</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 3c FILTER SHEET ============ -->
+<div id="3c" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">3c</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Filter sheet · Sort · Filter · Display · no Apply</span></div>
+<div data-screen-label="Library filter sheet" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 16px">
+    <span style="font:700 24px/30px 'Noto Sans',sans-serif;color:#FFFFFF">Library</span>
+    <div style="display:flex;align-items:center">
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M16.2 16.2L21 21"></path></svg>
+      </div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 3.4v17.2M20.6 12H3.4"></path></svg>
+      </div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:24px;background:#151516">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h8M16 17h4"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="14" cy="17" r="2"></circle></svg>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;padding:6px 16px 16px;overflow:hidden">
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#FFFFFF14;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#FFFFFF">All</span>
+      <span style="font:400 13px/1 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums">95</span>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Ongoing</span>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Backlog</span>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;background:#151516;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">Finished</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,112px);gap:12px;padding:0 16px">
+    <sc-for list="{{ gridAll }}" as="item" hint-placeholder-count="9">
+      <div style="width:112px">
+        <div style="position:relative;width:112px;height:168px;border-radius:12px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+          <sc-if value="{{ item.type }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;top:6px;left:6px;height:20px;padding:0 7px;border-radius:10px;background:#151516;display:flex;align-items:center;font:500 11px/1 'Noto Sans',sans-serif;color:#FFFFFF">{{ item.type }}</div></sc-if>
+          <sc-if value="{{ item.unread }}"><div style="position:absolute;top:6px;right:6px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#4169A1;display:flex;align-items:center;justify-content:center;font:600 11px/1 'Noto Sans',sans-serif;color:#FFFFFF;font-variant-numeric:tabular-nums">{{ item.unread }}</div></sc-if>
+        </div>
+        <div style="margin-top:8px;height:40px;font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">{{ item.t }}</div>
+        <div style="margin-top:2px;font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.c }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="position:absolute;inset:0;background:rgba(8,8,12,.72)"></div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:618px;background:#151516;border-radius:28px 28px 0 0;box-shadow:inset 0 1px 0 0 #FFFFFF14">
+    <div style="height:20px;display:flex;align-items:center;justify-content:center;padding-top:8px"><div style="width:32px;height:4px;border-radius:2px;background:#9A9690"></div></div>
+
+    <div style="padding:12px 16px 0;font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Sort</div>
+    <div style="height:48px;display:flex;align-items:center;gap:12px;padding:0 16px">
+      <span style="width:20px;height:20px;border-radius:10px;box-shadow:inset 0 0 0 2px #4169A1;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:10px;height:10px;border-radius:5px;background:#4169A1"></span></span>
+      <span style="font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Recently updated</span>
+    </div>
+    <div style="height:48px;display:flex;align-items:center;gap:12px;padding:0 16px">
+      <span style="width:20px;height:20px;border-radius:10px;box-shadow:inset 0 0 0 2px #9A9690;flex:none"></span>
+      <span style="font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Recently opened</span>
+    </div>
+    <div style="height:48px;display:flex;align-items:center;gap:12px;padding:0 16px">
+      <span style="width:20px;height:20px;border-radius:10px;box-shadow:inset 0 0 0 2px #9A9690;flex:none"></span>
+      <span style="font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Title A–Z</span>
+    </div>
+
+    <div style="height:1px;background:#FFFFFF14;margin:8px 16px"></div>
+
+    <div style="padding:8px 16px 0;font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Filter</div>
+    <div style="height:48px;display:flex;align-items:center;gap:12px;padding:0 16px">
+      <span style="width:20px;height:20px;border-radius:4px;background:#4169A1;display:flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+      <span style="font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Unread only</span>
+    </div>
+    <div style="height:48px;display:flex;align-items:center;gap:12px;padding:0 16px">
+      <span style="width:20px;height:20px;border-radius:4px;box-shadow:inset 0 0 0 2px #9A9690;flex:none"></span>
+      <span style="font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Downloaded</span>
+    </div>
+    <div style="height:48px;display:flex;align-items:center;gap:12px;padding:0 16px">
+      <span style="width:20px;height:20px;border-radius:4px;box-shadow:inset 0 0 0 2px #9A9690;flex:none"></span>
+      <span style="font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Tracking</span>
+    </div>
+
+    <div style="height:1px;background:#FFFFFF14;margin:8px 16px"></div>
+
+    <div style="padding:8px 16px 0;font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Display</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 16px">
+      <span style="font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Columns</span>
+      <div style="display:inline-flex;align-items:center;background:#08080C;border-radius:18px">
+        <div style="height:36px;width:44px;border-radius:18px;display:flex;align-items:center;justify-content:center;font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">2</div>
+        <div style="height:36px;width:44px;border-radius:18px;display:flex;align-items:center;justify-content:center;font:500 14px/1 'Noto Sans',sans-serif;color:#FFFFFF;background:#FFFFFF14">3</div>
+        <div style="height:36px;width:44px;border-radius:18px;display:flex;align-items:center;justify-content:center;font:500 14px/1 'Noto Sans',sans-serif;color:#9A9690">4</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 16px">
+      <span style="font:400 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF">Show unread count</span>
+      <span style="width:52px;height:32px;border-radius:16px;background:#4169A1;display:flex;align-items:center;justify-content:flex-end;padding:0 4px;box-sizing:border-box"><span style="width:24px;height:24px;border-radius:12px;background:#FFFFFF"></span></span>
+    </div>
+    <div style="display:flex;justify-content:center;padding-top:8px">
+      <div style="height:48px;padding:0 24px;border-radius:24px;box-shadow:inset 0 0 0 1px #9A9690;display:flex;align-items:center;font:500 15px/1 'Noto Sans',sans-serif;color:#FFFFFF">Reset</div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      showNotes: this.props.showNotes ?? true,
+      gridAll: [
+        { t: 'Solo Leveling', c: 'Ch. 254', type: 'Manga', unread: 12 },
+        { t: 'One Piece', c: 'Ep. 1122', type: 'Anime', unread: 0 },
+        { t: 'Jujutsu Kaisen', c: 'Ch. 236', type: 'Manga', unread: 4 },
+        { t: 'Kingdom', c: 'Ch. 801', type: 'Manga', unread: 0 },
+        { t: 'Frieren', c: 'Ch. 141', type: 'Manga', unread: 2 },
+        { t: 'Chainsaw Man', c: 'Ep. 12', type: 'Anime', unread: 0 },
+        { t: 'Dandadan', c: 'Ch. 178', type: 'Manga', unread: 7 },
+        { t: 'Kaiju No. 8', c: 'Ep. 9', type: 'Anime', unread: 0 },
+        { t: 'Oshi no Ko', c: 'Ch. 166', type: 'Manga', unread: 1 }
+      ],
+      gridAnime: [
+        { t: 'One Piece', c: 'Ep. 1122', unread: 3 },
+        { t: 'Jujutsu Kaisen', c: 'Ep. 24', unread: 0 },
+        { t: 'Frieren', c: 'Ep. 28', unread: 1 },
+        { t: 'Chainsaw Man', c: 'Ep. 12', unread: 0 },
+        { t: 'Dandadan', c: 'Ep. 8', unread: 5 },
+        { t: 'Kaiju No. 8', c: 'Ep. 9', unread: 0 },
+        { t: 'Oshi no Ko', c: 'Ep. 21', unread: 0 },
+        { t: 'Blue Lock', c: 'Ep. 14', unread: 2 },
+        { t: 'Sakamoto Days', c: 'Ep. 6', unread: 0 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./react.js"></script><script src="./react-dom.js"></script><script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
+</style></helmet>
+
+<div style="padding:40px 44px 64px;display:flex;flex-direction:column;gap:28px;align-items:flex-start">
+
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1240px;background:#151516;border-radius:12px;padding:24px 28px;box-shadow:inset 0 0 0 1px #FFFFFF14">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<span style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#08080C;background:#9A9690;border-radius:4px;padding:4px 7px">PLAYER</span>
+<span style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Anime player — portrait, controls visible · dark and Paper</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Decisions</div>
+<div>· Portrait, video 393 × 221 (16:9) pinned under the status bar rather than centred — that leaves a real panel below it, so pausing to pick the next episode does not mean leaving the player. Rotating to landscape is the immersive case and it is the same overlay, edge to edge.</div>
+<div>· <span style="color:#FFFFFF">Controls over video stay white on a #08080C scrim in both themes.</span> You cannot put Ink Black text on someone's episode. The theme changes the surround and the panel, not the overlay — that is the honest light variant for a player.</div>
+<div>· <span style="color:#FFFFFF">Skip intro</span> is an outlined secondary that appears only in its window; <span style="color:#FFFFFF">Next episode</span> is the row below the scrubber, not a pill, because it is a destination and not a toggle.</div>
+<div>· Up next reuses the Title-page episode row verbatim: 96 × 54 thumb r8, 15 Medium, 13 Muted, blue 3 dp progress on the one in progress.</div>
+</div>
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Paper variant</div>
+<div>· Same borrowed tokens as the reader: White bars on Paper, Ink Black text, <span style="color:#FFFFFF">#08080C14</span> hairlines and tracks. <span style="color:#F59E0B">Both are missing from design.md</span> — a light surface and a light hairline. Two tokens, one decision from you.</div>
+<div>· The letterbox around a 16:9 video on Paper is <span style="color:#FFFFFF">#08080C</span>, not Paper: bright bars beside dark footage is the one place light theme actively hurts. Video sits in ink, the app sits on paper.</div>
+<div style="margin-top:6px">Blue budget: two per artboard (played position, and the in-progress bar on Up next).</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 8a PLAYER DARK ============ -->
+<div id="8a" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">8a</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Dark · controls visible, Skip intro window</span></div>
+<div data-screen-label="Player dark" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="position:relative;width:393px;height:221px;background:#151516;overflow:hidden">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.2" opacity="0.35"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+    <div style="position:absolute;inset:0;background:rgba(8,8,12,.55)"></div>
+
+    <div style="position:absolute;left:0;right:0;top:0;height:48px;display:flex;align-items:center;padding:0 4px">
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+      <div style="flex:1;min-width:0;padding:0 4px">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Frieren</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Episode 12 · The Land Where the Soul Rests</div>
+      </div>
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2"></rect><path d="M6.5 14h4M13 14h4.5"></path></svg></div>
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 18.5h17M3.5 6.5h11"></path><circle cx="18" cy="6.5" r="2.4"></circle><circle cx="8" cy="18.5" r="2.4"></circle></svg></div>
+    </div>
+
+    <div style="position:absolute;left:0;right:0;top:78px;display:flex;align-items:center;justify-content:center;gap:32px">
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 5.5L4 12l7.5 6.5V5.5zM19 5.5L11.5 12 19 18.5V5.5z"></path></svg></div>
+      <div style="width:64px;height:64px;border-radius:32px;background:#FFFFFF;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="#08080C"><rect x="7" y="5" width="3.6" height="14" rx="1"></rect><rect x="13.4" y="5" width="3.6" height="14" rx="1"></rect></svg></div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 5.5L20 12l-7.5 6.5V5.5zM5 5.5L12.5 12 5 18.5V5.5z"></path></svg></div>
+    </div>
+
+    <div style="position:absolute;right:16px;bottom:56px">
+      <div style="height:36px;padding:0 14px;border-radius:18px;box-shadow:inset 0 0 0 1px #FFFFFF;display:flex;align-items:center;font:500 14px/1 'Noto Sans',sans-serif;color:#FFFFFF">Skip intro</div>
+    </div>
+
+    <div style="position:absolute;left:0;right:0;bottom:0;height:48px;display:flex;align-items:center;gap:10px;padding:0 16px">
+      <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#FFFFFF;font-variant-numeric:tabular-nums;flex:none">08:24</span>
+      <div style="flex:1;position:relative;height:44px;display:flex;align-items:center">
+        <div style="position:absolute;left:0;right:0;height:4px;border-radius:2px;background:#FFFFFF14"></div>
+        <div style="position:absolute;left:0;width:46%;height:4px;border-radius:2px;background:#4169A1"></div>
+        <div style="position:absolute;left:46%;width:14px;height:14px;border-radius:7px;background:#FFFFFF;transform:translateX(-7px)"></div>
+      </div>
+      <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums;flex:none">24:12</span>
+      <div style="width:32px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4.5h4.5M20 15v4.5h-4.5M15.5 4.5H20V9M8.5 19.5H4V15"></path></svg></div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 16px">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Next · Episode 13</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Plays in 12s</div>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;box-shadow:inset 0 0 0 1px #9A9690;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#FFFFFF">Play now</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M8.5 5.6l10 6.4-10 6.4z"></path></svg>
+    </div>
+  </div>
+
+  <div style="height:1px;background:#FFFFFF14;margin:0 16px"></div>
+
+  <div style="padding:16px 16px 8px"><div style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Up next</div></div>
+  <sc-for list="{{ upNext }}" as="item" hint-placeholder-count="4">
+    <div style="display:flex;align-items:center;gap:12px;height:78px;padding:0 16px">
+      <div style="position:relative;width:96px;height:54px;flex:none;border-radius:8px;background:#151516;box-shadow:inset 0 0 0 1px #FFFFFF14;overflow:hidden">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.4"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+        <sc-if value="{{ item.progress }}"><div style="position:absolute;left:0;right:0;bottom:0;height:3px;background:#FFFFFF14"><div style="width:{{ item.progress }};height:3px;background:#4169A1"></div></div></sc-if>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.t }}</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.meta }}</div>
+      </div>
+      <sc-if value="{{ item.dl }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v10M8 10.5l4 4 4-4M5 19h14"></path></svg></span></sc-if>
+    </div>
+  </sc-for>
+</div>
+</div>
+
+<!-- ============ 8b PLAYER PAPER ============ -->
+<div id="8b" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">8b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Paper · overlay stays white on ink, panel turns light</span></div>
+<div data-screen-label="Player paper" dir="ltr" style="position:relative;width:393px;height:852px;background:#F2EEE5;overflow:hidden;box-shadow:inset 0 0 0 1px #08080C14">
+
+  <div style="height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#08080C">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="position:relative;width:393px;height:221px;background:#08080C;overflow:hidden">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.2" opacity="0.35"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+    <div style="position:absolute;inset:0;background:rgba(8,8,12,.55)"></div>
+
+    <div style="position:absolute;left:0;right:0;top:0;height:48px;display:flex;align-items:center;padding:0 4px">
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+      <div style="flex:1;min-width:0;padding:0 4px">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Frieren</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Episode 12 · The Land Where the Soul Rests</div>
+      </div>
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2"></rect><path d="M6.5 14h4M13 14h4.5"></path></svg></div>
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 18.5h17M3.5 6.5h11"></path><circle cx="18" cy="6.5" r="2.4"></circle><circle cx="8" cy="18.5" r="2.4"></circle></svg></div>
+    </div>
+
+    <div style="position:absolute;left:0;right:0;top:78px;display:flex;align-items:center;justify-content:center;gap:32px">
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 5.5L4 12l7.5 6.5V5.5zM19 5.5L11.5 12 19 18.5V5.5z"></path></svg></div>
+      <div style="width:64px;height:64px;border-radius:32px;background:#FFFFFF;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="#08080C"><rect x="7" y="5" width="3.6" height="14" rx="1"></rect><rect x="13.4" y="5" width="3.6" height="14" rx="1"></rect></svg></div>
+      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 5.5L20 12l-7.5 6.5V5.5zM5 5.5L12.5 12 5 18.5V5.5z"></path></svg></div>
+    </div>
+
+    <div style="position:absolute;left:0;right:0;bottom:0;height:48px;display:flex;align-items:center;gap:10px;padding:0 16px">
+      <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#FFFFFF;font-variant-numeric:tabular-nums;flex:none">08:24</span>
+      <div style="flex:1;position:relative;height:44px;display:flex;align-items:center">
+        <div style="position:absolute;left:0;right:0;height:4px;border-radius:2px;background:#FFFFFF14"></div>
+        <div style="position:absolute;left:0;width:46%;height:4px;border-radius:2px;background:#4169A1"></div>
+        <div style="position:absolute;left:46%;width:14px;height:14px;border-radius:7px;background:#FFFFFF;transform:translateX(-7px)"></div>
+      </div>
+      <span style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;font-variant-numeric:tabular-nums;flex:none">24:12</span>
+      <div style="width:32px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4.5h4.5M20 15v4.5h-4.5M15.5 4.5H20V9M8.5 19.5H4V15"></path></svg></div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 16px;background:#FFFFFF">
+    <div style="flex:1;min-width:0">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#08080C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Next · Episode 13</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Plays in 12s</div>
+    </div>
+    <div style="height:36px;padding:0 14px;border-radius:18px;box-shadow:inset 0 0 0 1px #9A9690;display:flex;align-items:center;gap:6px;flex:none">
+      <span style="font:500 14px/1 'Noto Sans',sans-serif;color:#08080C">Play now</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#08080C"><path d="M8.5 5.6l10 6.4-10 6.4z"></path></svg>
+    </div>
+  </div>
+
+  <div style="height:1px;background:#08080C14"></div>
+
+  <div style="padding:16px 16px 8px"><div style="font:600 18px/24px 'Noto Sans',sans-serif;color:#08080C">Up next</div></div>
+  <sc-for list="{{ upNext }}" as="item" hint-placeholder-count="4">
+    <div style="display:flex;align-items:center;gap:12px;height:78px;padding:0 16px">
+      <div style="position:relative;width:96px;height:54px;flex:none;border-radius:8px;background:#FFFFFF;box-shadow:inset 0 0 0 1px #08080C14;overflow:hidden">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.4" opacity="0.6"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+        <sc-if value="{{ item.progress }}"><div style="position:absolute;left:0;right:0;bottom:0;height:3px;background:#08080C14"><div style="width:{{ item.progress }};height:3px;background:#4169A1"></div></div></sc-if>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#08080C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.t }}</div>
+        <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.meta }}</div>
+      </div>
+      <sc-if value="{{ item.dl }}"><span style="width:32px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><path d="M12 4v10M8 10.5l4 4 4-4M5 19h14"></path></svg></span></sc-if>
+    </div>
+  </sc-for>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      showNotes: this.props.showNotes ?? true,
+      upNext: [
+        { t: 'Episode 13 · The Height of Magic', meta: '24 min · 318 MB', dl: true },
+        { t: 'Episode 14 · A Real Hero', meta: '24 min' },
+        { t: 'Episode 15 · Nothing to Fear', meta: '24 min' },
+        { t: 'Episode 16 · The Way of Mages', meta: '24 min' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

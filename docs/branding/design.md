@@ -67,9 +67,11 @@ muted. Never duotone, never colourful.
   **only under the All lens**.
 - **Continue card** — cover card + 3 dp progress bar + 1-line title + caption `Ch. 254 · 2h ago` +
   Accent `NEW` pill when applicable. Tap = opens content, not the title page.
-- **Lens chips** — one segmented group `All · Anime · Manga`, always directly under the top bar,
-  identical on Home, Library, Discover, Updates, Search. Active = blue fill.
-- **Stat chip** — number 20 SemiBold over 13 Muted label, Surface, radius 12, tappable.
+- **Lens button** — one top-bar icon, 24 dp, on Home, Library, Discover, Updates, Search.
+  Full outlined circle = All; the same circle **half-shaded and blue** = filtered to Anime or
+  Manga. Tap opens a small menu — All / Anime / Manga with a check on the current state and the
+  caption *Applies everywhere*. Choosing All restores the full circle. **No text label ever
+  accompanies the icon.**
 - **Update row** — 48 dp thumb (r12), 15 Medium title, 13 Muted caption, trailing NEW/download glyph.
 - **Buttons** — primary blue fill full-round; secondary outlined. **One primary per screen.**
 - **Empty state** — brand illustration (halftone burst / speed-line sweep / ink splash) + one
@@ -79,8 +81,10 @@ muted. Never duotone, never colourful.
 
 ## The lens
 
-Three states, one **global** value: flipping it anywhere flips it everywhere. Under `Anime`/`Manga`
-the type chips on covers disappear; under `All` they appear.
+Three states — All · Anime · Manga — one **global** value: flipping it anywhere flips it
+everywhere. It lives as the **lens button** in the top bar (see Components), never as a chip row:
+the icon itself carries the state, half-shaded when you are looking at part of the collection.
+Under `Anime`/`Manga` the type chips on covers disappear; under `All` they appear.
 
 ## Manga DNA
 

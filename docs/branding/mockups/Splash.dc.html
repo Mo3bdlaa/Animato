@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./react.js"></script><script src="./react-dom.js"></script><script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
+</style></helmet>
+
+<div style="padding:40px 44px 64px;display:flex;flex-direction:column;gap:28px;align-items:flex-start">
+
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1240px;background:#151516;border-radius:12px;padding:24px 28px;box-shadow:inset 0 0 0 1px #FFFFFF14">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<span style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#08080C;background:#9A9690;border-radius:4px;padding:4px 7px">SCREEN 11</span>
+<span style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Splash — Ink Black · Paper · what it replaces</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Decisions</div>
+<div>· <span style="color:#FFFFFF">The panel is gone.</span> Your old splash showed the app <em>icon</em> — a rounded square with a frame and a halftone fill — floating on black, which reads as a sticker of the logo rather than the logo. design.md says centred unframed wordmark, no panel, no spinner. This is that.</div>
+<div>· Wordmark is <span style="color:#FFFFFF">240 dp wide</span>, optically centred: the lockup sits 24 dp above true centre, because アニマト and the speed lines carry visual weight below it. Dead-centre maths looks low.</div>
+<div>· <span style="color:#FFFFFF">アニマト is live text</span> in Noto Sans JP 500, 22 dp, tracked +0.32em — not part of the PNG. That keeps it crisp at any density and matches the brand sheet's "never remove the Japanese text" rule.</div>
+<div>· Speed lines: 8 strokes, 2 dp, Muted at 0.18–0.5 opacity, converging left to right. Splash is one of the four places design.md allows manga DNA — and the only one where it can be the whole composition.</div>
+<div>· No spinner, no progress, no version string. Cold start is under a second; a spinner would advertise a wait that is not there.</div>
+</div>
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Notes for you</div>
+<div>· <a href="#9a">9a</a> is the default identity (Ink Black, blue wordmark). <a href="#9b">9b</a> is the Paper variant — same geometry, the light lockup, halftone at 0.10 because dots read heavier on Paper.</div>
+<div>· The old icon-on-black splash is deleted, not archived — 9a replaces it.</div>
+<div>· Blue budget: one. The wordmark. Nothing else on the screen is blue, which is the strongest possible statement of what blue means in this app.</div>
+<div>· The tagline is <span style="color:#FFFFFF">not</span> on the splash — it belongs to onboarding screen 1, where there is time to read it.</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 9a INK BLACK ============ -->
+<div id="9a" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">9a</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Default · Ink Black · no panel, no spinner</span></div>
+<div data-screen-label="Splash dark" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="position:absolute;left:0;right:0;top:0;height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#FFFFFF">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#FFFFFF" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:48px">
+    <div style="position:relative;width:393px;height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+
+      <div style="position:absolute;left:0;top:56px;width:64px;height:2px;background:#9A9690;opacity:.5"></div>
+      <div style="position:absolute;left:12px;top:78px;width:38px;height:2px;background:#9A9690;opacity:.28"></div>
+      <div style="position:absolute;left:0;top:100px;width:52px;height:2px;background:#9A9690;opacity:.4"></div>
+      <div style="position:absolute;left:20px;top:122px;width:26px;height:2px;background:#9A9690;opacity:.2"></div>
+      <div style="position:absolute;right:0;top:62px;width:56px;height:2px;background:#9A9690;opacity:.44"></div>
+      <div style="position:absolute;right:14px;top:86px;width:32px;height:2px;background:#9A9690;opacity:.24"></div>
+      <div style="position:absolute;right:0;top:110px;width:60px;height:2px;background:#9A9690;opacity:.36"></div>
+      <div style="position:absolute;right:22px;top:132px;width:24px;height:2px;background:#9A9690;opacity:.18"></div>
+
+      <div style="position:absolute;left:96px;top:26px;width:200px;height:168px;border-radius:50%;background-image:radial-gradient(#FFFFFF 1.3px,transparent 1.4px);background-size:10px 10px;opacity:.14;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 34%,transparent 72%);mask-image:radial-gradient(circle at 50% 50%,#000 34%,transparent 72%)"></div>
+
+      <img src="assets/wordmark-blue.png" alt="Animato" style="position:relative;width:240px;height:104px;display:block">
+      <div style="position:relative;margin-top:6px;font:500 22px/28px 'Noto Sans JP',sans-serif;color:#FFFFFF;letter-spacing:.32em;text-indent:.32em">アニマト</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 9b PAPER ============ -->
+<div id="9b" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">9b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Paper variant · same geometry, lighter halftone</span></div>
+<div data-screen-label="Splash paper" dir="ltr" style="position:relative;width:393px;height:852px;background:#F2EEE5;overflow:hidden;box-shadow:inset 0 0 0 1px #08080C14">
+
+  <div style="position:absolute;left:0;right:0;top:0;height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+    <span style="font:500 12px/16px 'Noto Sans',sans-serif;color:#08080C">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#08080C"><path d="M2 20h3v-6H2v6zm5.5 0h3V9h-3v11zM13 20h3V4h-3v16zm5.5 0h3V11h-3v9z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#08080C"><path d="M12 19.5l9.5-11A14.5 14.5 0 0 0 2.5 8.5L12 19.5z"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#08080C" stroke-width="1.6"><rect x="3" y="8" width="16" height="8" rx="1.5"></rect><path d="M21 11v2"></path><rect x="5" y="10" width="9" height="4" fill="#08080C" stroke="none"></rect></svg>
+    </span>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:48px">
+    <div style="position:relative;width:393px;height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+
+      <div style="position:absolute;left:0;top:56px;width:64px;height:2px;background:#08080C;opacity:.4"></div>
+      <div style="position:absolute;left:12px;top:78px;width:38px;height:2px;background:#08080C;opacity:.22"></div>
+      <div style="position:absolute;left:0;top:100px;width:52px;height:2px;background:#08080C;opacity:.32"></div>
+      <div style="position:absolute;left:20px;top:122px;width:26px;height:2px;background:#08080C;opacity:.16"></div>
+      <div style="position:absolute;right:0;top:62px;width:56px;height:2px;background:#08080C;opacity:.36"></div>
+      <div style="position:absolute;right:14px;top:86px;width:32px;height:2px;background:#08080C;opacity:.2"></div>
+      <div style="position:absolute;right:0;top:110px;width:60px;height:2px;background:#08080C;opacity:.3"></div>
+      <div style="position:absolute;right:22px;top:132px;width:24px;height:2px;background:#08080C;opacity:.14"></div>
+
+      <div style="position:absolute;left:96px;top:26px;width:200px;height:168px;border-radius:50%;background-image:radial-gradient(#08080C 1.3px,transparent 1.4px);background-size:10px 10px;opacity:.10;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 34%,transparent 72%);mask-image:radial-gradient(circle at 50% 50%,#000 34%,transparent 72%)"></div>
+
+      <img src="assets/wordmark-blue.png" alt="Animato" style="position:relative;width:240px;height:104px;display:block">
+      <div style="position:relative;margin-top:6px;font:500 22px/28px 'Noto Sans JP',sans-serif;color:#08080C;letter-spacing:.32em;text-indent:.32em">アニマト</div>
+    </div>
+  </div>
+</div>
+</div>
+
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return { showNotes: this.props.showNotes ?? true };
+  }
+}
+</script>
+</body>
+</html>

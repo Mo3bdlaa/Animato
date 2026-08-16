@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./react.js"></script><script src="./react-dom.js"></script><script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08080C;font-family:'Noto Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#4169A1;text-decoration:none}a:hover{color:#4169A1}
+</style></helmet>
+
+<div style="padding:40px 44px 64px;display:flex;flex-direction:column;gap:28px;align-items:flex-start">
+
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1240px;background:#151516;border-radius:12px;padding:24px 28px;box-shadow:inset 0 0 0 1px #FFFFFF14">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+<span style="font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#08080C;background:#9A9690;border-radius:4px;padding:4px 7px">READER</span>
+<span style="font:600 18px/24px 'Noto Sans',sans-serif;color:#FFFFFF">Manga reader — chrome visible · dark and Paper</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;font:400 13px/20px 'Noto Sans',sans-serif;color:#9A9690">
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Decisions</div>
+<div>· No status bar and no bottom nav: the reader is immersive. Chrome is one tap away and sits <em>over</em> the page — 56 dp top bar, 104 dp bottom bar, both Surface, no elevation shadow.</div>
+<div>· The page is fit-to-width: 393 × 590 at 2:3, centred in the 692 dp gap, so the letterbox is 51 dp top and bottom. Letterbox takes the <em>background</em> colour, never a third grey.</div>
+<div>· <span style="color:#FFFFFF">The scrubber runs right-to-left</span> — Japanese page order. 82% read means the thumb sits 18% from the left. This is the one control in the app whose direction does not follow the locale, it follows the book.</div>
+<div>· Blue is the read-position fill and nothing else. Page count, brightness, mode and lock are Muted; the reading-mode row is icon-only because those four are muscle memory, not first-run discovery.</div>
+</div>
+<div>
+<div style="color:#FFFFFF;font-weight:600;margin-bottom:6px">Paper variant</div>
+<div>· design.md defines Paper <span style="color:#FFFFFF">#F2EEE5</span> and White <span style="color:#FFFFFF">#FFFFFF</span> but <span style="color:#F59E0B">no light surface, no light hairline</span>. I used White for bars on Paper, Ink Black for primary text, Muted unchanged, and <span style="color:#FFFFFF">#08080C14</span> for hairlines and tracks — the mirror of #FFFFFF14. Those two need to become tokens; say the word and I will add them to design.md.</div>
+<div>· Paper is the reading-comfort theme, so it is the one place the page letterbox is warm rather than black. Everything else keeps identical geometry — same 56 / 104 / 590, same blue.</div>
+<div style="margin-top:6px">Blue budget: two per artboard (read fill, and the filled bookmark that means this page is marked).</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- ============ 7a READER DARK ============ -->
+<div id="7a" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">7a</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Dark · chrome visible</span></div>
+<div data-screen-label="Reader dark" dir="ltr" style="position:relative;width:393px;height:852px;background:#08080C;overflow:hidden;box-shadow:inset 0 0 0 1px #FFFFFF14">
+
+  <div style="position:absolute;left:0;top:131px;width:393px;height:590px;background:#151516;overflow:hidden">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.2" opacity="0.35"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;top:0;height:56px;background:#151516;display:flex;align-items:center;padding:0 4px">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="flex:1;min-width:0;padding:0 4px">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chapter 184</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Solo Leveling · 82%</div>
+    </div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M7 3.6h10a1 1 0 0 1 1 1v15.6l-6-4-6 4V4.6a1 1 0 0 1 1-1z"></path></svg></div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5v13.5h13.5M3.5 7H17v13.5"></path></svg></div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M9.9 3.3h4.2l.45 2.35 1.6.93 2.2-.9 2.1 3.64-1.75 1.6v1.86l1.75 1.6-2.1 3.64-2.2-.9-1.6.93-.45 2.35H9.9l-.45-2.35-1.6-.93-2.2.9-2.1-3.64 1.75-1.6v-1.86L3.55 9.32l2.1-3.64 2.2.9 1.6-.93z" stroke-linejoin="round"></path></svg></div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:104px;background:#151516;padding:0 8px">
+    <div style="height:56px;display:flex;align-items:center;gap:4px">
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+      <div style="flex:1;position:relative;height:44px;display:flex;align-items:center">
+        <div style="position:absolute;left:0;right:0;height:4px;border-radius:2px;background:#FFFFFF14"></div>
+        <div style="position:absolute;right:0;width:82%;height:4px;border-radius:2px;background:#4169A1"></div>
+        <div style="position:absolute;left:18%;width:14px;height:14px;border-radius:7px;background:#FFFFFF;transform:translateX(-7px)"></div>
+      </div>
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5l7 7-7 7"></path></svg></div>
+    </div>
+    <div style="height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 4px">
+      <span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#FFFFFF;font-variant-numeric:tabular-nums;min-width:64px">184 / 191</span>
+      <div style="display:flex;align-items:center">
+        <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="7" height="17" rx="1.5"></rect><rect x="13" y="3.5" width="7" height="17" rx="1.5"></rect></svg></div>
+        <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"></path></svg></div>
+        <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"></rect><path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9"></path></svg></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ 7b READER PAPER ============ -->
+<div id="7b" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 10.5px/1 ui-monospace,Menlo,monospace;color:#08080C;background:#FFFFFF;border-radius:5px;padding:3px 7px">7b</span><span style="font:400 12px/16px 'Noto Sans',sans-serif;color:#9A9690">Paper · identical geometry, mirrored tokens</span></div>
+<div data-screen-label="Reader paper" dir="ltr" style="position:relative;width:393px;height:852px;background:#F2EEE5;overflow:hidden;box-shadow:inset 0 0 0 1px #08080C14">
+
+  <div style="position:absolute;left:0;top:131px;width:393px;height:590px;background:#FFFFFF;overflow:hidden;box-shadow:inset 0 0 0 1px #08080C14">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.2" opacity="0.6"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10.5" r="1.6"></circle><path d="M4 17.5l5-4 3.5 3 3-2.5 4.5 3.5"></path></svg></div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;top:0;height:56px;background:#FFFFFF;display:flex;align-items:center;padding:0 4px;box-shadow:inset 0 -1px 0 0 #08080C14">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#08080C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+    <div style="flex:1;min-width:0;padding:0 4px">
+      <div style="font:500 15px/20px 'Noto Sans',sans-serif;color:#08080C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chapter 184</div>
+      <div style="font:400 13px/18px 'Noto Sans',sans-serif;color:#9A9690;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Solo Leveling · 82%</div>
+    </div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="#4169A1"><path d="M7 3.6h10a1 1 0 0 1 1 1v15.6l-6-4-6 4V4.6a1 1 0 0 1 1-1z"></path></svg></div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#08080C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5v13.5h13.5M3.5 7H17v13.5"></path></svg></div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#08080C" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M9.9 3.3h4.2l.45 2.35 1.6.93 2.2-.9 2.1 3.64-1.75 1.6v1.86l1.75 1.6-2.1 3.64-2.2-.9-1.6.93-.45 2.35H9.9l-.45-2.35-1.6-.93-2.2.9-2.1-3.64 1.75-1.6v-1.86L3.55 9.32l2.1-3.64 2.2.9 1.6-.93z" stroke-linejoin="round"></path></svg></div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;height:104px;background:#FFFFFF;padding:0 8px;box-shadow:inset 0 1px 0 0 #08080C14">
+    <div style="height:56px;display:flex;align-items:center;gap:4px">
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></svg></div>
+      <div style="flex:1;position:relative;height:44px;display:flex;align-items:center">
+        <div style="position:absolute;left:0;right:0;height:4px;border-radius:2px;background:#08080C14"></div>
+        <div style="position:absolute;right:0;width:82%;height:4px;border-radius:2px;background:#4169A1"></div>
+        <div style="position:absolute;left:18%;width:14px;height:14px;border-radius:7px;background:#08080C;transform:translateX(-7px)"></div>
+      </div>
+      <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5l7 7-7 7"></path></svg></div>
+    </div>
+    <div style="height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 4px">
+      <span style="font:600 13px/18px 'Noto Sans',sans-serif;color:#08080C;font-variant-numeric:tabular-nums;min-width:64px">184 / 191</span>
+      <div style="display:flex;align-items:center">
+        <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="7" height="17" rx="1.5"></rect><rect x="13" y="3.5" width="7" height="17" rx="1.5"></rect></svg></div>
+        <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"></path></svg></div>
+        <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9A9690" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"></rect><path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9"></path></svg></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return { showNotes: this.props.showNotes ?? true };
+  }
+}
+</script>
+</body>
+</html>
