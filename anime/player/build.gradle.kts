@@ -82,4 +82,7 @@ dependencies {
     implementation(animato.compose.constraintlayout)
     implementation(animato.constraintlayout)
     implementation(animato.kotlinx.immutables)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

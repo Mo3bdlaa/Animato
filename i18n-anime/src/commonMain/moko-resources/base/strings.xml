@@ -496,6 +496,10 @@
     <string name="cloudflare_no_sources">No sources are installed yet.</string>
     <string name="cloudflare_blocked_title">Cloudflare is blocking this source</string>
     <string name="cloudflare_blocked_action">Pass the check</string>
+    <string name="updater_checking">Checking for updates…</string>
+    <string name="updater_up_to_date">Animato %1$s is the newest build</string>
+    <string name="updater_failed">Could not check for updates: %1$s</string>
+    <string name="updater_disabled">This build cannot update itself</string>
     <string name="pref_backup_flags_summary">What information to include in the backup file</string>
     <string name="pref_anime_storage_usage">Anime Storage usage</string>
     <string name="pref_manga_storage_usage">Manga Storage usage</string>

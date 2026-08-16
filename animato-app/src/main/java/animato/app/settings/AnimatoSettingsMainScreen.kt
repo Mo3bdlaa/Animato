@@ -9,6 +9,7 @@ import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Search
@@ -20,7 +21,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import animato.app.updater.AnimatoAppUpdateChecker
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
@@ -40,6 +48,13 @@ import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
+import eu.kanade.tachiyomi.util.system.toast
+import io.github.mo3bdlaa.animato.BuildConfig
+import kotlinx.coroutines.launch
+import logcat.LogPriority
+import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -99,8 +114,90 @@ object AnimatoSettingsMainScreen : Screen() {
                         onPreferenceClick = { navigator.push(item.screen) },
                     )
                 }
+
+                item {
+                    CheckForUpdatesRow()
+                }
             }
         }
+    }
+
+    /**
+     * Asking for an update, and being told what happened.
+     *
+     * Mihon has this on its About screen and hides it behind its own `updaterEnabled`, which is
+     * false in this build — so until now there was no way to check by hand and, worse, no way to
+     * see *why* a check had come to nothing. The automatic check on launch swallows everything into
+     * a log nobody reads:
+     *
+     * ```kotlin
+     * catch (e: Exception) { logcat(LogPriority.ERROR, e) }
+     * ```
+     *
+     * That silence is how the updater managed to ship twice without ever running. A check that
+     * reports "you are on the newest build" or the actual error is the difference between a bug
+     * someone can describe and a bug that just looks like nothing happening.
+     */
+    @Composable
+    private fun CheckForUpdatesRow() {
+        val context = LocalContext.current
+        val navigator = LocalNavigator.currentOrThrow
+        val scope = rememberCoroutineScope()
+        var checking by remember { mutableStateOf(false) }
+
+        TextPreferenceWidget(
+            title = stringResource(MR.strings.check_for_updates),
+            subtitle = if (checking) {
+                stringResource(AYMR.strings.updater_checking)
+            } else {
+                BuildConfig.VERSION_NAME
+            },
+            icon = Icons.Outlined.NewReleases,
+            onPreferenceClick = {
+                if (checking) return@TextPreferenceWidget
+
+                if (!AnimatoAppUpdateChecker.isEnabled) {
+                    context.toast(AYMR.strings.updater_disabled)
+                    return@TextPreferenceWidget
+                }
+
+                checking = true
+                scope.launch {
+                    try {
+                        val release = AnimatoAppUpdateChecker().checkForUpdate()
+                        if (release == null) {
+                            context.toast(
+                                context.stringResource(
+                                    AYMR.strings.updater_up_to_date,
+                                    BuildConfig.VERSION_NAME,
+                                ),
+                            )
+                        } else {
+                            navigator.push(
+                                NewUpdateScreen(
+                                    versionName = release.version,
+                                    changelogInfo = release.info,
+                                    releaseLink = release.releaseLink,
+                                    downloadLink = release.downloadLink,
+                                ),
+                            )
+                        }
+                    } catch (e: Exception) {
+                        logcat(LogPriority.ERROR, e)
+                        // The message, not a generic failure: "Unable to resolve host" and
+                        // "rate limit exceeded" are different problems with different fixes.
+                        context.toast(
+                            context.stringResource(
+                                AYMR.strings.updater_failed,
+                                e.message ?: e::class.simpleName.orEmpty(),
+                            ),
+                        )
+                    } finally {
+                        checking = false
+                    }
+                }
+            },
+        )
     }
 
     private data class Item(

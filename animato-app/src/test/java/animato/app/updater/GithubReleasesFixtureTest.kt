@@ -21,10 +21,10 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 @Execution(ExecutionMode.CONCURRENT)
 class GithubReleasesFixtureTest {
 
-    /** The same configuration the app injects. */
+    /** The same configuration the checker builds for itself. */
     private val json = Json {
         ignoreUnknownKeys = true
-        explicitNulls = false
+        coerceInputValues = true
     }
 
     private val releases: List<GithubReleaseSummary> by lazy {
@@ -32,6 +32,30 @@ class GithubReleasesFixtureTest {
             .bufferedReader()
             .use { it.readText() }
         json.decodeFromString(raw)
+    }
+
+    @Test
+    fun `a release published with no notes is not a decode failure`() {
+        // GitHub answers "body": null for one, and `info` is a non-nullable String with a default.
+        // Without coerceInputValues that throws — inside the update check's catch, where it would
+        // look exactly like nothing happening.
+        val raw = """
+            [{
+              "tag_name": "v0.1.0-alpha.9",
+              "body": null,
+              "html_url": "https://example.invalid/tag/v0.1.0-alpha.9",
+              "prerelease": true,
+              "draft": false,
+              "assets": [{
+                "name": "animato-v0.1.0-alpha.9-arm64-v8a.apk",
+                "browser_download_url": "https://example.invalid/a.apk"
+              }]
+            }]
+        """.trimIndent()
+
+        val parsed = json.decodeFromString<List<GithubReleaseSummary>>(raw)
+
+        parsed.single().info shouldBe ""
     }
 
     @Test

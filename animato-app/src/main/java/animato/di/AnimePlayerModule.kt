@@ -1,6 +1,7 @@
 package animato.di
 
 import android.app.Application
+import animato.anime.player.RememberedQuality
 import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
 import eu.kanade.domain.source.anime.interactor.GetAnimeIncognitoState
 import eu.kanade.domain.track.anime.interactor.AddAnimeTracks
@@ -32,6 +33,9 @@ class AnimePlayerModule(val app: Application) : InjektModule {
 
     override fun InjektRegistrar.registerInjectables() {
         addSingletonFactory { PlayerPreferences(get()) }
+        // Not a settings screen's preference — the quality someone chose by hand for one
+        // anime, so the next episode of it does not start over. See RememberedQuality.
+        addSingletonFactory { RememberedQuality(get()) }
         addSingletonFactory { AdvancedPlayerPreferences(get()) }
         addSingletonFactory { AudioPreferences(get()) }
         addSingletonFactory { DecoderPreferences(get()) }

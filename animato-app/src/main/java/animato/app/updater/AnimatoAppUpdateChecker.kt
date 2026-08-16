@@ -40,8 +40,20 @@ import uy.kohesive.injekt.api.get
  */
 class AnimatoAppUpdateChecker(
     private val network: NetworkHelper = Injekt.get(),
-    private val json: Json = Injekt.get(),
 ) {
+
+    /**
+     * Ours rather than the injected one, for `coerceInputValues`.
+     *
+     * GitHub answers `"body": null` for a release published without notes, and `info` here is a
+     * non-nullable `String` with a default. Without coercion that combination throws — and it would
+     * throw inside the update check's `catch`, which is to say it would look like nothing happening.
+     * With it, a release with no notes reads as a release with empty notes, which is what it is.
+     */
+    private val json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+    }
 
     /**
      * The release to offer, or null when the running build is already the newest one.

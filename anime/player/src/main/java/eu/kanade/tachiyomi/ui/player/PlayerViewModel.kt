@@ -43,6 +43,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import animato.anime.player.CustomButtonFetchState
 import animato.anime.player.HosterState
+import animato.anime.player.RememberedQuality
 import animato.anime.player.getButtons
 import animato.anime.player.getChangedAt
 import animato.anime.util.editBackground
@@ -176,6 +177,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private val trackSelect: TrackSelect = Injekt.get(),
     private val getIncognitoState: GetAnimeIncognitoState = Injekt.get(),
     private val libraryPreferences: AnimeLibraryPreferences = Injekt.get(),
+    private val rememberedQuality: RememberedQuality = Injekt.get(),
     uiPreferences: UiPreferences = Injekt.get(),
 ) : ViewModel() {
 
@@ -1409,7 +1411,15 @@ class PlayerViewModel @JvmOverloads constructor(
                                     }
                                 }
 
-                                val prefIndex = hosterState.videoList.indexOfFirst { it.preferred }
+                                // What was chosen by hand for this anime last time, if anything
+                                // on offer still matches it; otherwise the extension's own pick.
+                                // A remembered quality is a preference, not an instruction — a
+                                // source with no 1080p for this episode should still play.
+                                val remembered = currentAnime.value?.id?.let(rememberedQuality::get)
+                                val prefIndex = hosterState.videoList
+                                    .indexOfFirst { remembered != null && it.resolution == remembered }
+                                    .takeIf { it != -1 }
+                                    ?: hosterState.videoList.indexOfFirst { it.preferred }
                                 if (prefIndex != -1 && hosterIndex == -1) {
                                     if (hasFoundPreferredVideo.compareAndSet(false, true)) {
                                         if (selectedHosterVideoIndex.value == Pair(-1, -1)) {
@@ -1571,6 +1581,11 @@ class PlayerViewModel @JvmOverloads constructor(
         val video = hosterState?.videoList
             ?.getOrNull(videoIndex)
             ?: return // Shouldn't happen, but just in case™
+
+        // Only here, and deliberately: this is the one path where a person chose. Recording it in
+        // loadVideo would remember the extension's own pick and then hand it back as though it had
+        // been asked for.
+        currentAnime.value?.let { rememberedQuality.set(it.id, video) }
 
         val videoState = hosterState.videoState
             .getOrNull(videoIndex)
