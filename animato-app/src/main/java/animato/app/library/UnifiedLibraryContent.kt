@@ -53,6 +53,7 @@ import animato.ui.components.Pill
 import animato.ui.components.UnviewedPill
 import animato.ui.entries.ItemCover
 import animato.ui.library.LazyLibraryGrid
+import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBarTitle
@@ -280,7 +281,7 @@ private fun LibraryGridItem(
     showUnviewedCount: Boolean,
     onClick: () -> Unit,
 ) {
-    Column(modifier = Modifier.clickable(onClick = onClick)) {
+    Column(modifier = Modifier.tvClickable(onClick = onClick)) {
         Box {
             ItemCover.Book(
                 modifier = Modifier.fillMaxWidth(),

@@ -48,6 +48,7 @@ import animato.ui.components.Pill
 import animato.ui.components.UnviewedPill
 import animato.ui.entries.ItemCover
 import animato.ui.theme.LocalAnimatoPalette
+import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
@@ -299,7 +300,7 @@ private fun LibraryRow(hit: LibraryHit, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .tvClickable(onClick = onClick)
             .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
@@ -402,7 +403,7 @@ private fun SourceHitRail(hits: List<SourceHit>, onClick: (SourceHit) -> Unit) {
             Column(
                 modifier = Modifier
                     .width(CardWidth)
-                    .clickable { onClick(hit) },
+                    .tvClickable { onClick(hit) },
             ) {
                 ItemCover.Book(
                     modifier = Modifier.fillMaxWidth(),

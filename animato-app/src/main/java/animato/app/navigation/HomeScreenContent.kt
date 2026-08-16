@@ -46,6 +46,7 @@ import animato.ui.components.NewPill
 import animato.ui.entries.ItemCover
 import animato.ui.navigation.AnimatoNavigator
 import animato.ui.navigation.AnimatoTab
+import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -243,7 +244,7 @@ private fun ContinueCard(
         modifier = Modifier
             .width(ContinueCardWidth)
             .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onClick),
+            .tvClickable(onClick = onClick),
     ) {
         ItemCover.Book(
             data = item.coverData,
@@ -306,7 +307,7 @@ private fun UpdateRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .tvClickable(onClick = onClick)
             .padding(
                 horizontal = MaterialTheme.padding.medium,
                 vertical = MaterialTheme.padding.extraSmall,

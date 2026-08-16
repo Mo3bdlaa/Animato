@@ -15,10 +15,9 @@
       a device without one then filters it out — so a TV refuses to install this without the second
       line, and the first is what lets a TV launcher list it at all.
 
-      This is the declaration half of Android TV support, and it is only that. What a remote still
-      cannot do is drive the screens: focus order, focus that is visible from three metres away, and
-      a player whose controls can be reached without a finger. That work is deliberately not here —
-      ROADMAP.md says why.
+      The declaration half of Android TV support. The other half — focus a remote can see from three
+      metres away — is animato.ui.tv.TvFocus, applied to every list and grid item on the five main
+      screens. Still outstanding: the player's own controls, which are a surface of their own.
     -->
     <uses-feature
         android:name="android.software.leanback"

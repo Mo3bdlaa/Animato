@@ -48,6 +48,7 @@ import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.components.Pill
 import animato.ui.entries.ItemCover
+import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
@@ -221,7 +222,7 @@ private fun MetadataCard(item: MetadataItem, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .width(RailItemWidth)
-            .clickable(onClick = onClick),
+            .tvClickable(onClick = onClick),
     ) {
         Box {
             ItemCover.Book(
@@ -283,7 +284,7 @@ private fun LazyListScope.sourceRail(
                 Column(
                     modifier = Modifier
                         .width(RailItemWidth)
-                        .clickable { onClick(item) },
+                        .tvClickable { onClick(item) },
                 ) {
                     ItemCover.Book(
                         modifier = Modifier.fillMaxWidth(),

@@ -39,6 +39,7 @@ import animato.app.navigation.LensButton
 import animato.domain.content.ContentType
 import animato.ui.components.NewPill
 import animato.ui.entries.ItemCover
+import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -212,7 +213,7 @@ private fun UpdateRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .tvClickable(onClick = onClick)
             .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
