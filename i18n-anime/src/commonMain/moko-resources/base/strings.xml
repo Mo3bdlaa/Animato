@@ -791,4 +791,16 @@
     <string name="cast_needs_headers">This source\'s video only loads with headers a receiver cannot send, so it cannot be cast yet.</string>
     <string name="cast_leave_playing">Leave it playing</string>
     <string name="cast_stop">Stop</string>
+
+    <!-- Library sync -->
+    <string name="pref_sync_title">Sync between devices</string>
+    <string name="pref_sync_enable">Sync my library</string>
+    <string name="pref_sync_enable_summary">Through a folder your devices already share — Nextcloud, Syncthing, Dropbox, a network share. Progress merges and always keeps whichever device got further. Deletions do not travel: a title removed on one device comes back from another\'s copy.</string>
+    <string name="pref_sync_folder">Shared folder</string>
+    <string name="pref_sync_folder_unset">Not chosen yet</string>
+    <string name="pref_sync_interval">How often</string>
+    <string name="pref_sync_every_hours">Every %1$s hours</string>
+    <string name="pref_sync_now">Sync now</string>
+    <string name="pref_sync_last">Last synced %1$s</string>
+    <string name="pref_sync_never">Not synced yet</string>
 </resources>

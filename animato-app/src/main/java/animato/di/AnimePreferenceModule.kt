@@ -3,6 +3,7 @@ package animato.di
 import android.app.Application
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.library.UnifiedLibraryPreferences
+import animato.app.sync.SyncPreferences
 import animato.domain.content.ContentPreferences
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.domain.download.service.AnimeDownloadPreferences
@@ -35,5 +36,6 @@ class AnimePreferenceModule(@Suppress("unused") val app: Application) : InjektMo
         addSingletonFactory { ContentPreferences(get()) }
         addSingletonFactory { DownloadCleanupPreferences(get()) }
         addSingletonFactory { UnifiedLibraryPreferences(get()) }
+        addSingletonFactory { SyncPreferences(get()) }
     }
 }

@@ -25,6 +25,8 @@ import animato.anime.backup.create.AnimatoBackupCreateJob
 import animato.anime.backup.restore.AniyomiBackupRestoreJob
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.downloads.OrphanedDownloadSweeper
+import animato.app.sync.LibrarySyncJob
+import animato.app.sync.SyncPreferences
 import animato.ui.settings.PreferenceRowHorizontalPadding
 import animato.ui.settings.PreferenceSubcomponentRow
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -37,6 +39,7 @@ import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableMap
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
@@ -101,7 +104,94 @@ object AnimatoSettingsDataScreen : SearchableSettings {
                     else -> preference
                 }
             }
+            .plus(getSyncGroup())
             .plus(getAniyomiImportGroup())
+    }
+
+    /**
+     * Sync, through a folder the user already shares between their devices.
+     *
+     * ## Why a folder and not a server
+     *
+     * The file sync already exists on the device. Nextcloud, Syncthing, Dropbox, Drive and an SMB
+     * share all present a folder, and Android hands any of them to an app through the storage
+     * picker — so the hard part of moving bytes between two phones is somebody else's, already
+     * installed and already trusted with the user's files. Against that: a server to run, or an
+     * OAuth client and Play Services, or somebody else holding a reading history.
+     *
+     * ## The one thing said out loud
+     *
+     * A merge cannot see deletions. Removing a title on one device and then merging a file that
+     * still contains it brings it back. That is inherent to merging snapshots without a change log
+     * and it is in the summary text, because the alternative is somebody discovering it by finding
+     * a series they deleted last week back on their shelf.
+     */
+    @Composable
+    private fun getSyncGroup(): Preference.PreferenceGroup {
+        val context = LocalContext.current
+        val syncPreferences = remember { Injekt.get<SyncPreferences>() }
+        val enabled by syncPreferences.enabled.collectAsState()
+        val folder by syncPreferences.folderUri.collectAsState()
+        val lastSynced by syncPreferences.lastSyncedAt.collectAsState()
+
+        val pickFolder = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocumentTree(),
+        ) { uri ->
+            if (uri == null) return@rememberLauncherForActivityResult
+            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            // Some devices do not implement persistable grants properly and throw here while the
+            // plain URI keeps working — the same swallow Mihon's own storage picker performs, for
+            // the same reason.
+            runCatching { context.contentResolver.takePersistableUriPermission(uri, flags) }
+            syncPreferences.folderUri.set(uri.toString())
+            LibrarySyncJob.setupTask(context)
+        }
+
+        return Preference.PreferenceGroup(
+            title = stringResource(AYMR.strings.pref_sync_title),
+            preferenceItems = persistentListOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = syncPreferences.enabled,
+                    title = stringResource(AYMR.strings.pref_sync_enable),
+                    subtitle = stringResource(AYMR.strings.pref_sync_enable_summary),
+                    onValueChanged = {
+                        syncPreferences.enabled.set(it)
+                        LibrarySyncJob.setupTask(context)
+                        true
+                    },
+                ),
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(AYMR.strings.pref_sync_folder),
+                    subtitle = folder.takeIf { it.isNotBlank() }
+                        ?: stringResource(AYMR.strings.pref_sync_folder_unset),
+                    onClick = { pickFolder.launch(null) },
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = syncPreferences.intervalHours,
+                    entries = SyncPreferences.INTERVAL_CHOICES.associateWith { hours ->
+                        context.stringResource(AYMR.strings.pref_sync_every_hours, hours.toString())
+                    }.toImmutableMap(),
+                    title = stringResource(AYMR.strings.pref_sync_interval),
+                    onValueChanged = {
+                        LibrarySyncJob.setupTask(context, it)
+                        true
+                    },
+                ),
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(AYMR.strings.pref_sync_now),
+                    subtitle = if (lastSynced > 0L) {
+                        context.stringResource(
+                            AYMR.strings.pref_sync_last,
+                            relativeTimeSpanString(lastSynced),
+                        )
+                    } else {
+                        stringResource(AYMR.strings.pref_sync_never)
+                    },
+                    enabled = enabled && folder.isNotBlank(),
+                    onClick = { LibrarySyncJob.startNow(context) },
+                ),
+            ),
+        )
     }
 
     /**

@@ -704,4 +704,14 @@
     <string name="cast_needs_headers">فيديو المصدر ده مش بيفتح غير بترويسات الجهاز المستقبل مش بيبعتها، فمينفعش يتبث دلوقتي.</string>
     <string name="cast_leave_playing">سيبه شغال</string>
     <string name="cast_stop">إيقاف</string>
+    <string name="pref_sync_title">المزامنة بين الأجهزة</string>
+    <string name="pref_sync_enable">زامن مكتبتي</string>
+    <string name="pref_sync_enable_summary">من خلال مجلد أجهزتك بتشاركه أصلًا — نكست كلاود، سينك ثينج، دروب بوكس، أو مجلد شبكة. التقدّم بيتدمج وبيفضل عند الجهاز اللي وصل أبعد. الحذف مش بينتقل: العمل اللي تشيله من جهاز هيرجع من نسخة جهاز تاني.</string>
+    <string name="pref_sync_folder">المجلد المشترك</string>
+    <string name="pref_sync_folder_unset">لسه ما اتحددش</string>
+    <string name="pref_sync_interval">كل قد إيه</string>
+    <string name="pref_sync_every_hours">كل %1$s ساعة</string>
+    <string name="pref_sync_now">زامن دلوقتي</string>
+    <string name="pref_sync_last">آخر مزامنة %1$s</string>
+    <string name="pref_sync_never">لسه ما اتزامنش</string>
 </resources>

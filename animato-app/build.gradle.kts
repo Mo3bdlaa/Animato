@@ -260,6 +260,9 @@ dependencies {
     // The swipe box Mihon's own chapter rows use. Reused rather than reimplemented so a swipe on
     // the updates feed feels identical to a swipe on a title page.
     implementation(libs.swipe)
+    // The library-sync worker. Both halves' backup jobs are WorkManager already; this schedules
+    // beside them rather than inventing a second way to run something periodically.
+    implementation(libs.androidx.work)
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)

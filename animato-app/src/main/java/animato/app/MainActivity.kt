@@ -58,6 +58,7 @@ import animato.app.navigation.AnimatoHomeScreen
 import animato.app.navigation.setContentLens
 import animato.app.onboarding.AnimatoOnboardingScreen
 import animato.app.settings.AniyomiImportScreen
+import animato.app.sync.LibrarySyncJob
 import animato.app.updater.AnimatoAppUpdateChecker
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
@@ -198,6 +199,9 @@ class MainActivity : BaseActivity() {
          * this is the last word rather than a race with one.
          */
         AnimatoBackupCreateJob.setupTask(this)
+        // Beside the backup job for the same reason it is here: WorkManager forgets periodic work
+        // across an app update on some devices, and re-enqueueing on every launch is idempotent.
+        LibrarySyncJob.setupTask(this)
 
         /*
          * Schedule the periodic anime library update, and keep it scheduled.
