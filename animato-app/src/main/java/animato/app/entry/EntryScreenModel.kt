@@ -6,11 +6,15 @@ import androidx.lifecycle.viewModelScope
 import animato.domain.content.ContentType
 import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
+import eu.kanade.domain.entries.anime.model.toSAnime
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
 import eu.kanade.domain.manga.interactor.UpdateManga
+import eu.kanade.domain.manga.model.toSManga
+import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.source.model.SManga
+import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -96,6 +100,13 @@ data class EntryState(
     val genres: List<String> = emptyList(),
     val statusLabel: dev.icerock.moko.resources.StringResource? = null,
     val sourceName: String = "",
+    /**
+     * The entry's page on the source's own site, when it has one.
+     *
+     * Null for a local entry and for a source that is a stub because its extension is gone — in
+     * both cases there is no site to open, and a button that opens nothing is worse than no button.
+     */
+    val webViewUrl: String? = null,
     val coverData: Any? = null,
     val inLibrary: Boolean = false,
     val items: List<EntryItem> = emptyList(),
@@ -192,6 +203,7 @@ class EntryScreenModel(
                 genres = manga.genre.orEmpty(),
                 statusLabel = statusLabel(manga.status),
                 sourceName = source.name,
+                webViewUrl = (source as? HttpSource)?.runCatching { getMangaUrl(manga.toSManga()) }?.getOrNull(),
                 coverData = manga.asMangaCover(),
                 inLibrary = manga.favorite,
                 items = withIOContext {
@@ -239,6 +251,7 @@ class EntryScreenModel(
                 genres = anime.genre.orEmpty(),
                 statusLabel = statusLabel(anime.status),
                 sourceName = source.name,
+                webViewUrl = (source as? AnimeHttpSource)?.runCatching { getAnimeUrl(anime.toSAnime()) }?.getOrNull(),
                 coverData = anime.asAnimeCover(),
                 inLibrary = anime.favorite,
                 items = withIOContext {

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -70,6 +71,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
+import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
@@ -243,6 +245,13 @@ class EntryScreen(
                         onToggleLibrary = screenModel::toggleInLibrary,
                         onResume = { state.nextItem?.let(open) },
                         onRefresh = screenModel::refresh,
+                        onOpenInBrowser = {
+                            state.webViewUrl?.let { url ->
+                                context.startActivity(
+                                    WebViewActivity.newIntent(context, url, sourceId = null, title = state.title),
+                                )
+                            }
+                        },
                     )
                 }
 
@@ -300,6 +309,7 @@ private fun EntryHeader(
     onToggleLibrary: () -> Unit,
     onResume: () -> Unit,
     onRefresh: () -> Unit,
+    onOpenInBrowser: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxWidth().height(BackdropHeight)) {
         AsyncImage(
@@ -422,6 +432,28 @@ private fun EntryHeader(
                 },
             )
         }
+        /*
+         * The site itself, next to the refresh that asks it politely.
+         *
+         * Asked for from a device: "we need a webview button beside reload, because when something
+         * is broken — which is often — opening it in the browser helps." That is the honest reason.
+         * A source can be rate limiting, behind Cloudflare, or serving a page the extension no
+         * longer parses, and in all three the site still works; being able to look is the
+         * difference between a dead entry and a readable one.
+         *
+         * Absent rather than disabled when there is no page — a local entry, or a source whose
+         * extension has been removed and is now a stub.
+         */
+        if (state.webViewUrl != null) {
+            IconButton(onClick = onOpenInBrowser) {
+                Icon(
+                    imageVector = Icons.Outlined.Public,
+                    contentDescription = stringResource(MR.strings.action_open_in_web_view),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
         /*
          * Circular arrows mean refresh, and for one release they opened the original screen.
          *
