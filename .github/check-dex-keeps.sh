@@ -205,3 +205,69 @@ if [ -s "$dangling" ]; then
 fi
 
 echo "OK: every class the APK refers to is either in it or provided by the platform."
+
+# ---------------------------------------------------------------------------------------------
+# The extension API must survive R8 member-complete.
+#
+# The callers of eu.kanade.tachiyomi.animesource, .source and .torrentutils are extension APKs,
+# compiled elsewhere and loaded at runtime. R8 cannot see a single one of those calls, so member
+# shrinking in these packages is deletion by luck — and it happened twice before this check
+# existed: first the interfaces' `$DefaultImpls` bodies (every video list came back empty on a
+# device), then the top-level `sourcePreferences(String)` (extensions read preferences through it
+# at video-selection time). Both were green builds.
+#
+# The consumer rules in the two source-api modules now keep these packages whole. This assertion
+# is the proof: R8's own usage.txt lists everything it removed, so the check is simply that no
+# public or protected member of these packages appears in it. Private and package-private members
+# are fair game — extensions live in their own packages and cannot reach either.
+echo
+echo "Checking that the extension API kept every public member…"
+
+USAGE="animato-app/build/outputs/mapping/release/usage.txt"
+if [ ! -f "$USAGE" ]; then
+    echo "MISSING: $USAGE — R8 did not write its removal record; is minify still on?"
+    exit 1
+fi
+
+# The watched set mirrors what the two source-api modules own — and only what an extension can
+# actually link against:
+#
+#   - The manga API's root package is shared with app-side plumbing (eu.kanade.tachiyomi.source
+#     .anime is this fork's own code, AndroidSourceManager is Mihon's), so the manga patterns are
+#     exact — root-level classes plus model and online — and the managers are excluded by name.
+#   - Method-scoped synthetics — continuation classes and inlined lambdas, `Foo$method$2` and
+#     `Foo$special$$inlined$…` — are excluded: their nested name starts with a lowercase letter,
+#     unlike API nested classes (Companion, State, DefaultImpls), and no other APK can reference
+#     a compiler-internal class of ours. R8 trims their spill fields even under -keep.
+#   - Generated R classes are excluded — no extension references them, each has its own R.
+api_removed="$(
+    awk '
+        /^[^ ]/ {
+            cls = $0
+            is_header = sub(/:$/, "", cls)
+            watching = (cls ~ /^eu\.kanade\.tachiyomi\.(animesource|torrentutils)\./ \
+                || cls ~ /^eu\.kanade\.tachiyomi\.source\.(model|online)\./ \
+                || cls ~ /^eu\.kanade\.tachiyomi\.source\.[^.]+$/) \
+                && cls !~ /\.R(\$[A-Za-z0-9_]+)?$/ \
+                && cls !~ /\$[a-z]/ \
+                && cls !~ /^eu\.kanade\.tachiyomi\.source\.AndroidSourceManager/
+            if (watching && !is_header) print cls " (entire class removed)"
+            next
+        }
+        watching && /^[ \t]+(public|protected) / { print cls ":" $0 }
+    ' "$USAGE"
+)"
+
+if [ -n "$api_removed" ]; then
+    echo
+    echo "R8 removed part of the extension-facing API. No build can prove an extension calls it,"
+    echo "which is exactly why it must all stay:"
+    echo
+    echo "$api_removed" | sed 's/^/  /'
+    echo
+    echo "The keep rules live in anime/source-api/consumer-proguard.pro and"
+    echo "source-api/consumer-proguard.pro — whatever slipped past them needs its pattern widened."
+    exit 1
+fi
+
+echo "OK: the extension API survived with every public and protected member."
