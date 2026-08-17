@@ -39,14 +39,29 @@ object AnimatoImageLoader {
         installed = true
 
         val callFactoryLazy = lazy { Injekt.get<NetworkHelper>().client }
-        val extended = SingletonImageLoader.get(context)
-            .newBuilder()
-            .components {
-                add(AnimeCoverFetcher.AnimeCoverFactory(callFactoryLazy))
-                add(AnimeCoverFetcher.AnimeFactory(callFactoryLazy))
-                add(AnimeCoverKeyer())
-                add(AnimeKeyer())
-            }
+        val current = SingletonImageLoader.get(context)
+
+        /*
+         * Built from the existing registry, not from an empty one.
+         *
+         * `Builder.components { }` does not add to what is there — it constructs a fresh
+         * `ComponentRegistry` and assigns it, discarding whatever the loader already had. So the
+         * first version of this replaced Mihon's manga cover fetcher and keyers with the two anime
+         * ones, and the result was exactly as reported from a device: *"anime covers appeared but
+         * manga covers vanished."* One half fixed by breaking the other, which is worse than the
+         * bug it was fixing, because manga covers had always worked.
+         *
+         * Starting from `current.components` and adding to it cannot lose anything.
+         */
+        val extended = current.newBuilder()
+            .components(
+                current.components.newBuilder()
+                    .add(AnimeCoverFetcher.AnimeCoverFactory(callFactoryLazy))
+                    .add(AnimeCoverFetcher.AnimeFactory(callFactoryLazy))
+                    .add(AnimeCoverKeyer())
+                    .add(AnimeKeyer())
+                    .build(),
+            )
             .build()
 
         SingletonImageLoader.setUnsafe(extended)
