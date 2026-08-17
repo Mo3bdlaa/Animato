@@ -433,26 +433,28 @@ private fun EntryHeader(
     }
 
     /*
-     * The primary gets its own row, and the icons sit under it.
+     * One row: the primary takes what is left after the icons take their 48 dp each.
      *
-     * They shared one row, and on a device the label was already reading "Nothing left — you are
-     * c…". Every icon button is 48 dp of the width the label does not get, so a third one — the
-     * WebView button — would have made a truncation that was already there worse. A sentence that
-     * has to be guessed at is not a button that names what it does, which is the whole point of
-     * naming the next chapter on it.
+     * It has been both ways now. The row was split because the full sentence "Nothing left — you
+     * are caught up" truncated beside the icons; then a device asked for the opposite — *"the
+     * play button is too big, make it smaller so refresh, webview and favorite can sit next to
+     * it"* — and the caught-up sentence was the only label that ever needed the width. So the row
+     * is shared again and that one label got shorter instead, which is the fix the truncation
+     * actually wanted.
      */
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        // One primary, and it names what it will open. "Read" with no number is a button you have to
+        // The primary names what it will open. "Read" with no number is a button you have to
         // press to find out what it does.
         Button(
             onClick = onResume,
             enabled = state.nextItem != null,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.weight(1f),
         ) {
             Icon(imageVector = Icons.Outlined.PlayArrow, contentDescription = null)
             Text(
@@ -461,15 +463,14 @@ private fun EntryHeader(
                         if (state.hasStarted) AYMR.strings.entry_resume else AYMR.strings.entry_start,
                         formatNumber(next.number),
                     )
-                } ?: stringResource(AYMR.strings.quick_nothing_left),
+                } ?: stringResource(AYMR.strings.entry_caught_up),
                 modifier = Modifier.padding(start = MaterialTheme.padding.extraSmall),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // The heart means "in your library". The word favourite never appears anywhere in the app.
