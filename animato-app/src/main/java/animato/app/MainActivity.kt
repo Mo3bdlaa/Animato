@@ -57,6 +57,7 @@ import animato.app.entry.EntryScreen
 import animato.app.extension.ExtensionUpdateCheck
 import animato.app.navigation.AnimatoHomeScreen
 import animato.app.navigation.setContentLens
+import animato.app.nsfw.NsfwDefaults
 import animato.app.onboarding.AnimatoOnboardingScreen
 import animato.app.settings.AniyomiImportScreen
 import animato.app.sync.LibrarySyncJob
@@ -207,6 +208,11 @@ class MainActivity : BaseActivity() {
         // Beside the backup job for the same reason it is here: WorkManager forgets periodic work
         // across an app update on some devices, and re-enqueueing on every launch is idempotent.
         LibrarySyncJob.setupTask(this)
+
+        // NSFW hidden unless somebody chose otherwise, and NSFW extensions incognito by default.
+        // See NsfwDefaults for why both are seeded data rather than changed defaults.
+        NsfwDefaults.seedHiddenByDefault()
+        lifecycleScope.launch { NsfwDefaults.seedIncognitoForNsfw() }
 
         /*
          * Schedule the periodic anime library update, and keep it scheduled.
