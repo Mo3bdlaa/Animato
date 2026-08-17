@@ -1,7 +1,9 @@
 package animato.app.updates
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +21,8 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RemoveDone
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,11 +32,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -56,8 +61,6 @@ import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import kotlinx.coroutines.launch
-import me.saket.swipe.SwipeAction
-import me.saket.swipe.SwipeableActionsBox
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -209,17 +212,15 @@ private fun DayHeader(date: LocalDate) {
  * Those are two different intentions and a feed that only offers the first makes the second a
  * three-step detour.
  *
- * ## The two swipes
+ * ## Hold, not swipe
  *
- * Leading marks it opened, trailing downloads it — the two things anybody does to a feed row
- * without wanting to look at it yet. Both are the same `SwipeableActionsBox` Mihon's own chapter
- * rows use, so the gesture feels identical wherever it is performed rather than being a second
- * dialect of the same idea.
- *
- * The action backgrounds are the surface colour and not blue. A swipe is a gesture in progress and
- * not a state that has been reached, and the brand spends blue on things that *are* — progress,
- * active tabs, the one download that is running.
+ * The row actions used to be two swipes, and a device asked for a hold instead — with the main
+ * tabs now living on a horizontal swipe, a row that also moves sideways is two gestures fighting
+ * over one axis. A long press opens the same two actions the swipes carried: download, and mark
+ * as opened — which is also how a row is dismissed, because the feed now shows only what is
+ * still unopened.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UpdateRow(
     item: UpdateItem,
@@ -228,32 +229,14 @@ private fun UpdateRow(
     onDownload: () -> Unit,
     onToggleViewed: () -> Unit,
 ) {
-    val background = MaterialTheme.colorScheme.surfaceContainerHighest
-    val markAction = swipeAction(
-        icon = if (item.isNew) Icons.Outlined.Done else Icons.Outlined.RemoveDone,
-        background = background,
-        // Undo runs the animation backwards, which is what says "you have just reversed something"
-        // rather than "you have done a second thing".
-        isUndo = !item.isNew,
-        onSwipe = onToggleViewed,
-    )
-    val downloadAction = swipeAction(
-        icon = Icons.Outlined.Download,
-        background = background,
-        onSwipe = onDownload,
-    )
+    var menuOpen by remember { mutableStateOf(false) }
 
-    SwipeableActionsBox(
-        modifier = Modifier.clipToBounds(),
-        startActions = listOf(markAction),
-        endActions = listOf(downloadAction),
-        backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceContainerLowest,
-    ) {
+    Box {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
-                .tvClickable(onClick = onClick)
+                .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true })
                 .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
@@ -291,6 +274,25 @@ private fun UpdateRow(
                 )
             }
         }
+
+        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(MR.strings.manga_download)) },
+                leadingIcon = { Icon(Icons.Outlined.Download, contentDescription = null) },
+                onClick = {
+                    menuOpen = false
+                    onDownload()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(AYMR.strings.updates_mark_opened)) },
+                leadingIcon = { Icon(Icons.Outlined.Done, contentDescription = null) },
+                onClick = {
+                    menuOpen = false
+                    onToggleViewed()
+                },
+            )
+        }
     }
 }
 
@@ -314,31 +316,5 @@ private fun NothingNew(
     )
 }
 
-/**
- * One swipe action, drawn the way Mihon draws its own.
- *
- * A local copy because theirs is `private` to their chapter row. Sixteen lines is a cheaper price
- * than a swipe on this feed looking subtly unlike a swipe two screens away.
- */
-private fun swipeAction(
-    onSwipe: () -> Unit,
-    icon: ImageVector,
-    background: Color,
-    isUndo: Boolean = false,
-): SwipeAction = SwipeAction(
-    icon = {
-        Icon(
-            modifier = Modifier.padding(SwipeIconPadding),
-            imageVector = icon,
-            tint = contentColorFor(background),
-            contentDescription = null,
-        )
-    },
-    background = background,
-    onSwipe = onSwipe,
-    isUndo = isUndo,
-)
-
-private val SwipeIconPadding = 16.dp
 private val ThumbSize = 48.dp
 private val ThumbRadius = 12.dp

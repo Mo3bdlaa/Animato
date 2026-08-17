@@ -121,7 +121,12 @@ class UpdatesScreenModel(
             val items = buildList {
                 if (lens.includesManga) addAll(mangaUpdates.map { it.toUpdateItem() })
                 if (lens.includesAnime) addAll(animeUpdates.map { it.toUpdateItem() })
-            }.sortedByDescending { it.fetchedAt }
+            }
+                .sortedByDescending { it.fetchedAt }
+                // Only what is still unopened. The feed used to keep read rows around as a log,
+                // and a device asked for the other behaviour: marking something opened is how a
+                // row is dismissed, so the feed is a to-do list rather than a diary.
+                .filter { it.isNew }
 
             UpdatesState(isLoading = false, lens = lens, days = items.groupIntoDays())
         }
