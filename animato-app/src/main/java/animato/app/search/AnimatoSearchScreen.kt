@@ -108,11 +108,12 @@ class AnimatoSearchScreen(
         val screenModel = viewModel { SearchScreenModel() }
         val state by screenModel.state.collectAsStateWithLifecycle()
 
+        // Re-fires every time this screen returns to the top — Voyager recomposes it from scratch —
+        // which is why the search itself is seeded once in the model rather than run from here.
         LaunchedEffect(initialQuery, restrictTo) {
             screenModel.restrictTo(restrictTo)
             if (initialQuery.isNotBlank()) {
-                screenModel.onQueryChange(initialQuery)
-                screenModel.search(initialQuery)
+                screenModel.seedSearch(initialQuery)
             }
         }
 

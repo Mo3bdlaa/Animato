@@ -266,6 +266,26 @@ class SearchScreenModel(
         }
     }
 
+    private var seeded = false
+
+    /**
+     * Runs the query a screen was *opened with*, once per model — a seed, not a standing
+     * instruction.
+     *
+     * The screen calls this from a `LaunchedEffect`, and Voyager recomposes a screen from scratch
+     * every time it comes back to the top, so the effect fires again on every return. From a
+     * device: search from a trending title, open a result, come back — *"it searches again instead
+     * of continuing or just showing the results."* This model outlives that round trip, so the
+     * results are all still here; re-running the seed threw them away and, worse, would clobber
+     * any different query typed in the meantime with the one the screen was opened with.
+     */
+    fun seedSearch(query: String) {
+        if (seeded) return
+        seeded = true
+        onQueryChange(query)
+        search(query)
+    }
+
     /**
      * Ask every source the lens admits.
      *
