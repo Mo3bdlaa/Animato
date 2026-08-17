@@ -63,10 +63,12 @@ import animato.anime.player.PlayerLauncher
 import animato.domain.content.ContentType
 import animato.ui.components.Pill
 import animato.ui.entries.ItemCover
+import animato.ui.theme.LocalAnimatoPalette
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
@@ -264,21 +266,40 @@ class EntryScreen(
                 }
 
                 item(key = "items-header") {
-                    Text(
-                        text = stringResource(
-                            when (contentType) {
-                                ContentType.MANGA -> AYMR.strings.entry_chapters_count
-                                ContentType.ANIME -> AYMR.strings.entry_episodes_count
-                            },
-                            state.items.size.toString(),
-                        ),
+                    Column(
                         modifier = Modifier.padding(
                             horizontal = MaterialTheme.padding.medium,
                             vertical = MaterialTheme.padding.small,
                         ),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                    ) {
+                        Text(
+                            text = stringResource(
+                                when (contentType) {
+                                    ContentType.MANGA -> AYMR.strings.entry_chapters_count
+                                    ContentType.ANIME -> AYMR.strings.entry_episodes_count
+                                },
+                                state.items.size.toString(),
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        // A gap in the numbering, said out loud. A list that jumps from 40 to 71
+                        // without comment reads as a list somebody has already read the middle of.
+                        if (state.missingCount > 0) {
+                            Text(
+                                text = pluralStringResource(
+                                    when (contentType) {
+                                        ContentType.MANGA -> MR.plurals.missing_chapters
+                                        ContentType.ANIME -> AYMR.plurals.missing_items
+                                    },
+                                    state.missingCount,
+                                    state.missingCount,
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = LocalAnimatoPalette.current.warning,
+                            )
+                        }
+                    }
                 }
 
                 items(items = state.items, key = { it.id }) { item ->
@@ -587,6 +608,9 @@ private fun ItemRow(
             )
             Text(
                 text = listOfNotNull(
+                    // When it was published, which the old screen showed and this one dropped. It
+                    // is the only thing on the row that says whether a source has stopped updating.
+                    item.dateUpload.takeIf { it > 0 }?.let { relativeDateText(it) },
                     item.scanlator?.takeIf { it.isNotBlank() },
                     stringResource(
                         when (contentType) {

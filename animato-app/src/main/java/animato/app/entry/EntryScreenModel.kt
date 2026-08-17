@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.domain.content.ContentType
 import eu.kanade.domain.chapter.interactor.SetReadStatus
+import eu.kanade.domain.chapter.model.applyFilters
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.toSAnime
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
+import eu.kanade.domain.items.episode.model.applyFilters
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.toSManga
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
@@ -31,6 +33,7 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.chapter.interactor.GetChapter
 import tachiyomi.domain.chapter.interactor.UpdateChapter
 import tachiyomi.domain.chapter.model.ChapterUpdate
+import tachiyomi.domain.chapter.service.missingChaptersCount
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.GetAnimeWithEpisodesAndSeasons
 import tachiyomi.domain.entries.anime.model.AnimeUpdate
@@ -38,6 +41,7 @@ import tachiyomi.domain.entries.anime.model.asAnimeCover
 import tachiyomi.domain.items.episode.interactor.GetEpisode
 import tachiyomi.domain.items.episode.interactor.UpdateEpisode
 import tachiyomi.domain.items.episode.model.EpisodeUpdate
+import tachiyomi.domain.items.episode.service.missingEntriesCount
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.interactor.GetMangaWithChapters
 import tachiyomi.domain.manga.model.MangaUpdate
@@ -110,14 +114,31 @@ data class EntryState(
     val coverData: Any? = null,
     val inLibrary: Boolean = false,
     val items: List<EntryItem> = emptyList(),
+    /**
+     * Whether [items] runs newest-first, which is the entry's own setting rather than a constant.
+     *
+     * Carried because it decides which end of the list *resume* means: descending, the next unread
+     * is the last one that matches; ascending, the first. Getting it from the list would need the
+     * list to be trusted to be sorted, which is exactly what was not true.
+     */
+    val sortDescending: Boolean = true,
+    /** Numbers the source skipped or a filter removed, counted the way both halves already count. */
+    val missingCount: Int = 0,
     val trackerCount: Int = 0,
     val isRefreshing: Boolean = false,
     /** What the last refresh found, held until the screen shows it once. */
     val refreshResult: RefreshResult? = null,
 ) {
 
-    /** The one the primary button resumes. First unviewed in list order, not lowest number. */
-    val nextItem: EntryItem? get() = items.lastOrNull { !it.viewed }
+    /**
+     * The one the primary button resumes: the earliest unviewed item, whichever way the list runs.
+     *
+     * It used to be `items.lastOrNull { !viewed }` unconditionally, which is right only for a
+     * newest-first list — and the list was in no particular order at all, so on an ascending entry
+     * this offered to resume from the newest chapter instead of the oldest unread one.
+     */
+    val nextItem: EntryItem?
+        get() = if (sortDescending) items.lastOrNull { !it.viewed } else items.firstOrNull { !it.viewed }
 
     val viewedCount: Int get() = items.count { it.viewed }
 
@@ -187,11 +208,15 @@ class EntryScreenModel(
 
     private suspend fun observeManga(trackRepository: TrackRepository) {
         combine(
-            getMangaWithChapters.subscribe(entryId),
+            // With the scanlator filter, which the default omits: a scanlator excluded in the
+            // chapter settings was still being listed here.
+            getMangaWithChapters.subscribe(entryId, applyScanlatorFilter = true),
             trackRepository.getTracksByMangaIdAsFlow(entryId).map { it.size },
             downloadManager.queueState.map { },
         ) { (manga, chapters), trackers, _ ->
             val source = sourceManager.getOrStub(manga.source)
+            // The entry's own sort and filters, which this page applied none of. See the class note.
+            val ordered = withIOContext { chapters.applyFilters(manga, downloadManager) }
             EntryState(
                 entryId = entryId,
                 contentType = ContentType.MANGA,
@@ -206,8 +231,10 @@ class EntryScreenModel(
                 webViewUrl = (source as? HttpSource)?.runCatching { getMangaUrl(manga.toSManga()) }?.getOrNull(),
                 coverData = manga.asMangaCover(),
                 inLibrary = manga.favorite,
+                sortDescending = manga.sortDescending(),
+                missingCount = ordered.map { it.chapterNumber }.missingChaptersCount(),
                 items = withIOContext {
-                    chapters.map { chapter ->
+                    ordered.map { chapter ->
                         EntryItem(
                             id = chapter.id,
                             name = chapter.name,
@@ -240,6 +267,7 @@ class EntryScreenModel(
             animeDownloadManager.queueState.map { },
         ) { (anime, episodes, _), trackers, _ ->
             val source = animeSourceManager.getOrStub(anime.source)
+            val ordered = withIOContext { episodes.applyFilters(anime, animeDownloadManager) }
             EntryState(
                 entryId = entryId,
                 contentType = ContentType.ANIME,
@@ -254,8 +282,10 @@ class EntryScreenModel(
                 webViewUrl = (source as? AnimeHttpSource)?.runCatching { getAnimeUrl(anime.toSAnime()) }?.getOrNull(),
                 coverData = anime.asAnimeCover(),
                 inLibrary = anime.favorite,
+                sortDescending = anime.sortDescending(),
+                missingCount = ordered.map { it.episodeNumber }.missingEntriesCount(),
                 items = withIOContext {
-                    episodes.map { episode ->
+                    ordered.map { episode ->
                         EntryItem(
                             id = episode.id,
                             name = episode.name,
