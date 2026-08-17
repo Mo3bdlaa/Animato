@@ -2,6 +2,9 @@ package animato.app.extension
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -48,8 +52,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -71,6 +78,8 @@ import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
+import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -104,6 +113,16 @@ class ExtensionsScreen : Screen() {
         val state by screenModel.state.collectAsStateWithLifecycle()
         var segment by rememberSaveable { mutableStateOf(ExtensionSegment.INSTALLED) }
         var languagesOpen by rememberSaveable { mutableStateOf(false) }
+
+        // The merge a device asked for: an installed extension is somewhere you can GO, not just
+        // a thing you manage. One source opens straight into its browse screen; several open a
+        // picker first, because ten languages of one site are ten different sources.
+        val openSource: (ExtensionRow, RowSource) -> Unit = { row, source ->
+            when (row.contentType) {
+                ContentType.MANGA -> navigator.push(BrowseSourceScreen(source.id, null))
+                ContentType.ANIME -> navigator.push(BrowseAnimeSourceScreen(source.id, null))
+            }
+        }
 
         if (languagesOpen) {
             LanguageSheet(
@@ -157,7 +176,30 @@ class ExtensionsScreen : Screen() {
                 return@Scaffold
             }
 
-            LazyColumn(contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.medium)) {
+            // The two segments are neighbours, so the horizontal swipe that walks the main tabs
+            // walks them too — same mechanics: only a drag no child claimed arrives here.
+            val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+            val swipeThreshold = with(LocalDensity.current) { 96.dp.toPx() }
+            var dragTotal by remember { mutableFloatStateOf(0f) }
+
+            LazyColumn(
+                contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.medium),
+                modifier = Modifier.draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta -> dragTotal += delta },
+                    onDragStarted = { dragTotal = 0f },
+                    onDragStopped = { velocity ->
+                        val toStart = if (isRtl) -dragTotal else dragTotal
+                        val toStartVelocity = if (isRtl) -velocity else velocity
+                        when {
+                            toStart < -swipeThreshold || toStartVelocity < -1100f ->
+                                segment = ExtensionSegment.AVAILABLE
+                            toStart > swipeThreshold || toStartVelocity > 1100f ->
+                                segment = ExtensionSegment.INSTALLED
+                        }
+                    },
+                ),
+            ) {
                 item(key = "repositories") {
                     RepositoriesRow(
                         lens = state.lens,
@@ -177,7 +219,7 @@ class ExtensionsScreen : Screen() {
                                 ShipsEmptyState(onBrowse = { segment = ExtensionSegment.AVAILABLE })
                             }
                         } else {
-                            extensionRows(state.installed, screenModel)
+                            extensionRows(state.installed, screenModel, openSource)
                         }
 
                     ExtensionSegment.AVAILABLE ->
@@ -195,7 +237,7 @@ class ExtensionsScreen : Screen() {
                         } else {
                             state.available.forEach { group ->
                                 item(key = "lang-${group.languageCode}") { LanguageHeader(group.languageName) }
-                                extensionRows(group.rows, screenModel)
+                                extensionRows(group.rows, screenModel, openSource)
                             }
                         }
                 }
@@ -212,6 +254,7 @@ private enum class ExtensionSegment(val labelRes: StringResource) {
 private fun LazyListScope.extensionRows(
     rows: List<ExtensionRow>,
     screenModel: ExtensionsScreenModel,
+    onOpenSource: (ExtensionRow, RowSource) -> Unit,
 ) {
     items(items = rows, key = { it.key }) { row ->
         ExtensionListItem(
@@ -221,6 +264,7 @@ private fun LazyListScope.extensionRows(
             onUninstall = { screenModel.uninstall(row) },
             onTrust = { screenModel.trust(row) },
             onCancel = { screenModel.cancel(row) },
+            onOpenSource = { source -> onOpenSource(row, source) },
         )
     }
 }
@@ -445,16 +489,40 @@ private fun ExtensionListItem(
     onUninstall: () -> Unit,
     onTrust: () -> Unit,
     onCancel: () -> Unit,
+    onOpenSource: (RowSource) -> Unit,
 ) {
     val palette = LocalAnimatoPalette.current
     var menuOpen by remember { mutableStateOf(false) }
+    var sourcesOpen by remember { mutableStateOf(false) }
 
-    ListItem(
-        leadingContent = { ExtensionIcon(icon = row.icon) },
-        headlineContent = {
-            Text(text = row.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        },
-        supportingContent = {
+    Box {
+        if (sourcesOpen) {
+            DropdownMenu(expanded = true, onDismissRequest = { sourcesOpen = false }) {
+                row.sources.forEach { source ->
+                    DropdownMenuItem(
+                        text = { Text("${source.name} · ${source.lang.uppercase()}") },
+                        onClick = {
+                            sourcesOpen = false
+                            onOpenSource(source)
+                        },
+                    )
+                }
+            }
+        }
+
+        ListItem(
+            modifier = Modifier.clickable(enabled = row.isInstalled && row.sources.isNotEmpty()) {
+                if (row.sources.size == 1) {
+                    onOpenSource(row.sources.first())
+                } else {
+                    sourcesOpen = true
+                }
+            },
+            leadingContent = { ExtensionIcon(icon = row.icon) },
+            headlineContent = {
+                Text(text = row.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            },
+            supportingContent = {
             /*
              * A flow, not a row, because a row here crushes its own children.
              *
@@ -467,56 +535,56 @@ private fun ExtensionListItem(
              * carrying a variable number of marks has to be allowed a second line; the alternative
              * is a row that silently destroys the last thing added to it, every time.
              */
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                itemVerticalAlignment = Alignment.CenterVertically,
-            ) {
-                // On every row, whatever the lens says — this screen is the answer to "which of
-                // these is anime", so the answer cannot be conditional. It is the one exception to
-                // the rule that narrowing the lens removes type marks.
-                Pill(
-                    text = stringResource(
-                        when (row.contentType) {
-                            ContentType.MANGA -> AYMR.strings.label_manga
-                            ContentType.ANIME -> AYMR.strings.label_anime
-                        },
-                    ),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = listOf(row.lang.uppercase(), row.versionName)
-                        .filter { it.isNotBlank() }
-                        .joinToString(" · "),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (row.hasUpdate) {
-                    // Warning rather than blue: an available update is attention, not novelty, and
-                    // blue already means "active" everywhere else in the app.
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // On every row, whatever the lens says — this screen is the answer to "which of
+                    // these is anime", so the answer cannot be conditional. It is the one exception to
+                    // the rule that narrowing the lens removes type marks.
                     Pill(
-                        text = stringResource(MR.strings.ext_update),
-                        containerColor = palette.warning,
-                        contentColor = palette.ink,
+                        text = stringResource(
+                            when (row.contentType) {
+                                ContentType.MANGA -> AYMR.strings.label_manga
+                                ContentType.ANIME -> AYMR.strings.label_anime
+                            },
+                        ),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
                     )
-                }
-                if (row.isObsolete) {
-                    Pill(
-                        text = stringResource(MR.strings.ext_obsolete),
-                        containerColor = palette.error,
-                        contentColor = palette.ink,
-                    )
-                }
-                if (row.isNsfw) {
-                    // In words. Never an icon and never colour alone — someone has to be able to
-                    // read what this row is rather than decode it.
                     Text(
-                        text = stringResource(AYMR.strings.label_nsfw),
-                        color = palette.warning,
-                        fontWeight = FontWeight.SemiBold,
+                        text = listOf(row.lang.uppercase(), row.versionName)
+                            .filter { it.isNotBlank() }
+                            .joinToString(" · "),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
-                }
+                    if (row.hasUpdate) {
+                        // Warning rather than blue: an available update is attention, not novelty, and
+                        // blue already means "active" everywhere else in the app.
+                        Pill(
+                            text = stringResource(MR.strings.ext_update),
+                            containerColor = palette.warning,
+                            contentColor = palette.ink,
+                        )
+                    }
+                    if (row.isObsolete) {
+                        Pill(
+                            text = stringResource(MR.strings.ext_obsolete),
+                            containerColor = palette.error,
+                            contentColor = palette.ink,
+                        )
+                    }
+                    if (row.isNsfw) {
+                        // In words. Never an icon and never colour alone — someone has to be able to
+                        // read what this row is rather than decode it.
+                        Text(
+                            text = stringResource(AYMR.strings.label_nsfw),
+                            color = palette.warning,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                 /*
                  * The reason, not just the fact. The design sheet's rule is that a failure states
                  * one, and "Install failed" states none — it is the same shrug as an empty screen
@@ -527,27 +595,27 @@ private fun ExtensionListItem(
                  * instead. Everything else keeps the plain wording rather than inventing a
                  * diagnosis nobody checked.
                  */
-                if (row.installStep == InstallStep.Error) {
-                    Text(
-                        text = stringResource(
-                            when (row.failure) {
-                                InstallFailure.DIFFERENT_REPOSITORY ->
-                                    AYMR.strings.ext_install_failed_repo
-                                else -> AYMR.strings.ext_install_failed
-                            },
-                        ),
-                        color = palette.error,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
-        },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                when {
-                    row.installStep.isOngoing() -> TextButton(onClick = onCancel) {
-                        Text(stringResource(MR.strings.action_cancel))
+                    if (row.installStep == InstallStep.Error) {
+                        Text(
+                            text = stringResource(
+                                when (row.failure) {
+                                    InstallFailure.DIFFERENT_REPOSITORY ->
+                                        AYMR.strings.ext_install_failed_repo
+                                    else -> AYMR.strings.ext_install_failed
+                                },
+                            ),
+                            color = palette.error,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
+                }
+            },
+            trailingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    when {
+                        row.installStep.isOngoing() -> TextButton(onClick = onCancel) {
+                            Text(stringResource(MR.strings.action_cancel))
+                        }
                     /*
                      * A failed install said nothing at all, and that is how it was reported: "I
                      * update it and it still says update, no matter how many times." Which is
@@ -557,46 +625,47 @@ private fun ExtensionListItem(
                      * Before the trust and update cases, so a failure is not hidden behind the very
                      * button that just failed.
                      */
-                    row.installStep == InstallStep.Error -> OutlinedButton(
-                        onClick = if (row.isInstalled) onUpdate else onInstall,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = LocalAnimatoPalette.current.error,
-                        ),
-                    ) {
-                        Text(stringResource(MR.strings.action_retry))
-                    }
-                    row.isUntrusted -> OutlinedButton(onClick = onTrust) {
-                        Text(stringResource(MR.strings.ext_trust))
-                    }
-                    row.hasUpdate -> OutlinedButton(onClick = onUpdate) {
-                        Text(stringResource(MR.strings.ext_update))
-                    }
-                    !row.isInstalled -> OutlinedButton(onClick = onInstall) {
-                        Text(stringResource(MR.strings.ext_install))
-                    }
-                }
-                if (row.isInstalled) {
-                    Box {
-                        IconButton(onClick = { menuOpen = true }) {
-                            Icon(
-                                imageVector = Icons.Outlined.MoreVert,
-                                contentDescription = stringResource(MR.strings.action_menu_overflow_description),
-                            )
+                        row.installStep == InstallStep.Error -> OutlinedButton(
+                            onClick = if (row.isInstalled) onUpdate else onInstall,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = LocalAnimatoPalette.current.error,
+                            ),
+                        ) {
+                            Text(stringResource(MR.strings.action_retry))
                         }
-                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(MR.strings.ext_uninstall)) },
-                                onClick = {
-                                    menuOpen = false
-                                    onUninstall()
-                                },
-                            )
+                        row.isUntrusted -> OutlinedButton(onClick = onTrust) {
+                            Text(stringResource(MR.strings.ext_trust))
+                        }
+                        row.hasUpdate -> OutlinedButton(onClick = onUpdate) {
+                            Text(stringResource(MR.strings.ext_update))
+                        }
+                        !row.isInstalled -> OutlinedButton(onClick = onInstall) {
+                            Text(stringResource(MR.strings.ext_install))
                         }
                     }
+                    if (row.isInstalled) {
+                        Box {
+                            IconButton(onClick = { menuOpen = true }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.MoreVert,
+                                    contentDescription = stringResource(MR.strings.action_menu_overflow_description),
+                                )
+                            }
+                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(MR.strings.ext_uninstall)) },
+                                    onClick = {
+                                        menuOpen = false
+                                        onUninstall()
+                                    },
+                                )
+                            }
+                        }
+                    }
                 }
-            }
-        },
-    )
+            },
+        )
+    }
 }
 
 /**

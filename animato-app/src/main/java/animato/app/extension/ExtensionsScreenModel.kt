@@ -94,6 +94,17 @@ data class InstallActivity(
     val failure: InstallFailure? = null,
 )
 
+/**
+ * One source an installed extension serves, just enough of it to open: a browse screen needs the
+ * id, and a picker between several needs a name and a language to say which is which.
+ */
+@Immutable
+data class RowSource(
+    val id: Long,
+    val name: String,
+    val lang: String,
+)
+
 /** One row on the screen, whichever half it came from. */
 @Immutable
 data class ExtensionRow(
@@ -117,6 +128,8 @@ data class ExtensionRow(
      */
     val icon: Any?,
     val handle: ExtensionHandle,
+    /** Installed rows only: what tapping the row can open. Empty before installing. */
+    val sources: List<RowSource> = emptyList(),
 ) {
     val contentType: ContentType get() = handle.contentType
 }
@@ -562,6 +575,9 @@ private fun Extension.toRow(steps: Map<String, InstallActivity>, onDevice: Insta
     failure = steps[pkgName]?.failure,
     icon = extensionIcon(),
     handle = ExtensionHandle.Manga(this),
+    sources = (this as? Extension.Installed)?.sources
+        ?.map { RowSource(id = it.id, name = it.name, lang = it.lang) }
+        .orEmpty(),
 )
 
 /**
@@ -602,6 +618,9 @@ private fun AnimeExtension.toRow(steps: Map<String, InstallActivity>, onDevice: 
     failure = steps[pkgName]?.failure,
     icon = extensionIcon(),
     handle = ExtensionHandle.Anime(this),
+    sources = (this as? AnimeExtension.Installed)?.sources
+        ?.map { RowSource(id = it.id, name = it.name, lang = it.lang) }
+        .orEmpty(),
 )
 
 private fun ExtensionRow.matches(query: String?): Boolean {
