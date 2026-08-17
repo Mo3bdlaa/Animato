@@ -3,6 +3,7 @@ package animato.app.entry
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.player.describeForUser
 import animato.domain.content.ContentType
 import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.domain.chapter.model.applyFilters
@@ -399,7 +400,14 @@ class EntryScreenModel(
                         // The entry vanished from the database while the refresh was in flight,
                         // which is what removing it from another screen looks like from here.
                         result == null -> null
-                        result.isFailure -> RefreshResult.Failed(result.exceptionOrNull()?.message)
+                        // Known failure shapes get said in words — an uninstalled source's
+                        // exception carries no message at all, and an extension that crashed
+                        // internally carries R8's mangled null-check text. The source's own words
+                        // otherwise: a 403 and a timeout are different facts and only the source
+                        // knows which happened.
+                        result.isFailure -> result.exceptionOrNull().let { e ->
+                            RefreshResult.Failed(e?.describeForUser() ?: e?.message)
+                        }
                         result.getOrDefault(0) > 0 -> RefreshResult.Found(result.getOrDefault(0))
                         else -> RefreshResult.UpToDate
                     },

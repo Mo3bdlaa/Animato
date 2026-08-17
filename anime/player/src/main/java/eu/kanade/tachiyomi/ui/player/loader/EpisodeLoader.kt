@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.player.loader
 
 import animato.anime.player.HosterState
+import animato.anime.player.describeForUser
 import eu.kanade.domain.items.episode.model.toSEpisode
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Hoster
@@ -204,7 +205,7 @@ class EpisodeLoader {
                 // This catch is the only place that ever sees why a hoster failed. Swallowing it
                 // silently is how "no videos, from every source, on a device" stays a mystery.
                 logcat(LogPriority.ERROR, e) { "Hoster '${hoster.hosterName}' failed to load videos" }
-                HosterState.Error(hoster.hosterName, e.message ?: e.javaClass.simpleName)
+                HosterState.Error(hoster.hosterName, e.describeForUser() ?: e.message ?: e.javaClass.simpleName)
             }
         }
     }
