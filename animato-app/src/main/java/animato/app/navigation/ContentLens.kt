@@ -1,9 +1,12 @@
 package animato.app.navigation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.DropdownMenu
@@ -18,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -87,10 +91,15 @@ fun contentTypeOrDefault(fallback: ContentType = ContentType.MANGA): ContentType
     }
 
 /**
- * The lens button: one icon that is its own state, and a menu behind it.
+ * The lens button: the glyph, a quiet word beside it, and a menu behind them.
  *
  * Sits in the top bar of every screen that lists content — home, library, discover, updates and
  * search — in the same slot each time, so the control is learned once.
+ *
+ * The label arrived exactly the way [LensGlyph]'s note predicted it would: the glyph alone did
+ * not read on a device — *"show inside it All or Ani or Man … just a mention, not too much
+ * contrast."* Inside the circle a word is a smudge at 24 dp, so it sits beside it, in the
+ * variant colour, small — a caption for the shape rather than a second control.
  */
 @Composable
 fun LensButton(modifier: Modifier = Modifier) {
@@ -98,8 +107,21 @@ fun LensButton(modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
-        IconButton(onClick = { expanded = true }) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(percent = 50))
+                .clickable { expanded = true }
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             LensGlyph(lens = lens)
+            Text(
+                text = stringResource(lens.shortLabelRes()),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                modifier = Modifier.padding(start = 4.dp),
+            )
         }
 
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -248,4 +270,11 @@ private fun ContentFilter.labelRes() = when (this) {
     ContentFilter.ALL -> AYMR.strings.lens_all
     ContentFilter.ANIME -> AYMR.strings.label_anime
     ContentFilter.MANGA -> AYMR.strings.label_manga
+}
+
+/** The caption beside the glyph. Short on purpose: it is a mention, not a heading. */
+private fun ContentFilter.shortLabelRes() = when (this) {
+    ContentFilter.ALL -> AYMR.strings.lens_short_all
+    ContentFilter.ANIME -> AYMR.strings.lens_short_anime
+    ContentFilter.MANGA -> AYMR.strings.lens_short_manga
 }
