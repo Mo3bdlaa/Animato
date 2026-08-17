@@ -1,7 +1,9 @@
 package animato.app.extension
 
 import android.app.Application
+import android.content.Context
 import androidx.compose.runtime.Immutable
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.domain.content.ContentFilter
@@ -183,25 +185,26 @@ class ExtensionsScreenModel(
                 contentPreferences.contentFilter.changes(),
                 state.map { it.searchQuery }.distinctUntilChanged(),
             ) { manga, anime, steps, lens, query ->
+                val onDevice = InstalledVersions(context)
                 val installed = buildList {
                     if (lens.includesManga) {
                         // Updates are listed among the rest rather than in a pending section of
                         // their own. The Update pill on the row already says which ones, and a
                         // section that empties itself moves every row below it on each install.
-                        addAll((manga.updates + manga.installed).map { it.toRow(steps) })
-                        addAll(manga.untrusted.map { it.toRow(steps) })
+                        addAll((manga.updates + manga.installed).map { it.toRow(steps, onDevice) })
+                        addAll(manga.untrusted.map { it.toRow(steps, onDevice) })
                     }
                     if (lens.includesAnime) {
-                        addAll((anime.updates + anime.installed).map { it.toRow(steps) })
-                        addAll(anime.untrusted.map { it.toRow(steps) })
+                        addAll((anime.updates + anime.installed).map { it.toRow(steps, onDevice) })
+                        addAll(anime.untrusted.map { it.toRow(steps, onDevice) })
                     }
                 }
                     .filter { it.matches(query) }
                     .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 
                 val available = buildList {
-                    if (lens.includesManga) addAll(manga.available.map { it.toRow(steps) })
-                    if (lens.includesAnime) addAll(anime.available.map { it.toRow(steps) })
+                    if (lens.includesManga) addAll(manga.available.map { it.toRow(steps, onDevice) })
+                    if (lens.includesAnime) addAll(anime.available.map { it.toRow(steps, onDevice) })
                 }
                     .filter { it.matches(query) }
                     .groupBy { it.lang }
@@ -386,13 +389,58 @@ class ExtensionsScreenModel(
     }
 }
 
-private fun Extension.toRow(steps: Map<String, InstallStep>) = ExtensionRow(
+/**
+ * What is actually installed, asked of the system rather than of a cache.
+ *
+ * ## The bug
+ *
+ * From a device: *"every time I update the extensions they keep telling me they need an update, as
+ * if I never did."*
+ *
+ * `hasUpdate` is a field on the manager's in-memory record of an installed extension, and that
+ * record is only replaced when a broadcast about the package arrives. Between the update landing
+ * and that broadcast being received — or if it is never received, which is what a phone that keeps
+ * offering the same update is telling you — the record still holds the *old* version code, that
+ * version is still behind the repository's, and the row still says Update. Pressing it installs the
+ * same version again and changes nothing, forever.
+ *
+ * The manager exposes no way to reload that record, and it is Mihon's file. So this asks the package
+ * manager what is on the phone right now, and only believes `hasUpdate` when the installed package
+ * really is no newer than the record claims.
+ *
+ * It can only ever *withdraw* an update, never invent one. Being told about an update that does not
+ * exist is the fault being fixed; inventing one would be the same fault with a new cause.
+ *
+ * A package that is not found is a private extension — those live in the app's own data directory
+ * and are not packages at all — and there the record is the only answer there is, so it stands.
+ *
+ * One instance per rebuild of the list, so a package is asked about once however many rows name it.
+ */
+private class InstalledVersions(context: Context) {
+
+    private val packageManager = context.packageManager
+    private val cache = mutableMapOf<String, Long?>()
+
+    private fun versionOf(pkgName: String): Long? = cache.getOrPut(pkgName) {
+        runCatching {
+            PackageInfoCompat.getLongVersionCode(packageManager.getPackageInfo(pkgName, 0))
+        }.getOrNull()
+    }
+
+    fun stillOlderThan(extension: Extension): Boolean =
+        (versionOf(extension.pkgName) ?: return true) <= extension.versionCode
+
+    fun stillOlderThan(extension: AnimeExtension): Boolean =
+        (versionOf(extension.pkgName) ?: return true) <= extension.versionCode
+}
+
+private fun Extension.toRow(steps: Map<String, InstallStep>, onDevice: InstalledVersions) = ExtensionRow(
     key = "manga-$pkgName",
     name = name,
     lang = lang.orEmpty(),
     versionName = versionName,
     isNsfw = isNsfw,
-    hasUpdate = (this as? Extension.Installed)?.hasUpdate == true,
+    hasUpdate = (this as? Extension.Installed)?.hasUpdate == true && onDevice.stillOlderThan(this),
     isObsolete = (this as? Extension.Installed)?.isObsolete == true,
     isUntrusted = this is Extension.Untrusted,
     isInstalled = this !is Extension.Available,
@@ -421,13 +469,13 @@ private fun AnimeExtension.extensionIcon(): Any? = when (this) {
     is AnimeExtension.Untrusted -> null
 }
 
-private fun AnimeExtension.toRow(steps: Map<String, InstallStep>) = ExtensionRow(
+private fun AnimeExtension.toRow(steps: Map<String, InstallStep>, onDevice: InstalledVersions) = ExtensionRow(
     key = "anime-$pkgName",
     name = name,
     lang = lang.orEmpty(),
     versionName = versionName,
     isNsfw = isNsfw,
-    hasUpdate = (this as? AnimeExtension.Installed)?.hasUpdate == true,
+    hasUpdate = (this as? AnimeExtension.Installed)?.hasUpdate == true && onDevice.stillOlderThan(this),
     isObsolete = (this as? AnimeExtension.Installed)?.isObsolete == true,
     isUntrusted = this is AnimeExtension.Untrusted,
     isInstalled = this !is AnimeExtension.Available,
