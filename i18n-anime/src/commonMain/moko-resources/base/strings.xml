@@ -299,6 +299,7 @@
     <string name="no_next_episode">Next Episode not found!</string>
     <string name="no_prev_episode">Previous Episode not found!</string>
     <string name="no_available_videos">No available videos</string>
+    <string name="no_available_videos_source_empty">The source returned an empty video list for this episode — the source itself is likely broken</string>
     <string name="no_hosters">Hoster list is empty</string>
     <string name="no_episode_loaded">No episode loaded</string>
     <string name="select_hoster_from_empty_list">Hoster selected from empty list</string>

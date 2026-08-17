@@ -287,9 +287,17 @@ fun HosterTrack(
                 )
             }
             is HosterState.Error -> {
+                // The reason is what the fetch actually threw. "Failed" alone turns a
+                // diagnosable error into a shrug.
                 Text(
-                    text = stringResource(AYMR.strings.player_hoster_failed),
-                    modifier = Modifier.alpha(DISABLED_ALPHA),
+                    text = hoster.reason
+                        ?.let { "${stringResource(AYMR.strings.player_hoster_failed)}: $it" }
+                        ?: stringResource(AYMR.strings.player_hoster_failed),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .alpha(DISABLED_ALPHA)
+                        .weight(1f, fill = false),
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(Icons.Default.ErrorOutline, null, tint = MaterialTheme.colorScheme.error)

@@ -15,7 +15,14 @@ import eu.kanade.tachiyomi.animesource.model.Video
 sealed class HosterState(open val name: String) {
     data class Idle(override val name: String) : HosterState(name)
     data class Loading(override val name: String) : HosterState(name)
-    data class Error(override val name: String) : HosterState(name)
+
+    /**
+     * [reason] is the message of whatever the fetch actually threw. Without it every failure
+     * between the source and the screen collapses into the word "Error" — and a device report of
+     * *"videos load for a while, then say there are none"* is undiagnosable, because the one
+     * string that said why was caught and discarded on the way past.
+     */
+    data class Error(override val name: String, val reason: String? = null) : HosterState(name)
     data class Ready(
         override val name: String,
         val videoList: List<Video>,

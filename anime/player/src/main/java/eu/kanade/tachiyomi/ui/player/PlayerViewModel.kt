@@ -31,6 +31,7 @@ import android.net.Uri
 import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -1246,10 +1247,42 @@ class PlayerViewModel @JvmOverloads constructor(
 
     private var currentHosterList: List<Hoster>? = null
 
+    /**
+     * [detail] is shown to the user under the localized message when present. It exists because
+     * "No available videos" alone cannot be acted on — not by the person holding the phone and
+     * not by anyone reading their report. The detail says which actual failure led here.
+     */
     class ExceptionWithStringResource(
         message: String,
         val stringResource: StringResource,
+        val detail: String? = null,
     ) : Exception(message)
+
+    /**
+     * The right error for "nothing is playable", which has two very different causes.
+     *
+     * If hosters *failed*, their reasons are the diagnosis, so up to three distinct ones ride
+     * along as detail. If every hoster answered and simply had nothing — the old-style shape of a
+     * source whose internal extractors all came back empty — say that instead, because "no
+     * available videos" reads as an app bug when it is the source that returned an empty list.
+     */
+    private fun noVideosError(states: List<HosterState>): ExceptionWithStringResource {
+        val failures = states.filterIsInstance<HosterState.Error>()
+        if (failures.isEmpty() && states.isNotEmpty() && states.all { it is HosterState.Ready }) {
+            return ExceptionWithStringResource(
+                "Source returned an empty video list",
+                AYMR.strings.no_available_videos_source_empty,
+            )
+        }
+
+        val detail = failures
+            .mapNotNull { failure -> failure.reason?.let { "${failure.name}: $it" } }
+            .distinct()
+            .take(3)
+            .joinToString("\n")
+            .ifEmpty { null }
+        return ExceptionWithStringResource("No available videos", AYMR.strings.no_available_videos, detail)
+    }
 
     suspend fun init(
         animeId: Long,
@@ -1444,10 +1477,7 @@ class PlayerViewModel @JvmOverloads constructor(
                         if (selectedHosterVideoIndex.value == Pair(-1, -1)) {
                             val (hosterIdx, videoIdx) = HosterLoader.selectBestVideo(hosterState.value)
                             if (hosterIdx == -1) {
-                                throw ExceptionWithStringResource(
-                                    "No available videos",
-                                    AYMR.strings.no_available_videos,
-                                )
+                                throw noVideosError(hosterState.value)
                             }
 
                             val video = (hosterState.value[hosterIdx] as HosterState.Ready).videoList[videoIdx]
@@ -1462,6 +1492,16 @@ class PlayerViewModel @JvmOverloads constructor(
                 }
 
                 throw e
+            } catch (e: ExceptionWithStringResource) {
+                // Thrown inside a launched coroutine, so nothing above this frame will render it —
+                // uncaught it is a crash screen, not a message. Show it and stay alive: the player
+                // stays open on the quality sheet, where the per-hoster reasons are visible.
+                updateIsLoadingEpisode(false)
+                withUIContext {
+                    val app = Injekt.get<Application>()
+                    val base = app.stringResource(e.stringResource)
+                    app.toast(e.detail?.let { "$base\n$it" } ?: base, Toast.LENGTH_LONG)
+                }
             }
         }
     }
@@ -1501,7 +1541,7 @@ class PlayerViewModel @JvmOverloads constructor(
                         _selectedHosterVideoIndex.update { _ -> Pair(-1, -1) }
                         return false
                     } else {
-                        throw ExceptionWithStringResource("No available videos", AYMR.strings.no_available_videos)
+                        throw noVideosError(hosterState.value)
                     }
                 }
 

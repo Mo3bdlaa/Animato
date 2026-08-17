@@ -1176,7 +1176,10 @@ class PlayerActivity : BaseActivity() {
      */
     private fun setInitialEpisodeError(error: Throwable) {
         if (error is PlayerViewModel.ExceptionWithStringResource) {
-            toast(error.stringResource)
+            // The detail is the difference between "No available videos" and knowing which hoster
+            // failed with what — keep it on screen long enough to be read.
+            val base = stringResource(error.stringResource)
+            toast(error.detail?.let { "$base\n$it" } ?: base, Toast.LENGTH_LONG)
         } else {
             toast(error.message)
         }

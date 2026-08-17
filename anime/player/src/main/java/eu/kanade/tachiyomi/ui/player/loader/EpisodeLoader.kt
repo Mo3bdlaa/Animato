@@ -10,6 +10,8 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.animesource.online.ParsedAnimeHttpSource
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import kotlinx.coroutines.CancellationException
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.source.local.entries.anime.LocalAnimeSource
@@ -199,7 +201,10 @@ class EpisodeLoader {
                     throw e
                 }
 
-                HosterState.Error(hoster.hosterName)
+                // This catch is the only place that ever sees why a hoster failed. Swallowing it
+                // silently is how "no videos, from every source, on a device" stays a mystery.
+                logcat(LogPriority.ERROR, e) { "Hoster '${hoster.hosterName}' failed to load videos" }
+                HosterState.Error(hoster.hosterName, e.message ?: e.javaClass.simpleName)
             }
         }
     }
