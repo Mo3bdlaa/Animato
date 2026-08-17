@@ -698,6 +698,7 @@
     <string name="entry_up_to_date">مفيش جديد</string>
     <string name="entry_refresh_failed">المصدر مردّش</string>
     <string name="ext_install_failed">التثبيت فشل</string>
+    <string name="ext_install_failed_repo">موقّعة من مستودع تاني — لازم تشيلها الأول</string>
     <string name="tracking_sync_all">زامن الكل</string>
     <string name="tracking_sync_now">زامن دلوقتي</string>
     <string name="tracking_not_signed_in">مش مسجّل دخول</string>

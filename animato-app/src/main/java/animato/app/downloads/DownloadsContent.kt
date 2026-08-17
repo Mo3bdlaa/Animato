@@ -39,7 +39,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.navigation.LensButton
 import animato.domain.content.ContentType
+import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.Pill
+import animato.ui.navigation.AnimatoNavigator
+import animato.ui.navigation.AnimatoTab
 import animato.ui.theme.LocalAnimatoPalette
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
@@ -361,23 +364,19 @@ private fun CancelButton(onCancel: () -> Unit) {
  * It keeps the storage line above it — what is already downloaded has not gone anywhere — and
  * teaches the batch gesture in the sentence, because an empty queue with no way forward is a dead
  * end and there is no screen in this app that is allowed to be one.
+ *
+ * It was a lone grey sentence in the middle of a black screen, which is what a broken screen looks
+ * like. The design sheet has been specific about this from the start — mark, one sentence, one
+ * button — and this is the shared component that finally obeys it. The button goes to the library,
+ * because that is where the gesture the sentence describes actually lives.
  */
 @Composable
 private fun NothingDownloading() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(MaterialTheme.padding.large),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-    ) {
-        Box(modifier = Modifier.height(EmptyTopSpace))
-        Text(
-            text = stringResource(AYMR.strings.downloads_nothing_downloading),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+    AnimatoEmptyState(
+        message = stringResource(AYMR.strings.downloads_nothing_downloading),
+        actionLabel = stringResource(MR.strings.label_library),
+        onAction = { AnimatoNavigator.openTab(AnimatoTab.LIBRARY) },
+    )
 }
 
 /**

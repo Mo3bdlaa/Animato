@@ -61,6 +61,39 @@ sealed interface ExtensionHandle {
     }
 }
 
+/**
+ * Why an install failed, in the terms somebody can act on.
+ *
+ * The design sheet's rule is that a failure states its reason, and "Install failed" states none.
+ * Android does not hand the reason back through anything reachable from here — the installer that
+ * knows it is `internal` to Mihon — so the one cause that can be established without it is
+ * established, and everything else says so honestly rather than inventing a diagnosis.
+ */
+@Immutable
+enum class InstallFailure {
+    /**
+     * The update is signed by a different repository than the copy on the phone.
+     *
+     * Android refuses to replace a package with one signed by another key, and no amount of
+     * retrying changes that — which is exactly what a button that keeps offering the same update
+     * looks like from outside. The extension has to be uninstalled first.
+     *
+     * Established rather than guessed: both halves' stores carry a `signingKey`, and the installed
+     * extension remembers which store it came from.
+     */
+    DIFFERENT_REPOSITORY,
+
+    /** It failed and the reason is not ours to know. Said plainly instead of dressed up. */
+    UNKNOWN,
+}
+
+/** What a package is doing, and — when it stopped badly — why. */
+@Immutable
+data class InstallActivity(
+    val step: InstallStep,
+    val failure: InstallFailure? = null,
+)
+
 /** One row on the screen, whichever half it came from. */
 @Immutable
 data class ExtensionRow(
@@ -74,6 +107,7 @@ data class ExtensionRow(
     val isUntrusted: Boolean,
     val isInstalled: Boolean,
     val installStep: InstallStep,
+    val failure: InstallFailure? = null,
     /**
      * A `Drawable` once installed, an icon URL before that, and null for an untrusted package.
      *
@@ -173,7 +207,7 @@ class ExtensionsScreenModel(
      * Held outside the state so that a download step ticking over does not re-run the grouping and
      * sorting of every list on the screen.
      */
-    private val currentSteps = MutableStateFlow<Map<String, InstallStep>>(emptyMap())
+    private val currentSteps = MutableStateFlow<Map<String, InstallActivity>>(emptyMap())
 
     init {
         val context = Injekt.get<Application>()
@@ -302,11 +336,11 @@ class ExtensionsScreenModel(
             when (val handle = row.handle) {
                 is ExtensionHandle.Manga -> {
                     val extension = handle.extension as? Extension.Available ?: return@launchIO
-                    extensionManager.installExtension(extension).track(extension.pkgName)
+                    extensionManager.installExtension(extension).track(extension.pkgName, ContentType.MANGA)
                 }
                 is ExtensionHandle.Anime -> {
                     val extension = handle.extension as? AnimeExtension.Available ?: return@launchIO
-                    animeExtensionManager.installExtension(extension).track(extension.pkgName)
+                    animeExtensionManager.installExtension(extension).track(extension.pkgName, ContentType.ANIME)
                 }
             }
         }
@@ -317,11 +351,11 @@ class ExtensionsScreenModel(
             when (val handle = row.handle) {
                 is ExtensionHandle.Manga -> {
                     val extension = handle.extension as? Extension.Installed ?: return@launchIO
-                    extensionManager.updateExtension(extension).track(extension.pkgName)
+                    extensionManager.updateExtension(extension).track(extension.pkgName, ContentType.MANGA)
                 }
                 is ExtensionHandle.Anime -> {
                     val extension = handle.extension as? AnimeExtension.Installed ?: return@launchIO
-                    animeExtensionManager.updateExtension(extension).track(extension.pkgName)
+                    animeExtensionManager.updateExtension(extension).track(extension.pkgName, ContentType.ANIME)
                 }
             }
         }
@@ -372,20 +406,56 @@ class ExtensionsScreenModel(
      * nothing looked exactly alike — which is how *"I update it and it still says update, no matter
      * how many times"* gets reported. A failure is kept on the row now until the next attempt.
      */
-    private suspend fun Flow<InstallStep>.track(pkgName: String) =
+    private suspend fun Flow<InstallStep>.track(pkgName: String, contentType: ContentType) =
         transformWhile { step ->
             emit(step)
             !step.isCompleted()
         }
-            .onEach { step -> currentSteps.update { it + (pkgName to step) } }
+            .onEach { step ->
+                val failure = if (step == InstallStep.Error) diagnose(pkgName, contentType) else null
+                currentSteps.update { it + (pkgName to InstallActivity(step, failure)) }
+            }
             .onCompletion {
                 currentSteps.update { steps ->
                     // A failure stays. Anything else has nothing left to say, and the row goes back
                     // to being described by the extension itself.
-                    if (steps[pkgName] == InstallStep.Error) steps else steps - pkgName
+                    if (steps[pkgName]?.step == InstallStep.Error) steps else steps - pkgName
                 }
             }
             .collect()
+
+    /**
+     * The one cause of a failed install that can be established from here.
+     *
+     * Android will not replace a package with one signed by a different key. Both halves' stores
+     * carry the key they sign with, and an installed extension remembers the store it came from —
+     * so when the store now offering the update signs with a different key, the refusal is certain
+     * and no amount of retrying will change it. With five repositories configured, installing from
+     * one and being offered the update by another is not an unusual thing to have happen.
+     *
+     * Everything else is [InstallFailure.UNKNOWN]. The installer that knows the real reason is
+     * `internal` to Mihon and does not pass it out, and a guess dressed as a diagnosis is worse
+     * than saying so.
+     */
+    private fun diagnose(pkgName: String, contentType: ContentType): InstallFailure {
+        val differentKey = when (contentType) {
+            ContentType.MANGA -> {
+                val installed = extensionManager.installedExtensionsFlow.value
+                    .firstOrNull { it.pkgName == pkgName }?.store?.signingKey
+                val available = extensionManager.availableExtensionsFlow.value
+                    .firstOrNull { it.pkgName == pkgName }?.store?.signingKey
+                installed != null && available != null && installed != available
+            }
+            ContentType.ANIME -> {
+                val installed = animeExtensionManager.installedExtensionsFlow.value
+                    .firstOrNull { it.pkgName == pkgName }?.store?.signingKey
+                val available = animeExtensionManager.availableExtensionsFlow.value
+                    .firstOrNull { it.pkgName == pkgName }?.store?.signingKey
+                installed != null && available != null && installed != available
+            }
+        }
+        return if (differentKey) InstallFailure.DIFFERENT_REPOSITORY else InstallFailure.UNKNOWN
+    }
 
     private companion object {
         /**
@@ -461,7 +531,7 @@ private class InstalledVersions(context: Context) {
         (versionOf(extension.pkgName) ?: return true) <= extension.versionCode
 }
 
-private fun Extension.toRow(steps: Map<String, InstallStep>, onDevice: InstalledVersions) = ExtensionRow(
+private fun Extension.toRow(steps: Map<String, InstallActivity>, onDevice: InstalledVersions) = ExtensionRow(
     key = "manga-$pkgName",
     name = name,
     lang = lang.orEmpty(),
@@ -471,7 +541,8 @@ private fun Extension.toRow(steps: Map<String, InstallStep>, onDevice: Installed
     isObsolete = (this as? Extension.Installed)?.isObsolete == true,
     isUntrusted = this is Extension.Untrusted,
     isInstalled = this !is Extension.Available,
-    installStep = steps[pkgName] ?: InstallStep.Idle,
+    installStep = steps[pkgName]?.step ?: InstallStep.Idle,
+    failure = steps[pkgName]?.failure,
     icon = extensionIcon(),
     handle = ExtensionHandle.Manga(this),
 )
@@ -496,7 +567,7 @@ private fun AnimeExtension.extensionIcon(): Any? = when (this) {
     is AnimeExtension.Untrusted -> null
 }
 
-private fun AnimeExtension.toRow(steps: Map<String, InstallStep>, onDevice: InstalledVersions) = ExtensionRow(
+private fun AnimeExtension.toRow(steps: Map<String, InstallActivity>, onDevice: InstalledVersions) = ExtensionRow(
     key = "anime-$pkgName",
     name = name,
     lang = lang.orEmpty(),
@@ -506,7 +577,8 @@ private fun AnimeExtension.toRow(steps: Map<String, InstallStep>, onDevice: Inst
     isObsolete = (this as? AnimeExtension.Installed)?.isObsolete == true,
     isUntrusted = this is AnimeExtension.Untrusted,
     isInstalled = this !is AnimeExtension.Available,
-    installStep = steps[pkgName] ?: InstallStep.Idle,
+    installStep = steps[pkgName]?.step ?: InstallStep.Idle,
+    failure = steps[pkgName]?.failure,
     icon = extensionIcon(),
     handle = ExtensionHandle.Anime(this),
 )

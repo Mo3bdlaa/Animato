@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -440,9 +441,22 @@ private fun ExtensionListItem(
             Text(text = row.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
         supportingContent = {
-            Row(
+            /*
+             * A flow, not a row, because a row here crushes its own children.
+             *
+             * On a device the Update pill came out as an orange circle reading "Up", and the
+             * install failure came out as one letter per line down the middle of the screen. A
+             * `Row` gives each child the space it asks for in order and squeezes whatever is left
+             * — so the version text took what it wanted and the marks after it got a few dp each.
+             *
+             * This is the third time this shape of fault has been found on this screen. A caption
+             * carrying a variable number of marks has to be allowed a second line; the alternative
+             * is a row that silently destroys the last thing added to it, every time.
+             */
+            FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 // On every row, whatever the lens says — this screen is the answer to "which of
                 // these is anime", so the answer cannot be conditional. It is the one exception to
@@ -489,11 +503,25 @@ private fun ExtensionListItem(
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
-                // In words too, for the same reason: a red Retry button says something went wrong
-                // and not what, and this is the row somebody is about to give up on.
+                /*
+                 * The reason, not just the fact. The design sheet's rule is that a failure states
+                 * one, and "Install failed" states none — it is the same shrug as an empty screen
+                 * saying "nothing here".
+                 *
+                 * Only one cause can be established from here, and when it is, it is the useful
+                 * one: retrying a signature mismatch will fail forever, and the row says what to do
+                 * instead. Everything else keeps the plain wording rather than inventing a
+                 * diagnosis nobody checked.
+                 */
                 if (row.installStep == InstallStep.Error) {
                     Text(
-                        text = stringResource(AYMR.strings.ext_install_failed),
+                        text = stringResource(
+                            when (row.failure) {
+                                InstallFailure.DIFFERENT_REPOSITORY ->
+                                    AYMR.strings.ext_install_failed_repo
+                                else -> AYMR.strings.ext_install_failed
+                            },
+                        ),
                         color = palette.error,
                         fontWeight = FontWeight.SemiBold,
                     )
