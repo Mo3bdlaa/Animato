@@ -1,10 +1,15 @@
 package animato.app.coil
 
 import android.content.Context
+import coil3.ComponentRegistry
 import coil3.SingletonImageLoader
+import coil3.fetch.Fetcher
+import coil3.key.Keyer
+import coil3.map.Mapper
 import eu.kanade.tachiyomi.network.NetworkHelper
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.reflect.KClass
 
 /**
  * Adds the anime half to the image loader Mihon built.
@@ -19,7 +24,7 @@ import uy.kohesive.injekt.api.get
  *
  * So the loader is taken as built and extended. `newBuilder` keeps every decision Mihon made — the
  * memory cache size, the crossfade, RGB565 on low-memory devices, the image decoder, the okhttp
- * factory — and adds the two components without which an [AnimeCover] is a type Coil has never heard
+ * factory — and adds the components without which an [AnimeCover] is a type Coil has never heard
  * of. Reimplementing the builder here instead would mean quietly owning Mihon's image configuration
  * and drifting from it on every sync.
  *
@@ -42,20 +47,29 @@ object AnimatoImageLoader {
         val current = SingletonImageLoader.get(context)
 
         /*
-         * Built from the existing registry, not from an empty one.
+         * This copy is selective, and both of its failure modes have been seen on a device.
          *
-         * `Builder.components { }` does not add to what is there — it constructs a fresh
-         * `ComponentRegistry` and assigns it, discarding whatever the loader already had. So the
-         * first version of this replaced Mihon's manga cover fetcher and keyers with the two anime
-         * ones, and the result was exactly as reported from a device: *"anime covers appeared but
-         * manga covers vanished."* One half fixed by breaking the other, which is worse than the
-         * bug it was fixing, because manga covers had always worked.
+         * Version one replaced the registry — `Builder.components { }` builds a fresh registry
+         * rather than adding — and manga covers vanished, because Mihon's fetchers went with it.
          *
-         * Starting from `current.components` and adding to it cannot lose anything.
+         * Version two copied `current.components` wholesale. That field is not "what Mihon
+         * registered": `RealImageLoader` composes it at construction as user components + platform
+         * components + its own terminal `EngineInterceptor`, appended last. Copying it therefore
+         * smuggled the OLD loader's engine into the new loader's interceptor chain, ahead of the
+         * new loader's own engine. An engine interceptor never calls `proceed`, so every request
+         * was served by the old engine against the old registry — which knows manga and has never
+         * heard of anime. Manga covers worked, anime covers broke, and the four anime components
+         * sat unreachable behind a terminated chain.
+         *
+         * So: copy every *loadable* — mappers, keyers, fetchers, decoders, which are inert
+         * registrations — and no interceptors. The only interceptor in the composed registry is
+         * the old engine (Mihon's `newImageLoader` registers none of its own), and the new loader
+         * appends its own engine and platform components when it is built.
          */
         val extended = current.newBuilder()
             .components(
-                current.components.newBuilder()
+                ComponentRegistry.Builder()
+                    .addAllLoadables(current.components)
                     .add(AnimeCoverFetcher.AnimeCoverFactory(callFactoryLazy))
                     .add(AnimeCoverFetcher.AnimeFactory(callFactoryLazy))
                     .add(AnimeCoverKeyer())
@@ -66,4 +80,17 @@ object AnimatoImageLoader {
 
         SingletonImageLoader.setUnsafe(extended)
     }
+}
+
+/**
+ * Copies every component that describes *how to load something* — and none that carry a reference
+ * back to the loader they came from. Interceptors are excluded deliberately: see the comment at the
+ * call site in [AnimatoImageLoader.install].
+ */
+@Suppress("UNCHECKED_CAST")
+internal fun ComponentRegistry.Builder.addAllLoadables(from: ComponentRegistry): ComponentRegistry.Builder = apply {
+    from.mappers.forEach { (mapper, type) -> add(mapper as Mapper<Any, Any>, type as KClass<Any>) }
+    from.keyers.forEach { (keyer, type) -> add(keyer as Keyer<Any>, type as KClass<Any>) }
+    from.fetcherFactories.forEach { (factory, type) -> add(factory as Fetcher.Factory<Any>, type as KClass<Any>) }
+    from.decoderFactories.forEach { add(it) }
 }
