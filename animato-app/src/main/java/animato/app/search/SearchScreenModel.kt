@@ -109,6 +109,26 @@ data class SearchState(
         }
 
     fun admits(type: ContentType): Boolean = effectiveLens.accepts(type)
+
+    /*
+     * The four states a source can be in, kept apart so the screen can put them in the order
+     * somebody reads them in.
+     *
+     * Listing every source in one flat list is what a device saw: twenty rows, most of them a name
+     * and a nought, with the three sources that actually found something buried among them. The
+     * ones with answers come first now; the rest collapse.
+     */
+    val answered: List<SourceGroup>
+        get() = sourceGroups.filter { !it.isSearching && it.hits.isNotEmpty() }
+
+    val searching: List<SourceGroup> get() = sourceGroups.filter { it.isSearching }
+
+    val empty: List<SourceGroup>
+        get() = sourceGroups.filter { !it.isSearching && it.failure == null && it.hits.isEmpty() }
+
+    val failed: List<SourceGroup> get() = sourceGroups.filter { !it.isSearching && it.failure != null }
+
+    val totalHits: Int get() = sourceGroups.sumOf { it.hits.size }
 }
 
 /**

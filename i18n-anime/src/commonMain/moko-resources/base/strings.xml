@@ -724,6 +724,10 @@
     <string name="search_from_your_sources">From your sources</string>
     <string name="search_recent">Recent</string>
     <string name="search_trending">Trending searches</string>
+    <string name="search_asking_sources">Asking %1$s of %2$s</string>
+    <string name="search_sources_answered">%1$s from %2$s of %3$s sources</string>
+    <string name="search_no_results_group">No results · %1$s sources</string>
+    <string name="search_failed_group">Did not answer · %1$s sources</string>
     <string name="search_progress">%1$s of %2$s</string>
     <string name="search_no_anime_sources">You don\'t have any anime sources yet, so there is nowhere to search.</string>
     <string name="search_no_manga_sources">You don\'t have any manga sources yet, so there is nowhere to search.</string>

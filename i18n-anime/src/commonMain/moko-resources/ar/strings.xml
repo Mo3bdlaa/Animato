@@ -647,6 +647,10 @@
     <string name="search_from_your_sources">من مصادرك</string>
     <string name="search_recent">الأخيرة</string>
     <string name="search_trending">عمليات بحث رائجة</string>
+    <string name="search_asking_sources">بيسأل %1$s من %2$s</string>
+    <string name="search_sources_answered">%1$s نتيجة من %2$s مصدر من %3$s</string>
+    <string name="search_no_results_group">مفيش نتايج · %1$s مصادر</string>
+    <string name="search_failed_group">مردّوش · %1$s مصادر</string>
     <string name="search_progress">%1$s من %2$s</string>
     <string name="search_no_anime_sources">لسه مفيش عندك مصادر أنمي، فمفيش مكان نبحث فيه.</string>
     <string name="search_no_manga_sources">لسه مفيش عندك مصادر مانجا، فمفيش مكان نبحث فيه.</string>
