@@ -50,6 +50,7 @@ import androidx.lifecycle.lifecycleScope
 import animato.anime.backup.create.AnimatoBackupCreateJob
 import animato.anime.services.AnimeConstants
 import animato.anime.services.AnimeNotifications
+import animato.app.coil.AnimatoImageLoader
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.downloads.OrphanedDownloadSweeper
 import animato.app.entry.EntryScreen
@@ -187,6 +188,10 @@ class MainActivity : BaseActivity() {
         val splashScreen = if (isLaunch) installSplashScreen() else null
 
         super.onCreate(savedInstanceState)
+
+        // Before a frame is drawn, because it is what makes an anime cover loadable at all. See
+        // AnimatoImageLoader for why it extends Mihon's loader instead of building one.
+        AnimatoImageLoader.install(this)
 
         Migrator.awaitAndRelease()
 
