@@ -61,6 +61,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.player.PlayerLauncher
 import animato.domain.content.ContentType
+import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.Pill
 import animato.ui.entries.ItemCover
 import animato.ui.theme.LocalAnimatoPalette
@@ -299,6 +300,19 @@ class EntryScreen(
                                 color = LocalAnimatoPalette.current.warning,
                             )
                         }
+                    }
+                }
+
+                // A source that lists nothing left the page as a header over black. It is a real
+                // state — a title page opened straight from a search, before anything is known
+                // about it — and the refresh in the header is the one thing that could change it.
+                if (state.items.isEmpty()) {
+                    item(key = "no-items") {
+                        AnimatoEmptyState(
+                            message = stringResource(AYMR.strings.entry_no_items),
+                            actionLabel = stringResource(MR.strings.action_webview_refresh),
+                            onAction = screenModel::refresh,
+                        )
                     }
                 }
 

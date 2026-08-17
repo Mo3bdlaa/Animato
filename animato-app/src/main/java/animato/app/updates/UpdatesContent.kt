@@ -44,6 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.entry.EntryScreen
 import animato.app.navigation.LensButton
 import animato.domain.content.ContentType
+import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.NewPill
 import animato.ui.entries.ItemCover
 import animato.ui.tv.tvClickable
@@ -305,23 +306,12 @@ private fun NothingNew(
     modifier: Modifier = Modifier,
     onCheckNow: () -> Unit,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(MaterialTheme.padding.large),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-    ) {
-        Box(modifier = Modifier.height(EmptyTopSpace))
-        Text(
-            text = stringResource(AYMR.strings.updates_nothing_new),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Button(onClick = onCheckNow) {
-            Text(stringResource(AYMR.strings.action_check_now))
-        }
-    }
+    AnimatoEmptyState(
+        message = stringResource(AYMR.strings.updates_nothing_new),
+        modifier = modifier,
+        actionLabel = stringResource(AYMR.strings.action_check_now),
+        onAction = onCheckNow,
+    )
 }
 
 /**
@@ -352,4 +342,3 @@ private fun swipeAction(
 private val SwipeIconPadding = 16.dp
 private val ThumbSize = 48.dp
 private val ThumbRadius = 12.dp
-private val EmptyTopSpace = 96.dp

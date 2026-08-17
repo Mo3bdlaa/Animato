@@ -43,6 +43,7 @@ import animato.app.search.AnimatoSearchScreen
 import animato.app.settings.AnimatoSettingsScreen
 import animato.app.updates.UpdateItem
 import animato.domain.content.ContentType
+import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.NewPill
 import animato.ui.entries.ItemCover
 import animato.ui.navigation.AnimatoNavigator
@@ -336,22 +337,11 @@ private fun UpdateRow(
 /** No library at all: one sentence and the one button that fixes it. */
 @Composable
 private fun EmptyShelf(onDiscover: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(MaterialTheme.padding.large),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-    ) {
-        Text(
-            text = stringResource(AYMR.strings.home_empty_shelf),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Button(onClick = onDiscover) {
-            Text(stringResource(AYMR.strings.label_discover))
-        }
-    }
+    AnimatoEmptyState(
+        message = stringResource(AYMR.strings.home_empty_shelf),
+        actionLabel = stringResource(AYMR.strings.label_discover),
+        onAction = onDiscover,
+    )
 }
 
 /** Chapter and episode numbers are stored as doubles; whole ones should not read as `12.0`. */

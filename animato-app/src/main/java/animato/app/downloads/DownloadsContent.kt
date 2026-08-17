@@ -396,4 +396,3 @@ private fun formatBytes(bytes: Long): String {
 private const val UNIT = 1024L
 private val ProgressHeight = 3.dp
 private val PositionBoxSize = 24.dp
-private val EmptyTopSpace = 96.dp

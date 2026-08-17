@@ -46,6 +46,7 @@ import animato.app.navigation.LensButton
 import animato.app.search.AnimatoSearchScreen
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
+import animato.ui.components.AnimatoEmptyState
 import animato.ui.entries.ItemCover
 import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -323,21 +324,11 @@ private fun LazyListScope.sourceRail(
  */
 @Composable
 private fun NoSourcesCard(onAddSources: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = MaterialTheme.padding.medium),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-    ) {
-        Text(
-            text = stringResource(AYMR.strings.discover_no_sources),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Button(onClick = onAddSources) {
-            Text(stringResource(AYMR.strings.action_add_sources))
-        }
-    }
+    AnimatoEmptyState(
+        message = stringResource(AYMR.strings.discover_no_sources),
+        actionLabel = stringResource(AYMR.strings.action_add_sources),
+        onAction = onAddSources,
+    )
 }
 
 @Composable

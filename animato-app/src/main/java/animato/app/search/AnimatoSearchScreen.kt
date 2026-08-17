@@ -54,6 +54,7 @@ import animato.app.extension.ExtensionsScreen
 import animato.app.navigation.LensButton
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
+import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.Pill
 import animato.ui.components.UnviewedPill
 import animato.ui.entries.ItemCover
@@ -624,34 +625,23 @@ private fun NoSourcesToSearch(
     canSwitchLens: Boolean,
     onAddSources: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = MaterialTheme.padding.medium),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-    ) {
-        Text(
-            text = stringResource(
-                when (lens) {
-                    ContentFilter.ANIME -> AYMR.strings.search_no_anime_sources
-                    ContentFilter.MANGA -> AYMR.strings.search_no_manga_sources
-                    ContentFilter.ALL -> AYMR.strings.search_no_sources
-                },
-            ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Button(onClick = onAddSources) {
-            Text(stringResource(AYMR.strings.action_add_sources))
-        }
-        if (canSwitchLens && lens != ContentFilter.ALL) {
-            Text(
-                text = stringResource(AYMR.strings.search_switch_lens),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+    val cause = stringResource(
+        when (lens) {
+            ContentFilter.ANIME -> AYMR.strings.search_no_anime_sources
+            ContentFilter.MANGA -> AYMR.strings.search_no_manga_sources
+            ContentFilter.ALL -> AYMR.strings.search_no_sources
+        },
+    )
+    val lensHint = stringResource(AYMR.strings.search_switch_lens)
+
+    AnimatoEmptyState(
+        // The lens hint joins the sentence rather than sitting under the button as a third block.
+        // It is part of the same thought — here is why there is nothing, and here are the two ways
+        // out — and an empty state is allowed one sentence, not a paragraph with a button in it.
+        message = if (canSwitchLens && lens != ContentFilter.ALL) "$cause\n$lensHint" else cause,
+        actionLabel = stringResource(AYMR.strings.action_add_sources),
+        onAction = onAddSources,
+    )
 }
 
 @Composable

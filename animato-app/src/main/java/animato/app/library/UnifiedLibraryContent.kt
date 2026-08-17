@@ -55,10 +55,13 @@ import animato.app.navigation.LensButton
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.domain.content.LibraryEntry
+import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.Pill
 import animato.ui.components.UnviewedPill
 import animato.ui.entries.ItemCover
 import animato.ui.library.LazyLibraryGrid
+import animato.ui.navigation.AnimatoNavigator
+import animato.ui.navigation.AnimatoTab
 import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -559,25 +562,22 @@ private fun LibraryEmptyState(
     emptiedBySettings: Boolean,
     onReset: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(MaterialTheme.padding.large),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-    ) {
-        Text(
-            text = stringResource(
-                if (emptiedBySettings) AYMR.strings.library_empty_filtered else AYMR.strings.library_empty,
-            ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+    // Two different empty shelves. One is a shelf with nothing on it, whose way forward is
+    // Discover; the other is a shelf hidden by a filter, whose way forward is to drop the filter.
+    // Telling somebody to go and find something when the something is already there and merely
+    // hidden is the worst thing an empty state can do.
+    if (emptiedBySettings) {
+        AnimatoEmptyState(
+            message = stringResource(AYMR.strings.library_empty_filtered),
+            actionLabel = stringResource(MR.strings.action_reset),
+            onAction = onReset,
         )
-        if (emptiedBySettings) {
-            OutlinedButton(onClick = onReset) {
-                Text(stringResource(MR.strings.action_reset))
-            }
-        }
+    } else {
+        AnimatoEmptyState(
+            message = stringResource(AYMR.strings.library_empty),
+            actionLabel = stringResource(AYMR.strings.label_discover),
+            onAction = { AnimatoNavigator.openTab(AnimatoTab.DISCOVER) },
+        )
     }
 }
 

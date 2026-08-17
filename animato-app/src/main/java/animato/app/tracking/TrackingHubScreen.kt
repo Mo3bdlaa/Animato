@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.settings.AnimatoSettingsScreen
+import animato.ui.components.AnimatoEmptyState
 import animato.ui.theme.LocalAnimatoPalette
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -83,6 +84,18 @@ class TrackingHubScreen : Screen() {
         ) { contentPadding ->
             if (state.isLoading) {
                 LoadingScreen(Modifier.padding(contentPadding))
+                return@Scaffold
+            }
+
+            // This screen had no empty branch at all: with nothing signed in it drew a title bar
+            // over a black rectangle, which is indistinguishable from a screen that failed to load.
+            if (state.accounts.isEmpty()) {
+                AnimatoEmptyState(
+                    message = stringResource(AYMR.strings.tracking_hub_empty),
+                    modifier = Modifier.padding(contentPadding),
+                    actionLabel = stringResource(MR.strings.label_settings),
+                    onAction = { navigator.push(AnimatoSettingsScreen()) },
+                )
                 return@Scaffold
             }
 

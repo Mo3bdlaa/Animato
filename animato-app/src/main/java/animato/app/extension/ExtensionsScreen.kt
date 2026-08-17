@@ -57,6 +57,7 @@ import animato.anime.ui.stores.AnimeExtensionStoresScreen
 import animato.app.navigation.LensButton
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
+import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.Pill
 import animato.ui.theme.LocalAnimatoPalette
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -180,9 +181,22 @@ class ExtensionsScreen : Screen() {
                         }
 
                     ExtensionSegment.AVAILABLE ->
-                        state.available.forEach { group ->
-                            item(key = "lang-${group.languageCode}") { LanguageHeader(group.languageName) }
-                            extensionRows(group.rows, screenModel)
+                        // Nothing on offer drew nothing at all: the segments, and then black. The
+                        // two causes are both actionable and both named, because "no extensions"
+                        // with five repositories configured is almost always the language filter.
+                        if (state.available.isEmpty()) {
+                            item(key = "available-empty") {
+                                AnimatoEmptyState(
+                                    message = stringResource(AYMR.strings.extensions_none_available),
+                                    actionLabel = stringResource(MR.strings.ext_info_language),
+                                    onAction = { languagesOpen = true },
+                                )
+                            }
+                        } else {
+                            state.available.forEach { group ->
+                                item(key = "lang-${group.languageCode}") { LanguageHeader(group.languageName) }
+                                extensionRows(group.rows, screenModel)
+                            }
                         }
                 }
             }
@@ -594,22 +608,11 @@ private fun ExtensionListItem(
  */
 @Composable
 private fun ShipsEmptyState(onBrowse: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(MaterialTheme.padding.large),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-    ) {
-        Text(
-            text = stringResource(AYMR.strings.extensions_ships_empty),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Button(onClick = onBrowse) {
-            Text(stringResource(AYMR.strings.action_browse_available))
-        }
-    }
+    AnimatoEmptyState(
+        message = stringResource(AYMR.strings.extensions_ships_empty),
+        actionLabel = stringResource(AYMR.strings.action_browse_available),
+        onAction = onBrowse,
+    )
 }
 
 private fun InstallStep.isOngoing(): Boolean =
