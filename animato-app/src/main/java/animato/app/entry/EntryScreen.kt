@@ -397,16 +397,28 @@ private fun EntryHeader(
         }
     }
 
-    Row(
+    /*
+     * The primary gets its own row, and the icons sit under it.
+     *
+     * They shared one row, and on a device the label was already reading "Nothing left — you are
+     * c…". Every icon button is 48 dp of the width the label does not get, so a third one — the
+     * WebView button — would have made a truncation that was already there worse. A sentence that
+     * has to be guessed at is not a button that names what it does, which is the whole point of
+     * naming the next chapter on it.
+     */
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
     ) {
         // One primary, and it names what it will open. "Read" with no number is a button you have to
         // press to find out what it does.
-        Button(onClick = onResume, enabled = state.nextItem != null, modifier = Modifier.weight(1f)) {
+        Button(
+            onClick = onResume,
+            enabled = state.nextItem != null,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Icon(imageVector = Icons.Outlined.PlayArrow, contentDescription = null)
             Text(
                 text = state.nextItem?.let { next ->
@@ -420,60 +432,66 @@ private fun EntryHeader(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        // The heart means "in your library". The word favourite never appears anywhere in the app.
-        IconButton(onClick = onToggleLibrary) {
-            Icon(
-                imageVector = if (state.inLibrary) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                contentDescription = stringResource(MR.strings.add_to_library),
-                tint = if (state.inLibrary) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
-        }
-        /*
-         * The site itself, next to the refresh that asks it politely.
-         *
-         * Asked for from a device: "we need a webview button beside reload, because when something
-         * is broken — which is often — opening it in the browser helps." That is the honest reason.
-         * A source can be rate limiting, behind Cloudflare, or serving a page the extension no
-         * longer parses, and in all three the site still works; being able to look is the
-         * difference between a dead entry and a readable one.
-         *
-         * Absent rather than disabled when there is no page — a local entry, or a source whose
-         * extension has been removed and is now a stub.
-         */
-        if (state.webViewUrl != null) {
-            IconButton(onClick = onOpenInBrowser) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // The heart means "in your library". The word favourite never appears anywhere in the app.
+            IconButton(onClick = onToggleLibrary) {
                 Icon(
-                    imageVector = Icons.Outlined.Public,
-                    contentDescription = stringResource(MR.strings.action_open_in_web_view),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    imageVector = if (state.inLibrary) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = stringResource(MR.strings.add_to_library),
+                    tint = if (state.inLibrary) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 )
             }
-        }
+            /*
+             * The site itself, next to the refresh that asks it politely.
+             *
+             * Asked for from a device: "we need a webview button beside reload, because when something
+             * is broken — which is often — opening it in the browser helps." That is the honest reason.
+             * A source can be rate limiting, behind Cloudflare, or serving a page the extension no
+             * longer parses, and in all three the site still works; being able to look is the
+             * difference between a dead entry and a readable one.
+             *
+             * Absent rather than disabled when there is no page — a local entry, or a source whose
+             * extension has been removed and is now a stub.
+             */
+            if (state.webViewUrl != null) {
+                IconButton(onClick = onOpenInBrowser) {
+                    Icon(
+                        imageVector = Icons.Outlined.Public,
+                        contentDescription = stringResource(MR.strings.action_open_in_web_view),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
 
-        /*
-         * Circular arrows mean refresh, and for one release they opened the original screen.
-         *
-         * From a device: "when I press the tracker icon, expecting it to check whether there is
-         * anything new, it opens the old page instead." The glyph was telling the truth about what
-         * it looked like and a lie about what it did. So the glyph kept its promise and tracking —
-         * which had no label to say it was tracking — moved into the overflow, where it has a word.
-         */
-        IconButton(onClick = onRefresh, enabled = !state.isRefreshing) {
-            if (state.isRefreshing) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(RefreshSpinnerSize),
-                    strokeWidth = RefreshSpinnerStroke,
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Outlined.Refresh,
-                    contentDescription = stringResource(MR.strings.action_webview_refresh),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            /*
+             * Circular arrows mean refresh, and for one release they opened the original screen.
+             *
+             * From a device: "when I press the tracker icon, expecting it to check whether there is
+             * anything new, it opens the old page instead." The glyph was telling the truth about what
+             * it looked like and a lie about what it did. So the glyph kept its promise and tracking —
+             * which had no label to say it was tracking — moved into the overflow, where it has a word.
+             */
+            IconButton(onClick = onRefresh, enabled = !state.isRefreshing) {
+                if (state.isRefreshing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(RefreshSpinnerSize),
+                        strokeWidth = RefreshSpinnerStroke,
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Refresh,
+                        contentDescription = stringResource(MR.strings.action_webview_refresh),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
