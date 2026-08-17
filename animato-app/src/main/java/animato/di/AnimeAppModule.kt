@@ -9,6 +9,7 @@ import animato.anime.track.AnimeTrackerManager
 import animato.app.discover.MetadataCatalog
 import animato.data.AnimeUpdateStrategyColumnAdapter
 import animato.data.FetchTypeColumnAdapter
+import aniyomi.core.common.torrent.AppTorrentInfoProvider
 import aniyomi.core.common.torrent.TorrentServerApi
 import aniyomi.core.common.torrent.TorrentServerUtils
 import app.cash.sqldelight.db.SqlDriver
@@ -26,6 +27,7 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.source.anime.AndroidAnimeSourceManager
+import eu.kanade.tachiyomi.torrentutils.TorrentInfoProvider
 import tachiyomi.data.DateColumnAdapter
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
@@ -140,5 +142,9 @@ class AnimeAppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { TorrentServerApi(get(), get()) }
         addSingletonFactory { TorrentServerUtils(get(), get()) }
+
+        // What TorrentUtils in the extension API resolves at runtime. Without this registration,
+        // every torrent-backed source dies at video time on an unresolvable injection.
+        addSingletonFactory<TorrentInfoProvider> { AppTorrentInfoProvider(get(), get()) }
     }
 }
