@@ -131,3 +131,77 @@ if [ "$asset_missing" -ne 0 ]; then
     echo "into the application."
     exit 1
 fi
+
+# ---------------------------------------------------------------------------------------------
+# Classes the APK refers to and does not contain.
+#
+# ## The bug, and why nothing caught it
+#
+# Installing an extension died with NoClassDefFoundError on LocalBroadcastManager, a library Mihon's
+# installer uses that arrived transitively and was dropped by a version bump elsewhere.
+#
+# R8 knew. It always knows — it resolves every reference and reports the ones it cannot find. What
+# silenced it is a single line in the merged configuration:
+#
+#     -dontwarn androidx.**
+#
+# Not ours and not Mihon's; it comes in through some dependency's consumer rules, and it switches
+# off the warning for the entire androidx namespace. A rule that broad cannot be narrowed from here,
+# because `-dontwarn` is additive and there is no way to un-say one.
+#
+# So the question is asked of the APK instead, where it cannot be suppressed: every type the dex
+# refers to, minus every type it defines, minus what the platform provides. What is left is what the
+# app will look for on a device and not find.
+#
+# This replaced a check that diffed Mihon's compile classpath against the shipped runtime classpath.
+# That was a proxy — an artifact leaving the graph only matters if something reaches into it — and
+# its allowlist rested on grepping our own sources, which says nothing about what a library's own
+# bytecode reaches for. This measures the thing itself.
+#
+# ## The allowlist
+#
+# Optional dependencies, probed for and used only when present. Each is already `-dontwarn`n
+# somewhere in the merged configuration by the library that probes for it, which is the difference
+# between a deliberate absence and this check's whole subject.
+echo
+echo "Checking classes the APK refers to but does not contain…"
+
+# Provided by the platform, so absent from the APK by design. `android.` does not cover `androidx.`,
+# which ships in the APK like any other library — that distinction is the entire point.
+PLATFORM='^(java|javax|android|dalvik|sun|com\.android|org\.w3c|org\.xml|org\.xmlpull|org\.json|org\.apache\.http|junit)\.'
+
+ALLOWED_REFS=(
+  # OEM window extensions, loaded reflectively on devices that implement them. Mihon's own
+  # proguard-rules.pro carries -dontwarn for both of these.
+  "androidx.window.extensions."
+  "androidx.window.sidecar."
+  # okhttp's optional alternative regex engine.
+  "com.google.re2j."
+  # An optional TLS provider okhttp looks for before falling back.
+  "org.bouncycastle.jsse."
+)
+
+referenced="$(mktemp)"
+dangling="$(mktemp)"
+trap 'rm -f "$present" "$expected" "$referenced" "$dangling"' EXIT
+
+python3 .github/list-dex-classes.py --referenced "$APK" | sort -u > "$referenced"
+comm -23 "$referenced" "$present" | grep -vE "$PLATFORM" > "$dangling" || true
+
+for allowed in "${ALLOWED_REFS[@]}"; do
+    grep -v "^${allowed//./\\.}" "$dangling" > "$dangling.tmp" || true
+    mv "$dangling.tmp" "$dangling"
+done
+
+if [ -s "$dangling" ]; then
+    echo
+    echo "These classes are referenced by the APK and are not in it:"
+    sed 's/^/  - /' "$dangling"
+    echo
+    echo "Each one throws NoClassDefFoundError on a device, in whichever feature reaches it. Either"
+    echo "declare the missing dependency in animato-app/build.gradle.kts, or — if it is genuinely"
+    echo "optional and guarded — add it to ALLOWED_REFS in $(basename "$0") with the reason."
+    exit 1
+fi
+
+echo "OK: every class the APK refers to is either in it or provided by the platform."
