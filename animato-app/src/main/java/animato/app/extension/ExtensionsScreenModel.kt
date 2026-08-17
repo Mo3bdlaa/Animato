@@ -516,26 +516,43 @@ class ExtensionsScreenModel(
 private class InstalledVersions(context: Context) {
 
     private val packageManager = context.packageManager
-    private val cache = mutableMapOf<String, Long?>()
+    private val cache = mutableMapOf<String, Installed?>()
 
-    private fun versionOf(pkgName: String): Long? = cache.getOrPut(pkgName) {
+    private data class Installed(val code: Long, val name: String?)
+
+    private fun versionOf(pkgName: String): Installed? = cache.getOrPut(pkgName) {
         runCatching {
-            PackageInfoCompat.getLongVersionCode(packageManager.getPackageInfo(pkgName, 0))
+            val info = packageManager.getPackageInfo(pkgName, 0)
+            Installed(PackageInfoCompat.getLongVersionCode(info), info.versionName)
         }.getOrNull()
     }
 
     fun stillOlderThan(extension: Extension): Boolean =
-        (versionOf(extension.pkgName) ?: return true) <= extension.versionCode
+        (versionOf(extension.pkgName)?.code ?: return true) <= extension.versionCode
 
     fun stillOlderThan(extension: AnimeExtension): Boolean =
-        (versionOf(extension.pkgName) ?: return true) <= extension.versionCode
+        (versionOf(extension.pkgName)?.code ?: return true) <= extension.versionCode
+
+    /**
+     * The version to print, which is the phone's answer whenever the phone has one.
+     *
+     * Suppressing a stale update prompt without also correcting the version beside it leaves the row
+     * quietly lying: no Update mark, and the number of the version that was replaced. That is not a
+     * state anybody can check, and *"it stopped asking, as if it were already latest"* is exactly
+     * the sentence somebody writes when the screen has given them nothing to check it against.
+     *
+     * The manager's own record is used only where there is no package to ask — a private extension,
+     * or one that is available and not installed at all.
+     */
+    fun versionNameOf(pkgName: String, fallback: String): String =
+        versionOf(pkgName)?.name ?: fallback
 }
 
 private fun Extension.toRow(steps: Map<String, InstallActivity>, onDevice: InstalledVersions) = ExtensionRow(
     key = "manga-$pkgName",
     name = name,
     lang = lang.orEmpty(),
-    versionName = versionName,
+    versionName = if (this is Extension.Installed) onDevice.versionNameOf(pkgName, versionName) else versionName,
     isNsfw = isNsfw,
     hasUpdate = (this as? Extension.Installed)?.hasUpdate == true && onDevice.stillOlderThan(this),
     isObsolete = (this as? Extension.Installed)?.isObsolete == true,
@@ -571,7 +588,11 @@ private fun AnimeExtension.toRow(steps: Map<String, InstallActivity>, onDevice: 
     key = "anime-$pkgName",
     name = name,
     lang = lang.orEmpty(),
-    versionName = versionName,
+    versionName = if (this is AnimeExtension.Installed) {
+        onDevice.versionNameOf(pkgName, versionName)
+    } else {
+        versionName
+    },
     isNsfw = isNsfw,
     hasUpdate = (this as? AnimeExtension.Installed)?.hasUpdate == true && onDevice.stillOlderThan(this),
     isObsolete = (this as? AnimeExtension.Installed)?.isObsolete == true,
