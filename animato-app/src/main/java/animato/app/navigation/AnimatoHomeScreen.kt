@@ -2,8 +2,12 @@ package animato.app.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.gestures.Orientation
@@ -159,8 +163,34 @@ object AnimatoHomeScreen : Screen(), AnimatoRoot {
                         AnimatedContent(
                             targetState = tabNavigator.current,
                             transitionSpec = {
-                                materialFadeThroughIn(initialScale = 1f, durationMillis = TabFadeDuration) togetherWith
-                                    materialFadeThroughOut(durationMillis = TabFadeDuration)
+                                // Neighbouring destinations slide in from the side they sit on —
+                                // asked for from a device: the swipe should read as a carousel,
+                                // not a cut. A third of the width is movement enough to say which
+                                // way things went; a full-width slide is a scene change.
+                                // SlideDirection.Start/End are layout-direction aware, so the
+                                // motion mirrors correctly in Arabic.
+                                val from = TABS.indexOfFirst { it::class == initialState::class }
+                                val to = TABS.indexOfFirst { it::class == targetState::class }
+                                if (from != -1 && to != -1 && from != to) {
+                                    val towards = if (to > from) {
+                                        AnimatedContentTransitionScope.SlideDirection.Start
+                                    } else {
+                                        AnimatedContentTransitionScope.SlideDirection.End
+                                    }
+                                    (
+                                        slideIntoContainer(towards, tween(TabFadeDuration)) { it / 3 } +
+                                            fadeIn(tween(TabFadeDuration))
+                                        ) togetherWith (
+                                        slideOutOfContainer(towards, tween(TabFadeDuration)) { it / 3 } +
+                                            fadeOut(tween(TabFadeDuration))
+                                        )
+                                } else {
+                                    materialFadeThroughIn(
+                                        initialScale = 1f,
+                                        durationMillis = TabFadeDuration,
+                                    ) togetherWith
+                                        materialFadeThroughOut(durationMillis = TabFadeDuration)
+                                }
                             },
                             label = "tabContent",
                         ) {
