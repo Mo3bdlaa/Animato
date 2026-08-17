@@ -92,15 +92,18 @@ data class DiscoverState(
  * Separating them is also what lets the covers drop their type marks. A rail is one medium now, its
  * header says which, and nothing on the cards has to repeat it.
  *
- * Anime leads each pair because *This season* is anime-only, so a mixed screen that put manga first
- * would alternate media in an order no rule explains.
+ * ## Why only trending now
+ *
+ * The screen carried all three questions per medium — five rails before your own sources ever
+ * appeared — and a device called it: *"discover has a lot; trending anime and trending manga may
+ * be enough."* The other questions did not disappear, they moved behind *view all*: the grid
+ * screen shows any rail at full depth, so top-rated is one tap away instead of two screens of
+ * scrolling closer.
  */
 private fun railsFor(lens: ContentFilter): List<MetadataRailState> =
-    MetadataRail.entries.flatMap { rail ->
-        listOf(ContentType.ANIME, ContentType.MANGA)
-            .filter { it in rail.media && lens.accepts(it) }
-            .map { MetadataRailState(rail = rail, contentType = it) }
-    }
+    listOf(ContentType.ANIME, ContentType.MANGA)
+        .filter { lens.accepts(it) }
+        .map { MetadataRailState(rail = MetadataRail.TRENDING, contentType = it) }
 
 /**
  * What to watch or read next.

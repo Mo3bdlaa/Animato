@@ -87,20 +87,24 @@ class MetadataCatalog(
      * Throws nothing: a rail that fails comes back empty, because three rails at the top of a
      * screen are decoration for the one below them and none of them is worth an error dialog.
      */
-    suspend fun fetch(rail: MetadataRail, contentType: ContentType): List<MetadataItem> = withIOContext {
+    suspend fun fetch(
+        rail: MetadataRail,
+        contentType: ContentType,
+        limit: Int = PER_PAGE,
+    ): List<MetadataItem> = withIOContext {
         // Seasons are an anime idea and AniList models them that way — `season` is not a field on a
         // manga. Rather than sending a query that quietly matches nothing, the manga half of this
         // rail simply does not exist, and the screen draws whatever the anime half returned.
         if (rail == MetadataRail.THIS_SEASON && contentType == ContentType.MANGA) {
             return@withIOContext emptyList()
         }
-        runCatching { request(rail, contentType) }.getOrDefault(emptyList())
+        runCatching { request(rail, contentType, limit) }.getOrDefault(emptyList())
     }
 
-    private suspend fun request(rail: MetadataRail, contentType: ContentType): List<MetadataItem> {
+    private suspend fun request(rail: MetadataRail, contentType: ContentType, limit: Int): List<MetadataItem> {
         val variables = buildJsonObject {
             put("type", if (contentType == ContentType.ANIME) "ANIME" else "MANGA")
-            put("perPage", PER_PAGE)
+            put("perPage", limit)
             when (rail) {
                 MetadataRail.TRENDING -> put("sort", JsonPrimitive("TRENDING_DESC").asList())
                 MetadataRail.TOP_RATED -> put("sort", JsonPrimitive("SCORE_DESC").asList())

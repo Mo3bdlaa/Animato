@@ -18,13 +18,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -119,7 +121,11 @@ internal fun DiscoverContent() {
                 // in what I have". Restricted to the rail's own medium: a trending anime has no
                 // business being looked for in a manga source, and asking every source of both
                 // halves is how a search takes twice as long to say nothing.
-                metadataRail(rail, showMedium = state.lens == ContentFilter.ALL) { item ->
+                metadataRail(
+                    rail = rail,
+                    showMedium = state.lens == ContentFilter.ALL,
+                    onViewAll = { navigator.push(MetadataGridScreen(rail.rail, rail.contentType)) },
+                ) { item ->
                     search(item.title, rail.contentType)
                 }
             }
@@ -137,18 +143,15 @@ internal fun DiscoverContent() {
                 sourceRail("latest", MR.strings.latest, state.latest, openSourceItem)
             }
 
+            // One management row, not two. "Sources & extensions" and a second "Sources" both
+            // led to lists of the same extensions — a device called the pair redundant — and the
+            // extensions screen now opens each installed extension into its own source, which was
+            // the only thing the second row could do that the first could not.
             item(key = "manage") {
                 DestinationRow(
                     labelRes = AYMR.strings.label_sources_extensions,
                     icon = Icons.Outlined.Extension,
                     onClick = { navigator.push(ExtensionsScreen()) },
-                )
-            }
-            item(key = "browse") {
-                DestinationRow(
-                    labelRes = MR.strings.label_sources,
-                    icon = Icons.Outlined.TravelExplore,
-                    onClick = { navigator.push(BrowseCatalogScreen()) },
                 )
             }
         }
@@ -175,14 +178,30 @@ private fun SearchRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
     ) {
-        OutlinedTextField(
+        // A filled pill, matching the search screen's field. It was an outlined box, and on a dark
+        // background the strongest line on the page belonged to an empty rectangle — the exact
+        // fault the search screen had already fixed, reported again from a device about this one.
+        TextField(
             value = query,
             onValueChange = onQueryChange,
             modifier = Modifier.weight(1f),
-            placeholder = { Text(stringResource(AYMR.strings.discover_search_hint)) },
+            placeholder = {
+                Text(
+                    text = stringResource(AYMR.strings.discover_search_hint),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            },
             leadingIcon = { Icon(imageVector = Icons.Outlined.Search, contentDescription = null) },
             singleLine = true,
             shape = RoundedCornerShape(SearchFieldRadius),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+            ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { onSearch() }),
         )
@@ -199,26 +218,39 @@ private fun SearchRow(
  * cards carry none. Under a narrowed lens even the header drops it, which is the same rule the rest
  * of the app follows: when everything on screen is the same kind, saying so on each item is noise.
  *
- * No *See all*. The design sheet puts one on each header, and it would have to open a screen that
- * does not exist — a link that goes nowhere is worse than a header that promises nothing. It comes
- * back with the browse-a-rail screen.
+ * *View all* exists now — the note that used to explain its absence said it "comes back with the
+ * browse-a-rail screen", and [MetadataGridScreen] is that screen. It is also where the questions
+ * the front page no longer lists still live.
  */
 private fun LazyListScope.metadataRail(
     rail: MetadataRailState,
     showMedium: Boolean,
+    onViewAll: () -> Unit,
     onClick: (MetadataItem) -> Unit,
 ) {
     if (!rail.isLoading && rail.items.isEmpty()) return
 
     item(key = "header-${rail.key}") {
         val question = stringResource(rail.rail.labelRes())
-        SectionHeader(
-            if (showMedium) {
-                "$question · ${stringResource(rail.contentType.labelRes())}"
-            } else {
-                question
-            },
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SectionHeader(
+                text = if (showMedium) {
+                    "$question · ${stringResource(rail.contentType.labelRes())}"
+                } else {
+                    question
+                },
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(
+                onClick = onViewAll,
+                modifier = Modifier.padding(end = MaterialTheme.padding.small),
+            ) {
+                Text(stringResource(AYMR.strings.discover_view_all))
+            }
+        }
     }
     item(key = "rail-${rail.key}") {
         LazyRow(
@@ -332,10 +364,10 @@ private fun NoSourcesCard(onAddSources: () -> Unit) {
 }
 
 @Composable
-private fun SectionHeader(text: String) {
+private fun SectionHeader(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
+        modifier = modifier.padding(horizontal = MaterialTheme.padding.medium),
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold,
     )
@@ -354,13 +386,13 @@ private fun DestinationRow(
     )
 }
 
-private fun MetadataRail.labelRes(): StringResource = when (this) {
+internal fun MetadataRail.labelRes(): StringResource = when (this) {
     MetadataRail.TRENDING -> AYMR.strings.rail_trending
     MetadataRail.THIS_SEASON -> AYMR.strings.rail_this_season
     MetadataRail.TOP_RATED -> AYMR.strings.rail_top_rated
 }
 
-private fun ContentType.labelRes(): StringResource = when (this) {
+internal fun ContentType.labelRes(): StringResource = when (this) {
     ContentType.MANGA -> AYMR.strings.label_manga
     ContentType.ANIME -> AYMR.strings.label_anime
 }
