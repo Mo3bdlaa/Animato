@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.app.updates.UpdateItem
 import animato.app.updates.toUpdateItem
+import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,7 +38,10 @@ data class ContinueItem(
     val itemNumber: Double,
     val lastViewedAt: Long,
     val coverData: Any?,
-)
+) {
+    /** The identity a dismissal is keyed on: the entry, within its half. */
+    val railKey: String get() = "${contentType.name}:$entryId"
+}
 
 @Immutable
 data class HomeScreenState(
@@ -58,6 +62,7 @@ class HomeScreenModel(
     getAnimeHistory: GetAnimeHistory = Injekt.get(),
     getUpdates: GetUpdates = Injekt.get(),
     getAnimeUpdates: GetAnimeUpdates = Injekt.get(),
+    private val contentPreferences: ContentPreferences = Injekt.get(),
 ) : ViewModel() {
 
     val state: StateFlow<HomeScreenState>
@@ -90,7 +95,9 @@ class HomeScreenModel(
                 excludedCategories = emptyList(),
             ),
             getAnimeUpdates.subscribe(instant = sinceLegacy),
-        ) { mangaHistory, animeHistory, mangaUpdates, animeUpdates ->
+            contentPreferences.hiddenFromContinue.changes(),
+        ) { mangaHistory, animeHistory, mangaUpdates, animeUpdates, hidden ->
+            val dismissedAt = hidden.mapNotNull(::parseDismissal).toMap()
             val continueItems = buildList {
                 mangaHistory.forEach {
                     add(
@@ -119,6 +126,11 @@ class HomeScreenModel(
             }
                 .sortedByDescending { it.lastViewedAt }
                 .distinctBy { it.contentType to it.entryId }
+                // A dismissal outranks the history that is older than it and nothing newer: hide
+                // was asked for from a device with exactly that shape — "off this rail, but it
+                // can stay in the library" — and opening the entry again is the change of mind
+                // that puts it back, because that writes a fresher history row.
+                .filterNot { (dismissedAt[it.railKey] ?: Long.MIN_VALUE) >= it.lastViewedAt }
                 .take(CONTINUE_LIMIT)
 
             // The same row object the Updates feed draws — Home is the first five of it, not a
@@ -137,7 +149,23 @@ class HomeScreenModel(
             .launchIn(viewModelScope)
     }
 
+    /** Dismisses one entry from the Continue rail, timestamped so a later open un-dismisses it. */
+    fun hideFromContinue(item: ContinueItem) {
+        val key = "${item.contentType.name}:${item.entryId}"
+        val entry = "$key:${System.currentTimeMillis()}"
+        contentPreferences.hiddenFromContinue.let { pref ->
+            pref.set(pref.get().filterNot { it.startsWith("$key:") }.toSet() + entry)
+        }
+    }
+
     companion object {
+        private fun parseDismissal(entry: String): Pair<String, Long>? {
+            val parts = entry.split(':')
+            if (parts.size != 3) return null
+            val at = parts[2].toLongOrNull() ?: return null
+            return "${parts[0]}:${parts[1]}" to at
+        }
+
         /** The rail is scrolled, not paged; past this many nobody is still looking. */
         private const val CONTINUE_LIMIT = 20
 

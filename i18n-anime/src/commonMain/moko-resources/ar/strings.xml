@@ -516,6 +516,14 @@
     <string name="failure_source_not_installed">إكستنشن المصدر ده مش متسطبة</string>
     <string name="failure_site_unreachable">مقدرناش نوصل للموقع — يا مفيش نت، يا الموقع واقع</string>
     <string name="failure_site_timed_out">الموقع اتأخر في الرد أكتر من اللازم</string>
+    <string name="lens_short_all">الكل</string>
+    <string name="lens_short_anime">أنمي</string>
+    <string name="lens_short_manga">مانجا</string>
+    <string name="discover_view_all">شوف الكل</string>
+    <string name="discover_rail_empty">مرجعش حاجة — خدمة القوائم ممكن تكون مش متاحة دلوقتي</string>
+    <string name="updates_mark_opened">عليم إنها اتفتحت</string>
+    <string name="home_hide_from_continue">شيلها من هنا</string>
+    <string name="entry_caught_up">مخلّصها كلها</string>
     <string name="no_available_videos_source_empty">المصدر رجّع قائمة فيديوهات فاضية للحلقة دي — الأغلب المصدر نفسه بايظ</string>
     <string name="no_hosters">قائمة المضيفين فارغة</string>
     <string name="no_episode_loaded">لم يتم تحميل أي حلقة</string>

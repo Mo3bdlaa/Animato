@@ -303,6 +303,14 @@
     <string name="failure_source_not_installed">The extension for this source is not installed</string>
     <string name="failure_site_unreachable">Could not reach the site — no connection, or the site is down</string>
     <string name="failure_site_timed_out">The site took too long to answer</string>
+    <string name="lens_short_all">All</string>
+    <string name="lens_short_anime">Ani</string>
+    <string name="lens_short_manga">Man</string>
+    <string name="discover_view_all">View all</string>
+    <string name="discover_rail_empty">Nothing came back — the list service may be unreachable</string>
+    <string name="updates_mark_opened">Mark as opened</string>
+    <string name="home_hide_from_continue">Hide from here</string>
+    <string name="entry_caught_up">Caught up</string>
     <string name="no_available_videos_source_empty">The source returned an empty video list for this episode — the source itself is likely broken</string>
     <string name="no_hosters">Hoster list is empty</string>
     <string name="no_episode_loaded">No episode loaded</string>
