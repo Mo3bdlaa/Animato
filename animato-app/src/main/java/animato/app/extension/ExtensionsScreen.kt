@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.FilterAltOff
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -488,6 +489,15 @@ private fun ExtensionListItem(
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
+                // In words too, for the same reason: a red Retry button says something went wrong
+                // and not what, and this is the row somebody is about to give up on.
+                if (row.installStep == InstallStep.Error) {
+                    Text(
+                        text = stringResource(AYMR.strings.ext_install_failed),
+                        color = palette.error,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         },
         trailingContent = {
@@ -495,6 +505,23 @@ private fun ExtensionListItem(
                 when {
                     row.installStep.isOngoing() -> TextButton(onClick = onCancel) {
                         Text(stringResource(MR.strings.action_cancel))
+                    }
+                    /*
+                     * A failed install said nothing at all, and that is how it was reported: "I
+                     * update it and it still says update, no matter how many times." Which is
+                     * exactly what a silent failure looks like from outside — the button is pressed,
+                     * the install fails, the row goes back to offering the same update.
+                     *
+                     * Before the trust and update cases, so a failure is not hidden behind the very
+                     * button that just failed.
+                     */
+                    row.installStep == InstallStep.Error -> OutlinedButton(
+                        onClick = if (row.isInstalled) onUpdate else onInstall,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = LocalAnimatoPalette.current.error,
+                        ),
+                    ) {
+                        Text(stringResource(MR.strings.action_retry))
                     }
                     row.isUntrusted -> OutlinedButton(onClick = onTrust) {
                         Text(stringResource(MR.strings.ext_trust))

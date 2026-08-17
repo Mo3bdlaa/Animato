@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.flow.update
 import mihon.domain.extension.anime.interactor.GetAnimeExtensionStoreCountAsFlow
 import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow
@@ -355,9 +356,35 @@ class ExtensionsScreenModel(
         }
     }
 
+    /**
+     * Follows one install to its end, and stops there.
+     *
+     * ## Two bugs in four lines
+     *
+     * The installer hands back `MutableStateFlow.asStateFlow()`, and **a state flow never
+     * completes**. So `collect()` never returned: every install left a coroutine collecting for the
+     * life of the screen, and `onCompletion` — the line that was supposed to clear the row's
+     * progress — could not run at all. `transformWhile` ends the collection at the first terminal
+     * step, which is what makes both work.
+     *
+     * The second is that `Error` is terminal and was being dropped on the floor with the rest.
+     * Nothing on the row said an install had failed, so a failed install and a button that does
+     * nothing looked exactly alike — which is how *"I update it and it still says update, no matter
+     * how many times"* gets reported. A failure is kept on the row now until the next attempt.
+     */
     private suspend fun Flow<InstallStep>.track(pkgName: String) =
-        onEach { step -> currentSteps.update { it + (pkgName to step) } }
-            .onCompletion { currentSteps.update { it - pkgName } }
+        transformWhile { step ->
+            emit(step)
+            !step.isCompleted()
+        }
+            .onEach { step -> currentSteps.update { it + (pkgName to step) } }
+            .onCompletion {
+                currentSteps.update { steps ->
+                    // A failure stays. Anything else has nothing left to say, and the row goes back
+                    // to being described by the extension itself.
+                    if (steps[pkgName] == InstallStep.Error) steps else steps - pkgName
+                }
+            }
             .collect()
 
     private companion object {
