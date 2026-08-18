@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -128,6 +129,14 @@ data class EntryState(
      * list to be trusted to be sorted, which is exactly what was not true.
      */
     val sortDescending: Boolean = true,
+    /**
+     * Whether the source has ever been asked about this entry.
+     *
+     * False for a row that only exists because something was tapped in a source list or a search
+     * result: `networkToLocal*` writes a title and a url and nothing else. See the first-fetch in
+     * the model, which is what stops that landing on an empty page.
+     */
+    val initialized: Boolean = false,
     /** Numbers the source skipped or a filter removed, counted the way both halves already count. */
     val missingCount: Int = 0,
     /**
@@ -213,11 +222,34 @@ class EntryScreenModel(
     val state: StateFlow<EntryState>
         field = MutableStateFlow(EntryState(entryId = entryId, contentType = contentType))
 
+    private var firstFetchDone = false
+
     init {
         viewModelScope.launch {
             when (contentType) {
                 ContentType.MANGA -> observeManga(trackRepository)
                 ContentType.ANIME -> observeAnime(animeTrackRepository)
+            }
+        }
+
+        /*
+         * Ask the source once, for an entry nobody has ever asked about.
+         *
+         * Opening something from a source list creates its row through `networkToLocal*`, which
+         * stores a title and a url — no description, no chapters, no episodes. The page observes
+         * the database, so it drew exactly that: a title over an empty list, until the refresh
+         * button was pressed by hand. From a device: *"when I open anything from a source the page
+         * doesn't load and I have to hit refresh."*
+         *
+         * Once, and only for an uninitialised entry: a library entry has been fetched before and a
+         * page that re-asks the source every time it is opened is a page that costs a request per
+         * glance.
+         */
+        viewModelScope.launch {
+            state.first { !it.isLoading }
+            if (!firstFetchDone && !state.value.initialized) {
+                firstFetchDone = true
+                refresh()
             }
         }
     }
@@ -248,6 +280,7 @@ class EntryScreenModel(
                 coverData = manga.asMangaCover(),
                 inLibrary = manga.favorite,
                 sortDescending = manga.sortDescending(),
+                initialized = manga.initialized,
                 missingCount = ordered.map { it.chapterNumber }.missingChaptersCount(),
                 nextReleaseDays = daysUntil(manga.expectedNextUpdate?.toEpochMilliseconds()),
                 releaseIntervalDays = manga.fetchInterval.absoluteValue.takeIf { it > 0 },
@@ -301,6 +334,7 @@ class EntryScreenModel(
                 coverData = anime.asAnimeCover(),
                 inLibrary = anime.favorite,
                 sortDescending = anime.sortDescending(),
+                initialized = anime.initialized,
                 missingCount = ordered.map { it.episodeNumber }.missingEntriesCount(),
                 nextReleaseDays = daysUntil(anime.expectedNextUpdate?.toEpochMilli()),
                 releaseIntervalDays = anime.fetchInterval.absoluteValue.takeIf { it > 0 },
