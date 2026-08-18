@@ -60,6 +60,7 @@ import animato.app.navigation.setContentLens
 import animato.app.nsfw.NsfwDefaults
 import animato.app.onboarding.AnimatoOnboardingScreen
 import animato.app.settings.AniyomiImportScreen
+import animato.app.source.SourceBrowseScreen
 import animato.app.sync.LibrarySyncJob
 import animato.app.updater.AnimatoAppUpdateChecker
 import animato.domain.content.ContentFilter
@@ -312,8 +313,16 @@ class MainActivity : BaseActivity() {
                             // See the note on `ready`: Mihon's tabs cannot reach this activity to set it.
                             ready = true
                         }
+                        // Which source, if any, is being browsed right now — the banner is
+                        // per-source, because incognito is. `SourceBrowseScreen` is what browsing
+                        // a source is in this app; upstream's is still named for the case where a
+                        // deep link or a shortcut lands on it.
                         LaunchedEffect(navigator.lastItem) {
-                            (navigator.lastItem as? BrowseSourceScreen)?.sourceId
+                            when (val screen = navigator.lastItem) {
+                                is SourceBrowseScreen -> screen.sourceId
+                                is BrowseSourceScreen -> screen.sourceId
+                                else -> null
+                            }
                                 .let(getIncognitoState::subscribe)
                                 .collectLatest { incognito = it }
                         }
@@ -365,6 +374,7 @@ class MainActivity : BaseActivity() {
                                     // result opens, so the rule has to name it too — otherwise
                                     // leaving incognito quietly stopped popping anything.
                                     if (currentScreen is BrowseSourceScreen ||
+                                        currentScreen is SourceBrowseScreen ||
                                         (currentScreen is MangaScreen && currentScreen.fromSource) ||
                                         (currentScreen is EntryScreen && currentScreen.fromSource)
                                     ) {

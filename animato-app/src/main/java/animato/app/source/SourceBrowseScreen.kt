@@ -94,7 +94,11 @@ import kotlin.time.Duration.Companion.seconds
  * pure UI over a public model, and a second implementation of it would be a second set of bugs.
  */
 class SourceBrowseScreen(
-    private val sourceId: Long,
+    /**
+     * Public because the incognito banner and the leave-incognito rule both ask the top screen
+     * which source it is showing — the same question upstream's browse screen answers.
+     */
+    val sourceId: Long,
     private val contentType: ContentType,
 ) : Screen() {
 
