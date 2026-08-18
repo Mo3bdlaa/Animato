@@ -5,6 +5,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import animato.anime.player.PlayerEpisodeVideoResolver
 import animato.anime.player.cast.CastController
 import animato.anime.services.download.EpisodeVideoResolver
+import animato.anime.stremio.StremioAddonStore
 import animato.anime.track.AnimeTrackerManager
 import animato.app.discover.MetadataCatalog
 import animato.data.AnimeUpdateStrategyColumnAdapter
@@ -111,7 +112,11 @@ class AnimeAppModule(val app: Application) : InjektModule {
         addSingletonFactory { AnimeCoverCache(app) }
         addSingletonFactory { AnimeBackgroundCache(app) }
 
-        addSingletonFactory<AnimeSourceManager> { AndroidAnimeSourceManager(app, get(), get()) }
+        // The addon store comes first because the source manager reads its stored addons on the
+        // very first emission: a source list that starts short and grows a moment later is a
+        // source list people have already scrolled past.
+        addSingletonFactory { StremioAddonStore() }
+        addSingletonFactory<AnimeSourceManager> { AndroidAnimeSourceManager(app, get(), get(), get()) }
         addSingletonFactory { AnimeExtensionManager(app) }
 
         // The anime half of the trackers. Each wraps the Mihon tracker of the same id and shares

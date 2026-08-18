@@ -1,0 +1,244 @@
+package animato.app.stremio
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.stremio.StremioAddon
+import animato.anime.stremio.StremioSource
+import animato.app.source.SourceBrowseScreen
+import animato.domain.content.ContentType
+import animato.ui.components.AnimatoEmptyState
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.util.Screen
+import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.plus
+
+/**
+ * The addons, and the one field that adds one.
+ *
+ * This screen exists because adding a source here is nothing like installing an extension, and
+ * pretending otherwise would be a lie the first error message would expose. There is no package to
+ * trust, no signature to compare, no repository to browse — there is an address, and either it
+ * answers like an addon or it does not. So the screen is a list and a text field, and every way it
+ * can go wrong is said in a sentence under that field rather than as a toast that disappears
+ * before it can be read.
+ */
+class StremioAddonsScreen : Screen() {
+
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val screenModel = viewModel { StremioAddonsScreenModel() }
+        val addons by screenModel.addons.collectAsStateWithLifecycle()
+        val installState by screenModel.installState.collectAsStateWithLifecycle()
+        var dialogOpen by remember { mutableStateOf(false) }
+
+        // Manifests go stale — an addon adds a catalog and this one would never notice. The
+        // catch-up is silent and keeps whatever it already had wherever an addon does not answer.
+        LaunchedEffect(Unit) { screenModel.refresh() }
+
+        // Closing on success is the model's decision, not the dialog's: the dialog cannot know
+        // whether the address it sent turned out to be an addon.
+        LaunchedEffect(installState) {
+            if (installState is AddonInstallState.Added) {
+                dialogOpen = false
+                screenModel.acknowledge()
+            }
+        }
+
+        if (dialogOpen) {
+            AddAddonDialog(
+                state = installState,
+                onAdd = screenModel::install,
+                onDismiss = {
+                    dialogOpen = false
+                    screenModel.acknowledge()
+                },
+            )
+        }
+
+        Scaffold(
+            topBar = { scrollBehavior ->
+                AppBar(
+                    title = stringResource(AYMR.strings.stremio_addons),
+                    navigateUp = navigator::pop,
+                    scrollBehavior = scrollBehavior,
+                    actions = {
+                        IconButton(onClick = { dialogOpen = true }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Add,
+                                contentDescription = stringResource(AYMR.strings.stremio_add_addon),
+                            )
+                        }
+                    },
+                )
+            },
+        ) { contentPadding ->
+            if (addons.isEmpty()) {
+                AnimatoEmptyState(
+                    message = stringResource(AYMR.strings.stremio_addons_empty),
+                    actionLabel = stringResource(AYMR.strings.stremio_add_addon),
+                    onAction = { dialogOpen = true },
+                    modifier = Modifier.padding(contentPadding),
+                )
+                return@Scaffold
+            }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.medium),
+            ) {
+                items(items = addons, key = { it.url }) { addon ->
+                    AddonListItem(
+                        addon = addon,
+                        // An addon in the list is somewhere you can go, the same way an installed
+                        // extension is — the row opens what it serves rather than only managing it.
+                        onOpen = {
+                            navigator.push(
+                                SourceBrowseScreen(StremioSource.idFor(addon.url), ContentType.ANIME),
+                            )
+                        },
+                        onRemove = { screenModel.remove(addon.url) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddonListItem(
+    addon: StremioAddon,
+    onOpen: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    ListItem(
+        modifier = Modifier.clickable(onClick = onOpen),
+        headlineContent = {
+            Text(
+                text = addon.manifest.name.ifBlank { addon.url },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        supportingContent = {
+            Column {
+                val description = addon.manifest.description.takeIf { it.isNotBlank() }
+                if (description != null) {
+                    Text(text = description, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+                Text(
+                    text = addon.url,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        },
+        trailingContent = {
+            IconButton(onClick = onRemove) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = stringResource(MR.strings.action_delete),
+                )
+            }
+        },
+    )
+}
+
+@Composable
+private fun AddAddonDialog(
+    state: AddonInstallState,
+    onAdd: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var url by remember { mutableStateOf("") }
+    val working = state is AddonInstallState.Working
+    val submit = { if (url.isNotBlank() && !working) onAdd(url) }
+
+    AlertDialog(
+        onDismissRequest = { if (!working) onDismiss() },
+        title = { Text(stringResource(AYMR.strings.stremio_add_addon)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it },
+                    label = { Text(stringResource(AYMR.strings.stremio_addon_url_hint)) },
+                    supportingText = { Text(stringResource(AYMR.strings.stremio_addon_url_example)) },
+                    singleLine = true,
+                    enabled = !working,
+                    isError = state is AddonInstallState.Failed,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Uri,
+                        imeAction = ImeAction.Go,
+                    ),
+                    keyboardActions = KeyboardActions(onGo = { submit() }),
+                )
+                // The failure stays on screen next to the field that caused it, because every one
+                // of these is something the person typing can fix on the spot.
+                (state as? AddonInstallState.Failed)?.let {
+                    Text(
+                        text = it.message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = submit, enabled = url.isNotBlank() && !working) {
+                if (working) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(stringResource(MR.strings.action_add))
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !working) {
+                Text(stringResource(MR.strings.action_cancel))
+            }
+        },
+    )
+}

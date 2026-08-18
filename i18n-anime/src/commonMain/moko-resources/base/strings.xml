@@ -327,6 +327,21 @@
     <string name="no_hosters">Hoster list is empty</string>
     <string name="no_episode_loaded">No episode loaded</string>
     <string name="select_hoster_from_empty_list">Hoster selected from empty list</string>
+    <!-- Stremio addons -->
+    <string name="stremio_addons">Stremio addons</string>
+    <string name="stremio_addons_summary">Sources that are a web address, not an installed app</string>
+    <string name="stremio_add_addon">Add an addon</string>
+    <string name="stremio_addon_url_hint">Addon address</string>
+    <string name="stremio_addon_url_example">Paste the manifest.json link the addon gives you</string>
+    <string name="stremio_addons_empty">No addons yet</string>
+    <string name="stremio_addon_added">Added %1$s</string>
+    <string name="stremio_addon_removed">Removed %1$s</string>
+    <string name="stremio_error_invalid_url">That does not look like a web address</string>
+    <string name="stremio_error_already_added">That addon is already added</string>
+    <string name="stremio_error_unreachable">Could not reach that address</string>
+    <string name="stremio_error_not_an_addon">That address answered, but not with an addon</string>
+    <string name="stremio_error_no_content">This addon has nothing to browse or open</string>
+    <string name="stremio_error_needs_configuration">Configure this addon on its own page first, then paste the address it gives you</string>
     <!-- Sheets -->
     <string name="player_sheets_delay_set_as_default">Set as default</string>
     <string name="player_sheets_track_title_w_lang" translatable="false">#%d: %s (%s)</string>

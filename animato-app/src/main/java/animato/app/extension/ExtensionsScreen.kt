@@ -56,9 +56,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.stremio.StremioAddonStore
 import animato.anime.ui.stores.AnimeExtensionStoresScreen
 import animato.app.navigation.LensButton
 import animato.app.source.SourceBrowseScreen
+import animato.app.stremio.StremioAddonsScreen
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -82,6 +84,8 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 /**
  * Sources and extensions, for both halves, on one screen.
@@ -211,6 +215,10 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                 storeCount = state.storeCount,
                 navigator = navigator,
             )
+            // Addons serve video and nothing else, so under the manga lens they are furniture.
+            if (state.lens != ContentFilter.MANGA) {
+                StremioAddonsRow(navigator = navigator)
+            }
             SegmentRow(selected = segment, onSelect = { segment = it })
 
             HorizontalPager(state = pagerState) { page ->
@@ -327,6 +335,39 @@ private fun RepositoriesRow(
             )
         }
     }
+}
+
+/**
+ * The other kind of source, one row below the repositories that serve the usual kind.
+ *
+ * It sits here rather than in settings because it answers the same question the row above it does
+ * — *where is Animato getting things from* — and because the two are alternatives to each other:
+ * an extension is a package we install and run, an addon is an address we only ever ask. Someone
+ * looking for more sources should find both without knowing that distinction first.
+ *
+ * The subtitle names the addons once there are any, and explains what one is while there are none.
+ * A bare count would be the least useful thing this line could say on either side of that.
+ */
+@Composable
+private fun StremioAddonsRow(navigator: Navigator) {
+    val store = remember { Injekt.get<StremioAddonStore>() }
+    val addons by store.addons.collectAsStateWithLifecycle()
+
+    ListItem(
+        modifier = Modifier.clickable { navigator.push(StremioAddonsScreen()) },
+        headlineContent = { Text(stringResource(AYMR.strings.stremio_addons)) },
+        supportingContent = {
+            Text(
+                text = if (addons.isEmpty()) {
+                    stringResource(AYMR.strings.stremio_addons_summary)
+                } else {
+                    addons.joinToString { it.manifest.name.ifBlank { it.url } }
+                },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+    )
 }
 
 /**

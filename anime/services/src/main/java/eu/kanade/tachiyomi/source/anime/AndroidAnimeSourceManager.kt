@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.source.anime
 
 import android.content.Context
+import animato.anime.stremio.StremioAddonStore
+import animato.anime.stremio.StremioSource
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -29,6 +32,7 @@ class AndroidAnimeSourceManager(
     private val context: Context,
     private val extensionManager: AnimeExtensionManager,
     private val sourceRepository: AnimeStubSourceRepository,
+    private val stremioAddonStore: StremioAddonStore,
 ) : AnimeSourceManager {
 
     private val _isInitialized = MutableStateFlow(false)
@@ -46,8 +50,15 @@ class AndroidAnimeSourceManager(
 
     init {
         scope.launch {
-            extensionManager.installedExtensionsFlow
-                .collectLatest { extensions ->
+            // Two kinds of source, one map. Extensions are code we installed and run; Stremio
+            // addons are URLs we only ever talk to. Everything downstream — browsing, search,
+            // the library, downloads — asks this manager for a source by id and neither knows
+            // nor needs to know which kind answered.
+            combine(
+                extensionManager.installedExtensionsFlow,
+                stremioAddonStore.addons,
+            ) { extensions, addons -> extensions to addons }
+                .collectLatest { (extensions, addons) ->
                     val mutableMap = ConcurrentHashMap<Long, AnimeSource>(
                         mapOf(
                             LocalAnimeSource.ID to LocalAnimeSource(
@@ -65,6 +76,11 @@ class AndroidAnimeSourceManager(
                             mutableMap[it.id] = it
                             registerStubSource(StubAnimeSource.from(it))
                         }
+                    }
+                    addons.forEach { addon ->
+                        val source = StremioSource(addon)
+                        mutableMap[source.id] = source
+                        registerStubSource(StubAnimeSource.from(source))
                     }
                     sourcesMapFlow.value = mutableMap
                     _isInitialized.value = true
