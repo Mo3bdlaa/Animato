@@ -58,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.ui.stores.AnimeExtensionStoresScreen
 import animato.app.navigation.LensButton
+import animato.app.source.SourceBrowseScreen
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -74,8 +75,6 @@ import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.extension.model.InstallStep
-import eu.kanade.tachiyomi.ui.browse.anime.source.browse.BrowseAnimeSourceScreen
-import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -113,10 +112,7 @@ class ExtensionsScreen : Screen() {
         // a thing you manage. One source opens straight into its browse screen; several open a
         // picker first, because ten languages of one site are ten different sources.
         val openSource: (ExtensionRow, RowSource) -> Unit = { row, source ->
-            when (row.contentType) {
-                ContentType.MANGA -> navigator.push(BrowseSourceScreen(source.id, null))
-                ContentType.ANIME -> navigator.push(BrowseAnimeSourceScreen(source.id, null))
-            }
+            navigator.push(SourceBrowseScreen(source.id, row.contentType))
         }
 
         if (languagesOpen) {

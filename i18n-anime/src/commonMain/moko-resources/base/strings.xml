@@ -318,6 +318,7 @@
     <string name="entry_release_next_in">next in %1$s</string>
     <string name="entry_release_next_soon">next expected soon</string>
     <string name="action_manage_sources">Manage</string>
+    <string name="source_browse_empty">This source has nothing to show for that</string>
     <string name="entry_caught_up">Caught up</string>
     <string name="no_available_videos_source_empty">The source returned an empty video list for this episode — the source itself is likely broken</string>
     <string name="no_hosters">Hoster list is empty</string>

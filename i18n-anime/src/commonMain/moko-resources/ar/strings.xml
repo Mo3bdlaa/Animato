@@ -531,6 +531,7 @@
     <string name="entry_release_next_in">الجاي بعد %1$s</string>
     <string name="entry_release_next_soon">الجاي قريب</string>
     <string name="action_manage_sources">إدارة</string>
+    <string name="source_browse_empty">المصدر ده مش لاقي حاجة يعرضها لكدا</string>
     <string name="entry_caught_up">مخلّصها كلها</string>
     <string name="no_available_videos_source_empty">المصدر رجّع قائمة فيديوهات فاضية للحلقة دي — الأغلب المصدر نفسه بايظ</string>
     <string name="no_hosters">قائمة المضيفين فارغة</string>
