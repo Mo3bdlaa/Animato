@@ -514,6 +514,7 @@
     <string name="no_available_videos">لا توجد مقاطع متاحة</string>
     <string name="failure_extension_crashed">الإكستنشن نفسها وقعت — غالبًا قديمة، أو الموقع اتغير من تحتها</string>
     <string name="failure_source_not_installed">إكستنشن المصدر ده مش متسطبة</string>
+    <string name="failure_site_changed">الموقع اتغير والإكستنشن مبقتش تعرف تقراه — محتاجة تحديث من صاحبها</string>
     <string name="failure_site_unreachable">مقدرناش نوصل للموقع — يا مفيش نت، يا الموقع واقع</string>
     <string name="failure_site_timed_out">الموقع اتأخر في الرد أكتر من اللازم</string>
     <string name="lens_short_all">الكل</string>

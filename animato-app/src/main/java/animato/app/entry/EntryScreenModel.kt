@@ -249,7 +249,11 @@ class EntryScreenModel(
             state.first { !it.isLoading }
             if (!firstFetchDone && !state.value.initialized) {
                 firstFetchDone = true
-                refresh()
+                // Quietly: nobody pressed anything. A source that fails here has already said so
+                // by leaving the page empty, and a snackbar on arrival — for a request the user
+                // did not make — is the app talking over its own screen. The refresh button
+                // reports properly, because that one was asked for.
+                refresh(announce = false)
             }
         }
     }
@@ -422,7 +426,7 @@ class EntryScreenModel(
      * both leave the list identical, and a button whose success case is indistinguishable from its
      * failure case is the thing this replaced.
      */
-    fun refresh() {
+    fun refresh(announce: Boolean = true) {
         if (state.value.isRefreshing) return
         state.update { it.copy(isRefreshing = true, refreshResult = null) }
 
@@ -449,20 +453,24 @@ class EntryScreenModel(
             state.update {
                 it.copy(
                     isRefreshing = false,
-                    refreshResult = when {
-                        // The entry vanished from the database while the refresh was in flight,
-                        // which is what removing it from another screen looks like from here.
-                        result == null -> null
-                        // Known failure shapes get said in words — an uninstalled source's
-                        // exception carries no message at all, and an extension that crashed
-                        // internally carries R8's mangled null-check text. The source's own words
-                        // otherwise: a 403 and a timeout are different facts and only the source
-                        // knows which happened.
-                        result.isFailure -> result.exceptionOrNull().let { e ->
-                            RefreshResult.Failed(e?.describeForUser() ?: e?.message)
+                    refreshResult = if (!announce) {
+                        null
+                    } else {
+                        when {
+                            // The entry vanished from the database while the refresh was in flight,
+                            // which is what removing it from another screen looks like from here.
+                            result == null -> null
+                            // Known failure shapes get said in words — an uninstalled source's
+                            // exception carries no message at all, and an extension that crashed
+                            // internally carries R8's mangled null-check text. The source's own words
+                            // otherwise: a 403 and a timeout are different facts and only the source
+                            // knows which happened.
+                            result.isFailure -> result.exceptionOrNull().let { e ->
+                                RefreshResult.Failed(e?.describeForUser() ?: e?.message)
+                            }
+                            result.getOrDefault(0) > 0 -> RefreshResult.Found(result.getOrDefault(0))
+                            else -> RefreshResult.UpToDate
                         }
-                        result.getOrDefault(0) > 0 -> RefreshResult.Found(result.getOrDefault(0))
-                        else -> RefreshResult.UpToDate
                     },
                 )
             }

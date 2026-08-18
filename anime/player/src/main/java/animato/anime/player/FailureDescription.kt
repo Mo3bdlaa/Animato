@@ -2,6 +2,7 @@ package animato.anime.player
 
 import android.app.Application
 import eu.kanade.tachiyomi.animesource.AnimeSource
+import kotlinx.serialization.SerializationException
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.Injekt
@@ -35,6 +36,11 @@ fun Throwable.describeForUser(): String? {
             javaClass.simpleName == "SourceNotInstalledException" -> AYMR.strings.failure_source_not_installed
         this is NullPointerException ||
             message?.contains("on a null object reference") == true -> AYMR.strings.failure_extension_crashed
+        // A field the extension expects and the site no longer sends. Its message names a class
+        // nobody outside the extension has heard of — "Field 'video' is required for type with
+        // serial name 'eu.kanade.tachiyomi.animeextension…'" — which is the site having changed,
+        // said in the vocabulary of the code that noticed.
+        this is SerializationException -> AYMR.strings.failure_site_changed
         else -> return null
     }
     return Injekt.get<Application>().stringResource(resource)

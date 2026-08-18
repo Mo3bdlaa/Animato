@@ -301,6 +301,7 @@
     <string name="no_available_videos">No available videos</string>
     <string name="failure_extension_crashed">The extension itself crashed — it is likely outdated, or the site changed under it</string>
     <string name="failure_source_not_installed">The extension for this source is not installed</string>
+    <string name="failure_site_changed">The site changed and the extension can no longer read it — it needs an update from whoever maintains it</string>
     <string name="failure_site_unreachable">Could not reach the site — no connection, or the site is down</string>
     <string name="failure_site_timed_out">The site took too long to answer</string>
     <string name="lens_short_all">All</string>
