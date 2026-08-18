@@ -2,9 +2,6 @@ package animato.app.extension
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Extension
@@ -41,8 +40,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -52,11 +51,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -87,7 +83,6 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
-import tachiyomi.presentation.core.util.plus
 
 /**
  * Sources and extensions, for both halves, on one screen.
@@ -176,70 +171,73 @@ class ExtensionsScreen : Screen() {
                 return@Scaffold
             }
 
-            // The two segments are neighbours, so the horizontal swipe that walks the main tabs
-            // walks them too — same mechanics: only a drag no child claimed arrives here.
-            val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-            val swipeThreshold = with(LocalDensity.current) { 96.dp.toPx() }
-            var dragTotal by remember { mutableFloatStateOf(0f) }
+            /*
+             * The segments are a pager, for the same reason the destinations are.
+             *
+             * The first version measured the drag and jumped once the finger lifted — a device
+             * called it needing work, and it was the same complaint the tab bar had already
+             * earned: nothing moves until you let go. A pager moves the lists with the finger and
+             * settles where the fling points, and tapping a segment animates it there.
+             *
+             * The repositories row and the segments stay put above it. They govern both lists, so
+             * sliding them out from under a swipe would be answering a question nobody asked.
+             */
+            val pagerState = rememberPagerState(initialPage = segment.ordinal) { ExtensionSegment.entries.size }
 
-            LazyColumn(
-                contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.medium),
-                modifier = Modifier.draggable(
-                    orientation = Orientation.Horizontal,
-                    state = rememberDraggableState { delta -> dragTotal += delta },
-                    onDragStarted = { dragTotal = 0f },
-                    onDragStopped = { velocity ->
-                        val toStart = if (isRtl) -dragTotal else dragTotal
-                        val toStartVelocity = if (isRtl) -velocity else velocity
-                        when {
-                            toStart < -swipeThreshold || toStartVelocity < -1100f ->
-                                segment = ExtensionSegment.AVAILABLE
-                            toStart > swipeThreshold || toStartVelocity > 1100f ->
-                                segment = ExtensionSegment.INSTALLED
+            LaunchedEffect(segment) {
+                if (pagerState.currentPage != segment.ordinal) pagerState.animateScrollToPage(segment.ordinal)
+            }
+            LaunchedEffect(pagerState.settledPage) {
+                val settled = ExtensionSegment.entries[pagerState.settledPage]
+                if (segment != settled) segment = settled
+            }
+
+            Column(modifier = Modifier.padding(contentPadding)) {
+                RepositoriesRow(
+                    lens = state.lens,
+                    storeCount = state.storeCount,
+                    navigator = navigator,
+                )
+                SegmentRow(selected = segment, onSelect = { segment = it })
+
+                HorizontalPager(state = pagerState) { page ->
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = MaterialTheme.padding.medium),
+                    ) {
+                        when (ExtensionSegment.entries[page]) {
+                            ExtensionSegment.INSTALLED ->
+                                if (state.installed.isEmpty()) {
+                                    item(key = "ships-empty") {
+                                        ShipsEmptyState(onBrowse = { segment = ExtensionSegment.AVAILABLE })
+                                    }
+                                } else {
+                                    extensionRows(state.installed, screenModel, openSource)
+                                }
+
+                            ExtensionSegment.AVAILABLE ->
+                                // Nothing on offer drew nothing at all: the segments, and then
+                                // black. The two causes are both actionable and both named,
+                                // because "no extensions" with five repositories configured is
+                                // almost always the language filter.
+                                if (state.available.isEmpty()) {
+                                    item(key = "available-empty") {
+                                        AnimatoEmptyState(
+                                            message = stringResource(AYMR.strings.extensions_none_available),
+                                            actionLabel = stringResource(MR.strings.ext_info_language),
+                                            onAction = { languagesOpen = true },
+                                        )
+                                    }
+                                } else {
+                                    state.available.forEach { group ->
+                                        item(key = "lang-${group.languageCode}") {
+                                            LanguageHeader(group.languageName)
+                                        }
+                                        extensionRows(group.rows, screenModel, openSource)
+                                    }
+                                }
                         }
-                    },
-                ),
-            ) {
-                item(key = "repositories") {
-                    RepositoriesRow(
-                        lens = state.lens,
-                        storeCount = state.storeCount,
-                        navigator = navigator,
-                    )
-                }
-
-                item(key = "segments") {
-                    SegmentRow(selected = segment, onSelect = { segment = it })
-                }
-
-                when (segment) {
-                    ExtensionSegment.INSTALLED ->
-                        if (state.installed.isEmpty()) {
-                            item(key = "ships-empty") {
-                                ShipsEmptyState(onBrowse = { segment = ExtensionSegment.AVAILABLE })
-                            }
-                        } else {
-                            extensionRows(state.installed, screenModel, openSource)
-                        }
-
-                    ExtensionSegment.AVAILABLE ->
-                        // Nothing on offer drew nothing at all: the segments, and then black. The
-                        // two causes are both actionable and both named, because "no extensions"
-                        // with five repositories configured is almost always the language filter.
-                        if (state.available.isEmpty()) {
-                            item(key = "available-empty") {
-                                AnimatoEmptyState(
-                                    message = stringResource(AYMR.strings.extensions_none_available),
-                                    actionLabel = stringResource(MR.strings.ext_info_language),
-                                    onAction = { languagesOpen = true },
-                                )
-                            }
-                        } else {
-                            state.available.forEach { group ->
-                                item(key = "lang-${group.languageCode}") { LanguageHeader(group.languageName) }
-                                extensionRows(group.rows, screenModel, openSource)
-                            }
-                        }
+                    }
                 }
             }
         }

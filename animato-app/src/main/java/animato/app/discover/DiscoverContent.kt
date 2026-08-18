@@ -16,11 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -147,8 +144,32 @@ internal fun DiscoverContent() {
                     }
                 }
 
+                /*
+                 * The way in to managing sources, attached to the only heading on the screen that
+                 * is already about them.
+                 *
+                 * It was a row at the very bottom, under everything — and a device asked where it
+                 * should go instead: the top of the page, or somewhere else? Neither. The top
+                 * belongs to the search field, and a management link there competes with the one
+                 * thing this screen is for. Here it reads as what it is: these are your sources,
+                 * and this is where you change them.
+                 */
                 item(key = "your-sources") {
-                    SectionHeader(stringResource(AYMR.strings.label_your_sources))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        SectionHeader(
+                            text = stringResource(AYMR.strings.label_your_sources),
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(
+                            onClick = { navigator.push(ExtensionsScreen()) },
+                            modifier = Modifier.padding(end = MaterialTheme.padding.small),
+                        ) {
+                            Text(stringResource(AYMR.strings.action_manage_sources))
+                        }
+                    }
                 }
 
                 if (!state.hasSources) {
@@ -158,18 +179,6 @@ internal fun DiscoverContent() {
                 } else {
                     sourceRail("popular", MR.strings.popular, state.popular, openSourceItem)
                     sourceRail("latest", MR.strings.latest, state.latest, openSourceItem)
-                }
-
-                // One management row, not two. "Sources & extensions" and a second "Sources" both
-                // led to lists of the same extensions — a device called the pair redundant — and the
-                // extensions screen now opens each installed extension into its own source, which was
-                // the only thing the second row could do that the first could not.
-                item(key = "manage") {
-                    DestinationRow(
-                        labelRes = AYMR.strings.label_sources_extensions,
-                        icon = Icons.Outlined.Extension,
-                        onClick = { navigator.push(ExtensionsScreen()) },
-                    )
                 }
             }
         }
@@ -388,19 +397,6 @@ private fun SectionHeader(text: String, modifier: Modifier = Modifier) {
         modifier = modifier.padding(horizontal = MaterialTheme.padding.medium),
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold,
-    )
-}
-
-@Composable
-private fun DestinationRow(
-    labelRes: StringResource,
-    icon: ImageVector,
-    onClick: () -> Unit,
-) {
-    ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
-        leadingContent = { Icon(imageVector = icon, contentDescription = null) },
-        headlineContent = { Text(stringResource(labelRes)) },
     )
 }
 
