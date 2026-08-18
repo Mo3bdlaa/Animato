@@ -523,6 +523,9 @@
     <string name="discover_rail_empty">مرجعش حاجة — خدمة القوائم ممكن تكون مش متاحة دلوقتي</string>
     <string name="updates_mark_opened">عليم إنها اتفتحت</string>
     <string name="home_hide_from_continue">شيلها من هنا</string>
+    <string name="settings_group_content">المحتوى بتاعك</string>
+    <string name="settings_group_sources_data">المصادر والبيانات</string>
+    <string name="settings_group_app">التطبيق</string>
     <string name="entry_caught_up">مخلّصها كلها</string>
     <string name="no_available_videos_source_empty">المصدر رجّع قائمة فيديوهات فاضية للحلقة دي — الأغلب المصدر نفسه بايظ</string>
     <string name="no_hosters">قائمة المضيفين فارغة</string>

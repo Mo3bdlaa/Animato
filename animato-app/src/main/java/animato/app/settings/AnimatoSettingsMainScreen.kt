@@ -1,7 +1,8 @@
 package animato.app.settings
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChromeReaderMode
 import androidx.compose.material.icons.outlined.Code
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -26,8 +28,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import animato.anime.player.settings.PlayerSettingsMainScreen
 import animato.app.updater.AnimatoAppUpdateChecker
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -100,16 +104,30 @@ object AnimatoSettingsMainScreen : Screen() {
             containerColor = MaterialTheme.colorScheme.surface,
         ) { contentPadding ->
             LazyColumn(contentPadding = contentPadding) {
-                itemsIndexed(
-                    items = items,
-                    key = { _, item -> item.titleRes.resourceId },
-                ) { _, item ->
-                    TextPreferenceWidget(
-                        title = stringResource(item.titleRes),
-                        subtitle = item.subtitleRes?.let { stringResource(it) },
-                        icon = item.icon,
-                        onPreferenceClick = { navigator.push(item.screen) },
-                    )
+                groups.forEach { group ->
+                    item(key = "header-${group.titleRes.resourceId}") {
+                        Text(
+                            text = stringResource(group.titleRes),
+                            modifier = Modifier.padding(
+                                start = 16.dp,
+                                top = 14.dp,
+                                bottom = 6.dp,
+                            ),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    items(
+                        items = group.items,
+                        key = { it.titleRes.resourceId },
+                    ) { item ->
+                        TextPreferenceWidget(
+                            title = stringResource(item.titleRes),
+                            subtitle = item.subtitleRes?.let { stringResource(it) },
+                            icon = item.icon,
+                            onPreferenceClick = { navigator.push(item.screen) },
+                        )
+                    }
                 }
 
                 item {
@@ -204,82 +222,102 @@ object AnimatoSettingsMainScreen : Screen() {
         val screen: VoyagerScreen,
     )
 
+    private data class Group(
+        val titleRes: StringResource,
+        val items: List<Item>,
+    )
+
     /**
-     * Ten entries, organised by what someone is doing rather than by which half they are in.
+     * Eleven destinations under three headings, organised by what someone is doing.
      *
-     * The old list was Mihon's with anime bolted on: a *Reader* entry at the top level and a
-     * *Player* buried three taps down inside a bucket called *Anime*, plus a stray *Unblock a
-     * source* sitting as a peer of Library. Reading and Watching are siblings here, which is the
-     * whole point — neither medium is the main one — and each shared section now answers for both
-     * halves rather than one, through the wrappers in AnimatoSettingsSections.kt.
+     * The flat list was already better than the tree it replaced — Reading and Watching as equals
+     * instead of a Player buried inside a bucket called Anime — and a device still called it "a
+     * lot, and messy". Eleven rows of identical shape is a wall however good their order. The
+     * headings are the fix that keeps every destination one tap deep: *what you have*, *where it
+     * comes from*, and *the app itself* — three questions, and each row visibly belongs to one.
      */
-    private val items = listOf(
-        Item(
-            titleRes = MR.strings.pref_category_appearance,
-            subtitleRes = MR.strings.pref_appearance_summary,
-            icon = Icons.Outlined.Palette,
-            screen = SettingsAppearanceScreen,
+    private val groups = listOf(
+        Group(
+            titleRes = AYMR.strings.settings_group_content,
+            items = listOf(
+                Item(
+                    titleRes = MR.strings.pref_category_library,
+                    subtitleRes = MR.strings.pref_library_summary,
+                    icon = Icons.Outlined.CollectionsBookmark,
+                    screen = AnimatoSettingsLibraryScreen,
+                ),
+                // Reading and Watching, adjacent and equal. Whichever medium someone came for,
+                // the other one is visibly right there rather than nested somewhere else.
+                Item(
+                    titleRes = AYMR.strings.pref_category_reading,
+                    subtitleRes = AYMR.strings.pref_reading_summary,
+                    icon = Icons.Outlined.ChromeReaderMode,
+                    screen = SettingsReaderScreen,
+                ),
+                Item(
+                    titleRes = AYMR.strings.pref_category_watching,
+                    subtitleRes = AYMR.strings.pref_watching_summary,
+                    icon = Icons.Outlined.PlayCircleOutline,
+                    screen = PlayerSettingsMainScreen(mainSettings = false),
+                ),
+                Item(
+                    titleRes = MR.strings.pref_category_tracking,
+                    subtitleRes = MR.strings.pref_tracking_summary,
+                    icon = Icons.Outlined.Sync,
+                    screen = AnimatoSettingsTrackingScreen,
+                ),
+            ),
         ),
-        Item(
-            titleRes = MR.strings.pref_category_library,
-            subtitleRes = MR.strings.pref_library_summary,
-            icon = Icons.Outlined.CollectionsBookmark,
-            screen = AnimatoSettingsLibraryScreen,
+        Group(
+            titleRes = AYMR.strings.settings_group_sources_data,
+            items = listOf(
+                Item(
+                    titleRes = AYMR.strings.pref_category_sources,
+                    subtitleRes = AYMR.strings.pref_sources_summary,
+                    icon = Icons.Outlined.Explore,
+                    screen = AnimatoSettingsSourcesScreen,
+                ),
+                Item(
+                    titleRes = AYMR.strings.pref_downloads_storage,
+                    subtitleRes = AYMR.strings.pref_downloads_storage_summary,
+                    icon = Icons.Outlined.GetApp,
+                    screen = AnimatoSettingsDownloadsScreen,
+                ),
+                Item(
+                    titleRes = AYMR.strings.pref_backup_data,
+                    subtitleRes = AYMR.strings.pref_backup_data_summary,
+                    icon = Icons.Outlined.Storage,
+                    screen = AnimatoSettingsDataScreen,
+                ),
+            ),
         ),
-        // Reading and Watching, adjacent and equal. The pair is the fix: whichever medium someone
-        // came for, the other one is visibly right there rather than nested somewhere else.
-        Item(
-            titleRes = AYMR.strings.pref_category_reading,
-            subtitleRes = AYMR.strings.pref_reading_summary,
-            icon = Icons.Outlined.ChromeReaderMode,
-            screen = SettingsReaderScreen,
-        ),
-        Item(
-            titleRes = AYMR.strings.pref_category_watching,
-            subtitleRes = AYMR.strings.pref_watching_summary,
-            icon = Icons.Outlined.PlayCircleOutline,
-            screen = PlayerSettingsMainScreen(mainSettings = false),
-        ),
-        Item(
-            titleRes = AYMR.strings.pref_category_sources,
-            subtitleRes = AYMR.strings.pref_sources_summary,
-            icon = Icons.Outlined.Explore,
-            screen = AnimatoSettingsSourcesScreen,
-        ),
-        Item(
-            titleRes = AYMR.strings.pref_downloads_storage,
-            subtitleRes = AYMR.strings.pref_downloads_storage_summary,
-            icon = Icons.Outlined.GetApp,
-            screen = AnimatoSettingsDownloadsScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_tracking,
-            subtitleRes = MR.strings.pref_tracking_summary,
-            icon = Icons.Outlined.Sync,
-            screen = AnimatoSettingsTrackingScreen,
-        ),
-        Item(
-            titleRes = AYMR.strings.pref_backup_data,
-            subtitleRes = AYMR.strings.pref_backup_data_summary,
-            icon = Icons.Outlined.Storage,
-            screen = AnimatoSettingsDataScreen,
-        ),
-        Item(
-            titleRes = AYMR.strings.pref_privacy_security,
-            subtitleRes = MR.strings.pref_security_summary,
-            icon = Icons.Outlined.Security,
-            screen = SettingsSecurityScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_advanced,
-            subtitleRes = MR.strings.pref_advanced_summary,
-            icon = Icons.Outlined.Code,
-            screen = SettingsAdvancedScreen,
-        ),
-        Item(
-            titleRes = MR.strings.pref_category_about,
-            icon = Icons.Outlined.Info,
-            screen = AboutScreen,
+        Group(
+            titleRes = AYMR.strings.settings_group_app,
+            items = listOf(
+                Item(
+                    titleRes = MR.strings.pref_category_appearance,
+                    subtitleRes = MR.strings.pref_appearance_summary,
+                    icon = Icons.Outlined.Palette,
+                    screen = SettingsAppearanceScreen,
+                ),
+                Item(
+                    titleRes = AYMR.strings.pref_privacy_security,
+                    subtitleRes = MR.strings.pref_security_summary,
+                    icon = Icons.Outlined.Security,
+                    screen = SettingsSecurityScreen,
+                ),
+                Item(
+                    titleRes = MR.strings.pref_category_advanced,
+                    subtitleRes = MR.strings.pref_advanced_summary,
+                    icon = Icons.Outlined.Code,
+                    screen = SettingsAdvancedScreen,
+                ),
+                Item(
+                    titleRes = MR.strings.pref_category_about,
+                    icon = Icons.Outlined.Info,
+                    screen = AboutScreen,
+                ),
+            ),
         ),
     )
 }
