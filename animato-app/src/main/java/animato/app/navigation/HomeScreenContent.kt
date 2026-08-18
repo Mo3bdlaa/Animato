@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.downloads.DownloadsScreen
 import animato.app.entry.EntryScreen
+import animato.app.history.ContinueScreen
 import animato.app.search.AnimatoSearchScreen
 import animato.app.settings.AnimatoSettingsScreen
 import animato.app.updates.UpdateItem
@@ -171,7 +172,13 @@ internal fun HomeScreenContent() {
             ) {
                 if (continueItems.isNotEmpty()) {
                     item {
-                        SectionHeader(stringResource(AYMR.strings.label_continue))
+                        // The rail is the recent handful; the screen behind this is the whole of
+                        // it. Same list, same gestures — see ContinueScreen.
+                        SectionHeader(
+                            text = stringResource(AYMR.strings.label_continue),
+                            action = stringResource(AYMR.strings.discover_view_all),
+                            onActionClick = { navigator.push(ContinueScreen()) },
+                        )
                     }
                     item {
                         LazyRow(
