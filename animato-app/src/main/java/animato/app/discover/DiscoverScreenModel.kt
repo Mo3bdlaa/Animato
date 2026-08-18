@@ -139,6 +139,7 @@ class DiscoverScreenModel(
     private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
     private val metadataCatalog: MetadataCatalog = Injekt.get(),
+    private val discoverCache: DiscoverCache = DiscoverCache(),
     contentPreferences: ContentPreferences = Injekt.get(),
 ) : ViewModel() {
 
@@ -152,12 +153,45 @@ class DiscoverScreenModel(
     init {
         viewModelScope.launch {
             contentPreferences.contentFilter.changes().collectLatest { lens ->
-                val rails = railsFor(lens)
-                state.value = DiscoverState(lens = lens, metadataRails = rails)
+                val rails = cachedRails(lens)
+                state.value = cachedState(lens, rails)
                 loadMetadata(rails)
                 loadSourceRails(lens)
             }
         }
+    }
+
+    /**
+     * Pull-to-refresh: the same rebuild a lens change does, for the lens already in place. The
+     * cached shelves stay on screen while every rail asks again — a refresh that blanks the page
+     * looks like a failure until it isn't.
+     */
+    fun refresh() {
+        viewModelScope.launch {
+            val lens = state.value.lens
+            val rails = cachedRails(lens)
+            state.value = cachedState(lens, rails)
+            loadMetadata(rails)
+            loadSourceRails(lens)
+        }
+    }
+
+    /** The rails for this lens, pre-filled from [DiscoverCache] so the screen never opens empty. */
+    private fun cachedRails(lens: ContentFilter): List<MetadataRailState> =
+        railsFor(lens).map { slot ->
+            val cached = discoverCache.loadMetadata(slot.key, slot.contentType)
+            if (cached.isEmpty()) slot else slot.copy(isLoading = false, items = cached)
+        }
+
+    private fun cachedState(lens: ContentFilter, rails: List<MetadataRailState>): DiscoverState {
+        val popular = discoverCache.loadSourceRail("popular", lens)
+        val latest = discoverCache.loadSourceRail("latest", lens)
+        return DiscoverState(
+            lens = lens,
+            metadataRails = rails,
+            popular = if (popular.isEmpty()) DiscoverRail() else DiscoverRail(isLoading = false, items = popular),
+            latest = if (latest.isEmpty()) DiscoverRail() else DiscoverRail(isLoading = false, items = latest),
+        )
     }
 
     /**
@@ -171,15 +205,19 @@ class DiscoverScreenModel(
         rails.forEach { slot ->
             launch {
                 val items = metadataCatalog.fetch(slot.rail, slot.contentType)
+                if (items.isNotEmpty()) {
+                    discoverCache.saveMetadata(slot.key, items)
+                }
                 // `update` rather than an assignment: five of these are in flight at once, and
                 // read-modify-write on a shared value loses whichever two land closest together.
                 state.update { current ->
                     current.copy(
                         metadataRails = current.metadataRails.map { existing ->
-                            if (existing.key == slot.key) {
-                                existing.copy(isLoading = false, items = items)
-                            } else {
-                                existing
+                            when {
+                                existing.key != slot.key -> existing
+                                // A failed fetch does not blank a shelf the cache filled.
+                                items.isEmpty() -> existing.copy(isLoading = false)
+                                else -> existing.copy(isLoading = false, items = items)
                             }
                         },
                     )
@@ -187,6 +225,14 @@ class DiscoverScreenModel(
             }
         }
     }
+
+    /** A fresh answer replaces the shelf; a failed one leaves the cached shelf standing. */
+    private fun DiscoverRail.keepCacheUnless(fresh: DiscoverRail): DiscoverRail =
+        if (fresh.items.isEmpty() && items.isNotEmpty()) {
+            copy(isLoading = false, failedSources = fresh.failedSources)
+        } else {
+            fresh
+        }
 
     private fun CoroutineScope.loadSourceRails(lens: ContentFilter) {
         launch {
@@ -201,11 +247,13 @@ class DiscoverScreenModel(
                 // answered or timed out.
                 launch(SOURCE_DISPATCHER) {
                     val rail = load(sourcesByType, latest = false)
-                    state.update { it.copy(popular = rail) }
+                    if (rail.items.isNotEmpty()) discoverCache.saveSourceRail("popular", lens, rail.items)
+                    state.update { it.copy(popular = it.popular.keepCacheUnless(rail)) }
                 }
                 launch(SOURCE_DISPATCHER) {
                     val rail = load(sourcesByType, latest = true)
-                    state.update { it.copy(latest = rail) }
+                    if (rail.items.isNotEmpty()) discoverCache.saveSourceRail("latest", lens, rail.items)
+                    state.update { it.copy(latest = it.latest.keepCacheUnless(rail)) }
                 }
             }
         }
