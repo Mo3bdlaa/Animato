@@ -199,6 +199,26 @@ class StremioMapperTest {
     }
 
     @Test
+    fun `catalogs are named with their type, because names repeat across types`() {
+        // Cinemeta's real shape: eight catalogs, three names, each name used twice. Without the
+        // type the picker reads as a list of duplicates and a lookup by name finds the first.
+        val cinemeta = json.decodeFromString<StremioManifest>(
+            """
+            {
+              "id":"com.linvo.cinemeta","name":"Cinemeta",
+              "resources":["catalog","meta"],"types":["movie","series"],
+              "catalogs":[
+                {"type":"movie","id":"top","name":"Popular"},
+                {"type":"series","id":"top","name":"Popular"}
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        cinemeta.catalogs.map { it.displayName } shouldBe listOf("Popular (movie)", "Popular (series)")
+    }
+
+    @Test
     fun `a metadata-only addon is never asked for streams`() {
         // Cinemeta's shape: it knows what everything is called and has no video at all. Asking it
         // for a stream returns an empty answer indistinguishable from "nothing is available",

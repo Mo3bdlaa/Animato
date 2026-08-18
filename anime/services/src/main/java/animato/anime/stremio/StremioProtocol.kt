@@ -103,9 +103,20 @@ data class StremioCatalog(
     val extraSupported: List<String> = emptyList(),
     val extraRequired: List<String> = emptyList(),
 ) {
-    /** What to call this catalog on screen when the addon did not bother to name it. */
+    /**
+     * What to call this catalog on screen.
+     *
+     * The type is part of the name because catalog names are only unique within a type, and
+     * routinely are not across them. Cinemeta publishes eight catalogs called Popular, New,
+     * Featured — twice each, once for films and once for series. Without the type the picker
+     * reads as a list of duplicates, and anything that looks a catalog up by name finds whichever
+     * came first.
+     */
     val displayName: String
-        get() = name?.takeIf { it.isNotBlank() } ?: id.takeIf { it.isNotBlank() } ?: type
+        get() {
+            val base = name?.takeIf { it.isNotBlank() } ?: id.takeIf { it.isNotBlank() } ?: type
+            return if (type.isBlank() || base == type) base else "$base ($type)"
+        }
 
     /**
      * Whether an extra argument may be passed to this catalog.

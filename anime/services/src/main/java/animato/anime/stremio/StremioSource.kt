@@ -114,12 +114,19 @@ class StremioSource(
         val chosen = filters.filterIsInstance<CatalogFilter>().firstOrNull()
             ?.let { catalogs.getOrNull(it.state) }
         // A blank query is the filter sheet being used as a catalogue picker, so any catalog will
-        // do. A real query needs a catalog that accepts one, and the chosen catalog often is not
-        // it — addons routinely publish browsing catalogs and a separate search catalog.
+        // do. A real query prefers a catalog that says it takes one — addons routinely publish
+        // browsing catalogs and a separate search catalog — but falls back to asking anyway.
+        //
+        // That fallback is not defensive coding, it is Cinemeta. It answers
+        // `/catalog/movie/top/search=spider.json` perfectly well while declaring no `search`
+        // extra on any of its eight catalogs, and it is the catalogue almost everybody installs
+        // first. Believing the manifest over the behaviour makes the default addon look like it
+        // cannot search at all. An addon that really does ignore the extra returns its unfiltered
+        // catalog, which is a worse answer than a filtered one but a far better answer than none.
         val catalog = when {
             query.isBlank() -> chosen ?: popularCatalog()
             chosen?.supports(EXTRA_SEARCH) == true -> chosen
-            else -> catalogs.firstOrNull { it.supports(EXTRA_SEARCH) }
+            else -> catalogs.firstOrNull { it.supports(EXTRA_SEARCH) } ?: chosen ?: popularCatalog()
         } ?: return AnimesPage(emptyList(), false)
 
         val genre = filters.filterIsInstance<GenreFilter>()
@@ -264,7 +271,7 @@ class StremioSource(
         genre: String?,
     ): AnimesPage {
         val extra = buildMap {
-            if (query.isNotBlank() && catalog.supports(EXTRA_SEARCH)) put(EXTRA_SEARCH, query)
+            if (query.isNotBlank()) put(EXTRA_SEARCH, query)
             // A catalog may refuse to answer at all without a genre. Picking its first option is
             // better than sending nothing and rendering the addon as empty and broken.
             val effectiveGenre = genre ?: catalog.takeIf { it.requires(EXTRA_GENRE) }
