@@ -54,6 +54,11 @@ import tachiyomi.domain.track.repository.TrackRepository
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import kotlin.math.absoluteValue
 
 /**
  * One chapter or episode, in the vocabulary the shared screen draws.
@@ -125,6 +130,16 @@ data class EntryState(
     val sortDescending: Boolean = true,
     /** Numbers the source skipped or a filter removed, counted the way both halves already count. */
     val missingCount: Int = 0,
+    /**
+     * Days until the next release the library update job predicts, or null when it has none.
+     *
+     * Null covers three honest cases at once: a completed work, an entry not in the library — the
+     * prediction is computed by the update job and nothing else — and one the job has not seen
+     * enough releases of to guess.
+     */
+    val nextReleaseDays: Int? = null,
+    /** How often releases have been arriving, in days. Absolute: a user-set interval is negative. */
+    val releaseIntervalDays: Int? = null,
     val trackerCount: Int = 0,
     val isRefreshing: Boolean = false,
     /** What the last refresh found, held until the screen shows it once. */
@@ -234,6 +249,8 @@ class EntryScreenModel(
                 inLibrary = manga.favorite,
                 sortDescending = manga.sortDescending(),
                 missingCount = ordered.map { it.chapterNumber }.missingChaptersCount(),
+                nextReleaseDays = daysUntil(manga.expectedNextUpdate?.toEpochMilliseconds()),
+                releaseIntervalDays = manga.fetchInterval.absoluteValue.takeIf { it > 0 },
                 items = withIOContext {
                     ordered.map { chapter ->
                         EntryItem(
@@ -285,6 +302,8 @@ class EntryScreenModel(
                 inLibrary = anime.favorite,
                 sortDescending = anime.sortDescending(),
                 missingCount = ordered.map { it.episodeNumber }.missingEntriesCount(),
+                nextReleaseDays = daysUntil(anime.expectedNextUpdate?.toEpochMilli()),
+                releaseIntervalDays = anime.fetchInterval.absoluteValue.takeIf { it > 0 },
                 items = withIOContext {
                     ordered.map { episode ->
                         EntryItem(
@@ -430,6 +449,20 @@ class EntryScreenModel(
                     updateEpisode.await(EpisodeUpdate(id = item.id, bookmark = !item.bookmarked))
             }
         }
+    }
+
+    /**
+     * Whole days from now until [epochMillis], never negative, null when there is nothing to count to.
+     *
+     * Local days rather than 24-hour blocks: "in 1 day" should mean tomorrow, which is what somebody
+     * reads it as, and what Mihon's own countdown means on its screen.
+     */
+    private fun daysUntil(epochMillis: Long?): Int? {
+        if (epochMillis == null || epochMillis <= 0L) return null
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+        val target = Instant.ofEpochMilli(epochMillis).atZone(zone).toLocalDate()
+        return ChronoUnit.DAYS.between(today, target).toInt().coerceAtLeast(0)
     }
 
     private fun statusLabel(status: Long) = when (status) {

@@ -284,6 +284,45 @@ class EntryScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
+                        /*
+                         * How often this thing arrives, and when the next one is due.
+                         *
+                         * Aniyomi's screen spends one of four action buttons on an hourglass
+                         * reading "5 days", or "N/A" when it has nothing — a control that mostly
+                         * says nothing, and never says what the number is *of*. A device asked
+                         * for the fact and not the button: *"add the bit about roughly how often
+                         * an episode drops."* So it is a sentence here, under the count it is
+                         * about, and it is simply absent when there is no prediction — which is
+                         * every entry outside the library, since the update job is what computes
+                         * it, and every completed work, which has no next one by definition.
+                         */
+                        val cadence = state.releaseIntervalDays?.let { days ->
+                            stringResource(
+                                when (contentType) {
+                                    ContentType.MANGA -> AYMR.strings.entry_release_every_chapters
+                                    ContentType.ANIME -> AYMR.strings.entry_release_every_episodes
+                                },
+                                pluralStringResource(MR.plurals.day, days, days),
+                            )
+                        }
+                        val next = state.nextReleaseDays?.let { days ->
+                            if (days == 0) {
+                                stringResource(AYMR.strings.entry_release_next_soon)
+                            } else {
+                                stringResource(
+                                    AYMR.strings.entry_release_next_in,
+                                    pluralStringResource(MR.plurals.day, days, days),
+                                )
+                            }
+                        }
+                        listOfNotNull(cadence, next).takeIf { it.isNotEmpty() }?.let { parts ->
+                            Text(
+                                text = parts.joinToString(" · "),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+
                         // A gap in the numbering, said out loud. A list that jumps from 40 to 71
                         // without comment reads as a list somebody has already read the middle of.
                         if (state.missingCount > 0) {

@@ -526,6 +526,11 @@
     <string name="settings_group_content">المحتوى بتاعك</string>
     <string name="settings_group_sources_data">المصادر والبيانات</string>
     <string name="settings_group_app">التطبيق</string>
+    <string name="entry_release_every_chapters">فصل كل %1$s تقريبًا</string>
+    <string name="entry_release_every_episodes">حلقة كل %1$s تقريبًا</string>
+    <string name="entry_release_next_in">الجاي بعد %1$s</string>
+    <string name="entry_release_next_soon">الجاي قريب</string>
+    <string name="action_manage_sources">إدارة</string>
     <string name="entry_caught_up">مخلّصها كلها</string>
     <string name="no_available_videos_source_empty">المصدر رجّع قائمة فيديوهات فاضية للحلقة دي — الأغلب المصدر نفسه بايظ</string>
     <string name="no_hosters">قائمة المضيفين فارغة</string>

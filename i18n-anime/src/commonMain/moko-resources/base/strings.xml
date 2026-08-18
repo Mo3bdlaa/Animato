@@ -313,6 +313,11 @@
     <string name="settings_group_content">Your content</string>
     <string name="settings_group_sources_data">Sources &amp; data</string>
     <string name="settings_group_app">The app</string>
+    <string name="entry_release_every_chapters">A chapter about every %1$s</string>
+    <string name="entry_release_every_episodes">An episode about every %1$s</string>
+    <string name="entry_release_next_in">next in %1$s</string>
+    <string name="entry_release_next_soon">next expected soon</string>
+    <string name="action_manage_sources">Manage</string>
     <string name="entry_caught_up">Caught up</string>
     <string name="no_available_videos_source_empty">The source returned an empty video list for this episode — the source itself is likely broken</string>
     <string name="no_hosters">Hoster list is empty</string>
