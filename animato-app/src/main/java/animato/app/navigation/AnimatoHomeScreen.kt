@@ -1,23 +1,16 @@
 package animato.app.navigation
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -29,19 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import animato.domain.content.ContentType
 import animato.ui.navigation.AnimatoNavigator
@@ -60,8 +46,6 @@ import eu.kanade.presentation.util.isTabletUi
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import soup.compose.material.motion.animation.materialFadeThroughIn
-import soup.compose.material.motion.animation.materialFadeThroughOut
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.NavigationBar
@@ -87,16 +71,7 @@ import uy.kohesive.injekt.api.get
 object AnimatoHomeScreen : Screen(), AnimatoRoot {
 
     @Suppress("ConstPropertyName")
-    private const val TabFadeDuration = 200
-
-    @Suppress("ConstPropertyName")
     private const val TabNavigatorKey = "AnimatoTabs"
-
-    private val SwipeDistanceThreshold = 96.dp
-
-    /** Pixels per second. A real fling, not the tail end of a hesitant drag. */
-    @Suppress("ConstPropertyName")
-    private const val SwipeVelocityThreshold = 1100f
 
     private val TABS = listOf(
         AnimatoHomeTab,
@@ -145,57 +120,56 @@ object AnimatoHomeScreen : Screen(), AnimatoRoot {
                     },
                     contentWindowInsets = WindowInsets(0),
                 ) { contentPadding ->
+                    /*
+                     * A real pager, because a device asked for the real thing twice: first "swipe
+                     * to move between tabs", then "make it move WITH my finger instead of after
+                     * it". The draggable-then-animate version satisfied the first and not the
+                     * second — content only moved once the finger had finished. A pager tracks
+                     * the drag frame by frame and settles wherever the fling says.
+                     *
+                     * The "only a swipe nothing else wanted" rule survives, because it was never
+                     * this file's cleverness — it is how nested scrolling dispatches. A rail or
+                     * carousel under the finger consumes its own horizontal drag; the pager gets
+                     * what is left. RTL comes free.
+                     *
+                     * The pager and the tab navigator are kept in sync in both directions: a
+                     * settle writes the tab, and a tab written from anywhere else — the bar, back,
+                     * a tabRequest — animates the pager. The guard on each side is what stops the
+                     * two effects feeding each other forever.
+                     */
+                    val pagerState = rememberPagerState(
+                        initialPage = TABS.indexOfFirst { it::class == tabNavigator.current::class }
+                            .coerceAtLeast(0),
+                    ) { TABS.size }
+
+                    LaunchedEffect(tabNavigator.current) {
+                        val index = TABS.indexOfFirst { it::class == tabNavigator.current::class }
+                        if (index != -1 && index != pagerState.currentPage) {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    }
+                    LaunchedEffect(pagerState.settledPage) {
+                        val tab = TABS[pagerState.settledPage]
+                        if (tabNavigator.current::class != tab::class) {
+                            tabNavigator.current = tab
+                        }
+                    }
+
                     Box(
                         modifier = Modifier
                             .padding(contentPadding)
-                            .consumeWindowInsets(contentPadding)
-                            .destinationSwipe(
-                                // Only while the bar is visible: it disappears exactly when a
-                                // screen is in a mode — selection — where silently switching
-                                // destinations would discard what the user is doing.
-                                enabled = bottomNavVisible,
-                                onSwitch = { step ->
-                                    val index = TABS.indexOfFirst { it::class == tabNavigator.current::class }
-                                    TABS.getOrNull(index + step)?.let { tabNavigator.current = it }
-                                },
-                            ),
+                            .consumeWindowInsets(contentPadding),
                     ) {
-                        AnimatedContent(
-                            targetState = tabNavigator.current,
-                            transitionSpec = {
-                                // Neighbouring destinations slide in from the side they sit on —
-                                // asked for from a device: the swipe should read as a carousel,
-                                // not a cut. A third of the width is movement enough to say which
-                                // way things went; a full-width slide is a scene change.
-                                // SlideDirection.Start/End are layout-direction aware, so the
-                                // motion mirrors correctly in Arabic.
-                                val from = TABS.indexOfFirst { it::class == initialState::class }
-                                val to = TABS.indexOfFirst { it::class == targetState::class }
-                                if (from != -1 && to != -1 && from != to) {
-                                    val towards = if (to > from) {
-                                        AnimatedContentTransitionScope.SlideDirection.Start
-                                    } else {
-                                        AnimatedContentTransitionScope.SlideDirection.End
-                                    }
-                                    (
-                                        slideIntoContainer(towards, tween(TabFadeDuration)) { it / 3 } +
-                                            fadeIn(tween(TabFadeDuration))
-                                        ) togetherWith (
-                                        slideOutOfContainer(towards, tween(TabFadeDuration)) { it / 3 } +
-                                            fadeOut(tween(TabFadeDuration))
-                                        )
-                                } else {
-                                    materialFadeThroughIn(
-                                        initialScale = 1f,
-                                        durationMillis = TabFadeDuration,
-                                    ) togetherWith
-                                        materialFadeThroughOut(durationMillis = TabFadeDuration)
-                                }
-                            },
-                            label = "tabContent",
-                        ) {
-                            tabNavigator.saveableState(key = "currentTab", it) {
-                                it.Content()
+                        HorizontalPager(
+                            state = pagerState,
+                            // The bar disappears exactly when a screen is in selection mode,
+                            // where silently switching destinations would discard what the user
+                            // is doing — so the swipe disarms with it.
+                            userScrollEnabled = bottomNavVisible,
+                        ) { page ->
+                            val tab = TABS[page]
+                            tabNavigator.saveableState(key = "currentTab", tab) {
+                                tab.Content()
                             }
                         }
                     }
@@ -218,45 +192,6 @@ object AnimatoHomeScreen : Screen(), AnimatoRoot {
                 }
             }
         }
-    }
-
-    /**
-     * A horizontal swipe on a destination moves to the neighbouring one — but only a swipe nothing
-     * else wanted.
-     *
-     * Asked for from a device in exactly those terms: *"when I swipe sideways and there is no
-     * swipe thing there, I want to move between home/library/discover/updates."* The "no swipe
-     * thing" clause is not extra work, it is how Compose already dispatches: a rail, a pager or a
-     * carousel under the finger consumes the horizontal drag, and a parent [draggable] only ever
-     * sees what no child claimed. So this sits on the box that hosts every destination and is
-     * inert wherever the content itself scrolls sideways.
-     *
-     * Direction follows reading direction: the gesture is "pull the next destination in from the
-     * end", which in RTL — this app is used in Arabic — is the mirror of LTR. A swipe either
-     * travels far enough or arrives fast enough; a slow half-hearted drag does nothing.
-     */
-    @Composable
-    private fun Modifier.destinationSwipe(
-        enabled: Boolean,
-        onSwitch: (Int) -> Unit,
-    ): Modifier {
-        val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-        val distanceThreshold = with(LocalDensity.current) { SwipeDistanceThreshold.toPx() }
-        var dragTotal by remember { mutableFloatStateOf(0f) }
-        return this.draggable(
-            orientation = Orientation.Horizontal,
-            enabled = enabled,
-            state = rememberDraggableState { delta -> dragTotal += delta },
-            onDragStarted = { dragTotal = 0f },
-            onDragStopped = { velocity ->
-                val toStart = if (isRtl) -dragTotal else dragTotal
-                val toStartVelocity = if (isRtl) -velocity else velocity
-                when {
-                    toStart < -distanceThreshold || toStartVelocity < -SwipeVelocityThreshold -> onSwitch(1)
-                    toStart > distanceThreshold || toStartVelocity > SwipeVelocityThreshold -> onSwitch(-1)
-                }
-            },
-        )
     }
 
     @Composable
