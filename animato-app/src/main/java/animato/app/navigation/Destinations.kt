@@ -7,17 +7,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.discover.DiscoverContent
 import animato.app.downloads.DownloadsContent
 import animato.app.library.UnifiedLibraryContent
 import animato.app.updates.UpdatesContent
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
-import animato.ui.navigation.AnimatoNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
@@ -25,9 +21,6 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
-import eu.kanade.tachiyomi.ui.library.LibraryTab
-import eu.kanade.tachiyomi.ui.library.LibraryViewModel
-import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesViewModel
 import tachiyomi.i18n.MR
@@ -64,19 +57,22 @@ data object AnimatoLibraryTab : Tab {
     // bar now, and a gesture that silently changes what you are looking at is the thing that
     // control exists to replace.
 
+    /**
+     * One library screen, under every lens.
+     *
+     * A narrowed lens used to hand the whole destination to Mihon's library or the ported anime
+     * one, and that is how a device ended up looking at two different title pages: those screens
+     * open *their* entry screens, so filtering to Anime silently swapped the entire visual
+     * language of everything below it — *"we want those two to look like the one we made."*
+     *
+     * The unified grid never needed the delegation. It reads the lens itself: entries are filtered
+     * by `lens.accepts`, categories hide when they have nothing to say under it, and a selection
+     * survives a lens change only where it still means something. What the per-half screens still
+     * hold that this one does not is reachable from the title page's overflow, which is where the
+     * deep tools have lived since they stopped being the front door.
+     */
     @Composable
-    override fun Content() {
-        when (contentLens()) {
-            // Both halves in one grid. Re-selecting the destination narrows to one, where the
-            // per-library screens still hold everything the unified grid does not do yet.
-            ContentFilter.ALL -> UnifiedLibraryContent()
-            ContentFilter.MANGA -> {
-                MirrorSelectionMode(viewModel<LibraryViewModel>().state.collectAsState().value.selectionMode)
-                LibraryTab.Content()
-            }
-            ContentFilter.ANIME -> AnimeLibraryTab.Content()
-        }
-    }
+    override fun Content() = UnifiedLibraryContent()
 }
 
 data object AnimatoDiscoverTab : Tab {
@@ -144,20 +140,4 @@ data object AnimatoHomeTab : Tab {
 
     @Composable
     override fun Content() = HomeScreenContent()
-}
-
-/**
- * Hides the tab bar while a Mihon screen is in selection mode.
- *
- * Mihon's library and updates screens do this themselves, by sending to a channel private to
- * Mihon's own `HomeScreen`. That host is not the one mounted here and nothing outside its file can
- * receive from it, so the signal has to be read from the same place the screen reads it: its view
- * model. `viewModel()` resolves against the store this destination already owns, so this is the
- * same instance the screen inside is using, not a second one.
- */
-@Composable
-private fun MirrorSelectionMode(selectionMode: Boolean) {
-    LaunchedEffect(selectionMode) {
-        AnimatoNavigator.showBottomNav(!selectionMode)
-    }
 }
