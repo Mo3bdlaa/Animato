@@ -92,6 +92,7 @@ import eu.kanade.tachiyomi.util.system.powerManager
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import `is`.xyz.mpv.MPVLib
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -1156,6 +1157,8 @@ class PlayerActivity : BaseActivity() {
                 )
         ) {
             launchIO {
+                // Nothing is fetched and nothing is shared until this has been answered.
+                if (!acknowledgeTorrentNotice()) return@launchIO
                 TorrentServerService.start()
                 torrentLinkHandler(video.videoUrl, video.videoTitle, videoOptions)
             }
@@ -1209,6 +1212,48 @@ class PlayerActivity : BaseActivity() {
         }
         logcat(LogPriority.ERROR, error)
         finish()
+    }
+
+    /**
+     * Ask once, before the first torrent, whether peer-to-peer sharing is understood.
+     *
+     * The disclosure used to sit on the TorrServer switch in settings, which only reached anybody
+     * for as long as that switch started off. It now starts on — because off was indistinguishable
+     * from a video that loads forever — so the notice moved to the moment the behaviour actually
+     * starts. Suspending here rather than firing and forgetting is the whole point: the torrent
+     * server must not be started, and no piece must be exchanged, until there is an answer.
+     *
+     * Declining leaves the setting alone and simply does not play; the toast says where to change
+     * that mind, since a player that closes without a word reads as a crash.
+     */
+    private suspend fun acknowledgeTorrentNotice(): Boolean {
+        val shownNotice = torrentPreferences.torrServerShownNotice()
+        if (shownNotice.get()) return true
+
+        val accepted = CompletableDeferred<Boolean>()
+        withUIContext {
+            viewModel.showDialog(
+                Dialogs.TorrentNotice(
+                    onAccept = {
+                        shownNotice.set(true)
+                        viewModel.showDialog(Dialogs.None)
+                        accepted.complete(true)
+                    },
+                    onDecline = {
+                        viewModel.showDialog(Dialogs.None)
+                        accepted.complete(false)
+                    },
+                ),
+            )
+        }
+
+        if (accepted.await()) return true
+        withUIContext {
+            viewModel.updateIsLoadingEpisode(false)
+            toast(AYMR.strings.torrent_notice_declined)
+            finish()
+        }
+        return false
     }
 
     private suspend fun torrentLinkHandler(videoUrl: String, title: String, videoOptions: String) {

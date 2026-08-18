@@ -141,6 +141,20 @@ enum class Panels {
 sealed class Dialogs {
     data object None : Dialogs()
     data object EpisodeList : Dialogs()
+
+    /**
+     * The peer-to-peer disclosure, shown once before the first torrent plays.
+     *
+     * It used to hang off the TorrServer switch in settings, which worked only for as long as
+     * that switch started off. Now that it starts on, the notice has to appear where the
+     * behaviour actually begins — a default should not have people uploading to strangers on the
+     * strength of a setting they never saw.
+     */
+    data class TorrentNotice(
+        val onAccept: () -> Unit,
+        val onDecline: () -> Unit,
+    ) : Dialogs()
+
     data class IntegerPicker(
         val defaultValue: Int,
         val minValue: Int,

@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.data.database.models.anime.Episode
 import eu.kanade.tachiyomi.ui.player.Dialogs
 import eu.kanade.tachiyomi.ui.player.controls.components.dialogs.EpisodeListDialog
 import eu.kanade.tachiyomi.ui.player.controls.components.dialogs.IntegerPickerDialog
+import eu.kanade.tachiyomi.ui.player.controls.components.dialogs.TorrentNoticeDialog
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -36,6 +37,12 @@ fun PlayerDialogs(
                 onFillermarkClicked = onFillermarkClicked,
                 onEpisodeClicked = onEpisodeClicked,
                 onDismissRequest = onDismissRequest,
+            )
+        }
+        is Dialogs.TorrentNotice -> {
+            TorrentNoticeDialog(
+                onAccept = dialogShown.onAccept,
+                onDecline = dialogShown.onDecline,
             )
         }
         is Dialogs.IntegerPicker -> {

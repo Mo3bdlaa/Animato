@@ -6,7 +6,20 @@ import tachiyomi.core.common.preference.getEnum
 class TorrentPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
-    fun torrServerEnable() = preferenceStore.getBoolean("pref_torrserver_enable", false)
+    /**
+     * On by default, because off by default was indistinguishable from broken.
+     *
+     * With it off the player hands a magnet straight to mpv, which cannot open one and does not
+     * say so — it shows a spinner and never stops. Most Stremio stream addons are torrent addons,
+     * so the app's most obvious new capability led there on the first try.
+     *
+     * The legal notice this switch used to carry has not been dropped, only moved: it is shown
+     * once before the first torrent actually plays, guarded by [torrServerShownNotice]. A default
+     * that is on must still not upload anything on somebody's behalf before they have been told
+     * that it does — which is the part of BitTorrent people do not expect, and the part that
+     * carries the consequences.
+     */
+    fun torrServerEnable() = preferenceStore.getBoolean("pref_torrserver_enable", true)
     fun torrServerShownNotice() = preferenceStore.getBoolean("pref_torrserver_shownotice", false)
 
     fun torrServerPort() = preferenceStore.getString("pref_torrserver_port", "8090")
