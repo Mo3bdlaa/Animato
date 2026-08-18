@@ -18,7 +18,7 @@ enum class AnimatoTab {
     LIBRARY,
     DISCOVER,
     UPDATES,
-    DOWNLOADS,
+    SOURCES,
 }
 
 /**

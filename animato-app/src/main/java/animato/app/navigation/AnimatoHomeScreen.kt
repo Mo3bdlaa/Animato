@@ -78,7 +78,7 @@ object AnimatoHomeScreen : Screen(), AnimatoRoot {
         AnimatoLibraryTab,
         AnimatoDiscoverTab,
         AnimatoUpdatesTab,
-        AnimatoDownloadsTab,
+        AnimatoSourcesTab,
     )
 
     @Composable
@@ -187,7 +187,7 @@ object AnimatoHomeScreen : Screen(), AnimatoRoot {
                         AnimatoTab.LIBRARY -> AnimatoLibraryTab
                         AnimatoTab.DISCOVER -> AnimatoDiscoverTab
                         AnimatoTab.UPDATES -> AnimatoUpdatesTab
-                        AnimatoTab.DOWNLOADS -> AnimatoDownloadsTab
+                        AnimatoTab.SOURCES -> AnimatoSourcesTab
                     }
                 }
             }
@@ -281,7 +281,7 @@ object AnimatoHomeScreen : Screen(), AnimatoRoot {
                         }
                         CountBadge(count, MR.plurals.notification_chapters_generic)
                     }
-                    is AnimatoDiscoverTab -> {
+                    is AnimatoSourcesTab -> {
                         val count by produceState(initialValue = 0, contentType) {
                             when (contentType) {
                                 ContentType.MANGA ->

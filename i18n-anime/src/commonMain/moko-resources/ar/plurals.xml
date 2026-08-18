@@ -56,4 +56,10 @@
         <item quantity="many">الحلقات %1$s و %2$d أخرى</item>
         <item quantity="other">الحلقات %1$s و %2$d أخرى</item>
     </plurals>
+    <plurals name="home_downloads_queued">
+        <item quantity="one">حاجة واحدة مستنية</item>
+        <item quantity="two">حاجتين مستنيين</item>
+        <item quantity="few">%d حاجات مستنيين</item>
+        <item quantity="other">%d حاجة مستنية</item>
+    </plurals>
 </resources>

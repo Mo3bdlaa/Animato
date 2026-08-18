@@ -58,6 +58,8 @@ import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.Pill
 import animato.ui.components.UnviewedPill
 import animato.ui.entries.ItemCover
+import animato.ui.navigation.AnimatoNavigator
+import animato.ui.navigation.AnimatoTab
 import animato.ui.theme.LocalAnimatoPalette
 import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -175,7 +177,7 @@ class AnimatoSearchScreen(
                             // from would still find nothing after switching it, and advice that
                             // does not work is worse than none.
                             canSwitchLens = state.restrictTo == null,
-                            onAddSources = { navigator.push(ExtensionsScreen()) },
+                            onAddSources = { AnimatoNavigator.openTab(AnimatoTab.SOURCES) },
                         )
                     }
                     return@LazyColumn

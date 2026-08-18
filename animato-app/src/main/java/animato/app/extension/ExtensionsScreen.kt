@@ -101,71 +101,88 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 class ExtensionsScreen : Screen() {
 
     @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        val screenModel = viewModel { ExtensionsScreenModel() }
-        val state by screenModel.state.collectAsStateWithLifecycle()
-        var segment by rememberSaveable { mutableStateOf(ExtensionSegment.INSTALLED) }
-        var languagesOpen by rememberSaveable { mutableStateOf(false) }
+    override fun Content() = ExtensionsContent(canGoBack = true)
+}
 
-        // The merge a device asked for: an installed extension is somewhere you can GO, not just
-        // a thing you manage. One source opens straight into its browse screen; several open a
-        // picker first, because ten languages of one site are ten different sources.
-        val openSource: (ExtensionRow, RowSource) -> Unit = { row, source ->
-            navigator.push(SourceBrowseScreen(source.id, row.contentType))
-        }
+/**
+ * The same screen whether it is pushed or is a destination.
+ *
+ * It became a destination because a device weighed it against what it replaced: *"Manage next to
+ * Your sources is far too small for how important sources are — what if it took Downloads' place
+ * in the bar?"* That is the right trade. A bar slot is worth having when it is somewhere you go
+ * without a reason having appeared, and a download queue is the opposite of that: it is empty
+ * unless something is being fetched, and it announces itself in the notification shade when it is
+ * not. Sources is somewhere people go to look around.
+ *
+ * [canGoBack] is the only difference between the two lives: a destination has nothing to go back
+ * to, and a back arrow that pops the whole tab host is worse than no arrow.
+ */
+@Composable
+internal fun ExtensionsContent(canGoBack: Boolean = false) {
+    val navigator = LocalNavigator.currentOrThrow
+    val screenModel = viewModel { ExtensionsScreenModel() }
+    val state by screenModel.state.collectAsStateWithLifecycle()
+    var segment by rememberSaveable { mutableStateOf(ExtensionSegment.INSTALLED) }
+    var languagesOpen by rememberSaveable { mutableStateOf(false) }
 
-        if (languagesOpen) {
-            LanguageSheet(
-                languages = state.languages,
-                onToggle = screenModel::toggleLanguage,
-                onDismiss = { languagesOpen = false },
+    // The merge a device asked for: an installed extension is somewhere you can GO, not just
+    // a thing you manage. One source opens straight into its browse screen; several open a
+    // picker first, because ten languages of one site are ten different sources.
+    val openSource: (ExtensionRow, RowSource) -> Unit = { row, source ->
+        navigator.push(SourceBrowseScreen(source.id, row.contentType))
+    }
+
+    if (languagesOpen) {
+        LanguageSheet(
+            languages = state.languages,
+            onToggle = screenModel::toggleLanguage,
+            onDismiss = { languagesOpen = false },
+        )
+    }
+
+    Scaffold(
+        topBar = { scrollBehavior ->
+            SearchToolbar(
+                titleContent = { AppBarTitle(stringResource(AYMR.strings.label_sources_extensions)) },
+                searchQuery = state.searchQuery,
+                onChangeSearchQuery = screenModel::search,
+                navigateUp = if (canGoBack) ({ navigator.pop() }) else null,
+                scrollBehavior = scrollBehavior,
+                actions = {
+                    LensButton()
+                    // Only once there is something to filter. On a first run the languages are
+                    // whatever the repositories have not been asked for yet, and a control that
+                    // opens an empty sheet is worse than one that is not there.
+                    if (state.languages.isNotEmpty()) {
+                        IconButton(onClick = { languagesOpen = true }) {
+                            Icon(
+                                imageVector = if (state.isLanguageFiltered) {
+                                    Icons.Outlined.FilterAlt
+                                } else {
+                                    Icons.Outlined.FilterAltOff
+                                },
+                                contentDescription = stringResource(MR.strings.ext_info_language),
+                                tint = if (state.isLanguageFiltered) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    LocalContentColor.current
+                                },
+                            )
+                        }
+                    }
+                    if (state.hasUpdates) {
+                        TextButton(onClick = screenModel::updateAll) {
+                            Text(stringResource(MR.strings.ext_update_all))
+                        }
+                    }
+                },
             )
+        },
+    ) { contentPadding ->
+        if (state.isLoading) {
+            LoadingScreen(Modifier.padding(contentPadding))
+            return@Scaffold
         }
-
-        Scaffold(
-            topBar = { scrollBehavior ->
-                SearchToolbar(
-                    titleContent = { AppBarTitle(stringResource(AYMR.strings.label_sources_extensions)) },
-                    searchQuery = state.searchQuery,
-                    onChangeSearchQuery = screenModel::search,
-                    navigateUp = navigator::pop,
-                    scrollBehavior = scrollBehavior,
-                    actions = {
-                        LensButton()
-                        // Only once there is something to filter. On a first run the languages are
-                        // whatever the repositories have not been asked for yet, and a control that
-                        // opens an empty sheet is worse than one that is not there.
-                        if (state.languages.isNotEmpty()) {
-                            IconButton(onClick = { languagesOpen = true }) {
-                                Icon(
-                                    imageVector = if (state.isLanguageFiltered) {
-                                        Icons.Outlined.FilterAlt
-                                    } else {
-                                        Icons.Outlined.FilterAltOff
-                                    },
-                                    contentDescription = stringResource(MR.strings.ext_info_language),
-                                    tint = if (state.isLanguageFiltered) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        LocalContentColor.current
-                                    },
-                                )
-                            }
-                        }
-                        if (state.hasUpdates) {
-                            TextButton(onClick = screenModel::updateAll) {
-                                Text(stringResource(MR.strings.ext_update_all))
-                            }
-                        }
-                    },
-                )
-            },
-        ) { contentPadding ->
-            if (state.isLoading) {
-                LoadingScreen(Modifier.padding(contentPadding))
-                return@Scaffold
-            }
 
             /*
              * The segments are a pager, for the same reason the destinations are.
@@ -178,61 +195,60 @@ class ExtensionsScreen : Screen() {
              * The repositories row and the segments stay put above it. They govern both lists, so
              * sliding them out from under a swipe would be answering a question nobody asked.
              */
-            val pagerState = rememberPagerState(initialPage = segment.ordinal) { ExtensionSegment.entries.size }
+        val pagerState = rememberPagerState(initialPage = segment.ordinal) { ExtensionSegment.entries.size }
 
-            LaunchedEffect(segment) {
-                if (pagerState.currentPage != segment.ordinal) pagerState.animateScrollToPage(segment.ordinal)
-            }
-            LaunchedEffect(pagerState.settledPage) {
-                val settled = ExtensionSegment.entries[pagerState.settledPage]
-                if (segment != settled) segment = settled
-            }
+        LaunchedEffect(segment) {
+            if (pagerState.currentPage != segment.ordinal) pagerState.animateScrollToPage(segment.ordinal)
+        }
+        LaunchedEffect(pagerState.settledPage) {
+            val settled = ExtensionSegment.entries[pagerState.settledPage]
+            if (segment != settled) segment = settled
+        }
 
-            Column(modifier = Modifier.padding(contentPadding)) {
-                RepositoriesRow(
-                    lens = state.lens,
-                    storeCount = state.storeCount,
-                    navigator = navigator,
-                )
-                SegmentRow(selected = segment, onSelect = { segment = it })
+        Column(modifier = Modifier.padding(contentPadding)) {
+            RepositoriesRow(
+                lens = state.lens,
+                storeCount = state.storeCount,
+                navigator = navigator,
+            )
+            SegmentRow(selected = segment, onSelect = { segment = it })
 
-                HorizontalPager(state = pagerState) { page ->
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = MaterialTheme.padding.medium),
-                    ) {
-                        when (ExtensionSegment.entries[page]) {
-                            ExtensionSegment.INSTALLED ->
-                                if (state.installed.isEmpty()) {
-                                    item(key = "ships-empty") {
-                                        ShipsEmptyState(onBrowse = { segment = ExtensionSegment.AVAILABLE })
-                                    }
-                                } else {
-                                    extensionRows(state.installed, screenModel, openSource)
+            HorizontalPager(state = pagerState) { page ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = MaterialTheme.padding.medium),
+                ) {
+                    when (ExtensionSegment.entries[page]) {
+                        ExtensionSegment.INSTALLED ->
+                            if (state.installed.isEmpty()) {
+                                item(key = "ships-empty") {
+                                    ShipsEmptyState(onBrowse = { segment = ExtensionSegment.AVAILABLE })
                                 }
+                            } else {
+                                extensionRows(state.installed, screenModel, openSource)
+                            }
 
-                            ExtensionSegment.AVAILABLE ->
-                                // Nothing on offer drew nothing at all: the segments, and then
-                                // black. The two causes are both actionable and both named,
-                                // because "no extensions" with five repositories configured is
-                                // almost always the language filter.
-                                if (state.available.isEmpty()) {
-                                    item(key = "available-empty") {
-                                        AnimatoEmptyState(
-                                            message = stringResource(AYMR.strings.extensions_none_available),
-                                            actionLabel = stringResource(MR.strings.ext_info_language),
-                                            onAction = { languagesOpen = true },
-                                        )
-                                    }
-                                } else {
-                                    state.available.forEach { group ->
-                                        item(key = "lang-${group.languageCode}") {
-                                            LanguageHeader(group.languageName)
-                                        }
-                                        extensionRows(group.rows, screenModel, openSource)
-                                    }
+                        ExtensionSegment.AVAILABLE ->
+                            // Nothing on offer drew nothing at all: the segments, and then
+                            // black. The two causes are both actionable and both named,
+                            // because "no extensions" with five repositories configured is
+                            // almost always the language filter.
+                            if (state.available.isEmpty()) {
+                                item(key = "available-empty") {
+                                    AnimatoEmptyState(
+                                        message = stringResource(AYMR.strings.extensions_none_available),
+                                        actionLabel = stringResource(MR.strings.ext_info_language),
+                                        onAction = { languagesOpen = true },
+                                    )
                                 }
-                        }
+                            } else {
+                                state.available.forEach { group ->
+                                    item(key = "lang-${group.languageCode}") {
+                                        LanguageHeader(group.languageName)
+                                    }
+                                    extensionRows(group.rows, screenModel, openSource)
+                                }
+                            }
                     }
                 }
             }

@@ -44,9 +44,12 @@ import animato.ui.components.Pill
 import animato.ui.navigation.AnimatoNavigator
 import animato.ui.navigation.AnimatoTab
 import animato.ui.theme.LocalAnimatoPalette
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
@@ -56,6 +59,19 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
+
+/**
+ * The queue as a pushed screen, which is what it is now.
+ *
+ * It used to hold a slot in the bottom bar; sources took that slot, on the reasoning in
+ * `AnimatoSourcesTab`. This is where it went — one tap from the Updates top bar, behind an icon
+ * that only appears when there is something in it, and from the launcher shortcut.
+ */
+class DownloadsScreen : Screen() {
+
+    @Composable
+    override fun Content() = DownloadsContent(canGoBack = true)
+}
 
 /**
  * One queue, both halves, and the number that says why it matters.
@@ -72,8 +88,9 @@ import tachiyomi.presentation.core.util.plus
  * instead.
  */
 @Composable
-internal fun DownloadsContent() {
+internal fun DownloadsContent(canGoBack: Boolean = false) {
     val context = LocalContext.current
+    val navigator = LocalNavigator.currentOrThrow
     val scope = rememberCoroutineScope()
     val screenModel = viewModel { DownloadsScreenModel() }
     val state by screenModel.state.collectAsStateWithLifecycle()
@@ -83,6 +100,7 @@ internal fun DownloadsContent() {
         topBar = { scrollBehavior ->
             AppBar(
                 titleContent = { AppBarTitle(stringResource(MR.strings.label_download_queue)) },
+                navigateUp = if (canGoBack) ({ navigator.pop() }) else null,
                 scrollBehavior = scrollBehavior,
                 actions = {
                     LensButton()

@@ -598,12 +598,12 @@ class MainActivity : BaseActivity() {
             Constants.SHORTCUT_DOWNLOADS -> {
                 navigator.popUntilRoot()
                 setContentLens(ContentFilter.MANGA)
-                AnimatoTab.DOWNLOADS
+                AnimatoTab.UPDATES
             }
             AnimeConstants.SHORTCUT_ANIME_DOWNLOADS -> {
                 navigator.popUntilRoot()
                 setContentLens(ContentFilter.ANIME)
-                AnimatoTab.DOWNLOADS
+                AnimatoTab.UPDATES
             }
             Intent.ACTION_APPLICATION_PREFERENCES -> {
                 navigator.popUntilRoot()

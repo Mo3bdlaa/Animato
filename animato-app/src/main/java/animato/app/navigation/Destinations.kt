@@ -4,12 +4,12 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import animato.app.discover.DiscoverContent
-import animato.app.downloads.DownloadsContent
+import animato.app.extension.ExtensionsContent
 import animato.app.library.UnifiedLibraryContent
 import animato.app.updates.UpdatesContent
 import animato.domain.content.ContentFilter
@@ -113,19 +113,30 @@ data object AnimatoUpdatesTab : Tab {
     override fun Content() = UpdatesContent()
 }
 
-data object AnimatoDownloadsTab : Tab {
+/**
+ * Sources, in the slot the download queue used to hold.
+ *
+ * The trade, weighed on a device: *"Manage next to Your sources is far too small for how important
+ * sources are — what if it took Downloads' place?"* A bar slot earns its keep when it is somewhere
+ * you go without a reason having appeared. A download queue is the opposite: empty unless something
+ * is being fetched, and loudly present in the notification shade when it is. Sources is a place to
+ * look around in — which of your sites has something new — and it was three taps away.
+ *
+ * The queue did not lose its home, it moved to one that only appears when it has something to say:
+ * an icon with a live count in the Updates top bar. See `UpdatesContent`.
+ */
+data object AnimatoSourcesTab : Tab {
 
     override val options: TabOptions
         @Composable
         get() = TabOptions(
             index = 4u,
-            title = stringResource(MR.strings.label_download_queue),
-            icon = rememberVectorPainter(Icons.Outlined.Download),
+            title = stringResource(MR.strings.label_sources),
+            icon = rememberVectorPainter(Icons.Outlined.Extension),
         )
 
-    // One queue. Two of them cannot both be a claim about what the device is doing right now.
     @Composable
-    override fun Content() = DownloadsContent()
+    override fun Content() = ExtensionsContent()
 }
 
 data object AnimatoHomeTab : Tab {

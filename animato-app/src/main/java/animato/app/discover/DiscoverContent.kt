@@ -47,6 +47,8 @@ import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
 import animato.ui.entries.ItemCover
+import animato.ui.navigation.AnimatoNavigator
+import animato.ui.navigation.AnimatoTab
 import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -145,36 +147,17 @@ internal fun DiscoverContent() {
                 }
 
                 /*
-                 * The way in to managing sources, attached to the only heading on the screen that
-                 * is already about them.
-                 *
-                 * It was a row at the very bottom, under everything — and a device asked where it
-                 * should go instead: the top of the page, or somewhere else? Neither. The top
-                 * belongs to the search field, and a management link there competes with the one
-                 * thing this screen is for. Here it reads as what it is: these are your sources,
-                 * and this is where you change them.
+                 * A plain heading again: managing sources is a destination in the bar now, so a
+                 * button here would be a second door to the same room. Discover asks what to
+                 * watch; Sources answers where from.
                  */
                 item(key = "your-sources") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        SectionHeader(
-                            text = stringResource(AYMR.strings.label_your_sources),
-                            modifier = Modifier.weight(1f),
-                        )
-                        TextButton(
-                            onClick = { navigator.push(ExtensionsScreen()) },
-                            modifier = Modifier.padding(end = MaterialTheme.padding.small),
-                        ) {
-                            Text(stringResource(AYMR.strings.action_manage_sources))
-                        }
-                    }
+                    SectionHeader(stringResource(AYMR.strings.label_your_sources))
                 }
 
                 if (!state.hasSources) {
                     item(key = "no-sources") {
-                        NoSourcesCard(onAddSources = { navigator.push(ExtensionsScreen()) })
+                        NoSourcesCard(onAddSources = { AnimatoNavigator.openTab(AnimatoTab.SOURCES) })
                     }
                 } else {
                     sourceRail("popular", MR.strings.popular, state.popular, openSourceItem)

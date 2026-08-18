@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material.icons.outlined.VisibilityOff
@@ -28,6 +29,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.downloads.DownloadsScreen
 import animato.app.entry.EntryScreen
 import animato.app.search.AnimatoSearchScreen
 import animato.app.settings.AnimatoSettingsScreen
@@ -70,6 +73,7 @@ import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
@@ -98,6 +102,7 @@ internal fun HomeScreenContent() {
     val scope = rememberCoroutineScope()
     val screenModel = viewModel { HomeScreenModel() }
     val state by screenModel.state.collectAsState()
+    val queued by screenModel.queuedDownloads.collectAsState()
     val lens = contentLens()
     val searchType = contentTypeOrDefault()
 
@@ -210,12 +215,56 @@ internal fun HomeScreenContent() {
                     }
                 }
 
-                if (continueItems.isEmpty() && updateItems.isEmpty()) {
+                /*
+                 * The download queue, as a line at the bottom that only exists when it has something
+                 * to say.
+                 *
+                 * It held a slot in the bottom bar until sources took it, and a device chose where it
+                 * should land: *"put it in Home as a section at the bottom — if something is
+                 * downloading it stays there."* Which is the right shape for it. A queue is not a
+                 * place, it is a status: worth a row while it is working, worth nothing at all when
+                 * it is empty, and never worth a permanent tab.
+                 */
+                if (queued > 0) {
+                    item(key = "downloads") {
+                        DownloadsRow(
+                            count = queued,
+                            onClick = { navigator.push(DownloadsScreen()) },
+                        )
+                    }
+                }
+
+                if (continueItems.isEmpty() && updateItems.isEmpty() && queued == 0) {
                     item { EmptyShelf(onDiscover = { AnimatoNavigator.openTab(AnimatoTab.DISCOVER) }) }
                 }
             }
         }
     }
+}
+
+/**
+ * What the device is fetching, in one line.
+ *
+ * A row and not a rail: nobody browses their download queue, they check whether it is moving.
+ * The count is the whole content, and tapping it opens the queue where the per-item progress,
+ * the pause and the failures live.
+ */
+@Composable
+private fun DownloadsRow(count: Int, onClick: () -> Unit) {
+    ListItem(
+        modifier = Modifier.clickable(onClick = onClick),
+        leadingContent = {
+            Icon(
+                imageVector = Icons.Outlined.Download,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        },
+        headlineContent = { Text(stringResource(MR.strings.label_download_queue)) },
+        supportingContent = {
+            Text(pluralStringResource(AYMR.plurals.home_downloads_queued, count, count))
+        },
+    )
 }
 
 /**

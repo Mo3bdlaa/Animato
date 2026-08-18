@@ -8,13 +8,17 @@ import animato.app.updates.UpdateItem
 import animato.app.updates.toUpdateItem
 import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
+import eu.kanade.tachiyomi.data.download.DownloadManager
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
 import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.domain.updates.anime.interactor.GetAnimeUpdates
@@ -66,7 +70,22 @@ class HomeScreenModel(
     getUpdates: GetUpdates = Injekt.get(),
     getAnimeUpdates: GetAnimeUpdates = Injekt.get(),
     private val contentPreferences: ContentPreferences = Injekt.get(),
+    downloadManager: DownloadManager = Injekt.get(),
+    animeDownloadManager: AnimeDownloadManager = Injekt.get(),
 ) : ViewModel() {
+
+    /**
+     * How many items are queued right now, across both halves.
+     *
+     * Its own flow rather than a field on the main state: the queue ticks while a download runs,
+     * and folding that into the state that carries Continue and Updates would rebuild both lists
+     * every few hundred milliseconds for a number.
+     */
+    val queuedDownloads: StateFlow<Int> = combine(
+        downloadManager.queueState,
+        animeDownloadManager.queueState,
+    ) { manga, anime -> manga.size + anime.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     val state: StateFlow<HomeScreenState>
         field = MutableStateFlow<HomeScreenState>(HomeScreenState())
