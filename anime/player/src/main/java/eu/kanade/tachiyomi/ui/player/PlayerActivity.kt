@@ -777,12 +777,36 @@ class PlayerActivity : BaseActivity() {
             return
         }
 
+        /*
+         * One retry of the same stream before giving up on it.
+         *
+         * Reported from a device as *"every so often it says failed loading"*, on sources that do
+         * play. The failover below was already here and already correct — it moves to the next
+         * hoster — but it treats one refused request as a dead stream, and most of these are not:
+         * a signed URL handed over a moment too late, a CDN edge that answers 503 once, a hoster
+         * that rate-limits the first hit. Trying the same video a second time costs one request
+         * and rescues exactly that case; only the second failure means the stream is really gone.
+         *
+         * Keyed on the video, so a stream that fails twice moves on rather than looping, and the
+         * count resets whenever a different video is loaded.
+         */
+        val current = viewModel.currentVideo.value
+        if (current != null && retriedVideoUrl != current.videoUrl) {
+            retriedVideoUrl = current.videoUrl
+            logcat(LogPriority.WARN) { "Retrying the current stream once after: $errorMessage" }
+            setVideo(current, position * 1000L)
+            return
+        }
+
         viewModel.viewModelScope.launchIO {
             if (!viewModel.failoverToNextVideo()) {
                 withUIContext { toast(errorMessage, Toast.LENGTH_LONG) }
             }
         }
     }
+
+    /** The stream a retry has already been spent on. See [onPlaybackError]. */
+    private var retriedVideoUrl: String? = null
 
     internal fun event(eventId: Int) {
         if (player.isExiting) return
