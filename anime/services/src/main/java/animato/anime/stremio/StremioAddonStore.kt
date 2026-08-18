@@ -26,7 +26,17 @@ import java.io.IOException
 data class StremioAddon(
     val url: String,
     val manifest: StremioManifest,
-)
+) {
+    /**
+     * Whether this addon is somewhere you can go, or only something other addons draw on.
+     *
+     * A stream-only addon like Torrentio has no catalogue at all: as a source it would show empty
+     * shelves and an empty search, which reads as broken rather than as "this one supplies video
+     * to the others". So it is kept, consulted whenever anything needs a stream, and never listed
+     * as a place to browse.
+     */
+    val isBrowsable: Boolean get() = manifest.serves("catalog")
+}
 
 /**
  * The addons the user has added, and the only place they are added or removed.
@@ -84,7 +94,12 @@ class StremioAddonStore(
         if (manifest.behaviorHints.configurationRequired) {
             return failure(AYMR.strings.stremio_error_needs_configuration)
         }
-        if (!manifest.serves(RESOURCE_CATALOG) && !manifest.serves(RESOURCE_META)) {
+        // Streaming counts. The first version of this check demanded a catalogue or metadata, and
+        // so refused Torrentio — an addon that serves nothing but `stream`, and the single most
+        // installed addon there is. That is precisely backwards: stream-only addons are the ones
+        // that turn a listing into something watchable, and refusing them left the app able to
+        // install only the half that cannot play anything.
+        if (USEFUL_RESOURCES.none { manifest.serves(it) }) {
             return failure(AYMR.strings.stremio_error_no_content)
         }
 
@@ -136,7 +151,8 @@ class StremioAddonStore(
 
     companion object {
         private const val PREF_KEY = "animato_stremio_addons"
-        private const val RESOURCE_CATALOG = "catalog"
-        private const val RESOURCE_META = "meta"
+
+        /** Anything an addon can offer that this app has a use for. */
+        private val USEFUL_RESOURCES = listOf("catalog", "meta", "stream")
     }
 }

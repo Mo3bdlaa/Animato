@@ -219,6 +219,21 @@ class StremioMapperTest {
     }
 
     @Test
+    fun `a stream-only addon is kept but is not somewhere to browse`() {
+        // Torrentio's shape, and the case an earlier version of the install check refused
+        // outright — which left the app able to install only the half that cannot play anything.
+        val torrentio = StremioAddon(
+            url = "https://torrentio.strem.fun/language=arabic",
+            manifest = json.decodeFromString(
+                """{"id":"t","name":"Torrentio","resources":["stream"],"types":["movie","series"]}""",
+            ),
+        )
+
+        torrentio.isBrowsable shouldBe false
+        torrentio.manifest.canServe("stream", "movie", "tt123") shouldBe true
+    }
+
+    @Test
     fun `a metadata-only addon is never asked for streams`() {
         // Cinemeta's shape: it knows what everything is called and has no video at all. Asking it
         // for a stream returns an empty answer indistinguishable from "nothing is available",

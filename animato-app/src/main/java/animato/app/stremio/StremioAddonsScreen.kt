@@ -130,12 +130,18 @@ class StremioAddonsScreen : Screen() {
                 items(items = addons, key = { it.url }) { addon ->
                     AddonListItem(
                         addon = addon,
-                        // An addon in the list is somewhere you can go, the same way an installed
-                        // extension is — the row opens what it serves rather than only managing it.
-                        onOpen = {
-                            navigator.push(
-                                SourceBrowseScreen(StremioSource.idFor(addon.url), ContentType.ANIME),
-                            )
+                        // An addon with a catalogue is somewhere you can go, the same way an
+                        // installed extension is. A stream-only one is not — it has nothing to
+                        // show, and opening an empty grid would be a worse answer than not
+                        // offering to open it.
+                        onOpen = if (addon.isBrowsable) {
+                            {
+                                navigator.push(
+                                    SourceBrowseScreen(StremioSource.idFor(addon.url), ContentType.ANIME),
+                                )
+                            }
+                        } else {
+                            null
                         },
                         onRemove = { screenModel.remove(addon.url) },
                     )
@@ -148,11 +154,11 @@ class StremioAddonsScreen : Screen() {
 @Composable
 private fun AddonListItem(
     addon: StremioAddon,
-    onOpen: () -> Unit,
+    onOpen: (() -> Unit)?,
     onRemove: () -> Unit,
 ) {
     ListItem(
-        modifier = Modifier.clickable(onClick = onOpen),
+        modifier = if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier,
         headlineContent = {
             Text(
                 text = addon.manifest.name.ifBlank { addon.url },
@@ -162,6 +168,16 @@ private fun AddonListItem(
         },
         supportingContent = {
             Column {
+                // What this addon is *for* comes before what it says about itself. A stream-only
+                // addon never appears in the sources list, so without this line its absence there
+                // looks like it failed to install.
+                if (!addon.isBrowsable) {
+                    Text(
+                        text = stringResource(AYMR.strings.stremio_streams_only),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
                 val description = addon.manifest.description.takeIf { it.isNotBlank() }
                 if (description != null) {
                     Text(text = description, maxLines = 2, overflow = TextOverflow.Ellipsis)

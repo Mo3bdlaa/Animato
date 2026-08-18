@@ -77,7 +77,11 @@ class AndroidAnimeSourceManager(
                             registerStubSource(StubAnimeSource.from(it))
                         }
                     }
-                    addons.forEach { addon ->
+                    // Only the addons that have something to browse become sources. A stream-only
+                    // addon is still installed and still consulted for video, but as a source it
+                    // would be empty shelves and an empty search — which reads as broken rather
+                    // than as the supporting role it actually plays.
+                    addons.filter { it.isBrowsable }.forEach { addon ->
                         val source = StremioSource(addon)
                         mutableMap[source.id] = source
                         registerStubSource(StubAnimeSource.from(source))
