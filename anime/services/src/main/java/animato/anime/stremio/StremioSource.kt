@@ -1,10 +1,10 @@
 package animato.anime.stremio
 
+import android.app.Application
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
 import eu.kanade.tachiyomi.animesource.model.Hoster
-import eu.kanade.tachiyomi.animesource.model.Hoster.Companion.toHosterList
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SAnimeEpisodeUpdate
 import eu.kanade.tachiyomi.animesource.model.SEpisode
@@ -13,7 +13,16 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.parseAs
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
+import logcat.LogPriority
+import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.util.system.logcat
+import tachiyomi.i18n.aniyomi.AYMR
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import java.security.MessageDigest
 
@@ -44,6 +53,12 @@ class StremioSource(
 ) : AnimeHttpSource() {
 
     private val json: Json by injectLazy()
+
+    /**
+     * Read at stream time rather than held: addons are added and removed while sources are alive,
+     * and a title opened before a stream provider was installed must still find it afterwards.
+     */
+    private val addonStore: StremioAddonStore by injectLazy()
 
     override val baseUrl: String = addon.url
 
@@ -143,14 +158,38 @@ class StremioSource(
         return StremioMapper.toEpisodes(meta, type)
     }
 
+    /**
+     * Every installed addon that can answer for this episode, asked at once.
+     *
+     * This is the one place the app must stop treating an addon as a self-contained source. In
+     * Stremio the catalogue and the streams are deliberately different addons: Cinemeta knows what
+     * *Spider-Man* is and has no video at all, while a stream provider has video and no idea what
+     * it is called. They meet on the id — that is the entire reason Stremio identifies things by
+     * IMDb id rather than by its own numbering.
+     *
+     * So a title opened from a metadata addon asks every stream addon that will take its id, and
+     * each one becomes a hoster named after itself, because "which addon found this" is exactly
+     * the distinction the hoster list exists to draw. Asking them together rather than in turn
+     * matters: stream providers are the slowest thing here, and in sequence a title with four
+     * installed addons would take four round trips before the first video appeared.
+     */
     override suspend fun getHosterList(episode: SEpisode): List<Hoster> {
         val (type, id) = StremioMapper.parseEntryUrl(episode.url) ?: return emptyList()
-        if (!addon.manifest.serves(RESOURCE_STREAM)) return emptyList()
-        val response = client.newCall(GET(StremioUrls.stream(baseUrl, type, id), headers))
-            .awaitSuccess()
-        val streams = with(json) { response.parseAs<StremioStreamResponse>() }.streams
-        val videos = StremioMapper.toVideos(streams)
-        return if (videos.isEmpty()) emptyList() else videos.toHosterList()
+        val providers = streamProvidersFor(type, id)
+        if (providers.isEmpty()) {
+            // Not "no videos": this addon is a listing, and the fix is to install a second addon.
+            // Saying so is the difference between a dead end and a next step.
+            throw IllegalStateException(
+                Injekt.get<Application>().stringResource(AYMR.strings.stremio_no_stream_addon),
+            )
+        }
+
+        return coroutineScope {
+            providers
+                .map { provider -> async { hosterFor(provider, type, id) } }
+                .awaitAll()
+                .filterNotNull()
+        }
     }
 
     /**
@@ -158,6 +197,42 @@ class StremioSource(
      * videos by the time the player asks for them and there is nothing left to fetch.
      */
     override suspend fun getVideoList(hoster: Hoster): List<Video> = hoster.videoList.orEmpty()
+
+    /**
+     * This addon first when it serves streams, then everything else that will take this id.
+     *
+     * Order is the answer to "which of these did the user mean": an addon that both lists and
+     * streams is the one they opened, so its own videos lead.
+     */
+    private fun streamProvidersFor(type: String, id: String): List<StremioAddon> {
+        val installed = addonStore.addons.value
+        val self = addon.takeIf { it.manifest.canServe(RESOURCE_STREAM, type, id) }
+        val others = installed.filter {
+            !it.url.equals(addon.url, ignoreCase = true) && it.manifest.canServe(RESOURCE_STREAM, type, id)
+        }
+        return listOfNotNull(self) + others
+    }
+
+    /**
+     * One addon's answer, or nothing.
+     *
+     * A provider that is down, slow or simply has this title is not an error for the others — the
+     * whole point of asking several is that any one of them may come back empty.
+     */
+    private suspend fun hosterFor(provider: StremioAddon, type: String, id: String): Hoster? = runCatching {
+        val response = client.newCall(GET(StremioUrls.stream(provider.url, type, id), headers)).awaitSuccess()
+        val streams = with(json) { response.parseAs<StremioStreamResponse>() }.streams
+        StremioMapper.toVideos(streams).takeIf { it.isNotEmpty() }?.let { videos ->
+            Hoster(
+                hosterUrl = provider.url,
+                hosterName = provider.manifest.name.ifBlank { provider.url },
+                videoList = videos,
+            )
+        }
+    }.getOrElse {
+        logcat(LogPriority.INFO, it) { "Stremio stream provider ${provider.url} did not answer for $type/$id" }
+        null
+    }
 
     /**
      * Where "open in browser" should land.

@@ -1,6 +1,7 @@
 package animato.anime.stremio
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -50,7 +51,40 @@ data class StremioManifest(
         }
 
     fun serves(resource: String): Boolean = resourceNames.any { it.equals(resource, ignoreCase = true) }
+
+    /**
+     * Whether this addon will answer for one particular thing, rather than merely in general.
+     *
+     * Addons narrow themselves twice. The manifest-level `types` and `idPrefixes` say what the
+     * whole addon is about, and the object form of a resource entry can narrow further — a stream
+     * provider that handles films and series but only for IMDb ids says so there. Asking an addon
+     * for something it has already declared it does not do wastes a request and, worse, returns an
+     * empty answer that is indistinguishable from "nothing is available".
+     *
+     * An absent list is no constraint at all, not an empty one.
+     */
+    fun canServe(resource: String, type: String, id: String): Boolean {
+        val entries = resources.filter { element ->
+            val name = when (element) {
+                is JsonPrimitive -> element.contentOrNullSafe()
+                is JsonObject -> (element["name"] as? JsonPrimitive)?.contentOrNullSafe()
+                else -> null
+            }
+            name.equals(resource, ignoreCase = true)
+        }
+        if (entries.isEmpty()) return false
+
+        return entries.any { element ->
+            val scopedTypes = (element as? JsonObject)?.get("types").stringList() ?: types
+            val scopedPrefixes = (element as? JsonObject)?.get("idPrefixes").stringList() ?: idPrefixes
+            (scopedTypes.isEmpty() || scopedTypes.any { it.equals(type, ignoreCase = true) }) &&
+                (scopedPrefixes.isEmpty() || scopedPrefixes.any { id.startsWith(it) })
+        }
+    }
 }
+
+private fun JsonElement?.stringList(): List<String>? =
+    (this as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.content }
 
 @Serializable
 data class StremioManifestHints(

@@ -199,6 +199,53 @@ class StremioMapperTest {
     }
 
     @Test
+    fun `a metadata-only addon is never asked for streams`() {
+        // Cinemeta's shape: it knows what everything is called and has no video at all. Asking it
+        // for a stream returns an empty answer indistinguishable from "nothing is available",
+        // which is how a title ends up saying the video failed when no video was ever offered.
+        val cinemeta = json.decodeFromString<StremioManifest>(
+            """{"id":"c","name":"Cinemeta","resources":["catalog","meta"],"types":["movie","series"]}""",
+        )
+
+        cinemeta.canServe("meta", "movie", "tt123") shouldBe true
+        cinemeta.canServe("stream", "movie", "tt123") shouldBe false
+    }
+
+    @Test
+    fun `a stream addon is asked only for the types and ids it declared`() {
+        // The object form of a resource narrows further than the manifest does: this one streams
+        // films and series, and only for IMDb ids.
+        val provider = json.decodeFromString<StremioManifest>(
+            """
+            {
+              "id":"p","name":"Provider",
+              "resources":[{"name":"stream","types":["movie","series"],"idPrefixes":["tt"]}],
+              "types":["movie","series","tv"]
+            }
+            """.trimIndent(),
+        )
+
+        provider.canServe("stream", "movie", "tt123") shouldBe true
+        provider.canServe("stream", "series", "tt123:1:1") shouldBe true
+        // Declared out of scope, so asking would spend a request to be told nothing.
+        provider.canServe("stream", "movie", "kitsu:1") shouldBe false
+        provider.canServe("stream", "tv", "tt123") shouldBe false
+    }
+
+    @Test
+    fun `an addon that declares no narrowing answers for anything it serves`() {
+        // An absent list is no constraint at all, not an empty one — read the other way round,
+        // every unnarrowed addon would be filtered out and nothing would ever be asked.
+        val open = json.decodeFromString<StremioManifest>(
+            """{"id":"o","name":"Open","resources":["stream"]}""",
+        )
+
+        open.canServe("stream", "movie", "tt123") shouldBe true
+        open.canServe("stream", "anime", "kitsu:9") shouldBe true
+        open.canServe("catalog", "movie", "tt123") shouldBe false
+    }
+
+    @Test
     fun `a catalog entry keeps the type it was requested under when it omits its own`() {
         val anime = StremioMapper.toSAnime(StremioMetaPreview(id = "tt1", name = "Untyped"), "series")
         anime.url shouldBe "series:tt1"
