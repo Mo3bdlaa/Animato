@@ -152,6 +152,12 @@ class PlayerActivity : BaseActivity() {
     private var pipReceiver: BroadcastReceiver? = null
     private var httpServer: HttpServer? = null
 
+    /**
+     * Whether this player is the one that raised the torrent server, and so the one to take it
+     * down. A player that never touched a torrent must not stop a server another one is using.
+     */
+    private var startedTorrentServer = false
+
     private val noisyReceiver = object : BroadcastReceiver() {
         var initialized = false
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -311,6 +317,19 @@ class PlayerActivity : BaseActivity() {
 
         httpServer?.stop()
         httpServer = null
+
+        // The torrent server goes down with the player that raised it.
+        //
+        // It used to be START_STICKY with an ongoing notification and no one to switch it off, so
+        // one torrent left a background service seeding — and therefore uploading — for as long as
+        // the app was installed, whether or not anything was playing. From a device: *"make it run
+        // only while a torrent is open and close behind it"*, which is also the only reading of a
+        // peer-to-peer default that is defensible. Only a player that started it stops it, so a
+        // second player opening over this one does not pull the server out from under it.
+        if (startedTorrentServer) {
+            startedTorrentServer = false
+            TorrentServerService.stop()
+        }
 
         audioFocusRequest?.let {
             AudioManagerCompat.abandonAudioFocusRequest(audioManager, it)
@@ -1159,7 +1178,18 @@ class PlayerActivity : BaseActivity() {
             launchIO {
                 // Nothing is fetched and nothing is shared until this has been answered.
                 if (!acknowledgeTorrentNotice()) return@launchIO
-                TorrentServerService.start()
+                // A native start fails for ordinary reasons — the port is taken, the library will
+                // not load on this ABI — and the old code carried on regardless, handing a magnet
+                // to a server that was not listening. That is the loads-forever case, again.
+                if (!TorrentServerService.start()) {
+                    withUIContext {
+                        viewModel.updateIsLoadingEpisode(false)
+                        toast(AYMR.strings.torrent_server_start_failure)
+                        finish()
+                    }
+                    return@launchIO
+                }
+                startedTorrentServer = true
                 torrentLinkHandler(video.videoUrl, video.videoTitle, videoOptions)
             }
         } else {

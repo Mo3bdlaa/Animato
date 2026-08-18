@@ -114,7 +114,7 @@ class TorrentServerService : Service() {
             )
 
         val builder = context.notificationBuilder(AnimeNotifications.CHANNEL_TORRENT_SERVER) {
-            setSmallIcon(AnimeR.drawable.ic_ani)
+            setSmallIcon(AnimeR.drawable.ic_animato_notification)
             setContentText(stringResource(AYMR.strings.torrentserver_is_running))
             setContentTitle(stringResource(MR.strings.app_name))
             setAutoCancel(false)
@@ -142,20 +142,37 @@ class TorrentServerService : Service() {
     companion object {
         const val ACTION_START = "start_torrent_server"
         const val ACTION_STOP = "stop_torrent_server"
+
+        /**
+         * How long to wait for the native server before calling it a failure.
+         *
+         * Long enough for a cold start on a slow device, short enough that somebody who tapped
+         * play gets an answer rather than an indefinite wait.
+         */
+        private const val START_TIMEOUT_SECONDS = 15
         val applicationContext = Injekt.get<Application>()
         val api = Injekt.get<TorrentServerApi>()
 
-        suspend fun start() {
-            try {
+        /**
+         * Start the server and say whether it actually came up.
+         *
+         * The result used to be discarded: [wait] would give up after ten seconds and the caller
+         * would carry on and hand a magnet to a server that was not listening, which reads on a
+         * device as a video that loads and loads. A native start can fail for ordinary reasons —
+         * the port is taken, the library will not load on this ABI — and none of them are worth
+         * hiding behind a spinner.
+         */
+        suspend fun start(): Boolean {
+            return try {
                 val intent =
                     Intent(applicationContext, TorrentServerService::class.java).apply {
                         action = ACTION_START
                     }
                 applicationContext.startService(intent)
-                wait(10)
+                wait(START_TIMEOUT_SECONDS)
             } catch (e: Exception) {
-                logcat(LogPriority.DEBUG, e) { "Failed to start torrent service" }
-                e.printStackTrace()
+                logcat(LogPriority.WARN, e) { "Failed to start torrent service" }
+                false
             }
         }
 

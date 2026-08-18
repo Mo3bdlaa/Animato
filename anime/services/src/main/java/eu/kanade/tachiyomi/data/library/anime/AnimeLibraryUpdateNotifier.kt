@@ -180,7 +180,7 @@ class AnimeLibraryUpdateNotifier(
         ) {
             setContentTitle(context.pluralStringResource(MR.plurals.notification_update_error, failed, failed))
             setContentText(context.stringResource(MR.strings.action_show_errors))
-            setSmallIcon(AnimeR.drawable.ic_ani)
+            setSmallIcon(AnimeR.drawable.ic_animato_notification)
 
             setContentIntent(AnimeNotificationReceiver.openErrorLogPendingActivity(context, uri))
         }
@@ -220,7 +220,7 @@ class AnimeLibraryUpdateNotifier(
                 }
             }
 
-            setSmallIcon(AnimeR.drawable.ic_ani)
+            setSmallIcon(AnimeR.drawable.ic_animato_notification)
             setLargeIcon(notificationBitmap)
 
             setGroup(AnimeNotifications.GROUP_NEW_EPISODES)
@@ -256,7 +256,7 @@ class AnimeLibraryUpdateNotifier(
             setContentText(description)
             setStyle(NotificationCompat.BigTextStyle().bigText(description))
 
-            setSmallIcon(AnimeR.drawable.ic_ani)
+            setSmallIcon(AnimeR.drawable.ic_animato_notification)
 
             if (icon != null) {
                 setLargeIcon(icon)

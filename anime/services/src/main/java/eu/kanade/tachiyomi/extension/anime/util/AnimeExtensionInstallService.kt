@@ -26,7 +26,7 @@ class AnimeExtensionInstallService : Service() {
 
     override fun onCreate() {
         val notification = notificationBuilder(Notifications.CHANNEL_EXTENSIONS_UPDATE) {
-            setSmallIcon(AnimeR.drawable.ic_ani)
+            setSmallIcon(AnimeR.drawable.ic_animato_notification)
             setAutoCancel(false)
             setOngoing(true)
             setShowWhen(false)

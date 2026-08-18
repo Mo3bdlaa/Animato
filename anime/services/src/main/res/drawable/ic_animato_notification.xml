@@ -1,0 +1,37 @@
+<!--
+  The mark Animato wears in the status bar.
+
+  A notification's small icon is not a logo slot: Android throws away every colour in it and draws
+  the alpha channel in whatever tint the system is using, at roughly 24dp inside a 22dp keyline.
+  The app icon cannot be used here — its panel, its cream ground and its two words survive that
+  treatment as an illegible grey smudge — which is why this is a separate, deliberately blunt
+  shape rather than a reference to the launcher icon.
+
+  So it draws the one thing the brand is recognisable by at that size: the leaning A of the
+  wordmark, cut from a rounded panel the way the icon's letters are cut from theirs. Solid white
+  on transparent, no strokes thinner than the keyline, nothing that depends on colour to read.
+
+  It replaced `ic_ani`, the donor app's ring-and-triangle, which was still appearing on every
+  Animato notification.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!--
+      The panel: a rounded rectangle with a corner clipped away, echoing the tilted comic frame the
+      launcher icon is built on. Drawn as an outline so the letter inside stays legible when the
+      whole thing is tinted one flat colour.
+    -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,2.6h16c0.77,0 1.4,0.63 1.4,1.4v16c0,0.77 -0.63,1.4 -1.4,1.4H4c-0.77,0 -1.4,-0.63 -1.4,-1.4V4c0,-0.77 0.63,-1.4 1.4,-1.4zM4.6,4.6v14.8h14.8V4.6z" />
+    <!--
+      The A, leaning the way the wordmark's letters lean. The crossbar is a full-width block rather
+      than a hairline so it survives being drawn at status-bar size.
+    -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M11.1,6.6h2.2l3.5,10.8h-2.3l-0.66,-2.2h-3.9l-0.66,2.2h-2.3zM12,9.3l-1.2,4h2.5z" />
+</vector>
