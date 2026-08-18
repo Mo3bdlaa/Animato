@@ -70,14 +70,17 @@ import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.secondaryItemAlpha
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Both libraries in one grid.
@@ -144,52 +147,70 @@ internal fun UnifiedLibraryContent() {
         }
 
         val layoutDirection = LocalLayoutDirection.current
-        Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
-            // Fixed rather than scrolling with the grid: switching shelf is the main thing this
-            // screen does, and a control that leaves the screen after two flicks is not available.
-            if (state.visibleCategories.isNotEmpty()) {
-                CategoryChipRow(
-                    categories = state.visibleCategories,
-                    selected = state.activeCategory?.name,
-                    shelfSize = state.shelfEntries.size,
-                    onSelect = screenModel::selectCategory,
-                )
-            }
-
-            LazyLibraryGrid(
-                columns = state.columns,
-                contentPadding = PaddingValues(
-                    start = contentPadding.calculateStartPadding(layoutDirection),
-                    end = contentPadding.calculateEndPadding(layoutDirection),
-                    bottom = contentPadding.calculateBottomPadding(),
-                ),
-            ) {
-                if (state.visibleEntries.isEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }, contentType = { "empty" }) {
-                        LibraryEmptyState(
-                            emptiedBySettings = state.emptiedBySettings,
-                            onReset = screenModel::resetDisplay,
-                        )
+        var isRefreshing by rememberSaveable { mutableStateOf(false) }
+        PullRefresh(
+            refreshing = isRefreshing,
+            enabled = true,
+            onRefresh = {
+                if (screenModel.refresh()) {
+                    scope.launch {
+                        // Honest for a second, then gone: the update is a background job with its
+                        // own notification. Same trade Mihon's library makes.
+                        isRefreshing = true
+                        delay(1.seconds)
+                        isRefreshing = false
                     }
-                    return@LazyLibraryGrid
+                }
+            },
+            indicatorPadding = PaddingValues(top = contentPadding.calculateTopPadding()),
+        ) {
+            Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
+                // Fixed rather than scrolling with the grid: switching shelf is the main thing this
+                // screen does, and a control that leaves the screen after two flicks is not available.
+                if (state.visibleCategories.isNotEmpty()) {
+                    CategoryChipRow(
+                        categories = state.visibleCategories,
+                        selected = state.activeCategory?.name,
+                        shelfSize = state.shelfEntries.size,
+                        onSelect = screenModel::selectCategory,
+                    )
                 }
 
-                items(
-                    count = state.visibleEntries.size,
-                    key = { index ->
+                LazyLibraryGrid(
+                    columns = state.columns,
+                    contentPadding = PaddingValues(
+                        start = contentPadding.calculateStartPadding(layoutDirection),
+                        end = contentPadding.calculateEndPadding(layoutDirection),
+                        bottom = contentPadding.calculateBottomPadding(),
+                    ),
+                ) {
+                    if (state.visibleEntries.isEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }, contentType = { "empty" }) {
+                            LibraryEmptyState(
+                                emptiedBySettings = state.emptiedBySettings,
+                                onReset = screenModel::resetDisplay,
+                            )
+                        }
+                        return@LazyLibraryGrid
+                    }
+
+                    items(
+                        count = state.visibleEntries.size,
+                        key = { index ->
+                            val entry = state.visibleEntries[index]
+                            "${entry.contentType}-${entry.entryId}"
+                        },
+                        contentType = { "entry" },
+                    ) { index ->
                         val entry = state.visibleEntries[index]
-                        "${entry.contentType}-${entry.entryId}"
-                    },
-                    contentType = { "entry" },
-                ) { index ->
-                    val entry = state.visibleEntries[index]
-                    LibraryGridItem(
-                        entry = entry,
-                        showTypeChip = state.lens == ContentFilter.ALL,
-                        showUnviewedCount = state.showUnviewedCount,
-                        onClick = { openEntry(entry) },
-                        onLongClick = { screenModel.openQuickSheet(entry) },
-                    )
+                        LibraryGridItem(
+                            entry = entry,
+                            showTypeChip = state.lens == ContentFilter.ALL,
+                            showUnviewedCount = state.showUnviewedCount,
+                            onClick = { openEntry(entry) },
+                            onLongClick = { screenModel.openQuickSheet(entry) },
+                        )
+                    }
                 }
             }
         }

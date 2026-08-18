@@ -1,5 +1,6 @@
 package animato.app.navigation
 
+import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,8 @@ import animato.app.updates.UpdateItem
 import animato.app.updates.toUpdateItem
 import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -147,6 +150,20 @@ class HomeScreenModel(
         }
             .onEach { newState -> state.value = newState }
             .launchIn(viewModelScope)
+    }
+
+    /**
+     * The same refresh Updates runs: ask both libraries for anything new, per the lens.
+     *
+     * Each job refuses if it is already running and says so by returning false; started means
+     * either half accepted.
+     */
+    fun refresh(): Boolean {
+        val context = Injekt.get<Application>()
+        val lens = contentPreferences.contentFilter.get()
+        val manga = lens.includesManga && LibraryUpdateJob.startNow(context)
+        val anime = lens.includesAnime && AnimeLibraryUpdateJob.startNow(context)
+        return manga || anime
     }
 
     /** Dismisses one entry from the Continue rail, timestamped so a later open un-dismisses it. */

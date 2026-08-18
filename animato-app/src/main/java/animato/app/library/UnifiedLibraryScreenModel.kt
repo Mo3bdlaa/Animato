@@ -45,7 +45,7 @@ class UnifiedLibraryScreenModel(
     getAnimeCategories: GetVisibleAnimeCategories = Injekt.get(),
     trackRepository: TrackRepository = Injekt.get(),
     animeTrackRepository: AnimeTrackRepository = Injekt.get(),
-    contentPreferences: ContentPreferences = Injekt.get(),
+    private val contentPreferences: ContentPreferences = Injekt.get(),
     private val downloadCache: DownloadCache = Injekt.get(),
     private val animeDownloadCache: AnimeDownloadCache = Injekt.get(),
     private val preferences: UnifiedLibraryPreferences = Injekt.get(),
@@ -170,6 +170,18 @@ class UnifiedLibraryScreenModel(
         }
 
     /**
+     * The same refresh the Updates screen runs: ask both libraries for anything new, per the
+     * lens. Each job refuses if already running; started means either half accepted.
+     */
+    fun refresh(): Boolean {
+        val context = Injekt.get<android.app.Application>()
+        val lens = contentPreferences.contentFilter.get()
+        val manga = lens.includesManga && eu.kanade.tachiyomi.data.library.LibraryUpdateJob.startNow(context)
+        val anime = lens.includesAnime && eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob.startNow(context)
+        return manga || anime
+    }
+
+    /**
      * The long-press sheet, which opens empty and fills in.
      *
      * Its captions state consequences — which chapter is next, how many rows a mark-done would
@@ -177,6 +189,7 @@ class UnifiedLibraryScreenModel(
      * sheet appears immediately and reads afterwards, rather than the press appearing to do nothing
      * while a query runs.
      */
+
     fun openQuickSheet(entry: LibraryEntry) {
         quickSheet.value = QuickSheetState(entry = entry)
         viewModelScope.launch {

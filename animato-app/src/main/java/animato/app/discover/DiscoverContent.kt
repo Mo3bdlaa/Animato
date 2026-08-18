@@ -56,14 +56,17 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Discovery that works before you have installed anything.
@@ -104,55 +107,70 @@ internal fun DiscoverContent() {
     }
 
     Scaffold { contentPadding ->
-        LazyColumn(
-            contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.medium),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
+        var isRefreshing by rememberSaveable { mutableStateOf(false) }
+        PullRefresh(
+            refreshing = isRefreshing,
+            enabled = true,
+            onRefresh = {
+                screenModel.refresh()
+                scope.launch {
+                    isRefreshing = true
+                    delay(1.seconds)
+                    isRefreshing = false
+                }
+            },
+            indicatorPadding = contentPadding,
         ) {
-            item(key = "search") {
-                SearchRow(
-                    query = query,
-                    onQueryChange = { query = it },
-                    onSearch = { search(query, null) },
-                )
-            }
-
-            state.metadataRails.forEach { rail ->
-                // A metadata title has no source, so the only thing a tap can mean is "find me this
-                // in what I have". Restricted to the rail's own medium: a trending anime has no
-                // business being looked for in a manga source, and asking every source of both
-                // halves is how a search takes twice as long to say nothing.
-                metadataRail(
-                    rail = rail,
-                    showMedium = state.lens == ContentFilter.ALL,
-                    onViewAll = { navigator.push(MetadataGridScreen(rail.rail, rail.contentType)) },
-                ) { item ->
-                    search(item.title, rail.contentType)
+            LazyColumn(
+                contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.medium),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
+            ) {
+                item(key = "search") {
+                    SearchRow(
+                        query = query,
+                        onQueryChange = { query = it },
+                        onSearch = { search(query, null) },
+                    )
                 }
-            }
 
-            item(key = "your-sources") {
-                SectionHeader(stringResource(AYMR.strings.label_your_sources))
-            }
-
-            if (!state.hasSources) {
-                item(key = "no-sources") {
-                    NoSourcesCard(onAddSources = { navigator.push(ExtensionsScreen()) })
+                state.metadataRails.forEach { rail ->
+                    // A metadata title has no source, so the only thing a tap can mean is "find me this
+                    // in what I have". Restricted to the rail's own medium: a trending anime has no
+                    // business being looked for in a manga source, and asking every source of both
+                    // halves is how a search takes twice as long to say nothing.
+                    metadataRail(
+                        rail = rail,
+                        showMedium = state.lens == ContentFilter.ALL,
+                        onViewAll = { navigator.push(MetadataGridScreen(rail.rail, rail.contentType)) },
+                    ) { item ->
+                        search(item.title, rail.contentType)
+                    }
                 }
-            } else {
-                sourceRail("popular", MR.strings.popular, state.popular, openSourceItem)
-                sourceRail("latest", MR.strings.latest, state.latest, openSourceItem)
-            }
 
-            // One management row, not two. "Sources & extensions" and a second "Sources" both
-            // led to lists of the same extensions — a device called the pair redundant — and the
-            // extensions screen now opens each installed extension into its own source, which was
-            // the only thing the second row could do that the first could not.
-            item(key = "manage") {
-                DestinationRow(
-                    labelRes = AYMR.strings.label_sources_extensions,
-                    icon = Icons.Outlined.Extension,
-                    onClick = { navigator.push(ExtensionsScreen()) },
-                )
+                item(key = "your-sources") {
+                    SectionHeader(stringResource(AYMR.strings.label_your_sources))
+                }
+
+                if (!state.hasSources) {
+                    item(key = "no-sources") {
+                        NoSourcesCard(onAddSources = { navigator.push(ExtensionsScreen()) })
+                    }
+                } else {
+                    sourceRail("popular", MR.strings.popular, state.popular, openSourceItem)
+                    sourceRail("latest", MR.strings.latest, state.latest, openSourceItem)
+                }
+
+                // One management row, not two. "Sources & extensions" and a second "Sources" both
+                // led to lists of the same extensions — a device called the pair redundant — and the
+                // extensions screen now opens each installed extension into its own source, which was
+                // the only thing the second row could do that the first could not.
+                item(key = "manage") {
+                    DestinationRow(
+                        labelRes = AYMR.strings.label_sources_extensions,
+                        icon = Icons.Outlined.Extension,
+                        onClick = { navigator.push(ExtensionsScreen()) },
+                    )
+                }
             }
         }
     }

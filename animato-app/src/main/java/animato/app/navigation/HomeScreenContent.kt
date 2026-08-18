@@ -35,6 +35,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,13 +63,17 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The first screen: where you left off, and how much you have.
@@ -90,6 +95,7 @@ import tachiyomi.presentation.core.util.plus
 @Composable
 internal fun HomeScreenContent() {
     val navigator = LocalNavigator.currentOrThrow
+    val scope = rememberCoroutineScope()
     val screenModel = viewModel { HomeScreenModel() }
     val state by screenModel.state.collectAsState()
     val lens = contentLens()
@@ -136,58 +142,77 @@ internal fun HomeScreenContent() {
             return@Scaffold
         }
 
-        LazyColumn(
-            contentPadding = contentPadding + PaddingValues(vertical = MaterialTheme.padding.medium),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-        ) {
-            if (continueItems.isNotEmpty()) {
-                item {
-                    SectionHeader(stringResource(AYMR.strings.label_continue))
+        // The indicator is honest for a second and then leaves: the update is a background job
+        // with its own notification, and a spinner that ran as long as the job would say the
+        // screen is busy when it is not. Same trade Mihon's library makes, same wording.
+        var isRefreshing by remember { mutableStateOf(false) }
+        PullRefresh(
+            refreshing = isRefreshing,
+            enabled = true,
+            onRefresh = {
+                if (screenModel.refresh()) {
+                    scope.launch {
+                        isRefreshing = true
+                        delay(1.seconds)
+                        isRefreshing = false
+                    }
                 }
-                item {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = MaterialTheme.padding.medium),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                    ) {
-                        items(
-                            items = continueItems,
-                            key = { "${it.contentType}-${it.entryId}" },
-                        ) { item ->
-                            ContinueCard(
-                                item = item,
-                                onClick = {
-                                    navigator.push(EntryScreen(item.entryId, item.contentType))
-                                },
-                                onHide = { screenModel.hideFromContinue(item) },
-                            )
+            },
+            indicatorPadding = contentPadding,
+        ) {
+            LazyColumn(
+                contentPadding = contentPadding + PaddingValues(vertical = MaterialTheme.padding.medium),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
+            ) {
+                if (continueItems.isNotEmpty()) {
+                    item {
+                        SectionHeader(stringResource(AYMR.strings.label_continue))
+                    }
+                    item {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = MaterialTheme.padding.medium),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                        ) {
+                            items(
+                                items = continueItems,
+                                key = { "${it.contentType}-${it.entryId}" },
+                            ) { item ->
+                                ContinueCard(
+                                    item = item,
+                                    onClick = {
+                                        navigator.push(EntryScreen(item.entryId, item.contentType))
+                                    },
+                                    onHide = { screenModel.hideFromContinue(item) },
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            if (updateItems.isNotEmpty()) {
-                item {
-                    SectionHeader(
-                        text = stringResource(AYMR.strings.label_latest_updates),
-                        action = stringResource(AYMR.strings.action_see_all),
-                        onActionClick = { AnimatoNavigator.openTab(AnimatoTab.UPDATES) },
-                    )
+                if (updateItems.isNotEmpty()) {
+                    item {
+                        SectionHeader(
+                            text = stringResource(AYMR.strings.label_latest_updates),
+                            action = stringResource(AYMR.strings.action_see_all),
+                            onActionClick = { AnimatoNavigator.openTab(AnimatoTab.UPDATES) },
+                        )
+                    }
+                    items(
+                        items = updateItems,
+                        key = { "u-${it.contentType}-${it.entryId}-${it.itemName}" },
+                    ) { item ->
+                        UpdateRow(
+                            item = item,
+                            onClick = {
+                                navigator.push(EntryScreen(item.entryId, item.contentType))
+                            },
+                        )
+                    }
                 }
-                items(
-                    items = updateItems,
-                    key = { "u-${it.contentType}-${it.entryId}-${it.itemName}" },
-                ) { item ->
-                    UpdateRow(
-                        item = item,
-                        onClick = {
-                            navigator.push(EntryScreen(item.entryId, item.contentType))
-                        },
-                    )
-                }
-            }
 
-            if (continueItems.isEmpty() && updateItems.isEmpty()) {
-                item { EmptyShelf(onDiscover = { AnimatoNavigator.openTab(AnimatoTab.DISCOVER) }) }
+                if (continueItems.isEmpty() && updateItems.isEmpty()) {
+                    item { EmptyShelf(onDiscover = { AnimatoNavigator.openTab(AnimatoTab.DISCOVER) }) }
+                }
             }
         }
     }
