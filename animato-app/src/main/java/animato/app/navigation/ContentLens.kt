@@ -1,12 +1,9 @@
 package animato.app.navigation
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.DropdownMenu
@@ -29,8 +26,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
@@ -91,15 +91,14 @@ fun contentTypeOrDefault(fallback: ContentType = ContentType.MANGA): ContentType
     }
 
 /**
- * The lens button: the glyph, a quiet word beside it, and a menu behind them.
+ * The lens button: the word inside the circle, and a menu behind it.
  *
  * Sits in the top bar of every screen that lists content — home, library, discover, updates and
  * search — in the same slot each time, so the control is learned once.
  *
- * The label arrived exactly the way [LensGlyph]'s note predicted it would: the glyph alone did
- * not read on a device — *"show inside it All or Ani or Man … just a mention, not too much
- * contrast."* Inside the circle a word is a smudge at 24 dp, so it sits beside it, in the
- * variant colour, small — a caption for the shape rather than a second control.
+ * The label went beside the glyph first and the device sent it home: *"show All and Ani and Man
+ * inside the circle, not beside it."* Inside a 24 dp circle a word is a smudge, so in the top bar
+ * the circle grew to fit one — the glyph everywhere else is unchanged.
  */
 @Composable
 fun LensButton(modifier: Modifier = Modifier) {
@@ -107,20 +106,11 @@ fun LensButton(modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(percent = 50))
-                .clickable { expanded = true }
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            LensGlyph(lens = lens)
-            Text(
-                text = stringResource(lens.shortLabelRes()),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                modifier = Modifier.padding(start = 4.dp),
+        IconButton(onClick = { expanded = true }) {
+            LensGlyph(
+                lens = lens,
+                glyphSize = LENS_BUTTON_GLYPH_SIZE,
+                label = stringResource(lens.shortLabelRes()),
             )
         }
 
@@ -189,7 +179,12 @@ fun LensButton(modifier: Modifier = Modifier) {
  * later in a top bar.
  */
 @Composable
-fun LensGlyph(lens: ContentFilter, modifier: Modifier = Modifier) {
+fun LensGlyph(
+    lens: ContentFilter,
+    modifier: Modifier = Modifier,
+    glyphSize: Dp = LENS_GLYPH_SIZE,
+    label: String? = null,
+) {
     val outline = MaterialTheme.colorScheme.onSurfaceVariant
     val active = MaterialTheme.colorScheme.primary
     val narrowed = lens != ContentFilter.ALL
@@ -203,7 +198,7 @@ fun LensGlyph(lens: ContentFilter, modifier: Modifier = Modifier) {
 
     Box(
         modifier = modifier
-            .size(LENS_GLYPH_SIZE)
+            .size(glyphSize)
             .clip(CircleShape)
             .drawBehind {
                 val inset = LENS_STROKE.toPx() / 2f
@@ -251,10 +246,32 @@ fun LensGlyph(lens: ContentFilter, modifier: Modifier = Modifier) {
                     style = Stroke(width = LENS_STROKE.toPx()),
                 )
             },
-    )
+    ) {
+        /*
+         * The word inside the circle, exactly as asked the second time: beside it was "a caption
+         * for the shape", and the device answered "inside it, not beside it". Tiny and bold —
+         * at this size a light weight vanishes — in the surface's own ink so it sits on the muted
+         * disc and on the accent half alike without becoming a badge.
+         */
+        if (label != null) {
+            Text(
+                text = label,
+                modifier = Modifier.align(Alignment.Center),
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 8.sp,
+                lineHeight = 8.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                softWrap = false,
+            )
+        }
+    }
 }
 
 private val LENS_GLYPH_SIZE = 24.dp
+
+/** Larger in the top bar than in onboarding rows, because a word has to fit inside it. */
+private val LENS_BUTTON_GLYPH_SIZE = 30.dp
 private val LENS_STROKE = 2.dp
 
 /** Six o'clock, sweeping clockwise to twelve: the left half. */
