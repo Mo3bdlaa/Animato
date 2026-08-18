@@ -11,6 +11,8 @@ import eu.kanade.domain.entries.anime.model.toDomainAnime
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.CoroutineScope
@@ -139,6 +141,8 @@ class DiscoverScreenModel(
     private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
     private val metadataCatalog: MetadataCatalog = Injekt.get(),
+    private val extensionManager: ExtensionManager = Injekt.get(),
+    private val animeExtensionManager: AnimeExtensionManager = Injekt.get(),
     private val discoverCache: DiscoverCache = DiscoverCache(),
     contentPreferences: ContentPreferences = Injekt.get(),
 ) : ViewModel() {
@@ -302,7 +306,7 @@ class DiscoverScreenModel(
         sourcePreferences.pinnedSources.changes(),
         sourcePreferences.disabledSources.changes(),
     ) { sources, pinned, disabled ->
-        choose(sources.filterIsInstance<HttpSource>().map { it.id }, pinned, disabled)
+        choose(sources.filterIsInstance<HttpSource>().map { it.id }, pinned, disabled, nsfwMangaSources())
     }
 
     private fun animeRailSources(): Flow<List<Long>> = combine(
@@ -310,14 +314,42 @@ class DiscoverScreenModel(
         animeSourcePreferences.pinnedAnimeSources.changes(),
         animeSourcePreferences.disabledAnimeSources.changes(),
     ) { sources, pinned, disabled ->
-        choose(sources.filterIsInstance<AnimeHttpSource>().map { it.id }, pinned, disabled)
+        choose(sources.filterIsInstance<AnimeHttpSource>().map { it.id }, pinned, disabled, nsfwAnimeSources())
     }
 
-    private fun choose(available: List<Long>, pinned: Set<String>, disabled: Set<String>): List<Long> {
-        val allowed = available.filter { it.toString() !in disabled }
+    /**
+     * Which sources this rail may ask, after the two standing exclusions.
+     *
+     * Disabled sources are excluded because hiding a source and then being shown its popular page
+     * is the setting not working. NSFW sources are excluded outright — asked for from a device:
+     * *"don't show NSFW in Discover under Your sources."* Discover is the front page, seen over
+     * shoulders and without asking; somebody who wants an adult source's front page can open the
+     * source itself, where the choice is theirs and deliberate. The preference that shows NSFW at
+     * all is a separate question from putting it on the app's first screen.
+     */
+    private fun choose(
+        available: List<Long>,
+        pinned: Set<String>,
+        disabled: Set<String>,
+        nsfw: Set<Long>,
+    ): List<Long> {
+        val allowed = available.filter { it.toString() !in disabled && it !in nsfw }
         val pinnedIds = allowed.filter { it.toString() in pinned }
         return pinnedIds.ifEmpty { allowed.take(UNPINNED_SOURCES) }
     }
+
+    /** Source ids belonging to an installed extension the repository marks NSFW. */
+    private fun nsfwMangaSources(): Set<Long> =
+        extensionManager.installedExtensionsFlow.value
+            .filter { it.isNsfw }
+            .flatMap { extension -> extension.sources.map { it.id } }
+            .toSet()
+
+    private fun nsfwAnimeSources(): Set<Long> =
+        animeExtensionManager.installedExtensionsFlow.value
+            .filter { it.isNsfw }
+            .flatMap { extension -> extension.sources.map { it.id } }
+            .toSet()
 
     private suspend fun load(
         sourcesByType: Map<ContentType, List<Long>>,
