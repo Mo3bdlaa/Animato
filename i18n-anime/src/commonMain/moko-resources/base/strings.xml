@@ -345,6 +345,7 @@
     <string name="stremio_error_needs_configuration">Configure this addon on its own page first, then paste the address it gives you</string>
     <string name="stremio_wrong_screen">That is a Stremio addon, not an extension store. Add it under Sources → Stremio addons.</string>
     <string name="stremio_no_stream_addon">This addon only lists titles. Add a streaming addon to watch them.</string>
+    <string name="stremio_torrents_disabled">These streams are torrents. Turn on TorrServer under Settings → Player → Torrent to play them.</string>
     <!-- Sheets -->
     <string name="player_sheets_delay_set_as_default">Set as default</string>
     <string name="player_sheets_track_title_w_lang" translatable="false">#%d: %s (%s)</string>

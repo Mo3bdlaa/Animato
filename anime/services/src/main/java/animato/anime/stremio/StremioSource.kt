@@ -1,6 +1,7 @@
 package animato.anime.stremio
 
 import android.app.Application
+import aniyomi.core.common.torrent.TorrentPreferences
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
@@ -59,6 +60,8 @@ class StremioSource(
      * and a title opened before a stream provider was installed must still find it afterwards.
      */
     private val addonStore: StremioAddonStore by injectLazy()
+
+    private val torrentPreferences: TorrentPreferences by injectLazy()
 
     override val baseUrl: String = addon.url
 
@@ -191,12 +194,40 @@ class StremioSource(
             )
         }
 
-        return coroutineScope {
+        val hosters = coroutineScope {
             providers
                 .map { provider -> async { hosterFor(provider, type, id) } }
                 .awaitAll()
                 .filterNotNull()
         }
+        return withoutUnplayableTorrents(hosters)
+    }
+
+    /**
+     * Drop the torrents when nothing here can play a torrent.
+     *
+     * TorrServer ships switched off, and the player only routes a magnet through it when it is
+     * on — otherwise the link goes straight to mpv, which cannot open a magnet and does not say
+     * so. It shows a spinner instead, forever. From a device: *"it keeps loading, I do not know
+     * whether it is going to work at all"*, which is exactly what a video that can never start
+     * looks like.
+     *
+     * Most Stremio stream addons are torrent addons, so this is not a rare corner — and being
+     * told to turn on a setting is a fix, while a spinner is not.
+     */
+    private fun withoutUnplayableTorrents(hosters: List<Hoster>): List<Hoster> {
+        if (torrentPreferences.torrServerEnable().get()) return hosters
+
+        val playable = hosters.mapNotNull { hoster ->
+            val kept = hoster.videoList.orEmpty().filterNot { it.videoUrl.startsWith(MAGNET_SCHEME) }
+            if (kept.isEmpty()) null else hoster.copy(videoList = kept)
+        }
+        if (playable.isEmpty() && hosters.isNotEmpty()) {
+            throw IllegalStateException(
+                Injekt.get<Application>().stringResource(AYMR.strings.stremio_torrents_disabled),
+            )
+        }
+        return playable
     }
 
     /**
@@ -343,6 +374,9 @@ class StremioSource(
         private const val ANY_GENRE = "Any"
         private const val IMDB_PREFIX = "tt"
         private const val IMDB_TITLE_URL = "https://www.imdb.com/title/"
+
+        /** The same prefix the player and the downloader test for when routing to TorrServer. */
+        private const val MAGNET_SCHEME = "magnet"
 
         private val POPULAR_WORDS = listOf("popular", "top", "trending", "featured")
         private val LATEST_WORDS = listOf("latest", "new", "recent", "airing", "updated")
