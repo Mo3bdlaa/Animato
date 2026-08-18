@@ -309,6 +309,7 @@
     <string name="lens_short_manga">Man</string>
     <string name="discover_view_all">View all</string>
     <string name="discover_rail_empty">Nothing came back — the list service may be unreachable</string>
+    <string name="updates_select">Select</string>
     <string name="updates_mark_opened">Mark as opened</string>
     <string name="home_hide_from_continue">Hide from here</string>
     <string name="settings_group_content">Your content</string>

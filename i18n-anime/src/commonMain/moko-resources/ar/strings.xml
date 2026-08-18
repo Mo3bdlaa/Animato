@@ -522,6 +522,7 @@
     <string name="lens_short_manga">مانجا</string>
     <string name="discover_view_all">شوف الكل</string>
     <string name="discover_rail_empty">مرجعش حاجة — خدمة القوائم ممكن تكون مش متاحة دلوقتي</string>
+    <string name="updates_select">تحديد</string>
     <string name="updates_mark_opened">عليم إنها اتفتحت</string>
     <string name="home_hide_from_continue">شيلها من هنا</string>
     <string name="settings_group_content">المحتوى بتاعك</string>

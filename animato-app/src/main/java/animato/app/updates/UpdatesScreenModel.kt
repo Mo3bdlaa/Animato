@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.chapter.interactor.GetChapter
 import tachiyomi.domain.entries.anime.interactor.GetAnime
@@ -49,8 +50,21 @@ data class UpdatesState(
     val lens: ContentFilter = ContentFilter.ALL,
     val days: List<UpdateDay> = emptyList(),
     val isRefreshing: Boolean = false,
+    /**
+     * The rows picked out for a bulk action, by [UpdateItem.key].
+     *
+     * Keys rather than the items themselves: the feed rebuilds whenever a download finishes or a
+     * row is marked opened, and a selection holding stale copies would act on what the list used
+     * to say. Empty means the screen is not in selection mode at all — the same value cannot mean
+     * "nothing chosen" and "not choosing", because those want different top bars.
+     */
+    val selected: Set<String> = emptySet(),
 ) {
     val isEmpty: Boolean get() = !isLoading && days.isEmpty()
+
+    val inSelectionMode: Boolean get() = selected.isNotEmpty()
+
+    val allItems: List<UpdateItem> get() = days.flatMap { it.items }
 }
 
 /**
@@ -130,7 +144,15 @@ class UpdatesScreenModel(
 
             UpdatesState(isLoading = false, lens = lens, days = items.groupIntoDays())
         }
-            .onEach { newState -> state.value = newState.copy(isRefreshing = state.value.isRefreshing) }
+            .onEach { newState ->
+                val stillThere = newState.allItems.mapTo(mutableSetOf()) { it.key }
+                state.value = newState.copy(
+                    isRefreshing = state.value.isRefreshing,
+                    // Marking a selected row opened removes it from the feed; keeping its key
+                    // would leave the screen in selection mode over a selection that is not on it.
+                    selected = state.value.selected intersect stillThere,
+                )
+            }
             .launchIn(viewModelScope)
     }
 
@@ -147,6 +169,44 @@ class UpdatesScreenModel(
         val anime = state.value.lens.includesAnime && AnimeLibraryUpdateJob.startNow(context)
         return manga || anime
     }
+
+    fun toggleSelection(item: UpdateItem) {
+        state.update { current ->
+            val selected = if (item.key in current.selected) {
+                current.selected - item.key
+            } else {
+                current.selected + item.key
+            }
+            current.copy(selected = selected)
+        }
+    }
+
+    fun selectAll() {
+        state.update { it.copy(selected = it.allItems.mapTo(mutableSetOf()) { item -> item.key }) }
+    }
+
+    fun clearSelection() = state.update { it.copy(selected = emptySet()) }
+
+    /**
+     * The bulk actions, which are the single-row ones over a list.
+     *
+     * Both clear the selection when they are done, because both answer the question the selection
+     * was asking: these rows, this thing. Leaving them ticked afterwards invites doing it twice.
+     */
+    fun downloadSelected() {
+        val items = selectedItems()
+        clearSelection()
+        items.forEach(::download)
+    }
+
+    fun markSelectedViewed() {
+        val items = selectedItems().filter { it.isNew }
+        clearSelection()
+        items.forEach(::toggleViewed)
+    }
+
+    private fun selectedItems(): List<UpdateItem> =
+        state.value.allItems.filter { it.key in state.value.selected }
 
     /**
      * Marks a row opened, or puts it back.

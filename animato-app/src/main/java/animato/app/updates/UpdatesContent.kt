@@ -1,5 +1,6 @@
 package animato.app.updates
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,10 +17,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RemoveDone
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,6 +35,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +57,7 @@ import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.NewPill
 import animato.ui.entries.ItemCover
+import animato.ui.navigation.AnimatoNavigator
 import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -119,21 +125,62 @@ internal fun UpdatesContent() {
         }
     }
 
+    /*
+     * While rows are picked out, the destination bar goes away.
+     *
+     * Not decoration: the bar's visibility is what arms the swipe between destinations, so
+     * hiding it also stops a sideways drag from carrying a half-made selection to another
+     * screen. Back clears the selection for the same reason it closes a menu.
+     */
+    LaunchedEffect(state.inSelectionMode) {
+        AnimatoNavigator.showBottomNav(!state.inSelectionMode)
+    }
+    BackHandler(enabled = state.inSelectionMode, onBack = screenModel::clearSelection)
+
     Scaffold(
         topBar = { scrollBehavior ->
-            AppBar(
-                titleContent = { AppBarTitle(stringResource(MR.strings.label_recent_updates)) },
-                scrollBehavior = scrollBehavior,
-                actions = {
-                    LensButton()
-                    IconButton(onClick = refresh) {
-                        Icon(
-                            imageVector = Icons.Outlined.Refresh,
-                            contentDescription = stringResource(MR.strings.action_update_library),
-                        )
-                    }
-                },
-            )
+            if (state.inSelectionMode) {
+                AppBar(
+                    titleContent = { AppBarTitle(state.selected.size.toString()) },
+                    navigateUp = screenModel::clearSelection,
+                    navigationIcon = Icons.Outlined.Close,
+                    scrollBehavior = scrollBehavior,
+                    actions = {
+                        IconButton(onClick = screenModel::downloadSelected) {
+                            Icon(
+                                imageVector = Icons.Outlined.Download,
+                                contentDescription = stringResource(MR.strings.manga_download),
+                            )
+                        }
+                        IconButton(onClick = screenModel::markSelectedViewed) {
+                            Icon(
+                                imageVector = Icons.Outlined.Done,
+                                contentDescription = stringResource(AYMR.strings.updates_mark_opened),
+                            )
+                        }
+                        IconButton(onClick = screenModel::selectAll) {
+                            Icon(
+                                imageVector = Icons.Outlined.SelectAll,
+                                contentDescription = stringResource(MR.strings.action_select_all),
+                            )
+                        }
+                    },
+                )
+            } else {
+                AppBar(
+                    titleContent = { AppBarTitle(stringResource(MR.strings.label_recent_updates)) },
+                    scrollBehavior = scrollBehavior,
+                    actions = {
+                        LensButton()
+                        IconButton(onClick = refresh) {
+                            Icon(
+                                imageVector = Icons.Outlined.Refresh,
+                                contentDescription = stringResource(MR.strings.action_update_library),
+                            )
+                        }
+                    },
+                )
+            }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { contentPadding ->
@@ -163,12 +210,22 @@ internal fun UpdatesContent() {
                         val item = day.items[index]
                         UpdateRow(
                             item = item,
-                            onClick = { open(item) },
+                            selected = item.key in state.selected,
+                            // In selection mode every tap is a tick — opening a chapter while
+                            // three others are chosen is nobody's intention.
+                            onClick = {
+                                if (state.inSelectionMode) screenModel.toggleSelection(item) else open(item)
+                            },
                             onCoverClick = {
-                                navigator.push(EntryScreen(item.entryId, item.contentType))
+                                if (state.inSelectionMode) {
+                                    screenModel.toggleSelection(item)
+                                } else {
+                                    navigator.push(EntryScreen(item.entryId, item.contentType))
+                                }
                             },
                             onDownload = { screenModel.download(item) },
                             onToggleViewed = { screenModel.toggleViewed(item) },
+                            onSelect = { screenModel.toggleSelection(item) },
                         )
                     }
                 }
@@ -224,10 +281,12 @@ private fun DayHeader(date: LocalDate) {
 @Composable
 private fun UpdateRow(
     item: UpdateItem,
+    selected: Boolean,
     onClick: () -> Unit,
     onCoverClick: () -> Unit,
     onDownload: () -> Unit,
     onToggleViewed: () -> Unit,
+    onSelect: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -235,7 +294,13 @@ private fun UpdateRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
+                .background(
+                    if (selected) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = SELECTED_ROW_ALPHA)
+                    } else {
+                        MaterialTheme.colorScheme.background
+                    },
+                )
                 .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true })
                 .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
             verticalAlignment = Alignment.CenterVertically,
@@ -292,6 +357,16 @@ private fun UpdateRow(
                     onToggleViewed()
                 },
             )
+            // The third way out of a long press: do this to several rows instead of one. It ticks
+            // the row it was opened from, which is the row the hold was about.
+            DropdownMenuItem(
+                text = { Text(stringResource(AYMR.strings.updates_select)) },
+                leadingIcon = { Icon(Icons.Outlined.Checklist, contentDescription = null) },
+                onClick = {
+                    menuOpen = false
+                    onSelect()
+                },
+            )
         }
     }
 }
@@ -315,6 +390,9 @@ private fun NothingNew(
         onAction = onCheckNow,
     )
 }
+
+/** Enough tint to read as chosen against a black feed, not enough to hide the cover. */
+private const val SELECTED_ROW_ALPHA = 0.24f
 
 private val ThumbSize = 48.dp
 private val ThumbRadius = 12.dp

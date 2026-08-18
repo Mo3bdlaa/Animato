@@ -29,7 +29,10 @@ data class UpdateItem(
     /** Unread or unseen — the pill on the row, and what makes the feed news rather than a log. */
     val isNew: Boolean,
     val coverData: Any?,
-)
+) {
+    /** Unique across both halves: the two id spaces are separate and can collide. */
+    val key: String get() = "$contentType-$itemId"
+}
 
 fun UpdatesWithRelations.toUpdateItem() = UpdateItem(
     entryId = mangaId,
