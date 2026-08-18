@@ -1,8 +1,10 @@
 package animato.anime.ui.stores
 
+import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.player.describeForUser
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +21,10 @@ import mihon.domain.extension.anime.interactor.GetAnimeExtensionStores
 import mihon.domain.extension.anime.interactor.RemoveAnimeExtensionStore
 import mihon.domain.extension.anime.interactor.UpdateAnimeExtensionStores
 import mihon.domain.extension.anime.model.AnimeExtensionStore
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
@@ -30,6 +35,7 @@ class AnimeExtensionStoresViewModel(
     private val removeExtensionStore: RemoveAnimeExtensionStore = Injekt.get(),
     private val updateExtensionStores: UpdateAnimeExtensionStores = Injekt.get(),
     private val extensionManager: AnimeExtensionManager = Injekt.get(),
+    private val context: Application = Injekt.get(),
 ) : ViewModel() {
 
     private val dialog = MutableStateFlow<AnimeExtensionStoreDialog?>(null)
@@ -49,6 +55,14 @@ class AnimeExtensionStoresViewModel(
      * @param baseUrl The baseUrl of the repo to create.
      */
     fun createRepo(baseUrl: String) {
+        // A Stremio addon pasted here is not a mistake anybody should have to diagnose. The two
+        // screens sit one row apart on Sources and both take a URL, so this is where people who
+        // have only ever added a repository will try first — and the store fetch would answer
+        // with a parse failure about an index nobody mentioned. Name what it is and where it goes.
+        if (looksLikeStremioAddon(baseUrl)) {
+            failDialog(context.stringResource(AYMR.strings.stremio_wrong_screen))
+            return
+        }
         viewModelScope.launch {
             dialog.update {
                 when (it) {
@@ -63,21 +77,40 @@ class AnimeExtensionStoresViewModel(
                     dismissDialog()
                 }
                 .onFailure { throwable ->
-                    dialog.update {
-                        when (it) {
-                            is AnimeExtensionStoreDialog.Create -> it.copy(
-                                processing = false,
-                                errorMessage = throwable.message ?: "unknown error",
-                            )
-                            is AnimeExtensionStoreDialog.Confirm -> it.copy(
-                                processing = false,
-                                errorMessage = throwable.message ?: "unknown error",
-                            )
-                            else -> it
-                        }
-                    }
+                    // The same translation the player uses, for the same reason: a repository that
+                    // is simply unreachable said so as a bare class name, under a text field, to
+                    // somebody who had just typed a URL and could have retried.
+                    failDialog(
+                        throwable.describeForUser()
+                            ?: throwable.message
+                            ?: context.stringResource(MR.strings.unknown_error),
+                    )
                 }
         }
+    }
+
+    private fun failDialog(message: String) {
+        dialog.update {
+            when (it) {
+                is AnimeExtensionStoreDialog.Create -> it.copy(processing = false, errorMessage = message)
+                is AnimeExtensionStoreDialog.Confirm -> it.copy(processing = false, errorMessage = message)
+                else -> it
+            }
+        }
+    }
+
+    /**
+     * Whether a URL is an addon rather than an extension store.
+     *
+     * By path, not by fetching it: an extension store index is `index.min.json`, and every Stremio
+     * addon ends in `manifest.json` — that is the addon's whole address. A wrong guess here costs a
+     * message pointing at the other screen, which is recoverable; fetching first to be certain
+     * would make the common case slower to be no more right.
+     */
+    private fun looksLikeStremioAddon(url: String): Boolean {
+        val trimmed = url.trim()
+        return trimmed.startsWith("stremio://", ignoreCase = true) ||
+            trimmed.substringBefore('?').trimEnd('/').endsWith("/manifest.json", ignoreCase = true)
     }
 
     /**
