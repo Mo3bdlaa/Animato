@@ -299,10 +299,10 @@
     <string name="no_next_episode">Next Episode not found!</string>
     <string name="no_prev_episode">Previous Episode not found!</string>
     <string name="no_available_videos">No available videos</string>
-    <string name="failure_extension_crashed">The extension itself crashed — it is likely outdated, or the site changed under it</string>
+    <string name="failure_extension_crashed">The extension crashed; it is likely outdated</string>
     <string name="failure_source_not_installed">The extension for this source is not installed</string>
-    <string name="failure_site_changed">The site changed and the extension can no longer read it — it needs an update from whoever maintains it</string>
-    <string name="failure_site_unreachable">Could not reach the site — no connection, or the site is down</string>
+    <string name="failure_site_changed">The site changed; this extension needs an update</string>
+    <string name="failure_site_unreachable">Could not reach the site</string>
     <string name="failure_site_timed_out">The site took too long to answer</string>
     <string name="lens_short_all">All</string>
     <string name="lens_short_anime">Ani</string>
@@ -320,8 +320,9 @@
     <string name="entry_release_next_soon">next expected soon</string>
     <string name="action_manage_sources">Manage</string>
     <string name="source_browse_empty">This source has nothing to show for that</string>
+    <string name="home_continue_empty">Nothing started yet</string>
     <string name="entry_caught_up">Caught up</string>
-    <string name="no_available_videos_source_empty">The source returned an empty video list for this episode — the source itself is likely broken</string>
+    <string name="no_available_videos_source_empty">The source has no video for this episode</string>
     <string name="no_hosters">Hoster list is empty</string>
     <string name="no_episode_loaded">No episode loaded</string>
     <string name="select_hoster_from_empty_list">Hoster selected from empty list</string>

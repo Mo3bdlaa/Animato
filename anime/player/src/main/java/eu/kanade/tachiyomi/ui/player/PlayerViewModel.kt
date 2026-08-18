@@ -1493,14 +1493,26 @@ class PlayerViewModel @JvmOverloads constructor(
 
                 throw e
             } catch (e: ExceptionWithStringResource) {
-                // Thrown inside a launched coroutine, so nothing above this frame will render it —
-                // uncaught it is a crash screen, not a message. Show it and stay alive: the player
-                // stays open on the quality sheet, where the per-hoster reasons are visible.
+                /*
+                 * Thrown inside a launched coroutine, so nothing above this frame will render it —
+                 * uncaught it is a crash screen, not a message.
+                 *
+                 * What happens next depends on whether anything is playable at all. If some hoster
+                 * is ready, the player stays open: the quality sheet has the alternatives and the
+                 * per-hoster reasons, and closing would throw away a working list because one
+                 * choice failed. If nothing is ready, staying open means a spinner over a black
+                 * screen forever — which is what a device photographed, message and all. There is
+                 * nothing to stay for, so it says why and leaves, exactly like a failed initial
+                 * load does.
+                 */
+                val anythingPlayable = _hosterState.value.any { it is HosterState.Ready && it.videoList.isNotEmpty() }
                 updateIsLoadingEpisode(false)
+                isLoading.update { false }
                 withUIContext {
                     val app = Injekt.get<Application>()
                     val base = app.stringResource(e.stringResource)
                     app.toast(e.detail?.let { "$base\n$it" } ?: base, Toast.LENGTH_LONG)
+                    if (!anythingPlayable) activity.finish()
                 }
             }
         }
