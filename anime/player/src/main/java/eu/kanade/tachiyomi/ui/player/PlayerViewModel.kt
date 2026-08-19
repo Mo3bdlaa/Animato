@@ -1830,6 +1830,12 @@ class PlayerViewModel @JvmOverloads constructor(
         if (isLoadingEpisode.value) return
         val currentEp = currentEpisode.value ?: return
         if (episodeId == -1L) return
+        // A live stream has no duration, and everything below this line is a fraction of one:
+        // how far through, whether that is far enough to count as seen, whether to fetch the next
+        // one. None of those questions mean anything about a television channel, so it keeps no
+        // progress, is never marked seen, and never disappears into a *seen* filter. That was
+        // already true because of this guard; it is written down now because IPTV made it a
+        // decision rather than an accident.
         if (duration == 0) return
 
         val seconds = position * 1000L

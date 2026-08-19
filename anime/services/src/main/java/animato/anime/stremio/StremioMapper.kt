@@ -66,7 +66,14 @@ internal object StremioMapper {
         // arrives — and the app fixes an entry's fetch type once it is initialised, which is what
         // this call does.
         fetch_type = if (toSeasons(meta, fallbackType).isEmpty()) FetchType.Episodes else FetchType.Seasons
-        update_strategy = AnimeUpdateStrategy.ALWAYS_UPDATE
+        // A channel's one row never changes, so re-asking for it on every library update is a
+        // request per channel per cycle that can only ever return the same answer. An IPTV
+        // catalogue is hundreds of them.
+        update_strategy = if (type == TYPE_TV) {
+            AnimeUpdateStrategy.ONLY_FETCH_ONCE
+        } else {
+            AnimeUpdateStrategy.ALWAYS_UPDATE
+        }
         initialized = true
     }
 
@@ -100,9 +107,19 @@ internal object StremioMapper {
             return listOf(
                 SEpisode.create().apply {
                     url = entryUrl(type, meta.id)
-                    name = meta.name.takeIf { it.isNotBlank() } ?: DEFAULT_SINGLE_EPISODE_NAME
+                    // A channel is not a film and not episode one of anything. Naming the row
+                    // after the channel — which is what the film branch does, and what this used
+                    // to do for everything — repeats the title directly under the title and says
+                    // nothing about what pressing it does.
+                    name = when {
+                        type == TYPE_TV -> LIVE_ITEM_NAME
+                        meta.name.isNotBlank() -> meta.name
+                        else -> DEFAULT_SINGLE_EPISODE_NAME
+                    }
                     episode_number = 1f
-                    date_upload = parseReleaseDate(meta.releaseInfo.primitiveText())
+                    // A channel has no release date and the field is drawn when it is set, so a
+                    // parsed-from-nothing zero is the honest value rather than a missing one.
+                    date_upload = if (type == TYPE_TV) 0L else parseReleaseDate(meta.releaseInfo.primitiveText())
                 },
             )
         }
@@ -352,6 +369,19 @@ internal object StremioMapper {
     private const val UNTITLED_STREAM = "Stream"
     private const val UNTITLED_EPISODE = "Episode"
     private const val DEFAULT_SINGLE_EPISODE_NAME = "Film"
+
+    /**
+     * Stremio's type for a live channel.
+     *
+     * A whole class of addon publishes nothing else — IPTV catalogues are `tv` from end to end —
+     * and everything on this side already worked for them by accident: catalogs are listed
+     * whatever their type, and a stream request for a channel is the same request as for a film.
+     * What did not work was the shape of the entry, which is what the two uses below fix.
+     */
+    private const val TYPE_TV = "tv"
+
+    /** What a channel's one item is called, since "Film" is not it. */
+    private const val LIVE_ITEM_NAME = "Live"
 
     private val FOUR_K_MARKERS = listOf("2160p", "4k", "uhd")
     private val RESOLUTION_PATTERN = Regex("""(\d{3,4})\s*p\b""", RegexOption.IGNORE_CASE)

@@ -1,5 +1,6 @@
 package animato.anime.stremio
 
+import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
@@ -65,6 +66,21 @@ class StremioMapperTest {
         // apart. So the numbers count down as the list goes back in time.
         episodes.map { it.episode_number } shouldBe listOf(4f, 3f, 2f, 1f)
         episodes.last().name shouldBe "S1:E1 · First"
+    }
+
+    @Test
+    fun `a television channel is a live row, not episode one of a series`() {
+        val meta = StremioMeta(id = "tv:aljazeera", type = "tv", name = "Al Jazeera")
+
+        val channel = StremioMapper.toSAnime(meta, "tv")
+        val rows = StremioMapper.toEpisodes(meta, "tv")
+
+        rows.single().name shouldBe "Live"
+        // Nothing to re-ask for: a channel's one row is the same row forever, and an IPTV
+        // catalogue is hundreds of channels being asked once per update cycle.
+        channel.update_strategy shouldBe AnimeUpdateStrategy.ONLY_FETCH_ONCE
+        // No air date, rather than one invented from the entry's release info.
+        rows.single().date_upload shouldBe 0L
     }
 
     @Test

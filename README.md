@@ -78,6 +78,11 @@ you already have, **Catalogue only** shows posters and plays nothing until a vid
 and **Subtitles** never appears as a source at all. Of the addons listed, roughly two thirds serve
 video and a fifth are catalogues alone.
 
+Live television works the same way. An IPTV addon publishes channels as Stremio's `tv` type and
+they arrive as ordinary entries — a channel's single row says **Live**, keeps no progress and is
+never marked as seen, because there is no such thing as being part-way through a channel. Search
+the store for *IPTV* to find one.
+
 Addons split the job between them and meet on a shared id, so a working setup is usually more than
 one:
 
