@@ -4,8 +4,8 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import animato.app.discover.DiscoverContent
@@ -132,7 +132,19 @@ data object AnimatoSourcesTab : Tab {
         get() = TabOptions(
             index = 4u,
             title = stringResource(MR.strings.label_sources),
-            icon = rememberVectorPainter(Icons.Outlined.Extension),
+            // A hub, not a puzzle piece.
+            //
+            // The puzzle piece is the universal sign for "plugin", and this stopped being a
+            // plugins tab. It holds repositories, installed extensions and Stremio addons — three
+            // unrelated shapes of one idea, which is *where Animato gets things from*. Spokes
+            // converging on a point say that. Interlocking pieces say "developer feature", which
+            // is jargon, and is now also untrue: an addon is a web address with no piece to fit
+            // anywhere.
+            //
+            // It also has to hold its own as one of five icons an inch apart. A hub is the only
+            // node graph in the bar, so nothing else reads like it — where a storefront, the
+            // other candidate, leans on Discover's own "go and fetch something" meaning.
+            icon = rememberVectorPainter(Icons.Outlined.Hub),
         )
 
     @Composable
