@@ -63,6 +63,7 @@ import animato.app.settings.AniyomiImportScreen
 import animato.app.source.SourceBrowseScreen
 import animato.app.sync.LibrarySyncJob
 import animato.app.updater.AnimatoAppUpdateChecker
+import animato.di.AnimeInjekt
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.deeplink.DeepLinkScreenType
@@ -190,6 +191,21 @@ class MainActivity : BaseActivity() {
         val splashScreen = if (isLaunch) installSplashScreen() else null
 
         super.onCreate(savedInstanceState)
+
+        /*
+         * Before anything asks Injekt for an anime type — which the image loader on the next line
+         * does, by way of its cover keyer.
+         *
+         * AnimeInjektInitializer normally has this done already. Normally: it schedules the
+         * registration during application bind, and for one release that schedule could lose to
+         * the activity launch sitting in the same queue. The result was a crash before the first
+         * frame, with a stack that named the cover keyer and no way to guess why it only sometimes
+         * happened. The initializer has been fixed; this line is why it can never matter again.
+         *
+         * Idempotent by scope identity, so on every launch where the initializer won, this is one
+         * reference comparison.
+         */
+        AnimeInjekt.ensureRegistered(application)
 
         // Before a frame is drawn, because it is what makes an anime cover loadable at all. See
         // AnimatoImageLoader for why it extends Mihon's loader instead of building one.

@@ -50,14 +50,21 @@ class StremioAddonsScreenModel(
     private val _directoryAddons = MutableStateFlow<List<DirectoryAddon>>(emptyList())
     val directoryAddons: StateFlow<List<DirectoryAddon>> = _directoryAddons.asStateFlow()
 
+    /**
+     * Whether addons that describe themselves as adult are offered.
+     *
+     * The same setting that hides NSFW extensions — one answer to one question, asked once in
+     * Settings, rather than a second switch on a screen about something else.
+     *
+     * Read here and applied by the screen rather than filtered out of the list, because the list
+     * is also what tells an *installed* addon that it is adult, and an addon does not stop being
+     * one when the setting is turned off. Filtering here would have unmarked exactly the row that
+     * most needs marking.
+     */
+    val showAdult: Boolean = sourcePreferences.showNsfwSource.get()
+
     init {
-        viewModelScope.launchIO {
-            // The same setting that hides NSFW extensions hides the addons that describe
-            // themselves as adult — one answer to one question, asked once in Settings, rather
-            // than a second switch on a screen about something else.
-            val showAdult = sourcePreferences.showNsfwSource.get()
-            _directoryAddons.value = directory.listed().filter { showAdult || !it.isAdult }
-        }
+        viewModelScope.launchIO { _directoryAddons.value = directory.listed() }
     }
 
     private val _installState = MutableStateFlow<AddonInstallState>(AddonInstallState.Idle)

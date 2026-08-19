@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -152,6 +153,7 @@ class StremioAddonsScreen : Screen() {
                     query = query.orEmpty(),
                     kind = kind,
                     onKindChange = { kind = it },
+                    showAdult = screenModel.showAdult,
                     onOpen = { addon ->
                         navigator.push(SourceBrowseScreen(StremioSource.idFor(addon.url), ContentType.ANIME))
                     },
@@ -223,11 +225,16 @@ internal fun LazyListScope.addonStore(
      */
     kind: AddonKind?,
     onKindChange: (AddonKind?) -> Unit,
+    /** Whether adult addons are offered at all — see [StremioAddonsScreenModel.showAdult]. */
+    showAdult: Boolean,
     onOpen: (StremioAddon) -> Unit,
     onRemove: (String) -> Unit,
     onAdd: (String) -> Unit,
 ) {
     val installed = addons.map { StremioUrls.normalizeBase(it.url) }.toSet()
+    // Every address the directory calls adult, including the ones already installed — which is
+    // the only way an installed addon can be marked at all, since a manifest never says.
+    val adultUrls = directory.filter { it.isAdult }.map { StremioUrls.normalizeBase(it.url) }.toSet()
     val mine = addons.filter { matches(query, it.manifest.name, it.manifest.description, it.url) }
     // Suggestions the person already took are not suggestions any more.
     val suggestions = SUGGESTED_ADDONS
@@ -235,6 +242,7 @@ internal fun LazyListScope.addonStore(
         .filter { matches(query, it.name, null, it.url) }
     val searched = directory
         .filterNot { StremioUrls.normalizeBase(it.url) in installed }
+        .filter { showAdult || !it.isAdult }
         .filter { matches(query, it.name, it.description, it.url) }
     // Counted before the kind filter, so a chip can say how many it would leave and an empty one
     // is visibly empty rather than missing.
@@ -261,6 +269,7 @@ internal fun LazyListScope.addonStore(
                 addon = addon,
                 onOpen = if (addon.isBrowsable) ({ onOpen(addon) }) else null,
                 onRemove = { onRemove(addon.url) },
+                isAdult = StremioUrls.normalizeBase(addon.url) in adultUrls,
             )
         }
     }
@@ -430,10 +439,26 @@ private fun DirectoryAddonItem(entry: DirectoryAddon, onPick: () -> Unit) {
         // the descriptions are marketing and every one of them sounds like it plays films, while
         // this is read off the manifest and is the one line that says whether it will.
         overlineContent = {
-            Text(
-                text = stringResource(entry.kind.labelRes),
-                color = MaterialTheme.colorScheme.primary,
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)) {
+                Text(
+                    text = stringResource(entry.kind.labelRes),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                // The same 18+ in the same error colour Mihon puts on an NSFW extension. These
+                // rows are only reachable with *Show NSFW sources* on, so it is not a warning
+                // about something unexpected — it is the label that lets somebody scanning a
+                // filtered list still tell which rows are which.
+                if (entry.isAdult) {
+                    Text(
+                        text = "·",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = stringResource(MR.strings.ext_nsfw_short),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
         },
         supportingContent = {
             Text(
@@ -458,15 +483,35 @@ private fun AddonListItem(
     addon: StremioAddon,
     onOpen: (() -> Unit)?,
     onRemove: () -> Unit,
+    /**
+     * Whether the directory says this one serves adult content.
+     *
+     * Answered from the directory rather than from the addon, because the manifest has no field
+     * for it — so an installed addon that is not in either published list simply is not marked,
+     * and that is the honest answer rather than a guess dressed as a fact.
+     */
+    isAdult: Boolean = false,
 ) {
     ListItem(
         modifier = if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier,
         headlineContent = {
-            Text(
-                text = addon.manifest.name.ifBlank { addon.url },
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = addon.manifest.name.ifBlank { addon.url },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (isAdult) {
+                    Text(
+                        text = stringResource(MR.strings.ext_nsfw_short),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
         },
         supportingContent = {
             Column {
