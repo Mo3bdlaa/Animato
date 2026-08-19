@@ -46,6 +46,42 @@ data class StremioAddon(
         }
 
     enum class Supplies { STREAMS, SUBTITLES, STREAMS_AND_SUBTITLES }
+
+    /**
+     * Every content type this addon says it deals in.
+     *
+     * Both places it can say so. An addon declares types at the top of its manifest and again on
+     * each catalog, and manifests exist that fill in only one of the two — so the answer is the
+     * union rather than whichever field happened to be populated.
+     */
+    private val declaredTypes: Set<String>
+        get() = (manifest.types + manifest.catalogs.map { it.type })
+            .filter { it.isNotBlank() }
+            .map { it.lowercase() }
+            .toSet()
+
+    /**
+     * Whether this addon carries live channels.
+     *
+     * True for a dual-purpose addon as well as a pure IPTV one: several publish films *and*
+     * channels, and those genuinely belong under both headings rather than under whichever one we
+     * happened to pick for them.
+     */
+    val servesLiveTv: Boolean get() = TYPE_TV in declaredTypes
+
+    /**
+     * Whether it carries anything that is not a channel.
+     *
+     * An addon that declares nothing at all counts as on-demand. That is the older and commoner
+     * shape, and a source with no stated type should turn up in the general list rather than
+     * vanish from both.
+     */
+    val servesOnDemand: Boolean
+        get() = declaredTypes.isEmpty() || declaredTypes.any { it != TYPE_TV }
+
+    private companion object {
+        const val TYPE_TV = "tv"
+    }
 }
 
 /**

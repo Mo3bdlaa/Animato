@@ -74,7 +74,17 @@ import tachiyomi.presentation.core.util.plus
  * can go wrong is said in a sentence under that field rather than as a toast that disappears
  * before it can be read.
  */
-class StremioAddonsScreen : Screen() {
+class StremioAddonsScreen(
+    /**
+     * Whether this is the live-TV door into the same store.
+     *
+     * There is one kind of thing being added — a Stremio addon is a Stremio addon whether it
+     * publishes films or channels — so this is a filter and not a second mechanism. It exists
+     * because *IPTV* is what somebody looking for television will look for, and telling them to
+     * find it inside a list called Stremio is telling them to already know the answer.
+     */
+    private val liveTvOnly: Boolean = false,
+) : Screen() {
 
     @Composable
     override fun Content() {
@@ -121,7 +131,13 @@ class StremioAddonsScreen : Screen() {
                 // Searchable, because the community list is hundreds of rows long and scrolling
                 // it to find one name is not browsing, it is looking for something.
                 SearchToolbar(
-                    titleContent = { AppBarTitle(stringResource(AYMR.strings.stremio_addons)) },
+                    titleContent = {
+                        AppBarTitle(
+                            stringResource(
+                                if (liveTvOnly) AYMR.strings.iptv_addons else AYMR.strings.stremio_addons,
+                            ),
+                        )
+                    },
                     searchQuery = query,
                     onChangeSearchQuery = { query = it },
                     placeholderText = stringResource(AYMR.strings.stremio_search_hint),
@@ -154,6 +170,7 @@ class StremioAddonsScreen : Screen() {
                     kind = kind,
                     onKindChange = { kind = it },
                     showAdult = screenModel.showAdult,
+                    liveTvOnly = liveTvOnly,
                     onOpen = { addon ->
                         navigator.push(SourceBrowseScreen(StremioSource.idFor(addon.url), ContentType.ANIME))
                     },
@@ -227,6 +244,8 @@ internal fun LazyListScope.addonStore(
     onKindChange: (AddonKind?) -> Unit,
     /** Whether adult addons are offered at all — see [StremioAddonsScreenModel.showAdult]. */
     showAdult: Boolean,
+    /** Narrow everything to addons that publish live channels — see [StremioAddonsScreen]. */
+    liveTvOnly: Boolean,
     onOpen: (StremioAddon) -> Unit,
     onRemove: (String) -> Unit,
     onAdd: (String) -> Unit,
@@ -235,14 +254,23 @@ internal fun LazyListScope.addonStore(
     // Every address the directory calls adult, including the ones already installed — which is
     // the only way an installed addon can be marked at all, since a manifest never says.
     val adultUrls = directory.filter { it.isAdult }.map { StremioUrls.normalizeBase(it.url) }.toSet()
-    val mine = addons.filter { matches(query, it.manifest.name, it.manifest.description, it.url) }
+    val mine = addons
+        .filter { !liveTvOnly || it.servesLiveTv }
+        .filter { matches(query, it.manifest.name, it.manifest.description, it.url) }
     // Suggestions the person already took are not suggestions any more.
-    val suggestions = SUGGESTED_ADDONS
-        .filterNot { StremioUrls.normalizeBase(it.url) in installed }
-        .filter { matches(query, it.name, null, it.url) }
+    // None of the four we suggest is a television addon, so under the live-TV heading the section
+    // is empty rather than four rows of the wrong thing.
+    val suggestions = if (liveTvOnly) {
+        emptyList()
+    } else {
+        SUGGESTED_ADDONS
+            .filterNot { StremioUrls.normalizeBase(it.url) in installed }
+            .filter { matches(query, it.name, null, it.url) }
+    }
     val searched = directory
         .filterNot { StremioUrls.normalizeBase(it.url) in installed }
         .filter { showAdult || !it.isAdult }
+        .filter { !liveTvOnly || it.types.any { type -> type.equals(TYPE_TV, ignoreCase = true) } }
         .filter { matches(query, it.name, it.description, it.url) }
     // Counted before the kind filter, so a chip can say how many it would leave and an empty one
     // is visibly empty rather than missing.
@@ -253,7 +281,11 @@ internal fun LazyListScope.addonStore(
         item(key = "stremio-no-match") {
             AnimatoEmptyState(
                 message = stringResource(
-                    if (query.isBlank()) AYMR.strings.stremio_addons_empty else AYMR.strings.stremio_search_empty,
+                    when {
+                        query.isNotBlank() -> AYMR.strings.stremio_search_empty
+                        liveTvOnly -> AYMR.strings.iptv_addons_empty
+                        else -> AYMR.strings.stremio_addons_empty
+                    },
                 ),
             )
         }
@@ -287,7 +319,13 @@ internal fun LazyListScope.addonStore(
         item(key = "stremio-community-header") {
             SectionHeader(
                 title = stringResource(AYMR.strings.stremio_community),
-                subtitle = stringResource(AYMR.strings.stremio_community_summary),
+                subtitle = stringResource(
+                    if (liveTvOnly) {
+                        AYMR.strings.iptv_community_summary
+                    } else {
+                        AYMR.strings.stremio_community_summary
+                    },
+                ),
             )
         }
         item(key = "stremio-kind-chips") {
@@ -641,3 +679,6 @@ private fun SuggestedAddonItem(
         },
     )
 }
+
+/** Stremio's type for a live channel, which is the whole of what makes an addon an IPTV one. */
+private const val TYPE_TV = "tv"

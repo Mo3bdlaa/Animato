@@ -78,10 +78,15 @@ you already have, **Catalogue only** shows posters and plays nothing until a vid
 and **Subtitles** never appears as a source at all. Of the addons listed, roughly two thirds serve
 video and a fifth are catalogues alone.
 
-Live television works the same way. An IPTV addon publishes channels as Stremio's `tv` type and
-they arrive as ordinary entries — a channel's single row says **Live**, keeps no progress and is
-never marked as seen, because there is no such thing as being part-way through a channel. Search
-the store for *IPTV* to find one.
+Live television works the same way and has its own doors. **Extension stores → IPTV** opens the
+same store filtered to addons that publish channels, and Sources carries an **IPTV** segment beside
+*Installed*, *Available* and *Stremio* listing the ones you have added. It is a filter rather than a
+second mechanism — an IPTV addon is a Stremio addon whose declared type is `tv` — and an addon that
+publishes films and channels both appears under both headings, which is true of it.
+
+A channel arrives as an ordinary entry whose single row says **Live**. It keeps no progress and is
+never marked as seen, because there is no such thing as being part-way through a channel, and it is
+fetched once rather than re-asked on every library update.
 
 Addons split the job between them and meet on a shared id, so a working setup is usually more than
 one:

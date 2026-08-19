@@ -333,6 +333,10 @@
     <string name="stremio_addons">Stremio addons</string>
     <!-- The segment beside Installed and Available. One word, because it sits between two. -->
     <string name="stremio_segment">Stremio</string>
+    <string name="iptv_segment">IPTV</string>
+    <string name="iptv_addons">Live TV addons</string>
+    <string name="iptv_addons_empty">No live TV addons yet</string>
+    <string name="iptv_community_summary">Addons that publish live channels. Tapping one fills in its address.</string>
     <string name="stremio_search_hint">Search addons</string>
     <string name="addon_kind_all">All</string>
     <!-- The four kinds, named for what you get rather than for the protocol's resource names. -->

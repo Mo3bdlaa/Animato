@@ -203,8 +203,11 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
              * The repositories row and the segments stay put above it. They govern both lists, so
              * sliding them out from under a swipe would be answering a question nobody asked.
              */
+        // Addons and channels serve video and nothing else, so under the manga lens both segments
+        // are furniture — and a tab that opens an empty list is worse than one that is absent.
+        val videoSegments = setOf(ExtensionSegment.STREMIO, ExtensionSegment.IPTV)
         val segments = ExtensionSegment.entries.filterNot {
-            it == ExtensionSegment.STREMIO && state.lens == ContentFilter.MANGA
+            it in videoSegments && state.lens == ContentFilter.MANGA
         }
         val pagerState = rememberPagerState(initialPage = segments.indexOf(segment).coerceAtLeast(0)) {
             segments.size
@@ -248,7 +251,7 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                             // stores* above, with the two extension repositories — see the note on
                             // installedAddons for what this segment used to do instead.
                             installedAddons(
-                                addons = addons,
+                                addons = addons.filter { it.servesOnDemand },
                                 onOpen = { addon ->
                                     navigator.push(
                                         SourceBrowseScreen(
@@ -259,6 +262,24 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                                 },
                                 onRemove = { url -> stremioStore.remove(url) },
                                 onOpenStore = { navigator.push(StremioAddonsScreen()) },
+                            )
+                        }
+
+                        ExtensionSegment.IPTV -> {
+                            installedAddons(
+                                addons = addons.filter { it.servesLiveTv },
+                                onOpen = { addon ->
+                                    navigator.push(
+                                        SourceBrowseScreen(
+                                            StremioSource.idFor(addon.url),
+                                            ContentType.ANIME,
+                                        ),
+                                    )
+                                },
+                                onRemove = { url -> stremioStore.remove(url) },
+                                onOpenStore = {
+                                    navigator.push(StremioAddonsScreen(liveTvOnly = true))
+                                },
                             )
                         }
 
@@ -304,6 +325,18 @@ private enum class ExtensionSegment(val labelRes: StringResource) {
      * extension does.
      */
     STREMIO(AYMR.strings.stremio_segment),
+
+    /**
+     * Live channels, beside the three kinds of on-demand source.
+     *
+     * Not a fourth mechanism: an IPTV addon is a Stremio addon whose declared type is `tv`, added
+     * the same way through the same store. It is a heading of its own because *IPTV* is the word
+     * somebody looking for television will look for, and a channel list buried inside a tab called
+     * Stremio is findable only by people who already knew where it was.
+     *
+     * An addon that publishes films and channels both appears under both, which is true of it.
+     */
+    IPTV(AYMR.strings.iptv_segment),
 }
 
 private fun LazyListScope.extensionRows(
@@ -383,6 +416,15 @@ private fun RepositoriesRow(
                 onClick = {
                     menuOpen = false
                     navigator.push(StremioAddonsScreen())
+                },
+            )
+            // The same store, opened on the channels. See StremioAddonsScreen for why that is a
+            // filter rather than a second place to add things.
+            DropdownMenuItem(
+                text = { Text(stringResource(AYMR.strings.iptv_segment)) },
+                onClick = {
+                    menuOpen = false
+                    navigator.push(StremioAddonsScreen(liveTvOnly = true))
                 },
             )
         }
