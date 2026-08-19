@@ -79,6 +79,9 @@ class TorrentServerService : Service() {
                 if (port != -1) {
                     api.setPort(port)
                     wait(10)
+                    // Before the trackers, because the tracker list is only consulted in
+                    // RetrackersMode 1 and this is what guarantees that mode.
+                    api.tuneForStreaming()
                     torrentServerUtils.setTrackersList()
                 }
             }

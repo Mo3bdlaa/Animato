@@ -347,6 +347,8 @@
     <string name="stremio_supplies_subtitles">Supplies subtitles to your other addons</string>
     <string name="stremio_supplies_both">Supplies streams and subtitles to your other addons</string>
     <string name="stremio_suggested">Worth starting with</string>
+    <string name="stremio_community">Community addons</string>
+    <string name="stremio_community_summary">Published by their authors in Stremio\'s own list. Tapping one fills in its address.</string>
     <string name="rail_suggested">Because of your library</string>
     <string name="stremio_suggested_kitsu">Anime, from Kitsu</string>
     <string name="stremio_suggested_cinemeta">Films and series, with posters and descriptions</string>

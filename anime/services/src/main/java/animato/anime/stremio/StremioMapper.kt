@@ -71,7 +71,7 @@ internal object StremioMapper {
     }
 
     /**
-     * The videos of an entry, in the order a person would watch them.
+     * The videos of an entry, newest first.
      *
      * Two shapes arrive here. A series carries a `videos` array with season and episode numbers,
      * out of order as often as not, with specials filed under season 0. A film carries no videos
@@ -80,8 +80,19 @@ internal object StremioMapper {
      *
      * Numbering is a running index over the sorted list rather than the episode field itself:
      * across several seasons the episode field restarts at 1, and two episodes sharing a number
-     * are two episodes the app cannot tell apart. Specials sort last for the same reason they are
-     * season 0 — they are extra, and putting them first pushes episode one off the screen.
+     * are two episodes the app cannot tell apart. Specials number last for the same reason they
+     * are season 0 — they are extra, and numbering them first would renumber the whole series.
+     *
+     * ## Why the list comes back reversed
+     *
+     * `sourceOrder` is the position in this list, and the sorter reads it with "0 is the newest" —
+     * that is what makes the default *source order* put the latest chapter on top of a manga. Every
+     * manga source lists newest first, so the convention holds without anybody saying so; this
+     * source was handing back oldest first, which is the same list read backwards and showed
+     * episode one on top of a finished series with a hundred of them.
+     *
+     * So the numbering is decided in watch order and the list is turned around after. Reversing
+     * before numbering would call the newest episode number one, which is the opposite of a fix.
      */
     fun toEpisodes(meta: StremioMeta, fallbackType: String, onlySeason: Int? = null): List<SEpisode> {
         val type = meta.type?.takeIf { it.isNotBlank() } ?: fallbackType
@@ -116,6 +127,7 @@ internal object StremioMapper {
                     preview_url = video.thumbnail
                 }
             }
+            .reversed()
     }
 
     /**

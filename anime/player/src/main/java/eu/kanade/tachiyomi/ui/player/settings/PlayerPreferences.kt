@@ -59,7 +59,19 @@ class PlayerPreferences(
 
     fun enablePip() = preferenceStore.getBoolean("pref_enable_pip", true)
     fun pipEpisodeToasts() = preferenceStore.getBoolean("pref_pip_episode_toasts", true)
-    fun pipOnExit() = preferenceStore.getBoolean("pref_pip_on_exit", false)
+
+    /**
+     * Whether leaving the player keeps the picture, small, in a corner.
+     *
+     * On by default. Off was the inherited setting and it makes the feature invisible: leaving a
+     * video stops it, which is what happens without picture-in-picture at all, so nobody who did
+     * not already know the setting existed would go looking for it.
+     *
+     * It only applies while something is playing — a paused video that followed you home would be
+     * a black rectangle in the corner — and it is `setAutoEnterEnabled` on Android 12 and up, which
+     * is what makes the swipe home animate into the small window rather than cut to it.
+     */
+    fun pipOnExit() = preferenceStore.getBoolean("pref_pip_on_exit", true)
     fun pipReplaceWithPrevious() = preferenceStore.getBoolean("pip_replace_with_previous", false)
 
     // External player

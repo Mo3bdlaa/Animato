@@ -32,6 +32,7 @@ thing you would notice.
 Run from anywhere: `python3 docs/branding/build-wordmark.py`
 """
 
+import math
 from pathlib import Path
 
 import numpy as np
@@ -60,7 +61,14 @@ DENSITIES = {"mdpi": 1.0, "hdpi": 1.5, "xhdpi": 2.0, "xxhdpi": 3.0, "xxxhdpi": 4
 # The splash window draws its icon at 288 dp with the inner 192 dp as content, so the artwork is
 # built large enough to stay crisp wherever the system scales it.
 SPLASH_CANVAS = 768
-SPLASH_WIDTH_FRACTION = 0.86
+
+# 192/288. The system does not merely centre the icon inside that square — it *masks* it to a circle
+# of that diameter, and everything outside is cut away. A wide mark sized by its width therefore
+# loses its ends: at 0.86 of the canvas the word's corners sat well outside the circle and the
+# splash read "ANIMAT", with the O gone. So the fit is measured on the mark's diagonal, which is the
+# only measurement a circle cares about, with a little air left over.
+SPLASH_CIRCLE_FRACTION = 192 / 288
+SPLASH_FIT = 0.94
 
 
 def white_alpha(source):
@@ -111,7 +119,7 @@ def write_ui_mark(mark):
 
 def write_splash_mark(mark):
     """
-    The splash art: the same white letters, centred on a transparent square.
+    The splash art: the same white letters, centred on a transparent square and inside its mask.
 
     One file, not three. The old mark carried the Japanese line, which had to be recoloured between
     the light and dark configurations or it vanished into whichever background it was not drawn for
@@ -119,8 +127,10 @@ def write_splash_mark(mark):
     black in *both* configurations, has nothing to vary, so `drawable-nodpi` answers every case and
     the night and notnight overrides are deleted rather than kept in sync.
     """
-    scaled_width = round(SPLASH_CANVAS * SPLASH_WIDTH_FRACTION)
-    scaled = mark.resize((scaled_width, round(scaled_width * mark.height / mark.width)), Image.LANCZOS)
+    # Fit the mark's *diagonal* into the mask circle, not its width. See SPLASH_CIRCLE_FRACTION.
+    diameter = SPLASH_CANVAS * SPLASH_CIRCLE_FRACTION * SPLASH_FIT
+    scale = diameter / math.hypot(mark.width, mark.height)
+    scaled = mark.resize((round(mark.width * scale), round(mark.height * scale)), Image.LANCZOS)
 
     canvas = Image.new("RGBA", (SPLASH_CANVAS, SPLASH_CANVAS), (255, 255, 255, 0))
     canvas.paste(scaled, ((SPLASH_CANVAS - scaled.width) // 2, (SPLASH_CANVAS - scaled.height) // 2), scaled)

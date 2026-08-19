@@ -7,7 +7,11 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
 import logcat.LogPriority
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -39,6 +43,64 @@ class TorrentServerApi(
         } catch (e: Exception) {
             logcat(LogPriority.DEBUG, e) { "Error sending echo" }
             ""
+        }
+    }
+
+    /**
+     * Re-tune the server for watching a film on a phone.
+     *
+     * TorrServer's defaults are written for an always-on box on a home network, and three of them
+     * are what a torrent on a phone feels like:
+     *
+     * - **64 MB of cache.** At the bitrate of a 1080p release that is about a minute of video. One
+     *   slow stretch of swarm empties it and the picture stops, which is the "there is no buffering
+     *   at all" of it.
+     * - **25 connections.** A public swarm has hundreds of peers, and most of any given twenty-five
+     *   are slow or are not seeding the pieces wanted next. Reaching a watchable rate takes minutes
+     *   at that limit and seconds at a sane one.
+     * - **Half the cache preloaded before the first frame.** With a bigger cache that default gets
+     *   *worse*: half of 192 MB is 96 MB to fetch before anything plays. The two have to move
+     *   together, so the buffer grows while the wait shrinks.
+     *
+     * Read-modify-write rather than a blind set, because `action: "set"` replaces the whole record
+     * — posting only these fields would reset the search hosts, the certificates and everything
+     * else the server keeps beside them. Anything not named here keeps what it had.
+     *
+     * Failure is logged and nothing else. The server then plays on its own defaults: worse, but a
+     * dialog about cache percentages is not what somebody who pressed play is owed.
+     */
+    suspend fun tuneForStreaming() {
+        try {
+            val current = network.client
+                .newCall(POST("$hostUrl/settings", body = GET_SETTINGS.toRequestBody(jsonMime)))
+                .awaitSuccess()
+                .use { json.parseToJsonElement(it.body.string()).jsonObject }
+
+            val body = buildJsonObject {
+                put("action", "set")
+                putJsonObject("sets") {
+                    current.forEach { (key, value) -> if (key !in TUNED_KEYS) put(key, value) }
+                    put("CacheSize", CACHE_BYTES)
+                    put("PreloadCache", PRELOAD_PERCENT)
+                    put("ReaderReadAHead", READ_AHEAD_PERCENT)
+                    put("ConnectionsLimit", CONNECTIONS)
+                    // The tracker list this app installs is only consulted in mode 1. A server that
+                    // came up in mode 0 — an older install, a settings file somebody edited — would
+                    // ignore every one of them and fall back to whatever the magnet itself named.
+                    put("RetrackersMode", RETRACKERS_ADD)
+                    // Serve pieces as they arrive rather than waiting for each to verify whole. It
+                    // is the default, and it is the difference between a stutter and a stall, so it
+                    // is worth insisting on rather than inheriting.
+                    put("ResponsiveMode", true)
+                }
+            }
+
+            network.client
+                .newCall(POST("$hostUrl/settings", body = body.toString().toRequestBody(jsonMime)))
+                .awaitSuccess()
+                .close()
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN, e) { "Could not tune the torrent server; its own defaults stand" }
         }
     }
 
@@ -92,5 +154,38 @@ class TorrentServerApi(
         ).awaitSuccess()
 
         return resp.use { json.decodeFromStream<Torrent>(it.body.byteStream()) }
+    }
+
+    private companion object {
+        val jsonMime = "application/json".toMediaTypeOrNull()
+        const val GET_SETTINGS = """{"action":"get"}"""
+
+        /** 192 MB, three times the default: three minutes of a 1080p release instead of one. */
+        const val CACHE_BYTES = 192L * 1024 * 1024
+
+        /**
+         * How much of the cache to fill before the first frame, as a percent.
+         *
+         * Fifteen of 192 MB is about 29 MB — near enough to what the untouched server fetched
+         * (half of 64) that the wait does not grow, while leaving the rest of the buffer to fill
+         * behind the picture instead of in front of it.
+         */
+        const val PRELOAD_PERCENT = 15
+
+        /** The server's own default, restated because everything around it is being changed. */
+        const val READ_AHEAD_PERCENT = 95
+
+        const val CONNECTIONS = 120
+        const val RETRACKERS_ADD = 1
+
+        /** Written unconditionally, so they are the keys not to copy from the old record. */
+        val TUNED_KEYS = setOf(
+            "CacheSize",
+            "PreloadCache",
+            "ReaderReadAHead",
+            "ConnectionsLimit",
+            "RetrackersMode",
+            "ResponsiveMode",
+        )
     }
 }

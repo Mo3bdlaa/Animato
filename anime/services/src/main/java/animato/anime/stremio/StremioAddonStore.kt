@@ -163,6 +163,6 @@ class StremioAddonStore(
         private const val PREF_KEY = "animato_stremio_addons"
 
         /** Anything an addon can offer that this app has a use for. */
-        private val USEFUL_RESOURCES = listOf("catalog", "meta", "stream", "subtitles")
+        internal val USEFUL_RESOURCES = listOf("catalog", "meta", "stream", "subtitles")
     }
 }

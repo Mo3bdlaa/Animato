@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.stremio.DirectoryAddon
 import animato.anime.stremio.StremioAddon
 import animato.anime.stremio.StremioSource
 import animato.anime.stremio.StremioUrls
@@ -71,6 +72,7 @@ class StremioAddonsScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = viewModel { StremioAddonsScreenModel() }
         val addons by screenModel.addons.collectAsStateWithLifecycle()
+        val directory by screenModel.directoryAddons.collectAsStateWithLifecycle()
         val installState by screenModel.installState.collectAsStateWithLifecycle()
         var dialogOpen by remember { mutableStateOf(false) }
         // What the address field opens on. A suggestion fills it; the plus button leaves it blank.
@@ -137,6 +139,7 @@ class StremioAddonsScreen : Screen() {
                         draftUrl = url
                         dialogOpen = true
                     },
+                    directory = directory,
                 )
             }
         }
@@ -157,6 +160,14 @@ internal fun LazyListScope.stremioAddons(
     onOpen: (StremioAddon) -> Unit,
     onRemove: (String) -> Unit,
     onAdd: (String) -> Unit,
+    /**
+     * Stremio's own community list, when the caller has it.
+     *
+     * Empty from the segment beside Installed and Available, which is a summary of what is already
+     * here and sends people to the full screen to add anything. Ninety rows do not belong under a
+     * tab somebody swiped onto by accident.
+     */
+    directory: List<DirectoryAddon> = emptyList(),
 ) {
     // Suggestions the person already took are not suggestions any more.
     val installed = addons.map { StremioUrls.normalizeBase(it.url) }.toSet()
@@ -200,6 +211,85 @@ internal fun LazyListScope.stremioAddons(
             onRemove = { onRemove(addon.url) },
         )
     }
+
+    val community = directory.filterNot { StremioUrls.normalizeBase(it.url) in installed }
+    if (community.isNotEmpty()) {
+        item(key = "stremio-community-header") {
+            SectionHeader(
+                title = stringResource(AYMR.strings.stremio_community),
+                subtitle = stringResource(AYMR.strings.stremio_community_summary),
+            )
+        }
+        items(items = community, key = { "stremio-community-" + it.url }) { entry ->
+            DirectoryAddonItem(entry = entry, onPick = { onAdd(entry.url) })
+        }
+    }
+}
+
+/**
+ * A heading over a run of rows, with a line saying what they are.
+ *
+ * The suggestions had a bare title and did not need more — four entries we chose. The community
+ * list does: it is long, it is somebody else's, and the second line is where that is said rather
+ * than left for the person to infer from the length.
+ */
+@Composable
+private fun SectionHeader(title: String, subtitle: String? = null) {
+    Column(
+        modifier = Modifier.padding(
+            start = MaterialTheme.padding.medium,
+            end = MaterialTheme.padding.medium,
+            top = MaterialTheme.padding.medium,
+            bottom = MaterialTheme.padding.small,
+        ),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        if (subtitle != null) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/**
+ * One row of the community list.
+ *
+ * The supporting line is the addon's own description where it wrote one, and the resources it
+ * declares where it did not — which is less friendly and more useful than a blank, because
+ * *catalog · meta* against a name nobody recognises is still the answer to what it would do here.
+ *
+ * Tapping fills the address field rather than installing, for the same reason the suggestions do:
+ * several of these are configured on their own site first and carry the configuration in the path,
+ * and an install button would hide the one thing that has to be edited.
+ */
+@Composable
+private fun DirectoryAddonItem(entry: DirectoryAddon, onPick: () -> Unit) {
+    ListItem(
+        modifier = Modifier.clickable(onClick = onPick),
+        headlineContent = { Text(entry.name) },
+        supportingContent = {
+            Text(
+                text = entry.description.takeIf { it.isNotBlank() }
+                    ?: entry.resources.joinToString(" · "),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        trailingContent = {
+            Icon(
+                imageVector = Icons.Outlined.Add,
+                contentDescription = stringResource(AYMR.strings.stremio_add_addon),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        },
+    )
 }
 
 @Composable

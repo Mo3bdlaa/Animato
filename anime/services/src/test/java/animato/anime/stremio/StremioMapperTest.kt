@@ -42,7 +42,7 @@ class StremioMapperTest {
     }
 
     @Test
-    fun `episodes come back in watch order with specials last`() {
+    fun `episodes come back newest first, numbered in watch order, specials last`() {
         val meta = StremioMeta(
             id = "tt0944947",
             type = "series",
@@ -57,11 +57,14 @@ class StremioMapperTest {
 
         val episodes = StremioMapper.toEpisodes(meta, "series")
 
-        episodes.map { it.url } shouldBe listOf("series:tt:1:1", "series:tt:1:2", "series:tt:2:1", "series:tt:0:1")
-        // Numbering is a running index, not the episode field: across seasons that field restarts
-        // at 1, and two episodes sharing a number are two the app cannot tell apart.
-        episodes.map { it.episode_number } shouldBe listOf(1f, 2f, 3f, 4f)
-        episodes.first().name shouldBe "S1:E1 · First"
+        // Newest first, because sourceOrder is this list's index and the sorter reads index 0 as
+        // the newest — the convention every manga source already follows.
+        episodes.map { it.url } shouldBe listOf("series:tt:0:1", "series:tt:2:1", "series:tt:1:2", "series:tt:1:1")
+        // Numbering is a running index over watch order, not the episode field: across seasons
+        // that field restarts at 1, and two episodes sharing a number are two the app cannot tell
+        // apart. So the numbers count down as the list goes back in time.
+        episodes.map { it.episode_number } shouldBe listOf(4f, 3f, 2f, 1f)
+        episodes.last().name shouldBe "S1:E1 · First"
     }
 
     @Test

@@ -3,7 +3,9 @@ package animato.app.stremio
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.stremio.DirectoryAddon
 import animato.anime.stremio.StremioAddon
+import animato.anime.stremio.StremioAddonDirectory
 import animato.anime.stremio.StremioAddonStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,9 +32,25 @@ sealed interface AddonInstallState {
 
 class StremioAddonsScreenModel(
     private val store: StremioAddonStore = Injekt.get(),
+    private val directory: StremioAddonDirectory = StremioAddonDirectory(),
 ) : ViewModel() {
 
     val addons: StateFlow<List<StremioAddon>> = store.addons
+
+    /**
+     * The community list, fetched once and left alone.
+     *
+     * Empty until it arrives, and empty forever if it does not: the section simply is not drawn,
+     * which is the right amount of noise for a directory nobody asked to load. It is not refreshed
+     * with the rest of the screen either — pull-to-refresh here means *re-check my addons*, and
+     * re-downloading ninety strangers' manifests is not that.
+     */
+    private val _directoryAddons = MutableStateFlow<List<DirectoryAddon>>(emptyList())
+    val directoryAddons: StateFlow<List<DirectoryAddon>> = _directoryAddons.asStateFlow()
+
+    init {
+        viewModelScope.launchIO { _directoryAddons.value = directory.listed() }
+    }
 
     private val _installState = MutableStateFlow<AddonInstallState>(AddonInstallState.Idle)
     val installState: StateFlow<AddonInstallState> = _installState.asStateFlow()
