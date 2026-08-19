@@ -46,9 +46,15 @@ import java.security.MessageDigest
  *
  * An addon publishes any number of catalogs; we have exactly two shelves, Popular and Latest. The
  * mapping picks by name where a name says what it is ("Top", "Popular" / "New", "Recent") and
- * falls back to first and second. Every other catalog is still reachable — the filter sheet lists
- * them all, which is how the sources with a dozen catalogs stay usable without inventing a third
- * shelf nobody asked for.
+ * falls back to first and second.
+ *
+ * One shelf can be several catalogs, because catalogs are published *per content type* and a shelf
+ * is not. Cinemeta publishes eight — Popular, New and Featured, each once for films and once for
+ * series — and taking the first match gave shelves of films only. A shelf now takes the best match
+ * for each type and interleaves them, so both are on the first screen.
+ *
+ * Every other catalog is still reachable: the filter sheet lists them all, which is how the addons
+ * with a dozen catalogs stay usable without inventing a third shelf nobody asked for.
  */
 class StremioSource(
     val addon: StremioAddon,
@@ -85,7 +91,9 @@ class StremioSource(
      */
     override val id: Long by lazy { idFor(addon.url) }
 
-    override val supportsLatest: Boolean by lazy { latestCatalog() != null && latestCatalog() != popularCatalog() }
+    override val supportsLatest: Boolean by lazy {
+        latestCatalogs().isNotEmpty() && latestCatalogs() != popularCatalogs()
+    }
 
     private val catalogs: List<StremioCatalog> get() = addon.manifest.catalogs
 
@@ -104,15 +112,9 @@ class StremioSource(
         return AnimeFilterList(filters)
     }
 
-    override suspend fun getPopularAnime(page: Int): AnimesPage {
-        val catalog = popularCatalog() ?: return AnimesPage(emptyList(), false)
-        return fetchCatalog(catalog, page, query = "", genre = null)
-    }
+    override suspend fun getPopularAnime(page: Int): AnimesPage = fetchShelf(popularCatalogs(), page)
 
-    override suspend fun getLatestUpdates(page: Int): AnimesPage {
-        val catalog = latestCatalog() ?: return AnimesPage(emptyList(), false)
-        return fetchCatalog(catalog, page, query = "", genre = null)
-    }
+    override suspend fun getLatestUpdates(page: Int): AnimesPage = fetchShelf(latestCatalogs(), page)
 
     override suspend fun getSearchAnime(page: Int, query: String, filters: AnimeFilterList): AnimesPage {
         val chosen = filters.filterIsInstance<CatalogFilter>().firstOrNull()
@@ -380,16 +382,65 @@ class StremioSource(
     /** Catalogs that can be browsed without a query — a search-only catalog answers nothing without one. */
     private fun browsableCatalogs(): List<StremioCatalog> = catalogs.filterNot { it.requires(EXTRA_SEARCH) }
 
-    private fun popularCatalog(): StremioCatalog? {
+    /**
+     * The catalogs behind one shelf — one per content type, not one in total.
+     *
+     * Catalogs are published per type, and a shelf is not. Cinemeta has eight: Popular, New and
+     * Featured, each once for films and once for series. Picking the first match gave a Popular
+     * shelf of films only, with every series in the addon reachable solely through the filter
+     * sheet — in an app whose whole subject is episodic content. So a shelf takes the best match
+     * *for each type* and interleaves them.
+     *
+     * Capped, because an addon with a dozen types would otherwise turn one shelf into a dozen
+     * requests. Anything past the cap is still in the filter sheet, where it always was.
+     */
+    private fun catalogsFor(words: List<String>, fallbackIndex: Int): List<StremioCatalog> {
         val browsable = browsableCatalogs()
-        return browsable.firstOrNull { catalog -> POPULAR_WORDS.any { catalog.displayName.contains(it, true) } }
-            ?: browsable.firstOrNull()
+        val byType = browsable
+            .filter { catalog -> words.any { catalog.displayName.contains(it, true) } }
+            .groupBy { it.type }
+            .values
+            .mapNotNull { it.firstOrNull() }
+            .take(MAX_CATALOGS_PER_SHELF)
+        if (byType.isNotEmpty()) return byType
+        // No catalog says what it is, so fall back to position: the first for Popular, the second
+        // for Latest, which is the order addons tend to list them in anyway.
+        return listOfNotNull(browsable.getOrNull(fallbackIndex))
     }
 
-    private fun latestCatalog(): StremioCatalog? {
-        val browsable = browsableCatalogs()
-        return browsable.firstOrNull { catalog -> LATEST_WORDS.any { catalog.displayName.contains(it, true) } }
-            ?: browsable.getOrNull(1)
+    private fun popularCatalogs(): List<StremioCatalog> = catalogsFor(POPULAR_WORDS, fallbackIndex = 0)
+
+    private fun latestCatalogs(): List<StremioCatalog> = catalogsFor(LATEST_WORDS, fallbackIndex = 1)
+
+    private fun popularCatalog(): StremioCatalog? = popularCatalogs().firstOrNull()
+
+    /**
+     * Several catalogs as one page, taken in turns.
+     *
+     * Concatenating would put a hundred films above the first series, which on a phone is the same
+     * as not having the series. Taking one from each in turn puts both types on the first screen,
+     * which is the point of asking for both.
+     */
+    private suspend fun fetchShelf(catalogs: List<StremioCatalog>, page: Int): AnimesPage {
+        if (catalogs.isEmpty()) return AnimesPage(emptyList(), false)
+        if (catalogs.size == 1) return fetchCatalog(catalogs.first(), page, query = "", genre = null)
+
+        val pages = coroutineScope {
+            catalogs
+                .map { catalog -> async { runCatching { fetchCatalog(catalog, page, "", null) }.getOrNull() } }
+                .awaitAll()
+                .filterNotNull()
+        }
+        val interleaved = buildList {
+            val lists = pages.map { it.animes }
+            for (index in 0 until (lists.maxOfOrNull { it.size } ?: 0)) {
+                lists.forEach { list -> list.getOrNull(index)?.let(::add) }
+            }
+        }
+        return AnimesPage(
+            animes = interleaved.distinctBy { it.url },
+            hasNextPage = pages.any { it.hasNextPage },
+        )
     }
 
     private class CatalogFilter(names: List<String>) :
@@ -419,6 +470,9 @@ class StremioSource(
         }
 
         private const val PAGE_SIZE = 100
+
+        /** One shelf, at most this many catalogs — one per content type, up to a sane ceiling. */
+        private const val MAX_CATALOGS_PER_SHELF = 3
         private const val EXTRA_SEARCH = "search"
         private const val EXTRA_GENRE = "genre"
         private const val EXTRA_SKIP = "skip"

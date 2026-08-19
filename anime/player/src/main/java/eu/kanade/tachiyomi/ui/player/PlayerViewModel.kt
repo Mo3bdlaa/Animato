@@ -45,6 +45,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import animato.anime.player.CustomButtonFetchState
 import animato.anime.player.HosterState
 import animato.anime.player.RememberedQuality
+import animato.anime.player.SubtitleDelayMemory
 import animato.anime.player.getButtons
 import animato.anime.player.getChangedAt
 import animato.anime.util.editBackground
@@ -176,6 +177,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private val basePreferences: BasePreferences = Injekt.get(),
     private val getCustomButtons: GetCustomButtons = Injekt.get(),
     private val trackSelect: TrackSelect = Injekt.get(),
+    private val subtitleDelayMemory: SubtitleDelayMemory = Injekt.get(),
     private val getIncognitoState: GetAnimeIncognitoState = Injekt.get(),
     private val libraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val rememberedQuality: RememberedQuality = Injekt.get(),
@@ -458,6 +460,12 @@ class PlayerViewModel @JvmOverloads constructor(
      * or select the first one in the list if trackSelect fails.
      */
     fun onFinishLoadingTracks() {
+        // Before the tracks are chosen, because choosing one is what makes an offset visible and a
+        // subtitle that appears already-corrected is the whole point of having remembered it.
+        subtitleDelayMemory.get(currentAnime.value?.id)?.let {
+            MPVLib.setPropertyDouble("sub-delay", it / MILLIS_IN_A_SECOND)
+        }
+
         val preferredSubtitle = trackSelect.getPreferredTrackIndex(subtitleTracks.value)
         (preferredSubtitle ?: subtitleTracks.value.firstOrNull())?.let {
             activity.player.sid = it.id
@@ -472,6 +480,16 @@ class PlayerViewModel @JvmOverloads constructor(
         isLoadingTracks.update { _ -> true }
         updateIsLoadingEpisode(false)
         setPausedState()
+    }
+
+    /**
+     * Keep this anime's subtitle offset, so the next episode opens already corrected.
+     *
+     * Called on every change from the delay panel rather than on dismissal: the panel adjusts live
+     * and has no confirm step, so there is no later moment that means "this is the value".
+     */
+    fun rememberSubtitleDelay(delayMillis: Int) {
+        subtitleDelayMemory.set(currentAnime.value?.id, delayMillis)
     }
 
     @Immutable
@@ -2291,3 +2309,6 @@ fun CustomButton.executeLongPress() {
 fun Float.normalize(inMin: Float, inMax: Float, outMin: Float, outMax: Float): Float {
     return (this - inMin) * (outMax - outMin) / (inMax - inMin) + outMin
 }
+
+/** mpv talks in seconds; the delay panel and everything stored here talk in milliseconds. */
+private const val MILLIS_IN_A_SECOND = 1000.0

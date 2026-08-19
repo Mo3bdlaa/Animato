@@ -46,6 +46,7 @@ import uy.kohesive.injekt.api.get
 fun PlayerPanels(
     panelShown: Panels,
     onDismissRequest: () -> Unit,
+    onSubtitleDelayChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     AnimatedContent(
@@ -66,7 +67,7 @@ fun PlayerPanels(
                 SubtitleSettingsPanel(onDismissRequest)
             }
             Panels.SubtitleDelay -> {
-                SubtitleDelayPanel(onDismissRequest)
+                SubtitleDelayPanel(onDismissRequest, onSubtitleDelayChanged)
             }
             Panels.AudioDelay -> {
                 AudioDelayPanel(onDismissRequest)

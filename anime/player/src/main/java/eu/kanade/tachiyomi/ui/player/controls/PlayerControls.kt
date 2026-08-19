@@ -666,6 +666,7 @@ fun PlayerControls(
         PlayerPanels(
             panelShown = panel,
             onDismissRequest = { viewModel.showPanel(Panels.None) },
+            onSubtitleDelayChanged = viewModel::rememberSubtitleDelay,
         )
 
         val activity = LocalContext.current as PlayerActivity

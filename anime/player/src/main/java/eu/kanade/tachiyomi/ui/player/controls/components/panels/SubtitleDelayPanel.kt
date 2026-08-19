@@ -74,6 +74,7 @@ import kotlin.math.roundToInt
 @Composable
 fun SubtitleDelayPanel(
     onDismissRequest: () -> Unit,
+    onDelayChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val preferences = remember { Injekt.get<SubtitlePreferences>() }
@@ -96,6 +97,10 @@ fun SubtitleDelayPanel(
         }
         LaunchedEffect(delay, secondaryDelay) {
             val finalDelay = (if (affectedSubtitle == SubtitleDelayType.Secondary) secondaryDelay else delay) / 1000.0
+            // Kept against this anime, not just against this playback: a subtitle file mistimed by
+            // two seconds is mistimed by two seconds on every episode of the season, and correcting
+            // it once per episode is correcting somebody else's mistake twelve times.
+            onDelayChanged(delay)
             when (affectedSubtitle) {
                 SubtitleDelayType.Primary -> MPVLib.setPropertyDouble("sub-delay", finalDelay)
                 SubtitleDelayType.Secondary -> MPVLib.setPropertyDouble("secondary-sub-delay", finalDelay)
