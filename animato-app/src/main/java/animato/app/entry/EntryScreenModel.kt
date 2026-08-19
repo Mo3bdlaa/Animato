@@ -13,6 +13,8 @@ import eu.kanade.domain.items.episode.interactor.SetSeenStatus
 import eu.kanade.domain.items.episode.model.applyFilters
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.toSManga
+import eu.kanade.domain.track.anime.interactor.AddAnimeTracks
+import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.DownloadManager
@@ -239,6 +241,8 @@ class EntryScreenModel(
     private val entryOverrides: EntryOverrides = Injekt.get(),
     private val updateMangaFromRemote: UpdateMangaFromRemote = Injekt.get(),
     private val updateAnimeFromRemote: UpdateAnimeFromRemote = Injekt.get(),
+    private val addTracks: AddTracks = Injekt.get(),
+    private val addAnimeTracks: AddAnimeTracks = Injekt.get(),
     trackRepository: TrackRepository = Injekt.get(),
     animeTrackRepository: AnimeTrackRepository = Injekt.get(),
 ) : ViewModel() {
@@ -434,13 +438,40 @@ class EntryScreenModel(
      * downloaded file, because the sweep in Settings and the library's own quick sheet are where
      * deleting is asked for rather than assumed. Categories are not asked here — Mihon's add-to-
      * category dialog is per-half and this screen answers for both.
+     *
+     * ## The trackers that match themselves
+     *
+     * Adding also offers the entry to the enhanced trackers, which is the one piece of the original
+     * screens' add that could not be left out. A Komga, Kavita, Suwayomi or Jellyfin entry is
+     * already on that server's list — the tracker's whole job is to notice, by url, without anybody
+     * searching for anything — and both original screens do this on add. This page did not, so a
+     * title added from here was the one title on the server that never got its row, and the
+     * difference depended on which page you happened to press the heart from.
+     *
+     * Only on the way in. Removing from the library deliberately leaves the track row alone, the
+     * same as everywhere else: the server's list is not this app's to unpick.
      */
     fun toggleInLibrary() {
         val current = state.value.inLibrary
         viewModelScope.launchNonCancellable {
             when (contentType) {
-                ContentType.MANGA -> updateManga.await(MangaUpdate(id = entryId, favorite = !current))
-                ContentType.ANIME -> updateAnime.await(AnimeUpdate(id = entryId, favorite = !current))
+                ContentType.MANGA -> {
+                    updateManga.await(MangaUpdate(id = entryId, favorite = !current))
+                    if (!current) {
+                        val manga = getManga.await(entryId) ?: return@launchNonCancellable
+                        addTracks.bindEnhancedTrackers(manga, sourceManager.getOrStub(manga.source))
+                    }
+                }
+                ContentType.ANIME -> {
+                    updateAnime.await(AnimeUpdate(id = entryId, favorite = !current))
+                    if (!current) {
+                        val anime = getAnime.await(entryId) ?: return@launchNonCancellable
+                        addAnimeTracks.bindEnhancedTrackers(
+                            anime,
+                            animeSourceManager.getOrStub(anime.source),
+                        )
+                    }
+                }
             }
         }
     }
