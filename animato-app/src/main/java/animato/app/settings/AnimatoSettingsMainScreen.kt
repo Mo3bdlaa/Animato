@@ -1,5 +1,6 @@
 package animato.app.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -76,7 +77,19 @@ import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 object AnimatoSettingsMainScreen : Screen() {
 
     @Composable
-    override fun Content() {
+    override fun Content() = Content(twoPane = false)
+
+    /**
+     * The list, on its own or as the left half of a tablet.
+     *
+     * `twoPane` changes two things and nothing else: which row is drawn as selected, and where a
+     * tap sends it. On a phone the list *is* the screen and a tap pushes onto the stack, so nothing
+     * is ever selected — you are looking at either the list or a section, never both. On a tablet
+     * both are visible at once, so the list has to say which section the right half is showing, and
+     * a tap replaces that half rather than stacking on top of it.
+     */
+    @Composable
+    fun Content(twoPane: Boolean) {
         val navigator = LocalNavigator.currentOrThrow
         val backPress = LocalBackPress.currentOrThrow
         val topBarState = rememberTopAppBarState()
@@ -121,11 +134,22 @@ object AnimatoSettingsMainScreen : Screen() {
                         items = group.items,
                         key = { it.titleRes.resourceId },
                     ) { item ->
+                        val selected = twoPane && navigator.lastItem::class == item.screen::class
                         TextPreferenceWidget(
                             title = stringResource(item.titleRes),
                             subtitle = item.subtitleRes?.let { stringResource(it) },
                             icon = item.icon,
-                            onPreferenceClick = { navigator.push(item.screen) },
+                            modifier = if (selected) {
+                                Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
+                            } else {
+                                Modifier
+                            },
+                            // Replace, not push: on a tablet the right half is a pane rather than a
+                            // page, and stacking sections in it would build a back stack out of
+                            // rows that are all still visible on the left.
+                            onPreferenceClick = {
+                                if (twoPane) navigator.replaceAll(item.screen) else navigator.push(item.screen)
+                            },
                         )
                     }
                 }
