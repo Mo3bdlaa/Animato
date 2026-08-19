@@ -334,7 +334,12 @@
     <!-- The segment beside Installed and Available. One word, because it sits between two. -->
     <string name="stremio_segment">Stremio</string>
     <string name="iptv_segment">IPTV</string>
-    <string name="iptv_addons">Live TV addons</string>
+    <string name="iptv_addons">Live TV</string>
+    <string name="iptv_playlists">Playlists</string>
+    <string name="iptv_add_playlist">Add an M3U playlist</string>
+    <string name="iptv_playlist_hint">Playlist address (.m3u or .m3u8)</string>
+    <string name="iptv_playlist_channels">%1$d channels</string>
+    <string name="iptv_playlists_summary">An M3U file of channels, read straight from its address. Nothing is installed.</string>
     <string name="iptv_addons_empty">No live TV addons yet</string>
     <string name="iptv_community_summary">Addons that publish live channels. Tapping one fills in its address.</string>
     <string name="stremio_search_hint">Search addons</string>

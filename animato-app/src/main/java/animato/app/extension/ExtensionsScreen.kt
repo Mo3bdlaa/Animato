@@ -56,6 +56,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.iptv.M3uPlaylistStore
+import animato.anime.iptv.M3uSource
 import animato.anime.stremio.StremioAddonStore
 import animato.anime.stremio.StremioSource
 import animato.anime.ui.stores.AnimeExtensionStoresScreen
@@ -63,6 +65,7 @@ import animato.app.navigation.LensButton
 import animato.app.source.SourceBrowseScreen
 import animato.app.stremio.StremioAddonsScreen
 import animato.app.stremio.installedAddons
+import animato.app.stremio.m3uPlaylists
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -132,6 +135,8 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
     var languagesOpen by rememberSaveable { mutableStateOf(false) }
     val stremioStore = remember { Injekt.get<StremioAddonStore>() }
     val addons by stremioStore.addons.collectAsStateWithLifecycle()
+    val playlistStore = remember { Injekt.get<M3uPlaylistStore>() }
+    val playlists by playlistStore.playlists.collectAsStateWithLifecycle()
 
     // The merge a device asked for: an installed extension is somewhere you can GO, not just
     // a thing you manage. One source opens straight into its browse screen; several open a
@@ -266,8 +271,26 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                         }
 
                         ExtensionSegment.IPTV -> {
+                            // Playlists first: for most people the M3U file *is* the IPTV source,
+                            // and an addon that also carries channels is the rarer half.
+                            m3uPlaylists(
+                                playlists = playlists,
+                                onOpen = { playlist ->
+                                    navigator.push(
+                                        SourceBrowseScreen(
+                                            M3uSource.idFor(playlist.url),
+                                            ContentType.ANIME,
+                                        ),
+                                    )
+                                },
+                                onRemove = { url -> playlistStore.remove(url) },
+                            )
                             installedAddons(
                                 addons = addons.filter { it.servesLiveTv },
+                                // Only when there is nothing at all under this heading. With a
+                                // playlist above, an empty-addons message would be describing a
+                                // section rather than the screen.
+                                showEmptyState = playlists.isEmpty(),
                                 onOpen = { addon ->
                                     navigator.push(
                                         SourceBrowseScreen(

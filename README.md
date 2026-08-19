@@ -78,11 +78,18 @@ you already have, **Catalogue only** shows posters and plays nothing until a vid
 and **Subtitles** never appears as a source at all. Of the addons listed, roughly two thirds serve
 video and a fifth are catalogues alone.
 
-Live television works the same way and has its own doors. **Extension stores → IPTV** opens the
-same store filtered to addons that publish channels, and Sources carries an **IPTV** segment beside
-*Installed*, *Available* and *Stremio* listing the ones you have added. It is a filter rather than a
-second mechanism — an IPTV addon is a Stremio addon whose declared type is `tv` — and an addon that
-publishes films and channels both appears under both headings, which is true of it.
+Live television has two shapes and its own doors. **Extension stores → IPTV** and the **IPTV**
+segment in Sources hold both.
+
+An **M3U playlist** is the common one: paste the address of a `.m3u` file and its channels become a
+source. Nothing is installed and nothing is stored but the address — the file is read on demand and
+kept for as long as the app is open, so restarting is how you get today's list. Channels are grouped
+by the playlist's own `group-title`, searchable by name or group, and the file's order is kept
+because it is editorial and there is nothing better to sort by.
+
+A **Stremio addon** can also carry channels, and that works the same way. The store's live-TV door is a filter rather
+than a second mechanism — an IPTV addon is a Stremio addon whose declared type is `tv` — and an
+addon that publishes films and channels appears under both headings, which is true of it.
 
 A channel arrives as an ordinary entry whose single row says **Live**. It keeps no progress and is
 never marked as seen, because there is no such thing as being part-way through a channel, and it is

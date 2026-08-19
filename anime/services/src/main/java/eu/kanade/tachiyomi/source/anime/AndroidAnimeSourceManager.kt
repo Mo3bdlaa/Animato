@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.source.anime
 
 import android.content.Context
+import animato.anime.iptv.M3uPlaylistStore
+import animato.anime.iptv.M3uSource
 import animato.anime.stremio.StremioAddonStore
 import animato.anime.stremio.StremioSource
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -33,6 +35,7 @@ class AndroidAnimeSourceManager(
     private val extensionManager: AnimeExtensionManager,
     private val sourceRepository: AnimeStubSourceRepository,
     private val stremioAddonStore: StremioAddonStore,
+    private val m3uPlaylistStore: M3uPlaylistStore,
 ) : AnimeSourceManager {
 
     private val _isInitialized = MutableStateFlow(false)
@@ -50,15 +53,16 @@ class AndroidAnimeSourceManager(
 
     init {
         scope.launch {
-            // Two kinds of source, one map. Extensions are code we installed and run; Stremio
-            // addons are URLs we only ever talk to. Everything downstream — browsing, search,
-            // the library, downloads — asks this manager for a source by id and neither knows
-            // nor needs to know which kind answered.
+            // Three kinds of source, one map. Extensions are code we installed and run; Stremio
+            // addons are URLs we only ever talk to; M3U playlists are a file we read. Everything
+            // downstream — browsing, search, the library, downloads — asks this manager for a
+            // source by id and neither knows nor needs to know which kind answered.
             combine(
                 extensionManager.installedExtensionsFlow,
                 stremioAddonStore.addons,
-            ) { extensions, addons -> extensions to addons }
-                .collectLatest { (extensions, addons) ->
+                m3uPlaylistStore.playlists,
+            ) { extensions, addons, playlists -> Triple(extensions, addons, playlists) }
+                .collectLatest { (extensions, addons, playlists) ->
                     val mutableMap = ConcurrentHashMap<Long, AnimeSource>(
                         mapOf(
                             LocalAnimeSource.ID to LocalAnimeSource(
@@ -83,6 +87,14 @@ class AndroidAnimeSourceManager(
                     // than as the supporting role it actually plays.
                     addons.filter { it.isBrowsable }.forEach { addon ->
                         val source = StremioSource(addon)
+                        mutableMap[source.id] = source
+                        registerStubSource(StubAnimeSource.from(source))
+                    }
+                    // Every playlist is browsable by definition — a playlist that parsed into no
+                    // channels was refused when it was added, so there is no empty-shelf case to
+                    // filter out the way there is for a stream-only addon.
+                    playlists.forEach { playlist ->
+                        val source = M3uSource(playlist)
                         mutableMap[source.id] = source
                         registerStubSource(StubAnimeSource.from(source))
                     }

@@ -42,6 +42,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.iptv.M3uPlaylist
+import animato.anime.iptv.M3uSource
 import animato.anime.stremio.AddonKind
 import animato.anime.stremio.DirectoryAddon
 import animato.anime.stremio.StremioAddon
@@ -100,6 +102,11 @@ class StremioAddonsScreen(
         // the field and the other shows an empty one. SearchToolbar draws the difference.
         var query by remember { mutableStateOf<String?>(null) }
         var kind by remember { mutableStateOf<AddonKind?>(null) }
+        // Which field the one dialog is showing. A playlist and an addon are both an address in a
+        // box, and two dialogs that look identical would be two places to maintain the same
+        // keyboard handling and the same error line.
+        var addingPlaylist by remember { mutableStateOf(false) }
+        val playlists by screenModel.playlists.collectAsStateWithLifecycle()
 
         // Manifests go stale — an addon adds a catalog and this one would never notice. The
         // catch-up is silent and keeps whatever it already had wherever an addon does not answer.
@@ -118,7 +125,8 @@ class StremioAddonsScreen(
             AddAddonDialog(
                 initialUrl = draftUrl,
                 state = installState,
-                onAdd = screenModel::install,
+                playlist = addingPlaylist,
+                onAdd = if (addingPlaylist) screenModel::addPlaylist else screenModel::install,
                 onDismiss = {
                     dialogOpen = false
                     screenModel.acknowledge()
@@ -144,15 +152,25 @@ class StremioAddonsScreen(
                     navigateUp = navigator::pop,
                     scrollBehavior = scrollBehavior,
                     actions = {
+                        // Under the live-TV heading the plus adds a playlist, because that is the
+                        // thing this screen is mostly for there — an addon is still addable from
+                        // the row below the playlists.
                         IconButton(
                             onClick = {
                                 draftUrl = ""
+                                addingPlaylist = liveTvOnly
                                 dialogOpen = true
                             },
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Add,
-                                contentDescription = stringResource(AYMR.strings.stremio_add_addon),
+                                contentDescription = stringResource(
+                                    if (liveTvOnly) {
+                                        AYMR.strings.iptv_add_playlist
+                                    } else {
+                                        AYMR.strings.stremio_add_addon
+                                    },
+                                ),
                             )
                         }
                     },
@@ -163,6 +181,22 @@ class StremioAddonsScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.medium),
             ) {
+                if (liveTvOnly) {
+                    playlistSection(
+                        playlists = playlists,
+                        onOpen = { playlist ->
+                            navigator.push(
+                                SourceBrowseScreen(M3uSource.idFor(playlist.url), ContentType.ANIME),
+                            )
+                        },
+                        onRemove = screenModel::removePlaylist,
+                        onAdd = {
+                            draftUrl = ""
+                            addingPlaylist = true
+                            dialogOpen = true
+                        },
+                    )
+                }
                 addonStore(
                     addons = addons,
                     directory = directory,
@@ -177,6 +211,7 @@ class StremioAddonsScreen(
                     onRemove = screenModel::remove,
                     onAdd = { url ->
                         draftUrl = url
+                        addingPlaylist = false
                         dialogOpen = true
                     },
                 )
@@ -199,7 +234,10 @@ internal fun LazyListScope.installedAddons(
     onOpen: (StremioAddon) -> Unit,
     onRemove: (String) -> Unit,
     onOpenStore: () -> Unit,
+    /** Whether an empty list is the whole tab being empty, or only this part of it. */
+    showEmptyState: Boolean = true,
 ) {
+    if (addons.isEmpty() && !showEmptyState) return
     if (addons.isEmpty()) {
         item(key = "stremio-empty") {
             AnimatoEmptyState(
@@ -598,6 +636,8 @@ private fun AddonListItem(
 private fun AddAddonDialog(
     initialUrl: String,
     state: AddonInstallState,
+    /** Whether the address being asked for is a playlist rather than an addon manifest. */
+    playlist: Boolean,
     onAdd: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -609,14 +649,32 @@ private fun AddAddonDialog(
 
     AlertDialog(
         onDismissRequest = { if (!working) onDismiss() },
-        title = { Text(stringResource(AYMR.strings.stremio_add_addon)) },
+        title = {
+            Text(
+                stringResource(
+                    if (playlist) AYMR.strings.iptv_add_playlist else AYMR.strings.stremio_add_addon,
+                ),
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text(stringResource(AYMR.strings.stremio_addon_url_hint)) },
-                    supportingText = { Text(stringResource(AYMR.strings.stremio_addon_url_example)) },
+                    label = {
+                        Text(
+                            stringResource(
+                                if (playlist) {
+                                    AYMR.strings.iptv_playlist_hint
+                                } else {
+                                    AYMR.strings.stremio_addon_url_hint
+                                },
+                            ),
+                        )
+                    },
+                    supportingText = {
+                        if (!playlist) Text(stringResource(AYMR.strings.stremio_addon_url_example))
+                    },
                     singleLine = true,
                     enabled = !working,
                     isError = state is AddonInstallState.Failed,
@@ -682,3 +740,93 @@ private fun SuggestedAddonItem(
 
 /** Stremio's type for a live channel, which is the whole of what makes an addon an IPTV one. */
 private const val TYPE_TV = "tv"
+
+/**
+ * The playlists already added, as the Sources tab shows them.
+ *
+ * Browse and remove, and no way to add — adding lives behind *Extension stores → IPTV*, the same
+ * arrangement the Stremio segment has and for the same reason. Drawn only when there are some, so
+ * that an empty IPTV tab shows one message rather than two empty sections.
+ */
+internal fun LazyListScope.m3uPlaylists(
+    playlists: List<M3uPlaylist>,
+    onOpen: (M3uPlaylist) -> Unit,
+    onRemove: (String) -> Unit,
+) {
+    if (playlists.isEmpty()) return
+    item(key = "m3u-tab-header") {
+        SectionHeader(title = stringResource(AYMR.strings.iptv_playlists))
+    }
+    items(items = playlists, key = { "m3u-tab-" + it.url }) { playlist ->
+        PlaylistRow(playlist = playlist, onOpen = { onOpen(playlist) }, onRemove = onRemove)
+    }
+}
+
+/**
+ * The playlists, above the addons, under the live-TV heading only.
+ *
+ * Its own section because it is its own kind of thing. An addon is a service that answers
+ * questions; a playlist is a file of channels read straight from its address. They meet on this
+ * screen because both are "somewhere live TV comes from", and separating them here is what stops
+ * that convenience turning into a claim that they are the same.
+ */
+private fun LazyListScope.playlistSection(
+    playlists: List<M3uPlaylist>,
+    onOpen: (M3uPlaylist) -> Unit,
+    onRemove: (String) -> Unit,
+    onAdd: () -> Unit,
+) {
+    item(key = "m3u-header") {
+        SectionHeader(
+            title = stringResource(AYMR.strings.iptv_playlists),
+            subtitle = stringResource(AYMR.strings.iptv_playlists_summary),
+        )
+    }
+    if (playlists.isEmpty()) {
+        item(key = "m3u-add") {
+            ListItem(
+                modifier = Modifier.clickable(onClick = onAdd),
+                headlineContent = { Text(stringResource(AYMR.strings.iptv_add_playlist)) },
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+            )
+        }
+        return
+    }
+    items(items = playlists, key = { "m3u-" + it.url }) { playlist ->
+        PlaylistRow(playlist = playlist, onOpen = { onOpen(playlist) }, onRemove = onRemove)
+    }
+}
+
+@Composable
+private fun PlaylistRow(
+    playlist: M3uPlaylist,
+    onOpen: () -> Unit,
+    onRemove: (String) -> Unit,
+) {
+    ListItem(
+        modifier = Modifier.clickable(onClick = onOpen),
+        headlineContent = { Text(playlist.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        supportingContent = {
+            Text(
+                // The count is from when it was added. A playlist changes daily and re-reading it
+                // to keep a number honest would be a download per row drawn.
+                text = stringResource(AYMR.strings.iptv_playlist_channels, playlist.channelCount),
+                maxLines = 1,
+            )
+        },
+        trailingContent = {
+            IconButton(onClick = { onRemove(playlist.url) }) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = stringResource(MR.strings.action_delete),
+                )
+            }
+        },
+    )
+}

@@ -3,6 +3,8 @@ package animato.app.stremio
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.iptv.M3uPlaylist
+import animato.anime.iptv.M3uPlaylistStore
 import animato.anime.stremio.DirectoryAddon
 import animato.anime.stremio.StremioAddon
 import animato.anime.stremio.StremioAddonDirectory
@@ -34,6 +36,7 @@ sealed interface AddonInstallState {
 class StremioAddonsScreenModel(
     private val store: StremioAddonStore = Injekt.get(),
     private val directory: StremioAddonDirectory = StremioAddonDirectory(),
+    private val playlistStore: M3uPlaylistStore = Injekt.get(),
     sourcePreferences: SourcePreferences = Injekt.get(),
 ) : ViewModel() {
 
@@ -67,6 +70,39 @@ class StremioAddonsScreenModel(
         viewModelScope.launchIO { _directoryAddons.value = directory.listed() }
     }
 
+    /**
+     * The M3U playlists, which live beside the addons rather than under them.
+     *
+     * Only the live-TV door shows these. A playlist is a different kind of thing — a file of
+     * channels rather than a service that answers questions — and listing it under *Stremio addons*
+     * would be filing it by the screen it happens to share rather than by what it is.
+     */
+    val playlists: StateFlow<List<M3uPlaylist>> = playlistStore.playlists
+
+    /**
+     * Add a playlist by address.
+     *
+     * Shares [installState] with the addon field on purpose: one screen, one thing being added at
+     * a time, one place the outcome is reported. The two paths cannot run at once because there is
+     * one dialog.
+     */
+    fun addPlaylist(url: String) {
+        if (_installState.value is AddonInstallState.Working) return
+        _installState.value = AddonInstallState.Working
+        viewModelScope.launchIO {
+            _installState.value = playlistStore.add(url).fold(
+                onSuccess = { AddonInstallState.Added(it.name) },
+                onFailure = {
+                    AddonInstallState.Failed(it.message.orEmpty().ifBlank { UNREADABLE_PLAYLIST })
+                },
+            )
+        }
+    }
+
+    fun removePlaylist(url: String) {
+        playlistStore.remove(url)
+    }
+
     private val _installState = MutableStateFlow<AddonInstallState>(AddonInstallState.Idle)
     val installState: StateFlow<AddonInstallState> = _installState.asStateFlow()
 
@@ -97,3 +133,11 @@ class StremioAddonsScreenModel(
         viewModelScope.launchIO { store.refresh() }
     }
 }
+
+/**
+ * What to say when a playlist would not load and the failure carried no message of its own.
+ *
+ * Every other failure here already has a sentence — the store writes them — and this covers the
+ * network exceptions that arrive with nothing readable in them.
+ */
+private const val UNREADABLE_PLAYLIST = "That address could not be read"

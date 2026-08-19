@@ -2,6 +2,7 @@ package animato.di
 
 import android.app.Application
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import animato.anime.iptv.M3uPlaylistStore
 import animato.anime.player.PlayerEpisodeVideoResolver
 import animato.anime.player.cast.CastController
 import animato.anime.services.download.EpisodeVideoResolver
@@ -116,7 +117,8 @@ class AnimeAppModule(val app: Application) : InjektModule {
         // very first emission: a source list that starts short and grows a moment later is a
         // source list people have already scrolled past.
         addSingletonFactory { StremioAddonStore() }
-        addSingletonFactory<AnimeSourceManager> { AndroidAnimeSourceManager(app, get(), get(), get()) }
+        addSingletonFactory { M3uPlaylistStore() }
+        addSingletonFactory<AnimeSourceManager> { AndroidAnimeSourceManager(app, get(), get(), get(), get()) }
         addSingletonFactory { AnimeExtensionManager(app) }
 
         // The anime half of the trackers. Each wraps the Mihon tracker of the same id and shares
