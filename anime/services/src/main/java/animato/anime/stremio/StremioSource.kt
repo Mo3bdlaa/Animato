@@ -262,25 +262,74 @@ class StremioSource(
      * it, so a per-stream answer would be thrown away the moment somebody switched quality.
      */
     private suspend fun subtitlesFor(type: String, id: String): List<Track> {
-        val providers = addonStore.addons.value.filter {
-            it.manifest.canServe(RESOURCE_SUBTITLES, type, id)
-        }
-        if (providers.isEmpty()) return emptyList()
+        val native = providersOfSubtitles(type, id)
+        if (native.isNotEmpty()) return askForSubtitles(native, type, id)
 
-        return coroutineScope {
-            providers.map { provider ->
-                async {
-                    runCatching {
-                        val url = StremioUrls.subtitles(provider.url, type, id)
-                        val response = client.newCall(GET(url, headers)).awaitSuccess()
-                        with(json) { response.parseAs<StremioSubtitleResponse>() }.subtitles
-                    }.getOrElse {
-                        logcat(LogPriority.INFO, it) { "Stremio subtitles: ${provider.url} did not answer" }
-                        emptyList()
-                    }
+        // Nobody speaks this id. Try the one it can be turned into — see [imdbIdFor].
+        val translated = runCatching { imdbIdFor(type, id) }.getOrNull() ?: return emptyList()
+        val byImdb = providersOfSubtitles(type, translated)
+        if (byImdb.isEmpty()) return emptyList()
+        return askForSubtitles(byImdb, type, translated)
+    }
+
+    private fun providersOfSubtitles(type: String, id: String) = addonStore.addons.value.filter {
+        it.manifest.canServe(RESOURCE_SUBTITLES, type, id)
+    }
+
+    private suspend fun askForSubtitles(
+        providers: List<StremioAddon>,
+        type: String,
+        id: String,
+    ): List<Track> = coroutineScope {
+        providers.map { provider ->
+            async {
+                runCatching {
+                    val url = StremioUrls.subtitles(provider.url, type, id)
+                    val response = client.newCall(GET(url, headers)).awaitSuccess()
+                    with(json) { response.parseAs<StremioSubtitleResponse>() }.subtitles
+                }.getOrElse {
+                    logcat(LogPriority.INFO, it) { "Stremio subtitles: ${provider.url} did not answer" }
+                    emptyList()
                 }
-            }.awaitAll().flatten().let(StremioMapper::toTracks)
-        }
+            }
+        }.awaitAll().flatten().let(StremioMapper::toTracks)
+    }
+
+    /**
+     * This episode's id in the one dialect every subtitle addon speaks.
+     *
+     * Subtitle addons are IMDb-only in practice — OpenSubtitles declares `idPrefixes: ["tt"]` and
+     * the rest follow it. Anime Kitsu identifies everything as `kitsu:41370:5`, so an anime opened
+     * through it was filtered out before a single request went anywhere, and the subtitle work did
+     * not reach the catalogue an anime app's users are most likely to install. Silently, because
+     * "no subtitles offered" is what a working addon with nothing to offer also looks like.
+     *
+     * Two ways across, cheapest first:
+     *
+     * 1. **The addon says so.** Meta objects carry an optional `imdb_id`, and where it is present
+     *    it is exact — no matching, no chance of the wrong show. The season and episode come from
+     *    the same document's own entry for this video, which is better than either guessing or
+     *    reading them out of a title.
+     * 2. **Ask a catalogue.** Failing that, the title is searched against a catalogue addon that
+     *    does speak IMDb, which is the same bridge ordinary extensions already cross and holds
+     *    itself to the same rule: an exact title match or nothing.
+     *
+     * Only reached when no installed provider would take the native id, so the extra request is
+     * paid for by episodes that would otherwise have shown an empty subtitle list.
+     */
+    private suspend fun imdbIdFor(type: String, id: String): String? {
+        if (id.startsWith(IMDB_PREFIX)) return null
+        val meta = requestMeta(type, id.substringBefore(':')) ?: return null
+
+        val video = meta.videos.firstOrNull { it.id == id }
+        val season = video?.season ?: 1
+        val episode = video?.episode ?: 1
+
+        val imdb = meta.imdbId?.takeIf { it.startsWith(IMDB_PREFIX) }
+            ?: StremioSubtitleFinder().resolve(meta.name)
+            ?: return null
+
+        return if (type == TYPE_MOVIE) imdb else "$imdb:$season:$episode"
     }
 
     /**
@@ -523,6 +572,9 @@ class StremioSource(
         private const val FILTER_CATALOG = "Catalog"
         private const val ANY_GENRE = "Any"
         private const val IMDB_PREFIX = "tt"
+
+        /** A film's subtitle id is the bare IMDb id; a series' carries season and episode. */
+        private const val TYPE_MOVIE = "movie"
         private const val IMDB_TITLE_URL = "https://www.imdb.com/title/"
 
         /** The same prefix the player and the downloader test for when routing to TorrServer. */

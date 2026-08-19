@@ -1,5 +1,6 @@
 package animato.anime.stremio
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -185,6 +186,15 @@ data class StremioMeta(
     val director: List<String> = emptyList(),
     val writer: List<String> = emptyList(),
     val videos: List<StremioVideo> = emptyList(),
+    /**
+     * The IMDb id for this title, where the addon knows one.
+     *
+     * Optional in the spec and absent more often than not, but when it is there it is the cheapest
+     * possible answer to *what would a subtitle addon call this* — no search, no title matching, no
+     * chance of landing on the wrong show.
+     */
+    @SerialName("imdb_id")
+    val imdbId: String? = null,
     val behaviorHints: StremioMetaHints? = null,
 ) {
     /** `genres` is current, `genre` is what older addons send; some send both. */

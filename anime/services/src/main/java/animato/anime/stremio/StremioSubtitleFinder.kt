@@ -93,7 +93,7 @@ class StremioSubtitleFinder(
      * the person chose to install and hardcoding Cinemeta's address would be a source this app
      * added on their behalf.
      */
-    private suspend fun resolve(animeTitle: String): String? {
+    internal suspend fun resolve(animeTitle: String): String? {
         val key = normalise(animeTitle)
         if (key.isEmpty()) return null
         resolved[key]?.let { return it }
