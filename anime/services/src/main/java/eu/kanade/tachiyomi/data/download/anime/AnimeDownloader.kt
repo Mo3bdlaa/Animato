@@ -162,10 +162,39 @@ class AnimeDownloader(
     }
 
     /**
+     * Whether this downloader raised the torrent server, and so owes it a shutdown.
+     *
+     * The player already worked this way — *"make it run only while a torrent is open and close
+     * behind it"* — and the downloader did not, so one downloaded torrent left a peer-to-peer
+     * server seeding in the background until the app was killed. That is the same objection, in
+     * the half nobody had looked at, and it is worse here: a download finishes while the app is in
+     * somebody's pocket.
+     *
+     * Only a queue that started it stops it, and only when the queue has nothing left — several
+     * torrents in a row share the one server rather than restarting it between each.
+     */
+    @Volatile
+    private var startedTorrentServer = false
+
+    /**
+     * Take the torrent server down, if this downloader is what put it up.
+     *
+     * Called wherever the queue stops running rather than after each item: the next download may
+     * be another torrent, and stopping the server between two of them would pay the cold start
+     * twice and lose the cache in between.
+     */
+    private fun releaseTorrentServer() {
+        if (!startedTorrentServer) return
+        startedTorrentServer = false
+        TorrentServerService.stop()
+    }
+
+    /**
      * Stops the downloader.
      */
     fun stop(reason: String? = null) {
         cancelDownloaderJob()
+        releaseTorrentServer()
         queueState.value
             .filter { it.status == AnimeDownload.State.DOWNLOADING }
             .forEach { it.status = AnimeDownload.State.ERROR }
@@ -189,6 +218,7 @@ class AnimeDownloader(
      */
     fun pause() {
         cancelDownloaderJob()
+        releaseTorrentServer()
         queueState.value
             .filter { it.status == AnimeDownload.State.DOWNLOADING }
             .forEach { it.status = AnimeDownload.State.QUEUE }
@@ -199,6 +229,7 @@ class AnimeDownloader(
      */
     fun clearQueue() {
         cancelDownloaderJob()
+        releaseTorrentServer()
 
         internalClearQueue()
         notifier.dismissProgress()
@@ -555,6 +586,7 @@ class AnimeDownloader(
         if (!TorrentServerService.start()) {
             throw Exception(context.stringResource(AYMR.strings.torrent_server_start_failure))
         }
+        startedTorrentServer = true
 
         if (video.videoUrl.startsWith(torrentServerApi.hostUrl)) {
             val hash = video.videoUrl.substringAfter("link=").substringBefore("&")

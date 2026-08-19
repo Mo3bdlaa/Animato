@@ -647,6 +647,60 @@ class EntryScreenModel(
     }
 
     /**
+     * Queues one item for download, or deletes the file if it is already here.
+     *
+     * ## Why this page needed it at all
+     *
+     * It did not have it. The row carried a bookmark and nothing else, on the reasoning that a
+     * download button on a thousand-row list is a thousand buttons nobody presses — which is still
+     * true of a *button*, and was the wrong conclusion about the *action*. Downloading was
+     * reachable only by opening the original screen through *All options*, so the page everybody
+     * actually uses could not save anything for a flight.
+     *
+     * A long press is where the library grid already keeps its per-item actions, so it is where
+     * this goes rather than on the row.
+     *
+     * ## Torrents included
+     *
+     * A Stremio episode whose only stream is a magnet downloads through TorrServer, which the
+     * downloader has always known how to do and nothing had ever asked it to. Nothing here is
+     * special-cased for it: the video is whatever the source hands over, and the downloader routes
+     * a magnet the same way the player does.
+     */
+    fun toggleDownload(item: EntryItem) {
+        viewModelScope.launchNonCancellable {
+            when (contentType) {
+                ContentType.MANGA -> {
+                    val manga = getManga.await(entryId) ?: return@launchNonCancellable
+                    val chapter = getChapter.await(item.id) ?: return@launchNonCancellable
+                    if (item.downloaded) {
+                        downloadManager.deleteChapters(
+                            listOf(chapter),
+                            manga,
+                            sourceManager.getOrStub(manga.source),
+                        )
+                    } else {
+                        downloadManager.downloadChapters(manga, listOf(chapter))
+                    }
+                }
+                ContentType.ANIME -> {
+                    val anime = getAnime.await(entryId) ?: return@launchNonCancellable
+                    val episode = getEpisode.await(item.id) ?: return@launchNonCancellable
+                    if (item.downloaded) {
+                        animeDownloadManager.deleteEpisodes(
+                            listOf(episode),
+                            anime,
+                            animeSourceManager.getOrStub(anime.source),
+                        )
+                    } else {
+                        animeDownloadManager.downloadEpisodes(anime, listOf(episode))
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Whole days from now until [epochMillis], never negative, null when there is nothing to count to.
      *
      * Local days rather than 24-hour blocks: "in 1 day" should mean tomorrow, which is what somebody

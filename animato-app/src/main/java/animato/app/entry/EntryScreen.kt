@@ -2,6 +2,7 @@ package animato.app.entry
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,8 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
@@ -459,6 +462,7 @@ class EntryScreen(
                         onClick = { open(item) },
                         onToggleViewed = { screenModel.setViewed(item, !item.viewed) },
                         onToggleBookmark = { screenModel.toggleBookmark(item) },
+                        onToggleDownload = { screenModel.toggleDownload(item) },
                     )
                 }
             }
@@ -714,9 +718,13 @@ private fun AboutSection(
  * One chapter or episode.
  *
  * Read state is the muted text rather than a tick, because a list where half the rows carry an icon
- * and half do not reads as two lists. The bookmark is the only trailing control: downloading from
- * here is the overflow's job, and a per-row download button on a thousand-row list is a thousand
- * buttons nobody presses.
+ * and half do not reads as two lists. The bookmark is the only trailing control — a per-row
+ * download button on a thousand-row list is a thousand buttons nobody presses.
+ *
+ * Downloading is a long press, which is where the library grid already keeps its per-item actions.
+ * It used to be nowhere: the reasoning above is right about a button and was the wrong conclusion
+ * about the action, and for several releases the only way to save an episode for a flight was to
+ * open the original screen through *All options*.
  */
 @Composable
 private fun ItemRow(
@@ -725,67 +733,100 @@ private fun ItemRow(
     onClick: () -> Unit,
     onToggleViewed: () -> Unit,
     onToggleBookmark: () -> Unit,
+    onToggleDownload: () -> Unit,
 ) {
     val alpha = if (item.viewed) VIEWED_ALPHA else 1f
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-    ) {
-        Box(
+    var menuOpen by remember { mutableStateOf(false) }
+
+    Box {
+        Row(
             modifier = Modifier
-                .size(NumberBoxSize)
-                .clip(RoundedCornerShape(NumberBoxRadius))
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                .clickable(onClick = onToggleViewed),
-            contentAlignment = Alignment.Center,
+                .fillMaxWidth()
+                .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true })
+                .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
         ) {
-            Text(
-                text = formatNumber(item.number),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-            )
+            Box(
+                modifier = Modifier
+                    .size(NumberBoxSize)
+                    .clip(RoundedCornerShape(NumberBoxRadius))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .clickable(onClick = onToggleViewed),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = formatNumber(item.number),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = listOfNotNull(
+                        // When it was published, which the old screen showed and this one dropped. It
+                        // is the only thing on the row that says whether a source has stopped updating.
+                        item.dateUpload.takeIf { it > 0 }?.let { relativeDateText(it) },
+                        item.scanlator?.takeIf { it.isNotBlank() },
+                        stringResource(
+                            when (contentType) {
+                                ContentType.MANGA -> AYMR.strings.caption_chapters
+                                ContentType.ANIME -> AYMR.strings.caption_episodes
+                            },
+                            formatNumber(item.number),
+                        ),
+                        stringResource(MR.strings.label_downloaded).takeIf { item.downloaded },
+                    ).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            IconButton(onClick = onToggleBookmark) {
+                Icon(
+                    imageVector = if (item.bookmarked) Icons.Outlined.Bookmark else Icons.Outlined.BookmarkBorder,
+                    contentDescription = stringResource(MR.strings.action_bookmark),
+                    tint = if (item.bookmarked) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
         }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.name,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = listOfNotNull(
-                    // When it was published, which the old screen showed and this one dropped. It
-                    // is the only thing on the row that says whether a source has stopped updating.
-                    item.dateUpload.takeIf { it > 0 }?.let { relativeDateText(it) },
-                    item.scanlator?.takeIf { it.isNotBlank() },
-                    stringResource(
-                        when (contentType) {
-                            ContentType.MANGA -> AYMR.strings.caption_chapters
-                            ContentType.ANIME -> AYMR.strings.caption_episodes
+
+        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            // Download and delete are the same entry wearing the state it is in, because they are
+            // never both available and a greyed-out one of each would be two dead rows.
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        stringResource(
+                            if (item.downloaded) MR.strings.action_delete else MR.strings.action_download,
+                        ),
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = if (item.downloaded) {
+                            Icons.Outlined.Delete
+                        } else {
+                            Icons.Outlined.Download
                         },
-                        formatNumber(item.number),
-                    ),
-                    stringResource(MR.strings.label_downloaded).takeIf { item.downloaded },
-                ).joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        IconButton(onClick = onToggleBookmark) {
-            Icon(
-                imageVector = if (item.bookmarked) Icons.Outlined.Bookmark else Icons.Outlined.BookmarkBorder,
-                contentDescription = stringResource(MR.strings.action_bookmark),
-                tint = if (item.bookmarked) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                        contentDescription = null,
+                    )
+                },
+                onClick = {
+                    menuOpen = false
+                    onToggleDownload()
                 },
             )
         }
