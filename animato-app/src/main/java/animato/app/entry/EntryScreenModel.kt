@@ -419,29 +419,6 @@ class EntryScreenModel(
     }
 
     /**
-     * Asks the source whether anything new exists.
-     *
-     * ## Why this had to exist
-     *
-     * The page had no refresh at all. The circular-arrows icon in its place opened the original
-     * screen, which is a different thing entirely — from a device: *"when I press the tracker icon,
-     * expecting it to check whether there is anything new, it opens the old page instead."* The
-     * glyph was right about what it promised and wrong about what it did, so the promise is what
-     * got kept.
-     *
-     * ## Both halves, one interactor each
-     *
-     * `UpdateMangaFromRemote` and `UpdateAnimeFromRemote` are the same paths the library update job
-     * runs, so a manual refresh and an automatic one agree about what counts as new, what happens to
-     * a renamed title, and when a cover is re-fetched. `manualFetch = true` is what distinguishes
-     * them: it re-downloads the cover and ignores the update strategy, because somebody asking by
-     * hand has usually asked *because* the automatic answer looked wrong.
-     *
-     * The result is reported rather than left to be inferred. Nothing new and a source that threw
-     * both leave the list identical, and a button whose success case is indistinguishable from its
-     * failure case is the thing this replaced.
-     */
-    /**
      * Keep a correction, or drop it.
      *
      * Blank fields arrive here as null rather than as empty strings, and the difference is the
@@ -500,6 +477,29 @@ class EntryScreenModel(
         }
     }
 
+    /**
+     * Asks the source whether anything new exists.
+     *
+     * ## Why this had to exist
+     *
+     * The page had no refresh at all. The circular-arrows icon in its place opened the original
+     * screen, which is a different thing entirely — from a device: *"when I press the tracker icon,
+     * expecting it to check whether there is anything new, it opens the old page instead."* The
+     * glyph was right about what it promised and wrong about what it did, so the promise is what
+     * got kept.
+     *
+     * ## Both halves, one interactor each
+     *
+     * `UpdateMangaFromRemote` and `UpdateAnimeFromRemote` are the same paths the library update job
+     * runs, so a manual refresh and an automatic one agree about what counts as new, what happens to
+     * a renamed title, and when a cover is re-fetched. `manualFetch = true` is what distinguishes
+     * them: it re-downloads the cover and ignores the update strategy, because somebody asking by
+     * hand has usually asked *because* the automatic answer looked wrong.
+     *
+     * The result is reported rather than left to be inferred. Nothing new and a source that threw
+     * both leave the list identical, and a button whose success case is indistinguishable from its
+     * failure case is the thing this replaced.
+     */
     fun refresh(announce: Boolean = true) {
         if (state.value.isRefreshing) return
         state.update { it.copy(isRefreshing = true, refreshResult = null) }
