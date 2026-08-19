@@ -387,6 +387,7 @@ internal fun MetadataRail.labelRes(): StringResource = when (this) {
     MetadataRail.TRENDING -> AYMR.strings.rail_trending
     MetadataRail.THIS_SEASON -> AYMR.strings.rail_this_season
     MetadataRail.TOP_RATED -> AYMR.strings.rail_top_rated
+    MetadataRail.SUGGESTED -> AYMR.strings.rail_suggested
 }
 
 internal fun ContentType.labelRes(): StringResource = when (this) {

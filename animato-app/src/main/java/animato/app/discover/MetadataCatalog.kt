@@ -44,6 +44,9 @@ enum class MetadataRail(val media: Set<ContentType>) {
     TRENDING(setOf(ContentType.ANIME, ContentType.MANGA)),
     THIS_SEASON(setOf(ContentType.ANIME)),
     TOP_RATED(setOf(ContentType.ANIME, ContentType.MANGA)),
+
+    /** Built from the library rather than from a chart — see [MetadataCatalog.suggestions]. */
+    SUGGESTED(setOf(ContentType.ANIME, ContentType.MANGA)),
 }
 
 /**
@@ -106,6 +109,10 @@ class MetadataCatalog(
             put("type", if (contentType == ContentType.ANIME) "ANIME" else "MANGA")
             put("perPage", limit)
             when (rail) {
+                // Never reached: SUGGESTED does not come from a chart and takes the seeded path in
+                // `suggestions` instead. Named rather than swept into an `else` so that adding a
+                // fourth rail fails here rather than silently returning trending.
+                MetadataRail.SUGGESTED -> return emptyList()
                 MetadataRail.TRENDING -> put("sort", JsonPrimitive("TRENDING_DESC").asList())
                 MetadataRail.TOP_RATED -> put("sort", JsonPrimitive("SCORE_DESC").asList())
                 MetadataRail.THIS_SEASON -> {
@@ -134,6 +141,96 @@ class MetadataCatalog(
         return response.data?.page?.media.orEmpty().mapNotNull { it.toItem(contentType) }
     }
 
+    /**
+     * What else to watch or read, worked out from what is already in the library.
+     *
+     * No account and no server. AniList publishes, for each title, the recommendations its own
+     * users made against it, and those are public — so a library of six titles is six sets of
+     * "people who liked this also liked", and what appears in several of them is a better guess
+     * than what appears in one. Anikku proved the shape works without a backend; this is the same
+     * idea against the API this screen already talks to.
+     *
+     * ## One request, not one per title
+     *
+     * Six seeds could be six round trips. GraphQL aliases make them one document instead, which
+     * matters less for speed than for AniList's rate limit — a rail that quietly exhausts it would
+     * take the trending rails down with it.
+     *
+     * ## Why the seeds are matched by title
+     *
+     * A library entry has no AniList id: it came from an extension, and only the tracked ones
+     * carry a remote id at all. `search` is what is left, and it is good enough for a rail whose
+     * job is a suggestion — a mismatched seed contributes a few odd recommendations rather than
+     * being wrong about something the person can see.
+     */
+    suspend fun suggestions(
+        seedTitles: List<String>,
+        contentType: ContentType,
+        exclude: Set<String>,
+        limit: Int = PER_PAGE,
+    ): List<MetadataItem> = withIOContext {
+        val seeds = seedTitles.map { it.trim() }.filter { it.isNotEmpty() }.distinct().take(MAX_SEEDS)
+        if (seeds.isEmpty()) return@withIOContext emptyList()
+        runCatching { requestSuggestions(seeds, contentType, exclude, limit) }.getOrDefault(emptyList())
+    }
+
+    private suspend fun requestSuggestions(
+        seeds: List<String>,
+        contentType: ContentType,
+        exclude: Set<String>,
+        limit: Int,
+    ): List<MetadataItem> {
+        val type = if (contentType == ContentType.ANIME) "ANIME" else "MANGA"
+        val fields = seeds.mapIndexed { index, title ->
+            """
+            s$index: Media(search: ${'$'}q$index, type: $type, isAdult: false) {
+              recommendations(sort: RATING_DESC, perPage: $RECOMMENDATIONS_PER_SEED) {
+                nodes { mediaRecommendation { id title { userPreferred romaji english }
+                        coverImage { large } averageScore format } }
+              }
+            }
+            """.trimIndent()
+        }.joinToString("\n")
+        val declarations = seeds.indices.joinToString(", ") { "${'$'}q$it: String" }
+
+        val body = buildJsonObject {
+            put("query", "query ($declarations) {\n$fields\n}")
+            put(
+                "variables",
+                buildJsonObject { seeds.forEachIndexed { index, title -> put("q$index", title) } },
+            )
+        }
+
+        val request = POST(url = ENDPOINT, body = body.toString().toRequestBody(JSON_MEDIA_TYPE))
+        val response = with(json) {
+            network.client.newCall(request).awaitSuccess().parseAs<AniListSuggestionResponse>()
+        }
+
+        // Counted, not concatenated. A title recommended against three different things in the
+        // library is a better guess than one recommended against a single seed, and ordering by
+        // that is the whole difference between a suggestion and a list.
+        val tally = LinkedHashMap<Int, Pair<AniListMedia, Int>>()
+        response.data.values.filterNotNull().forEach { seed ->
+            seed.recommendations?.nodes.orEmpty().mapNotNull { it.mediaRecommendation }.forEach { media ->
+                val seen = tally[media.id]
+                tally[media.id] = media to ((seen?.second ?: 0) + 1)
+            }
+        }
+
+        return tally.values
+            .sortedWith(
+                compareByDescending<Pair<AniListMedia, Int>> { it.second }.thenByDescending {
+                    it.first.averageScore
+                        ?: 0
+                },
+            )
+            .mapNotNull { (media, _) -> media.toItem(contentType) }
+            // Suggesting what is already in the library is the one way this rail can be useless,
+            // and the seeds themselves are the likeliest offenders.
+            .filterNot { normaliseTitle(it.title) in exclude }
+            .take(limit)
+    }
+
     private fun AniListMedia.toItem(contentType: ContentType): MetadataItem? {
         val name = title.userPreferred ?: title.romaji ?: title.english ?: return null
         return MetadataItem(
@@ -150,6 +247,10 @@ class MetadataCatalog(
     private companion object {
         const val ENDPOINT = "https://graphql.anilist.co"
         const val PER_PAGE = 24
+
+        /** Enough seeds for an overlap to mean something, few enough to stay one modest request. */
+        const val MAX_SEEDS = 8
+        const val RECOMMENDATIONS_PER_SEED = 10
 
         val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
@@ -233,3 +334,28 @@ private data class AniListTitle(
 
 @Serializable
 private data class AniListCover(val large: String? = null)
+
+/**
+ * Titles compared with their punctuation and case removed.
+ *
+ * A library entry's title comes from whichever site it was found on and an AniList title comes
+ * from AniList, so "Re:ZERO -Starting Life in Another World-" and "Re:Zero Starting Life in
+ * Another World" are the same show spelled by two different people. Exact matching would suggest
+ * half the library back to itself.
+ */
+internal fun normaliseTitle(title: String): String =
+    title.lowercase().filter { it.isLetterOrDigit() }
+
+@Serializable
+private data class AniListSuggestionResponse(
+    val data: Map<String, AniListSeed?> = emptyMap(),
+)
+
+@Serializable
+private data class AniListSeed(val recommendations: AniListRecommendations? = null)
+
+@Serializable
+private data class AniListRecommendations(val nodes: List<AniListRecommendationNode> = emptyList())
+
+@Serializable
+private data class AniListRecommendationNode(val mediaRecommendation: AniListMedia? = null)

@@ -31,8 +31,10 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.domain.manga.model.toDomainManga
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.entries.anime.interactor.NetworkToLocalAnime
 import tachiyomi.domain.entries.anime.model.asAnimeCover
+import tachiyomi.domain.manga.interactor.GetLibraryManga
 import tachiyomi.domain.manga.interactor.NetworkToLocalManga
 import tachiyomi.domain.manga.model.asMangaCover
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
@@ -105,7 +107,12 @@ data class DiscoverState(
 private fun railsFor(lens: ContentFilter): List<MetadataRailState> =
     listOf(ContentType.ANIME, ContentType.MANGA)
         .filter { lens.accepts(it) }
-        .map { MetadataRailState(rail = MetadataRail.TRENDING, contentType = it) }
+        .flatMap {
+            listOf(
+                MetadataRailState(rail = MetadataRail.TRENDING, contentType = it),
+                MetadataRailState(rail = MetadataRail.SUGGESTED, contentType = it),
+            )
+        }
 
 /**
  * What to watch or read next.
@@ -141,6 +148,8 @@ class DiscoverScreenModel(
     private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
     private val networkToLocalAnime: NetworkToLocalAnime = Injekt.get(),
     private val metadataCatalog: MetadataCatalog = Injekt.get(),
+    private val getLibraryManga: GetLibraryManga = Injekt.get(),
+    private val getLibraryAnime: GetLibraryAnime = Injekt.get(),
     private val extensionManager: ExtensionManager = Injekt.get(),
     private val animeExtensionManager: AnimeExtensionManager = Injekt.get(),
     private val discoverCache: DiscoverCache = DiscoverCache(),
@@ -180,6 +189,27 @@ class DiscoverScreenModel(
         }
     }
 
+    /**
+     * The library, as seeds and as an exclusion list.
+     *
+     * Seeds are taken from the most recently added rather than at random: what somebody added last
+     * is the best available guess at what they are in the mood for, and a rail that changes as the
+     * library grows is doing its job. The whole library — not just the seeds — is what gets
+     * excluded, since suggesting something already on the shelf is the one way this can be useless.
+     */
+    private suspend fun suggestionsFor(contentType: ContentType): List<MetadataItem> {
+        val titles = when (contentType) {
+            ContentType.MANGA -> getLibraryManga.await().map { it.manga.title }
+            ContentType.ANIME -> getLibraryAnime.await().map { it.anime.title }
+        }
+        if (titles.isEmpty()) return emptyList()
+        return metadataCatalog.suggestions(
+            seedTitles = titles.asReversed(),
+            contentType = contentType,
+            exclude = titles.map(::normaliseTitle).toSet(),
+        )
+    }
+
     /** The rails for this lens, pre-filled from [DiscoverCache] so the screen never opens empty. */
     private fun cachedRails(lens: ContentFilter): List<MetadataRailState> =
         railsFor(lens).map { slot ->
@@ -208,7 +238,10 @@ class DiscoverScreenModel(
     private fun CoroutineScope.loadMetadata(rails: List<MetadataRailState>) {
         rails.forEach { slot ->
             launch {
-                val items = metadataCatalog.fetch(slot.rail, slot.contentType)
+                val items = when (slot.rail) {
+                    MetadataRail.SUGGESTED -> suggestionsFor(slot.contentType)
+                    else -> metadataCatalog.fetch(slot.rail, slot.contentType)
+                }
                 if (items.isNotEmpty()) {
                     discoverCache.saveMetadata(slot.key, items)
                 }
