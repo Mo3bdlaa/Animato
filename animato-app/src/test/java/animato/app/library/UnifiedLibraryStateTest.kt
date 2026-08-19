@@ -142,6 +142,76 @@ class UnifiedLibraryStateTest {
         searchQuery = searchQuery,
     )
 
+    @Test
+    fun `a slash in the name makes a shelf inside a shelf`() {
+        val state = UnifiedLibraryState(
+            entries = listOf(
+                entry(1, ContentType.ANIME, "Loose", total = 1, viewed = 0, categories = listOf(10)),
+                entry(2, ContentType.ANIME, "Winter", total = 1, viewed = 0, categories = listOf(11)),
+                entry(3, ContentType.ANIME, "Spring", total = 1, viewed = 0, categories = listOf(12)),
+                entry(4, ContentType.ANIME, "Elsewhere", total = 1, viewed = 0, categories = listOf(13)),
+            ),
+            categories = listOf(
+                LibraryCategory("Anime", emptySet(), setOf(10)),
+                LibraryCategory("Anime/Winter", emptySet(), setOf(11)),
+                LibraryCategory("Anime/Spring", emptySet(), setOf(12)),
+                LibraryCategory("Reading", emptySet(), setOf(13)),
+            ),
+        )
+
+        // One chip per shelf on the top row, with the nested ones folded into their parent.
+        state.rootCategories shouldBe listOf("Anime", "Reading")
+    }
+
+    @Test
+    fun `standing in a parent shows everything under it, not just what is filed directly`() {
+        val state = subCategoryLibrary(selected = "Anime")
+
+        // A shelf that hid the contents of its own sub-shelves would be a worse answer than the
+        // flat list it replaced.
+        state.shelfEntries.map { it.entryId } shouldBe listOf(1L, 2L, 3L)
+        state.childCategories.map { it.leaf } shouldBe listOf("Winter", "Spring")
+    }
+
+    @Test
+    fun `standing in a child narrows to it alone`() {
+        val state = subCategoryLibrary(selected = "Anime/Winter")
+
+        state.shelfEntries.map { it.entryId } shouldBe listOf(2L)
+        // The sub-row stays up while inside one of its own children, or the way back would vanish.
+        state.childCategories.map { it.leaf } shouldBe listOf("Winter", "Spring")
+    }
+
+    @Test
+    fun `a library without a single slash has no second row at all`() {
+        val state = UnifiedLibraryState(
+            entries = listOf(entry(1, ContentType.ANIME, "A", total = 1, viewed = 0, categories = listOf(10))),
+            categories = listOf(LibraryCategory("Watching", emptySet(), setOf(10))),
+            selectedCategory = "Watching",
+        )
+
+        // Somebody who never types a slash sees precisely the interface they saw before.
+        state.rootCategories shouldBe listOf("Watching")
+        state.childCategories shouldBe emptyList()
+        state.shelfEntries.map { it.entryId } shouldBe listOf(1L)
+    }
+
+    private fun subCategoryLibrary(selected: String) = UnifiedLibraryState(
+        entries = listOf(
+            entry(1, ContentType.ANIME, "Loose", total = 1, viewed = 0, categories = listOf(10)),
+            entry(2, ContentType.ANIME, "Winter", total = 1, viewed = 0, categories = listOf(11)),
+            entry(3, ContentType.ANIME, "Spring", total = 1, viewed = 0, categories = listOf(12)),
+            entry(4, ContentType.ANIME, "Elsewhere", total = 1, viewed = 0, categories = listOf(13)),
+        ),
+        categories = listOf(
+            LibraryCategory("Anime", emptySet(), setOf(10)),
+            LibraryCategory("Anime/Winter", emptySet(), setOf(11)),
+            LibraryCategory("Anime/Spring", emptySet(), setOf(12)),
+            LibraryCategory("Reading", emptySet(), setOf(13)),
+        ),
+        selectedCategory = selected,
+    )
+
     private fun entry(
         id: Long,
         type: ContentType,

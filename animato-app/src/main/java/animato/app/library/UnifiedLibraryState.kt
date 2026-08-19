@@ -31,6 +31,26 @@ data class LibraryCategory(
     val animeIds: Set<Long>,
 ) {
 
+    /**
+     * The shelf this one sits inside, read out of its own name.
+     *
+     * Sub-categories are the request; a `parent_id` column is the obvious way to hold them and is
+     * not available. Categories live in two databases, one of which is Mihon's and not edited here,
+     * so a schema change would land on one half and not the other.
+     *
+     * A separator in the name needs no schema at all. `Anime/Seasonal` is stored as exactly that
+     * string, so a backup opened in Mihon or Aniyomi shows a category called `Anime/Seasonal` and
+     * loses nothing — the hierarchy is drawn here rather than recorded anywhere. Somebody who never
+     * types a slash sees precisely the interface they saw before.
+     */
+    val parent: String? get() = name.substringBefore(SEPARATOR, missingDelimiterValue = "").takeIf { it.isNotEmpty() }
+
+    /** What to write on the chip once its parent is already on screen above it. */
+    val leaf: String get() = name.substringAfter(SEPARATOR)
+
+    /** The shelf this belongs to at the top level, which is itself when it has no parent. */
+    val root: String get() = parent ?: name
+
     fun accepts(entry: LibraryEntry): Boolean {
         val ids = when (entry.contentType) {
             ContentType.MANGA -> mangaIds
@@ -43,6 +63,15 @@ data class LibraryCategory(
     fun visibleUnder(lens: ContentFilter): Boolean =
         (lens.includesManga && mangaIds.isNotEmpty()) ||
             (lens.includesAnime && animeIds.isNotEmpty())
+
+    companion object {
+        /**
+         * One level, not a path. `Anime/Seasonal/Winter` reads as a category named
+         * `Seasonal/Winter` inside `Anime`, because a chip row is one line and a tree three deep
+         * has nowhere to go on a phone.
+         */
+        const val SEPARATOR = '/'
+    }
 }
 
 /**
@@ -113,6 +142,23 @@ data class UnifiedLibraryState(
         categories.filter { it.visibleUnder(lens) }
     }
 
+    /** The top row: one chip per shelf, whether or not it has anything nested under it. */
+    val rootCategories: List<String> by lazy {
+        visibleCategories.map { it.root }.distinct()
+    }
+
+    /**
+     * The second row, which exists only while standing in a shelf that has one.
+     *
+     * A parent that is only ever a parent — `Anime/Seasonal` with no bare `Anime` — still gets its
+     * chip on the top row, and selecting it means the whole branch. So the sub-row never has to
+     * carry an "all of this" chip: the chip above it already is one.
+     */
+    val childCategories: List<LibraryCategory> by lazy {
+        val root = selectedCategory?.substringBefore(LibraryCategory.SEPARATOR) ?: return@lazy emptyList()
+        visibleCategories.filter { it.parent == root }
+    }
+
     /**
      * The chip actually in effect.
      *
@@ -125,6 +171,20 @@ data class UnifiedLibraryState(
     }
 
     /**
+     * Every category the selection stands for, which for a parent is the whole branch.
+     *
+     * Selecting `Anime` shows what is filed directly under it *and* everything in `Anime/Seasonal`,
+     * because a shelf that hides the contents of its own sub-shelves is a worse answer than the
+     * flat list it replaced.
+     */
+    val activeBranch: List<LibraryCategory> by lazy {
+        val selected = selectedCategory ?: return@lazy emptyList()
+        visibleCategories.filter {
+            it.name == selected || it.name.startsWith(selected + LibraryCategory.SEPARATOR)
+        }
+    }
+
+    /**
      * Everything on the selected shelf, before the derived filters and the search box.
      *
      * This is the number on the chip. It is the size of the shelf you are standing in — not the
@@ -132,11 +192,11 @@ data class UnifiedLibraryState(
      * the chip read as a result rather than a place.
      */
     val shelfEntries: List<LibraryEntry> by lazy {
-        val category = activeCategory
+        val branch = activeBranch
         entries
             .asSequence()
             .filter { lens.accepts(it.contentType) }
-            .filter { category == null || category.accepts(it) }
+            .filter { branch.isEmpty() || branch.any { category -> category.accepts(it) } }
             .distinctBy { it.contentType to it.entryId }
             .toList()
     }

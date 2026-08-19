@@ -169,11 +169,20 @@ internal fun UnifiedLibraryContent() {
                 // screen does, and a control that leaves the screen after two flicks is not available.
                 if (state.visibleCategories.isNotEmpty()) {
                     CategoryChipRow(
-                        categories = state.visibleCategories,
-                        selected = state.activeCategory?.name,
+                        roots = state.rootCategories,
+                        selectedRoot = state.selectedCategory?.substringBefore(LibraryCategory.SEPARATOR),
                         shelfSize = state.shelfEntries.size,
                         onSelect = screenModel::selectCategory,
                     )
+                    // Only while standing in a shelf that has one. A second row that is empty half
+                    // the time moves the grid up and down as you switch shelves.
+                    if (state.childCategories.isNotEmpty()) {
+                        SubCategoryChipRow(
+                            children = state.childCategories,
+                            selected = state.selectedCategory,
+                            onSelect = screenModel::selectCategory,
+                        )
+                    }
                 }
 
                 LazyLibraryGrid(
@@ -271,8 +280,8 @@ internal fun UnifiedLibraryContent() {
  */
 @Composable
 private fun CategoryChipRow(
-    categories: List<LibraryCategory>,
-    selected: String?,
+    roots: List<String>,
+    selectedRoot: String?,
     shelfSize: Int,
     onSelect: (String?) -> Unit,
 ) {
@@ -286,16 +295,52 @@ private fun CategoryChipRow(
     ) {
         CategoryChip(
             label = stringResource(AYMR.strings.label_all),
-            count = shelfSize.takeIf { selected == null },
-            selected = selected == null,
+            count = shelfSize.takeIf { selectedRoot == null },
+            selected = selectedRoot == null,
             onClick = { onSelect(null) },
         )
-        categories.forEach { category ->
+        roots.forEach { root ->
             CategoryChip(
-                label = category.name,
-                count = shelfSize.takeIf { selected == category.name },
-                selected = selected == category.name,
-                onClick = { onSelect(category.name) },
+                label = root,
+                count = shelfSize.takeIf { selectedRoot == root },
+                selected = selectedRoot == root,
+                onClick = { onSelect(root) },
+            )
+        }
+    }
+}
+
+/**
+ * The shelves inside the one being stood in.
+ *
+ * Smaller and unnumbered, because the count above already answers "how much is here" and repeating
+ * it on every child would make two rows of numbers competing to be the total.
+ *
+ * There is no "all of this" chip: the parent chip on the row above is already selected and already
+ * means that, so adding one would put the same choice on screen twice.
+ */
+@Composable
+private fun SubCategoryChipRow(
+    children: List<LibraryCategory>,
+    selected: String?,
+    onSelect: (String?) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.extraSmall),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        children.forEach { child ->
+            CategoryChip(
+                label = child.leaf,
+                count = null,
+                selected = selected == child.name,
+                // Tapping the one already chosen goes back up to the whole branch, which is the
+                // same "tap again to undo" the top row has.
+                onClick = { onSelect(if (selected == child.name) child.root else child.name) },
             )
         }
     }
