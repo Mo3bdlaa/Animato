@@ -46,6 +46,8 @@ import animato.anime.player.CustomButtonFetchState
 import animato.anime.player.HosterState
 import animato.anime.player.RememberedQuality
 import animato.anime.player.SubtitleDelayMemory
+import animato.anime.stremio.StremioSource
+import animato.anime.stremio.StremioSubtitleFinder
 import animato.anime.player.getButtons
 import animato.anime.player.getChangedAt
 import animato.anime.util.editBackground
@@ -178,6 +180,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private val getCustomButtons: GetCustomButtons = Injekt.get(),
     private val trackSelect: TrackSelect = Injekt.get(),
     private val subtitleDelayMemory: SubtitleDelayMemory = Injekt.get(),
+    private val subtitleFinder: StremioSubtitleFinder = Injekt.get(),
     private val getIncognitoState: GetAnimeIncognitoState = Injekt.get(),
     private val libraryPreferences: AnimeLibraryPreferences = Injekt.get(),
     private val rememberedQuality: RememberedQuality = Injekt.get(),
@@ -1416,6 +1419,31 @@ class PlayerViewModel @JvmOverloads constructor(
     /**
      * Set the video list for hosters.
      */
+    /**
+     * Subtitle-addon tracks added to an episode that did not come from Stremio.
+     *
+     * A Stremio source has already asked its neighbours by the time its videos arrive here, so
+     * doing it again would double every track. Everything else has no universal id at all, which
+     * is what [StremioSubtitleFinder] exists to work around — and when it cannot resolve one, the
+     * episode is returned exactly as its own source built it.
+     *
+     * Appended, never substituted: whatever the extension shipped is timed for the release it
+     * shipped with, and stays first.
+     */
+    private suspend fun withAddonSubtitles(state: HosterState, source: AnimeSource): HosterState {
+        if (state !is HosterState.Ready) return state
+        if (source is StremioSource || !subtitleFinder.isUsable()) return state
+
+        val title = currentAnime.value?.title ?: return state
+        val episodeNumber = currentEpisode.value?.episode_number ?: return state
+        val tracks = runCatching { subtitleFinder.subtitlesFor(title, episodeNumber) }.getOrDefault(emptyList())
+        if (tracks.isEmpty()) return state
+
+        return state.copy(
+            videoList = state.videoList.map { it.copy(subtitleTracks = it.subtitleTracks + tracks) },
+        )
+    }
+
     fun loadHosters(source: AnimeSource, hosterList: List<Hoster>, hosterIndex: Int, videoIndex: Int) {
         val hasFoundPreferredVideo = AtomicBoolean(false)
 
@@ -1447,7 +1475,10 @@ class PlayerViewModel @JvmOverloads constructor(
                 coroutineScope {
                     hosterList.mapIndexed { hosterIdx, hoster ->
                         async {
-                            val hosterState = EpisodeLoader.loadHosterVideos(source, hoster)
+                            val hosterState = withAddonSubtitles(
+                                EpisodeLoader.loadHosterVideos(source, hoster),
+                                source,
+                            )
 
                             _hosterState.updateAt(hosterIdx, hosterState)
 
