@@ -109,6 +109,12 @@ data class EntryState(
     val artist: String? = null,
     val description: String? = null,
     val genres: List<String> = emptyList(),
+    /**
+     * The title before any correction, kept so the editor can show what it is departing from and
+     * offer to return to it. Without it "reset" would have nothing to reset to until a refresh.
+     */
+    val sourceTitle: String = "",
+    val override: EntryOverride? = null,
     val statusLabel: dev.icerock.moko.resources.StringResource? = null,
     val sourceName: String = "",
     /**
@@ -213,6 +219,7 @@ class EntryScreenModel(
     private val updateAnime: UpdateAnime = Injekt.get(),
     private val getManga: GetManga = Injekt.get(),
     private val getAnime: GetAnime = Injekt.get(),
+    private val entryOverrides: EntryOverrides = Injekt.get(),
     private val updateMangaFromRemote: UpdateMangaFromRemote = Injekt.get(),
     private val updateAnimeFromRemote: UpdateAnimeFromRemote = Injekt.get(),
     trackRepository: TrackRepository = Injekt.get(),
@@ -265,19 +272,23 @@ class EntryScreenModel(
             getMangaWithChapters.subscribe(entryId, applyScanlatorFilter = true),
             trackRepository.getTracksByMangaIdAsFlow(entryId).map { it.size },
             downloadManager.queueState.map { },
-        ) { (manga, chapters), trackers, _ ->
+            entryOverrides.overrides,
+        ) { (manga, chapters), trackers, _, overrides ->
             val source = sourceManager.getOrStub(manga.source)
+            val edited = overrides[EntryOverrides.key(ContentType.MANGA, entryId)]
             // The entry's own sort and filters, which this page applied none of. See the class note.
             val ordered = withIOContext { chapters.applyFilters(manga, downloadManager) }
             EntryState(
                 entryId = entryId,
                 contentType = ContentType.MANGA,
                 isLoading = false,
-                title = manga.title,
-                author = manga.author,
-                artist = manga.artist,
-                description = manga.description,
-                genres = manga.genre.orEmpty(),
+                title = edited?.title ?: manga.title,
+                author = edited?.author ?: manga.author,
+                artist = edited?.artist ?: manga.artist,
+                description = edited?.description ?: manga.description,
+                genres = edited?.genres ?: manga.genre.orEmpty(),
+                sourceTitle = manga.title,
+                override = edited,
                 statusLabel = statusLabel(manga.status),
                 sourceName = source.name,
                 webViewUrl = (source as? HttpSource)?.runCatching { getMangaUrl(manga.toSManga()) }?.getOrNull(),
@@ -320,18 +331,22 @@ class EntryScreenModel(
             getAnimeWithEpisodes.subscribe(entryId),
             animeTrackRepository.getTracksByAnimeIdAsFlow(entryId).map { it.size },
             animeDownloadManager.queueState.map { },
-        ) { (anime, episodes, _), trackers, _ ->
+            entryOverrides.overrides,
+        ) { (anime, episodes, _), trackers, _, overrides ->
             val source = animeSourceManager.getOrStub(anime.source)
+            val edited = overrides[EntryOverrides.key(ContentType.ANIME, entryId)]
             val ordered = withIOContext { episodes.applyFilters(anime, animeDownloadManager) }
             EntryState(
                 entryId = entryId,
                 contentType = ContentType.ANIME,
                 isLoading = false,
-                title = anime.title,
-                author = anime.author,
-                artist = anime.artist,
-                description = anime.description,
-                genres = anime.genre.orEmpty(),
+                title = edited?.title ?: anime.title,
+                author = edited?.author ?: anime.author,
+                artist = edited?.artist ?: anime.artist,
+                description = edited?.description ?: anime.description,
+                genres = edited?.genres ?: anime.genre.orEmpty(),
+                sourceTitle = anime.title,
+                override = edited,
                 statusLabel = statusLabel(anime.status),
                 sourceName = source.name,
                 webViewUrl = (source as? AnimeHttpSource)?.runCatching { getAnimeUrl(anime.toSAnime()) }?.getOrNull(),
@@ -426,6 +441,65 @@ class EntryScreenModel(
      * both leave the list identical, and a button whose success case is indistinguishable from its
      * failure case is the thing this replaced.
      */
+    /**
+     * Keep a correction, or drop it.
+     *
+     * Blank fields arrive here as null rather than as empty strings, and the difference is the
+     * whole design: a cleared field means *follow the source again*, which is a different
+     * instruction from *this entry has no author*. Nothing is written to the entry's own row — see
+     * [EntryOverrides] for why it cannot be.
+     */
+    fun saveOverride(override: EntryOverride) {
+        entryOverrides.set(state.value.contentType, entryId, override)
+        viewModelScope.launchIO { applyOverride() }
+    }
+
+    fun clearOverride() {
+        entryOverrides.clear(state.value.contentType, entryId)
+        viewModelScope.launchIO { refresh(announce = false) }
+    }
+
+    /**
+     * Write the correction into the entry's own row as well as keeping it.
+     *
+     * The store is the source of truth; this is a copy, and it exists for the screens this project
+     * does not own. The library grid and the updates feed render through the upstream components,
+     * which read the row and know nothing about an override applied on the way out — so a renamed
+     * entry would keep its old name everywhere except the page it was renamed on, which reads as
+     * the rename not having worked.
+     *
+     * The copy is not permanent and does not have to be: a refresh from the source overwrites these
+     * columns, and [applyOverride] runs again after every refresh this screen performs. Anything
+     * clobbered by a background library update is repaired the next time the entry is opened. The
+     * alternative — teaching the refresh to spare edited fields — is only available on the anime
+     * half, since the manga interactor belongs to Mihon.
+     */
+    private suspend fun applyOverride() {
+        val override = entryOverrides.get(state.value.contentType, entryId) ?: return
+        when (state.value.contentType) {
+            ContentType.MANGA -> updateManga.await(
+                MangaUpdate(
+                    id = entryId,
+                    title = override.title,
+                    author = override.author,
+                    artist = override.artist,
+                    description = override.description,
+                    genre = override.genres,
+                ),
+            )
+            ContentType.ANIME -> updateAnime.await(
+                AnimeUpdate(
+                    id = entryId,
+                    title = override.title,
+                    author = override.author,
+                    artist = override.artist,
+                    description = override.description,
+                    genre = override.genres,
+                ),
+            )
+        }
+    }
+
     fun refresh(announce: Boolean = true) {
         if (state.value.isRefreshing) return
         state.update { it.copy(isRefreshing = true, refreshResult = null) }
@@ -449,6 +523,10 @@ class EntryScreenModel(
                     ).map { it.newEpisodes.size }
                 }
             }
+
+            // The refresh has just written the source's own values over any correction, so put the
+            // correction back before anything renders the row again.
+            applyOverride()
 
             state.update {
                 it.copy(

@@ -346,6 +346,13 @@
     <string name="stremio_supplies_streams">Supplies streams to your other addons</string>
     <string name="stremio_supplies_subtitles">Supplies subtitles to your other addons</string>
     <string name="stremio_supplies_both">Supplies streams and subtitles to your other addons</string>
+    <!-- Editing an entry's details by hand -->
+    <string name="action_edit_details">Edit details</string>
+    <string name="edit_details_genres">Genres, separated by commas</string>
+    <string name="edit_details_description">Description</string>
+    <string name="edit_details_empty_follows_source">Leave a field empty to follow the source again.</string>
+    <string name="edit_details_source_says">The source calls this %1$s</string>
+    <string name="edit_details_edited">Edited by you</string>
     <string name="stremio_error_needs_configuration">Configure this addon on its own page first, then paste the address it gives you</string>
     <string name="stremio_wrong_screen">That is a Stremio addon, not an extension store. Add it under Sources → Stremio addons.</string>
     <string name="stremio_no_stream_addon">This addon only lists titles. Add a streaming addon to watch them.</string>

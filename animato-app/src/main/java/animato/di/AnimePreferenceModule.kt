@@ -2,6 +2,7 @@ package animato.di
 
 import android.app.Application
 import animato.app.downloads.DownloadCleanupPreferences
+import animato.app.entry.EntryOverrides
 import animato.app.library.UnifiedLibraryPreferences
 import animato.app.sync.SyncPreferences
 import animato.domain.content.ContentPreferences
@@ -37,5 +38,8 @@ class AnimePreferenceModule(@Suppress("unused") val app: Application) : InjektMo
         addSingletonFactory { DownloadCleanupPreferences(get()) }
         addSingletonFactory { UnifiedLibraryPreferences(get()) }
         addSingletonFactory { SyncPreferences(get()) }
+        // A singleton because its flow is what makes an edit show up on every screen at once, not
+        // only on the one it was made from.
+        addSingletonFactory { EntryOverrides(get()) }
     }
 }

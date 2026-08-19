@@ -123,6 +123,15 @@ class EntryScreen(
         }
         val state by screenModel.state.collectAsStateWithLifecycle()
         var menuOpen by remember { mutableStateOf(false) }
+        var editOpen by remember { mutableStateOf(false) }
+
+        if (editOpen) {
+            EditEntryDialog(
+                state = state,
+                onSave = screenModel::saveOverride,
+                onDismiss = { editOpen = false },
+            )
+        }
         var showAbout by rememberSaveable { mutableStateOf(false) }
         val snackbarHostState = remember { SnackbarHostState() }
 
@@ -190,6 +199,24 @@ class EntryScreen(
                             )
                         }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            DropdownMenuItem(
+                                // First in the menu because it acts on what is on screen, where
+                                // both entries below leave for another screen entirely.
+                                text = { Text(stringResource(AYMR.strings.action_edit_details)) },
+                                trailingIcon = {
+                                    if (state.override != null) {
+                                        Text(
+                                            text = stringResource(AYMR.strings.edit_details_edited),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    menuOpen = false
+                                    editOpen = true
+                                },
+                            )
                             DropdownMenuItem(
                                 // Here rather than as an icon in the header, where it had no label
                                 // and a glyph that read as refresh. Binding *this* title to a
