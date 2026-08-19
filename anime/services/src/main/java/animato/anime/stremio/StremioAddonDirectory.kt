@@ -39,6 +39,62 @@ data class DirectoryAddon(
 ) {
     /** Whether it is worth listing at all — see [StremioAddonStore.USEFUL_RESOURCES]. */
     val isUseful: Boolean get() = resources.any { it in StremioAddonStore.USEFUL_RESOURCES }
+
+    val kind: AddonKind get() = AddonKind.of(resources)
+}
+
+/**
+ * What an addon actually does for you, as one word.
+ *
+ * ## The question it answers
+ *
+ * Stremio addons split the job and meet on a shared id: a catalogue knows what *Spider-Man* is and
+ * has no video, a stream provider has video and no idea what it is called. That is the protocol's
+ * best idea and its worst first impression — install the wrong one and you get a beautiful grid of
+ * posters where nothing plays, with nothing on screen having warned you.
+ *
+ * A five-hundred-row list sorted by name cannot tell you which you are looking at. This can, and it
+ * is read off the manifest rather than guessed: an addon declares its resources, and those are
+ * exactly the promise it is making.
+ *
+ * ## Why it is one kind and not a set
+ *
+ * An addon serving both catalog and stream genuinely is in two categories, and listing it twice
+ * would make the list longer to answer a question about making it shorter. So the kinds are ranked
+ * by what is scarcest: something that browses *and* plays is the most useful thing here and gets
+ * its own name, and everything else is named for the one job it does.
+ */
+enum class AddonKind {
+    /** Browses and plays. Works on its own, which is what most people are looking for. */
+    Complete,
+
+    /** Plays, but has nothing to browse. Adds video behind catalogues already installed. */
+    Video,
+
+    /** Browses only. Needs one of the above before anything will play. */
+    Catalogue,
+
+    /** Subtitles, and nothing else. Never appears as a source; works behind the ones that do. */
+    Subtitles,
+
+    ;
+
+    companion object {
+        fun of(resources: List<String>): AddonKind {
+            val plays = STREAM in resources
+            val browses = CATALOG in resources || META in resources
+            return when {
+                plays && browses -> Complete
+                plays -> Video
+                browses -> Catalogue
+                else -> Subtitles
+            }
+        }
+
+        private const val STREAM = "stream"
+        private const val CATALOG = "catalog"
+        private const val META = "meta"
+    }
 }
 
 @Serializable

@@ -1,15 +1,18 @@
 package animato.app.stremio
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -17,6 +20,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -37,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.stremio.AddonKind
 import animato.anime.stremio.DirectoryAddon
 import animato.anime.stremio.StremioAddon
 import animato.anime.stremio.StremioSource
@@ -46,6 +51,7 @@ import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
@@ -82,6 +88,7 @@ class StremioAddonsScreen : Screen() {
         // Null is "the search box is closed", which is not the same as an empty query — one hides
         // the field and the other shows an empty one. SearchToolbar draws the difference.
         var query by remember { mutableStateOf<String?>(null) }
+        var kind by remember { mutableStateOf<AddonKind?>(null) }
 
         // Manifests go stale — an addon adds a catalog and this one would never notice. The
         // catch-up is silent and keeps whatever it already had wherever an addon does not answer.
@@ -143,6 +150,8 @@ class StremioAddonsScreen : Screen() {
                     addons = addons,
                     directory = directory,
                     query = query.orEmpty(),
+                    kind = kind,
+                    onKindChange = { kind = it },
                     onOpen = { addon ->
                         navigator.push(SourceBrowseScreen(StremioSource.idFor(addon.url), ContentType.ANIME))
                     },
@@ -205,6 +214,15 @@ internal fun LazyListScope.addonStore(
     addons: List<StremioAddon>,
     directory: List<DirectoryAddon>,
     query: String,
+    /**
+     * Which kind of addon the community list is narrowed to, or null for all of them.
+     *
+     * Applied to that list only. The four suggestions are one of each on purpose and hiding three
+     * of them would defeat what they are for, and what is already installed is not a shelf to
+     * browse — a filter that emptied it would be answering a question nobody asked.
+     */
+    kind: AddonKind?,
+    onKindChange: (AddonKind?) -> Unit,
     onOpen: (StremioAddon) -> Unit,
     onRemove: (String) -> Unit,
     onAdd: (String) -> Unit,
@@ -215,11 +233,15 @@ internal fun LazyListScope.addonStore(
     val suggestions = SUGGESTED_ADDONS
         .filterNot { StremioUrls.normalizeBase(it.url) in installed }
         .filter { matches(query, it.name, null, it.url) }
-    val community = directory
+    val searched = directory
         .filterNot { StremioUrls.normalizeBase(it.url) in installed }
         .filter { matches(query, it.name, it.description, it.url) }
+    // Counted before the kind filter, so a chip can say how many it would leave and an empty one
+    // is visibly empty rather than missing.
+    val counts = searched.groupingBy { it.kind }.eachCount()
+    val community = searched.filter { kind == null || it.kind == kind }
 
-    if (mine.isEmpty() && suggestions.isEmpty() && community.isEmpty()) {
+    if (mine.isEmpty() && suggestions.isEmpty() && searched.isEmpty()) {
         item(key = "stremio-no-match") {
             AnimatoEmptyState(
                 message = stringResource(
@@ -252,15 +274,91 @@ internal fun LazyListScope.addonStore(
         }
     }
 
-    if (community.isNotEmpty()) {
+    if (searched.isNotEmpty()) {
         item(key = "stremio-community-header") {
             SectionHeader(
                 title = stringResource(AYMR.strings.stremio_community),
                 subtitle = stringResource(AYMR.strings.stremio_community_summary),
             )
         }
+        item(key = "stremio-kind-chips") {
+            KindChips(selected = kind, counts = counts, onSelect = onKindChange)
+        }
+        // The chosen kind, said once above the rows it explains. A chip has room for a name and
+        // not for the consequence, and the consequence — *nothing plays until you also install a
+        // video addon* — is the entire reason these are separated.
+        if (kind != null) {
+            item(key = "stremio-kind-summary") {
+                Text(
+                    text = stringResource(kind.summaryRes),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(
+                        horizontal = MaterialTheme.padding.medium,
+                        vertical = MaterialTheme.padding.small,
+                    ),
+                )
+            }
+        }
         items(items = community, key = { "stremio-community-" + it.url }) { entry ->
             DirectoryAddonItem(entry = entry, onPick = { onAdd(entry.url) })
+        }
+    }
+}
+
+private val AddonKind.labelRes: StringResource
+    get() = when (this) {
+        AddonKind.Complete -> AYMR.strings.addon_kind_complete
+        AddonKind.Video -> AYMR.strings.addon_kind_video
+        AddonKind.Catalogue -> AYMR.strings.addon_kind_catalogue
+        AddonKind.Subtitles -> AYMR.strings.addon_kind_subtitles
+    }
+
+private val AddonKind.summaryRes: StringResource
+    get() = when (this) {
+        AddonKind.Complete -> AYMR.strings.addon_kind_complete_summary
+        AddonKind.Video -> AYMR.strings.addon_kind_video_summary
+        AddonKind.Catalogue -> AYMR.strings.addon_kind_catalogue_summary
+        AddonKind.Subtitles -> AYMR.strings.addon_kind_subtitles_summary
+    }
+
+/**
+ * The four kinds, as chips, with how many of each the search left.
+ *
+ * Counts rather than bare names because the point of the row is to answer *what is in here* before
+ * anything is tapped — "Catalogue only 87" is a fact about the list, and a chip that turns out to
+ * be empty is worse than one that said so.
+ *
+ * Tapping the chosen chip clears it, so *All* and the chip itself are the same control seen twice
+ * and nobody has to scroll back to the start to undo a filter.
+ */
+@Composable
+private fun KindChips(
+    selected: AddonKind?,
+    counts: Map<AddonKind, Int>,
+    onSelect: (AddonKind?) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(
+                horizontal = MaterialTheme.padding.medium,
+                vertical = MaterialTheme.padding.extraSmall,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+    ) {
+        FilterChip(
+            selected = selected == null,
+            onClick = { onSelect(null) },
+            label = { Text(stringResource(AYMR.strings.addon_kind_all)) },
+        )
+        AddonKind.entries.forEach { kind ->
+            val count = counts[kind] ?: 0
+            FilterChip(
+                selected = selected == kind,
+                onClick = { onSelect(if (selected == kind) null else kind) },
+                label = { Text("${stringResource(kind.labelRes)}  $count") },
+            )
         }
     }
 }
@@ -328,6 +426,15 @@ private fun DirectoryAddonItem(entry: DirectoryAddon, onPick: () -> Unit) {
     ListItem(
         modifier = Modifier.clickable(onClick = onPick),
         headlineContent = { Text(entry.name) },
+        // The kind first, then whatever the author wrote. Ahead of the description on purpose:
+        // the descriptions are marketing and every one of them sounds like it plays films, while
+        // this is read off the manifest and is the one line that says whether it will.
+        overlineContent = {
+            Text(
+                text = stringResource(entry.kind.labelRes),
+                color = MaterialTheme.colorScheme.primary,
+            )
+        },
         supportingContent = {
             Text(
                 text = entry.description.takeIf { it.isNotBlank() }

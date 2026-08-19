@@ -334,6 +334,16 @@
     <!-- The segment beside Installed and Available. One word, because it sits between two. -->
     <string name="stremio_segment">Stremio</string>
     <string name="stremio_search_hint">Search addons</string>
+    <string name="addon_kind_all">All</string>
+    <!-- The four kinds, named for what you get rather than for the protocol's resource names. -->
+    <string name="addon_kind_complete">Browse and play</string>
+    <string name="addon_kind_video">Video only</string>
+    <string name="addon_kind_catalogue">Catalogue only</string>
+    <string name="addon_kind_subtitles">Subtitles</string>
+    <string name="addon_kind_complete_summary">Works on its own — a catalogue to browse and the video to play it.</string>
+    <string name="addon_kind_video_summary">Nothing to browse. Adds video behind the catalogues you already have.</string>
+    <string name="addon_kind_catalogue_summary">Posters and descriptions only. Nothing plays until a video addon is installed too.</string>
+    <string name="addon_kind_subtitles_summary">Subtitles alone. Never appears as a source; works behind the ones that do.</string>
     <string name="stremio_search_empty">No addon matches that</string>
     <string name="stremio_installed">Installed</string>
     <string name="stremio_addons_empty_action">Open the addon store</string>

@@ -72,6 +72,12 @@ it at launch, which keeps the popular half current. The rest is a snapshot of
 you are running. Addons that describe themselves as adult are marked in that snapshot and hidden
 unless *Show NSFW sources* is on.
 
+The store groups them by what they actually do, read off each manifest rather than off its
+description — **Browse and play** works on its own, **Video only** adds playback behind catalogues
+you already have, **Catalogue only** shows posters and plays nothing until a video addon joins it,
+and **Subtitles** never appears as a source at all. Of the addons listed, roughly two thirds serve
+video and a fifth are catalogues alone.
+
 Addons split the job between them and meet on a shared id, so a working setup is usually more than
 one:
 
