@@ -331,6 +331,12 @@
     <string name="select_hoster_from_empty_list">Hoster selected from empty list</string>
     <!-- Stremio addons -->
     <string name="stremio_addons">Stremio addons</string>
+    <!-- The segment beside Installed and Available. One word, because it sits between two. -->
+    <string name="stremio_segment">Stremio</string>
+    <string name="stremio_search_hint">Search addons</string>
+    <string name="stremio_search_empty">No addon matches that</string>
+    <string name="stremio_installed">Installed</string>
+    <string name="stremio_addons_empty_action">Open the addon store</string>
     <string name="stremio_addons_summary">Sources that are a web address, not an installed app</string>
     <string name="stremio_add_addon">Add an addon</string>
     <string name="stremio_addon_url_hint">Addon address</string>

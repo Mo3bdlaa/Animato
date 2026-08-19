@@ -47,6 +47,8 @@ import animato.ui.components.AnimatoEmptyState
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.util.Screen
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
@@ -77,6 +79,9 @@ class StremioAddonsScreen : Screen() {
         var dialogOpen by remember { mutableStateOf(false) }
         // What the address field opens on. A suggestion fills it; the plus button leaves it blank.
         var draftUrl by remember { mutableStateOf("") }
+        // Null is "the search box is closed", which is not the same as an empty query — one hides
+        // the field and the other shows an empty one. SearchToolbar draws the difference.
+        var query by remember { mutableStateOf<String?>(null) }
 
         // Manifests go stale — an addon adds a catalog and this one would never notice. The
         // catch-up is silent and keeps whatever it already had wherever an addon does not answer.
@@ -105,8 +110,13 @@ class StremioAddonsScreen : Screen() {
 
         Scaffold(
             topBar = { scrollBehavior ->
-                AppBar(
-                    title = stringResource(AYMR.strings.stremio_addons),
+                // Searchable, because the community list is hundreds of rows long and scrolling
+                // it to find one name is not browsing, it is looking for something.
+                SearchToolbar(
+                    titleContent = { AppBarTitle(stringResource(AYMR.strings.stremio_addons)) },
+                    searchQuery = query,
+                    onChangeSearchQuery = { query = it },
+                    placeholderText = stringResource(AYMR.strings.stremio_search_hint),
                     navigateUp = navigator::pop,
                     scrollBehavior = scrollBehavior,
                     actions = {
@@ -129,8 +139,10 @@ class StremioAddonsScreen : Screen() {
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.medium),
             ) {
-                stremioAddons(
+                addonStore(
                     addons = addons,
+                    directory = directory,
+                    query = query.orEmpty(),
                     onOpen = { addon ->
                         navigator.push(SourceBrowseScreen(StremioSource.idFor(addon.url), ContentType.ANIME))
                     },
@@ -139,7 +151,6 @@ class StremioAddonsScreen : Screen() {
                         draftUrl = url
                         dialogOpen = true
                     },
-                    directory = directory,
                 )
             }
         }
@@ -147,60 +158,30 @@ class StremioAddonsScreen : Screen() {
 }
 
 /**
- * The addon list, wherever it is being drawn.
+ * The addons already here, as the Sources tab shows them.
  *
- * It has two homes: its own screen, reached from Sources, and a segment beside Installed and
- * Available on that same screen — from a device, *"put Stremio next to installed and available"*.
- * Both are the same list, so it is one function rather than two that drift apart, and it is
- * [LazyListScope] rather than a composable because the segment it lives in is already a lazy list
- * and nesting a second scroller inside one is how a page ends up with two.
+ * Browse and remove, and nothing else. It used to be the same list as the store — suggestions,
+ * community rows, and an *add* action that lived **only in the empty state**. So the way to add a
+ * second addon was to delete the first one: with anything installed, the empty state was gone and
+ * with it the only entrance. Adding now lives under *Extension stores*, beside the two extension
+ * repositories, where a person looking for somewhere to get sources from would go anyway.
  */
-internal fun LazyListScope.stremioAddons(
+internal fun LazyListScope.installedAddons(
     addons: List<StremioAddon>,
     onOpen: (StremioAddon) -> Unit,
     onRemove: (String) -> Unit,
-    onAdd: (String) -> Unit,
-    /**
-     * Stremio's own community list, when the caller has it.
-     *
-     * Empty from the segment beside Installed and Available, which is a summary of what is already
-     * here and sends people to the full screen to add anything. Ninety rows do not belong under a
-     * tab somebody swiped onto by accident.
-     */
-    directory: List<DirectoryAddon> = emptyList(),
+    onOpenStore: () -> Unit,
 ) {
-    // Suggestions the person already took are not suggestions any more.
-    val installed = addons.map { StremioUrls.normalizeBase(it.url) }.toSet()
-    val suggestions = SUGGESTED_ADDONS.filterNot { StremioUrls.normalizeBase(it.url) in installed }
     if (addons.isEmpty()) {
         item(key = "stremio-empty") {
             AnimatoEmptyState(
                 message = stringResource(AYMR.strings.stremio_addons_empty),
-                actionLabel = stringResource(AYMR.strings.stremio_add_addon),
-                onAction = { onAdd("") },
+                actionLabel = stringResource(AYMR.strings.stremio_addons_empty_action),
+                onAction = onOpenStore,
             )
         }
+        return
     }
-
-    if (suggestions.isNotEmpty()) {
-        item(key = "stremio-suggested-header") {
-            Text(
-                text = stringResource(AYMR.strings.stremio_suggested),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(
-                    start = MaterialTheme.padding.medium,
-                    end = MaterialTheme.padding.medium,
-                    top = MaterialTheme.padding.medium,
-                    bottom = MaterialTheme.padding.small,
-                ),
-            )
-        }
-        items(items = suggestions, key = { "stremio-suggested-" + it.url }) { suggestion ->
-            SuggestedAddonItem(suggestion = suggestion, onPick = { onAdd(suggestion.url) })
-        }
-    }
-
     items(items = addons, key = { "stremio-" + it.url }) { addon ->
         AddonListItem(
             addon = addon,
@@ -211,8 +192,66 @@ internal fun LazyListScope.stremioAddons(
             onRemove = { onRemove(addon.url) },
         )
     }
+}
 
-    val community = directory.filterNot { StremioUrls.normalizeBase(it.url) in installed }
+/**
+ * The store: everything on offer, and what is already taken.
+ *
+ * Three runs of rows in the order somebody works through them — what you have, four we suggest,
+ * and then everybody else's. All three answer the same search box, because "does this list have
+ * Comet in it" is one question and it should not matter which section Comet turned out to be in.
+ */
+internal fun LazyListScope.addonStore(
+    addons: List<StremioAddon>,
+    directory: List<DirectoryAddon>,
+    query: String,
+    onOpen: (StremioAddon) -> Unit,
+    onRemove: (String) -> Unit,
+    onAdd: (String) -> Unit,
+) {
+    val installed = addons.map { StremioUrls.normalizeBase(it.url) }.toSet()
+    val mine = addons.filter { matches(query, it.manifest.name, it.manifest.description, it.url) }
+    // Suggestions the person already took are not suggestions any more.
+    val suggestions = SUGGESTED_ADDONS
+        .filterNot { StremioUrls.normalizeBase(it.url) in installed }
+        .filter { matches(query, it.name, null, it.url) }
+    val community = directory
+        .filterNot { StremioUrls.normalizeBase(it.url) in installed }
+        .filter { matches(query, it.name, it.description, it.url) }
+
+    if (mine.isEmpty() && suggestions.isEmpty() && community.isEmpty()) {
+        item(key = "stremio-no-match") {
+            AnimatoEmptyState(
+                message = stringResource(
+                    if (query.isBlank()) AYMR.strings.stremio_addons_empty else AYMR.strings.stremio_search_empty,
+                ),
+            )
+        }
+        return
+    }
+
+    if (mine.isNotEmpty()) {
+        item(key = "stremio-installed-header") {
+            SectionHeader(title = stringResource(AYMR.strings.stremio_installed))
+        }
+        items(items = mine, key = { "stremio-" + it.url }) { addon ->
+            AddonListItem(
+                addon = addon,
+                onOpen = if (addon.isBrowsable) ({ onOpen(addon) }) else null,
+                onRemove = { onRemove(addon.url) },
+            )
+        }
+    }
+
+    if (suggestions.isNotEmpty()) {
+        item(key = "stremio-suggested-header") {
+            SectionHeader(title = stringResource(AYMR.strings.stremio_suggested))
+        }
+        items(items = suggestions, key = { "stremio-suggested-" + it.url }) { suggestion ->
+            SuggestedAddonItem(suggestion = suggestion, onPick = { onAdd(suggestion.url) })
+        }
+    }
+
     if (community.isNotEmpty()) {
         item(key = "stremio-community-header") {
             SectionHeader(
@@ -224,6 +263,21 @@ internal fun LazyListScope.stremioAddons(
             DirectoryAddonItem(entry = entry, onPick = { onAdd(entry.url) })
         }
     }
+}
+
+/**
+ * Whether a row survives the search box.
+ *
+ * Matched against the address as well as the name and the description, because half of these are
+ * known by their host — somebody looking for *torrentio* and somebody looking for *strem.fun* are
+ * both looking for the same row, and only one of those is in the name.
+ */
+private fun matches(query: String, name: String, description: String?, url: String): Boolean {
+    if (query.isBlank()) return true
+    val needle = query.trim()
+    return name.contains(needle, ignoreCase = true) ||
+        description?.contains(needle, ignoreCase = true) == true ||
+        url.contains(needle, ignoreCase = true)
 }
 
 /**

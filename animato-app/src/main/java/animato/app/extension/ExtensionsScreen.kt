@@ -62,7 +62,7 @@ import animato.anime.ui.stores.AnimeExtensionStoresScreen
 import animato.app.navigation.LensButton
 import animato.app.source.SourceBrowseScreen
 import animato.app.stremio.StremioAddonsScreen
-import animato.app.stremio.stremioAddons
+import animato.app.stremio.installedAddons
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -221,7 +221,6 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
 
         Column(modifier = Modifier.padding(contentPadding)) {
             RepositoriesRow(
-                lens = state.lens,
                 storeCount = state.storeCount,
                 navigator = navigator,
             )
@@ -245,7 +244,10 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                             }
 
                         ExtensionSegment.STREMIO -> {
-                            stremioAddons(
+                            // What is installed, and nothing else. Adding lives behind *Extension
+                            // stores* above, with the two extension repositories — see the note on
+                            // installedAddons for what this segment used to do instead.
+                            installedAddons(
                                 addons = addons,
                                 onOpen = { addon ->
                                     navigator.push(
@@ -256,10 +258,7 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                                     )
                                 },
                                 onRemove = { url -> stremioStore.remove(url) },
-                                // The dedicated screen owns the address field and everything that
-                                // can go wrong at it; this segment sends people there rather than
-                                // growing a second copy of the dialog.
-                                onAdd = { navigator.push(StremioAddonsScreen()) },
+                                onOpenStore = { navigator.push(StremioAddonsScreen()) },
                             )
                         }
 
@@ -304,7 +303,7 @@ private enum class ExtensionSegment(val labelRes: StringResource) {
      * beside it, and opening one should land in its catalogue exactly as tapping an installed
      * extension does.
      */
-    STREMIO(AYMR.strings.stremio_addons),
+    STREMIO(AYMR.strings.stremio_segment),
 }
 
 private fun LazyListScope.extensionRows(
@@ -336,7 +335,6 @@ private fun LazyListScope.extensionRows(
  */
 @Composable
 private fun RepositoriesRow(
-    lens: ContentFilter,
     storeCount: Int,
     navigator: Navigator,
 ) {
@@ -344,13 +342,13 @@ private fun RepositoriesRow(
 
     Box {
         ListItem(
-            modifier = Modifier.clickable {
-                when (lens) {
-                    ContentFilter.MANGA -> navigator.push(ExtensionStoresScreen())
-                    ContentFilter.ANIME -> navigator.push(AnimeExtensionStoresScreen())
-                    ContentFilter.ALL -> menuOpen = true
-                }
-            },
+            // Always the menu, never straight through to one of them.
+            //
+            // It used to follow the lens: manga went to the manga repositories, anime to the anime
+            // ones, and only *All* offered a choice. That made where new sources come from depend
+            // on a filter set somewhere else, and it left the third kind — Stremio — with nowhere
+            // to be listed at all. Three kinds of place to get sources from, so three rows.
+            modifier = Modifier.clickable { menuOpen = true },
             headlineContent = { Text(stringResource(MR.strings.extensionStores)) },
             supportingContent = {
                 Text(pluralStringResource(MR.plurals.num_repos, storeCount, storeCount))
@@ -358,17 +356,33 @@ private fun RepositoriesRow(
         )
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
             DropdownMenuItem(
+                text = { Text(stringResource(AYMR.strings.label_anime)) },
+                onClick = {
+                    menuOpen = false
+                    navigator.push(AnimeExtensionStoresScreen())
+                },
+            )
+            DropdownMenuItem(
                 text = { Text(stringResource(AYMR.strings.label_manga)) },
                 onClick = {
                     menuOpen = false
                     navigator.push(ExtensionStoresScreen())
                 },
             )
+            /*
+             * The one that had no home.
+             *
+             * A Stremio addon is a source you add by address, so it belongs with the other two
+             * answers to *where does Animato get things from* rather than hidden inside a tab of
+             * what is already installed. It was reachable only from that tab's empty state, which
+             * meant the way to add a second addon was to delete the first — the empty state was
+             * the only thing that offered it.
+             */
             DropdownMenuItem(
-                text = { Text(stringResource(AYMR.strings.label_anime)) },
+                text = { Text(stringResource(AYMR.strings.stremio_segment)) },
                 onClick = {
                     menuOpen = false
-                    navigator.push(AnimeExtensionStoresScreen())
+                    navigator.push(StremioAddonsScreen())
                 },
             )
         }
