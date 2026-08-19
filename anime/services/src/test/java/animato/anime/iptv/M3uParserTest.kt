@@ -147,6 +147,69 @@ class M3uParserTest {
     }
 
     @Test
+    fun `the headers a provider demands are read off the playlist`() {
+        // The commonest reason a playlist "does not work": the provider checks the User-Agent and
+        // answers 403 to anything else. It says so, and this is VLC's way of saying it.
+        val channels = M3uParser.parse(
+            """
+            #EXTINF:-1 tvg-id="x",Channel X
+            #EXTVLCOPT:http-user-agent=Mozilla/5.0 (SmartTV)
+            #EXTVLCOPT:http-referrer=http://provider.test/
+            http://example.test/x
+            """.trimIndent(),
+        )
+
+        channels.single().headers shouldBe mapOf(
+            "User-Agent" to "Mozilla/5.0 (SmartTV)",
+            "Referer" to "http://provider.test/",
+        )
+    }
+
+    @Test
+    fun `and the JSON way of saying it`() {
+        val channels = M3uParser.parse(
+            """
+            #EXTINF:-1,Channel
+            #EXTHTTP:{"User-Agent":"Custom/1.0","Cookie":"a=b"}
+            http://example.test/c
+            """.trimIndent(),
+        )
+
+        channels.single().headers shouldBe mapOf("User-Agent" to "Custom/1.0", "Cookie" to "a=b")
+    }
+
+    @Test
+    fun `and the way Kodi appends them to the address`() {
+        val channels = M3uParser.parse(
+            """
+            #EXTINF:-1,Channel
+            http://example.test/c|User-Agent=Kodi&Referer=http://ref.test/
+            """.trimIndent(),
+        )
+
+        // The pipe and everything after it is not part of the URL — sending it would 404.
+        channels.single().url shouldBe "http://example.test/c"
+        channels.single().headers shouldBe mapOf(
+            "User-Agent" to "Kodi",
+            "Referer" to "http://ref.test/",
+        )
+    }
+
+    @Test
+    fun `a pipe that is part of the address is left alone`() {
+        // A pipe is legal in a query string, and truncating one would break the stream silently.
+        val channels = M3uParser.parse(
+            """
+            #EXTINF:-1,Channel
+            http://example.test/c?token=a|b|c
+            """.trimIndent(),
+        )
+
+        channels.single().url shouldBe "http://example.test/c?token=a|b|c"
+        channels.single().headers shouldBe emptyMap()
+    }
+
+    @Test
     fun `nothing at all is not a crash`() {
         M3uParser.parse("") shouldBe emptyList()
         M3uParser.parse("#EXTM3U") shouldBe emptyList()

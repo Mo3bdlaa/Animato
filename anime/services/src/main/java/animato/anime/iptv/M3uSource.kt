@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
+import okhttp3.Headers
 import uy.kohesive.injekt.injectLazy
 import java.security.MessageDigest
 
@@ -137,6 +138,17 @@ class M3uSource(
                     Video(
                         videoUrl = channel.url,
                         videoTitle = channel.name,
+                        // Whatever the playlist said this stream needs. The player sends a video's
+                        // own headers in preference to the source's, and the downloader passes
+                        // them to ffmpeg, so stating them here is the whole of what is required —
+                        // and without them a provider that checks the User-Agent answers 403 to
+                        // everything, which on screen is a channel that will not play with no
+                        // reason given.
+                        headers = channel.headers.takeIf { it.isNotEmpty() }?.let { headers ->
+                            Headers.Builder().apply {
+                                headers.forEach { (name, value) -> add(name, value) }
+                            }.build()
+                        },
                     ),
                 ),
             ),

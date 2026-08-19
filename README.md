@@ -82,7 +82,10 @@ Live television has two shapes and its own doors. **Extension stores → IPTV** 
 segment in Sources hold both.
 
 An **M3U playlist** is the common one: paste the address of a `.m3u` file and its channels become a
-source. Nothing is installed and nothing is stored but the address — the file is read on demand and
+source. Where a provider demands a particular `User-Agent` or `Referer` — the usual reason a
+playlist answers 403 to everything — the playlist says so, and all three conventions for saying it
+are read: VLC's `#EXTVLCOPT`, the `#EXTHTTP` JSON object, and the `|Key=Value` suffix Kodi appends
+to the address. Nothing is installed and nothing is stored but the address — the file is read on demand and
 kept for as long as the app is open, so restarting is how you get today's list. Channels are grouped
 by the playlist's own `group-title`, searchable by name or group, and the file's order is kept
 because it is editorial and there is nothing better to sort by.

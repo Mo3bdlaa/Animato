@@ -51,6 +51,8 @@ import animato.anime.backup.create.AnimatoBackupCreateJob
 import animato.anime.services.AnimeConstants
 import animato.anime.services.AnimeNotifications
 import animato.app.coil.AnimatoImageLoader
+import animato.app.crash.CrashRecorder
+import animato.app.crash.CrashReportPrompt
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.downloads.OrphanedDownloadSweeper
 import animato.app.entry.EntryScreen
@@ -207,6 +209,11 @@ class MainActivity : BaseActivity() {
          */
         AnimeInjekt.ensureRegistered(application)
 
+        // Over the top of Mihon's handler and chained to it, so the crash screen still appears and
+        // the trace behind it survives being dismissed. See CrashRecorder for why this is a file
+        // on the device rather than a report sent anywhere.
+        CrashRecorder.install(application)
+
         // Before a frame is drawn, because it is what makes an anime cover loadable at all. See
         // AnimatoImageLoader for why it extends Mihon's loader instead of building one.
         AnimatoImageLoader.install(this)
@@ -286,6 +293,10 @@ class MainActivity : BaseActivity() {
             AnimatoTheme {
                 ProvideIsTelevision {
                     val context = LocalContext.current
+
+                    // Asked once, on the launch after a crash — which is the only moment somebody
+                    // has a reason to care that a report exists.
+                    CrashReportPrompt()
 
                     var incognito by remember { mutableStateOf(getIncognitoState.await(null)) }
                     val downloadOnly by preferences.downloadedOnly.collectAsState()

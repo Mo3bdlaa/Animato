@@ -16,6 +16,15 @@ data class M3uChannel(
     val group: String? = null,
     /** The XMLTV id, kept separately from [id] because a guide is matched on this and only this. */
     val tvgId: String? = null,
+    /**
+     * HTTP headers this channel needs to be fetched with.
+     *
+     * The single commonest reason a playlist "does not work": the provider checks the `User-Agent`
+     * or the `Referer` and answers 403 to anything else. That requirement is not a secret and not
+     * something to guess at — the playlist states it, in any of three conventions, and all three
+     * are read here. See [parseHeaderDirective] and [splitPipeOptions].
+     */
+    val headers: Map<String, String> = emptyMap(),
 )
 
 /**
@@ -61,15 +70,26 @@ object M3uParser {
                 // (`#EXTVLCOPT`, `#PLAYLIST`, `#EXTM3U` itself) are skipped without disturbing the
                 // channel being assembled, because they sit *between* the EXTINF and its URL.
                 line.startsWith("#") -> {
-                    if (line.startsWith(EXTGRP, ignoreCase = true)) {
-                        pending = pending?.copy(group = line.substringAfter(':').trim().ifBlank { null })
+                    when {
+                        line.startsWith(EXTGRP, ignoreCase = true) -> {
+                            pending = pending?.copy(
+                                group = line.substringAfter(':').trim().ifBlank { null },
+                            )
+                        }
+                        else -> parseHeaderDirective(line)?.let { found ->
+                            pending = pending?.let { it.copy(headers = it.headers + found) }
+                        }
                     }
                 }
 
                 else -> {
                     val entry = pending ?: return@forEach
                     pending = null
-                    val id = entry.tvgId?.takeIf { it.isNotBlank() } ?: line
+                    // Kodi's convention puts the headers on the end of the address itself. The
+                    // pipe and everything after it is not part of the URL and would 404 if it
+                    // were sent, so it is split off here rather than anywhere later.
+                    val (address, inlineHeaders) = splitPipeOptions(line)
+                    val id = entry.tvgId?.takeIf { it.isNotBlank() } ?: address
                     // A playlist repeating a channel is ordinary — several qualities of the same
                     // one, or the same one in two groups — and two library rows with one id is
                     // not. First wins, which is the highest quality in every playlist that does
@@ -77,11 +97,14 @@ object M3uParser {
                     if (!seen.add(id)) return@forEach
                     channels += M3uChannel(
                         id = id,
-                        name = entry.name.ifBlank { line },
-                        url = line,
+                        name = entry.name.ifBlank { address },
+                        url = address,
                         logo = entry.logo,
                         group = entry.group,
                         tvgId = entry.tvgId,
+                        // The address wins where both say the same thing: it is the more specific
+                        // of the two, being attached to this one stream rather than to the entry.
+                        headers = entry.headers + inlineHeaders,
                     )
                 }
             }
@@ -98,7 +121,52 @@ object M3uParser {
         val logo: String?,
         val group: String?,
         val tvgId: String?,
+        val headers: Map<String, String> = emptyMap(),
     )
+
+    /**
+     * A header stated by a directive between the entry and its address, or nothing.
+     *
+     * Two conventions, both common. `#EXTVLCOPT:http-user-agent=…` is VLC's, one header per line
+     * and named for the player rather than for HTTP. `#EXTHTTP:{"User-Agent":"…"}` is a JSON
+     * object of them, and is read by hand rather than parsed as JSON: it is one flat object of
+     * strings, and pulling a serializer into a text parser for that would be the larger cost.
+     */
+    private fun parseHeaderDirective(line: String): Map<String, String>? = when {
+        line.startsWith(EXTVLCOPT, ignoreCase = true) -> {
+            val option = line.substringAfter(':', "").trim()
+            val key = option.substringBefore('=', "").lowercase()
+            val value = option.substringAfter('=', "").trim()
+            VLC_HEADERS[key]?.takeIf { value.isNotEmpty() }?.let { mapOf(it to value) }
+        }
+        line.startsWith(EXTHTTP, ignoreCase = true) -> {
+            JSON_PAIR.findAll(line.substringAfter(':', ""))
+                .associate { it.groupValues[1] to it.groupValues[2] }
+                .takeIf { it.isNotEmpty() }
+        }
+        else -> null
+    }
+
+    /**
+     * An address split from the `|Key=Value` options Kodi appends to it.
+     *
+     * Only when what follows the pipe actually looks like options. A pipe is legal in a URL and
+     * appears in query strings, so a suffix with no `=` in it is left where it was rather than
+     * silently truncating somebody's stream address.
+     */
+    private fun splitPipeOptions(line: String): Pair<String, Map<String, String>> {
+        val pipe = line.indexOf('|')
+        if (pipe < 0) return line to emptyMap()
+        val options = line.substring(pipe + 1)
+            .split('&')
+            .mapNotNull { part ->
+                val key = part.substringBefore('=', "").trim()
+                val value = part.substringAfter('=', "").trim()
+                if (key.isEmpty() || value.isEmpty()) null else key to value
+            }
+            .toMap()
+        return if (options.isEmpty()) line to emptyMap() else line.substring(0, pipe) to options
+    }
 
     /**
      * One `#EXTINF` line: its attributes, and the display name after the comma.
@@ -133,5 +201,18 @@ object M3uParser {
 
     private const val EXTINF = "#EXTINF"
     private const val EXTGRP = "#EXTGRP"
+    private const val EXTVLCOPT = "#EXTVLCOPT"
+    private const val EXTHTTP = "#EXTHTTP"
+
+    /** VLC's option names, and the HTTP headers they mean. */
+    private val VLC_HEADERS = mapOf(
+        "http-user-agent" to "User-Agent",
+        "http-referrer" to "Referer",
+        // Spelled correctly by some providers, and by the HTTP standard incorrectly. Both appear.
+        "http-referer" to "Referer",
+        "http-origin" to "Origin",
+    )
+
+    private val JSON_PAIR = Regex(""""([^"]+)"\s*:\s*"([^"]*)"""")
     private val ATTRIBUTE = Regex("""([A-Za-z0-9_-]+)="([^"]*)"""")
 }

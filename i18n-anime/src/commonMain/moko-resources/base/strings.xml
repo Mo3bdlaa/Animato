@@ -333,6 +333,8 @@
     <string name="stremio_addons">Stremio addons</string>
     <!-- The segment beside Installed and Available. One word, because it sits between two. -->
     <string name="stremio_segment">Stremio</string>
+    <string name="crash_prompt_title">Animato closed unexpectedly last time</string>
+    <string name="crash_prompt_body">A report was saved on this device.</string>
     <string name="iptv_segment">IPTV</string>
     <string name="iptv_addons">Live TV</string>
     <string name="iptv_playlists">Playlists</string>
