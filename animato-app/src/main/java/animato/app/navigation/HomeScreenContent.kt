@@ -119,7 +119,7 @@ internal fun HomeScreenContent() {
     Scaffold(
         topBar = { scrollBehavior ->
             AppBar(
-                titleContent = { AppBarTitle(stringResource(MR.strings.app_name)) },
+                titleContent = { AnimatoWordmark() },
                 actions = {
                     IconButton(
                         onClick = {

@@ -493,46 +493,63 @@ class MainActivity : BaseActivity() {
     }
 
     /**
-     * Sets custom splash screen exit animation on devices prior to Android 12.
+     * How the splash hands over to the app.
      *
-     * When custom animation is used, status and navigation bar color will be set to transparent and
-     * will be restored after the animation is finished.
+     * The brush wordmark leaves the way it was drawn: drifting a little to the right, along the
+     * direction of the stroke, swelling very slightly as it goes. It reads as the last moment of a
+     * stroke being finished rather than a logo being dismissed. The app rises the final few dp
+     * underneath it at the same time, so the two are one movement instead of a disappearance
+     * followed by an appearance.
+     *
+     * Taken over on every version now, not only before Android 12. The platform's own exit is a
+     * centred zoom-and-fade designed for a circular launcher icon, and a wordmark two and a half
+     * times wider than it is tall pulses oddly inside it. Claiming the listener replaces that,
+     * which is the point — and it leaves one animation to look at rather than two behaviours split
+     * by OS version.
+     *
+     * The bars go transparent so nothing draws a hard edge across the fade, and are left that way:
+     * the activity sets its own system-bar appearance immediately afterwards.
      */
     @Suppress("Deprecation")
     private fun setSplashScreenExitAnimation(splashScreen: SplashScreen?) {
+        if (splashScreen == null) return
         val root = findViewById<View>(android.R.id.content)
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && splashScreen != null) {
-            window.statusBarColor = Color.TRANSPARENT
-            window.navigationBarColor = Color.TRANSPARENT
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
 
-            splashScreen.setOnExitAnimationListener { splashProvider ->
-                // For some reason the SplashScreen applies (incorrect) Y translation to the iconView
-                splashProvider.iconView.translationY = 0F
+        splashScreen.setOnExitAnimationListener { splashProvider ->
+            // The compat layer applies a Y translation of its own to the icon, which fights
+            // anything set here.
+            splashProvider.iconView.translationY = 0F
 
-                val activityAnim = ValueAnimator.ofFloat(1F, 0F).apply {
-                    interpolator = LinearOutSlowInInterpolator()
-                    duration = SPLASH_EXIT_ANIM_DURATION
-                    addUpdateListener { va ->
-                        val value = va.animatedValue as Float
-                        root.translationY = value * 16.dpToPx
+            val markAnim = ValueAnimator.ofFloat(0F, 1F).apply {
+                interpolator = FastOutSlowInInterpolator()
+                duration = SPLASH_EXIT_ANIM_DURATION
+                addUpdateListener { va ->
+                    val t = va.animatedValue as Float
+                    splashProvider.iconView.apply {
+                        // Outward along the stroke rather than upward: the letters lean right, so
+                        // that is the direction the eye already expects them to leave in.
+                        translationX = t * SPLASH_MARK_DRIFT_DP.dpToPx
+                        scaleX = 1F + t * SPLASH_MARK_SWELL
+                        scaleY = 1F + t * SPLASH_MARK_SWELL
+                        alpha = 1F - t
                     }
+                    splashProvider.view.alpha = 1F - t
                 }
-
-                val splashAnim = ValueAnimator.ofFloat(1F, 0F).apply {
-                    interpolator = FastOutSlowInInterpolator()
-                    duration = SPLASH_EXIT_ANIM_DURATION
-                    addUpdateListener { va ->
-                        val value = va.animatedValue as Float
-                        splashProvider.view.alpha = value
-                    }
-                    doOnEnd {
-                        splashProvider.remove()
-                    }
-                }
-
-                activityAnim.start()
-                splashAnim.start()
+                doOnEnd { splashProvider.remove() }
             }
+
+            val activityAnim = ValueAnimator.ofFloat(1F, 0F).apply {
+                interpolator = LinearOutSlowInInterpolator()
+                duration = SPLASH_EXIT_ANIM_DURATION
+                addUpdateListener { va ->
+                    root.translationY = (va.animatedValue as Float) * 16.dpToPx
+                }
+            }
+
+            activityAnim.start()
+            markAnim.start()
         }
     }
 
@@ -698,3 +715,8 @@ class MainActivity : BaseActivity() {
 private const val SPLASH_MIN_DURATION = 500 // ms
 private const val SPLASH_MAX_DURATION = 5000 // ms
 private const val SPLASH_EXIT_ANIM_DURATION = 400L // ms
+
+// How the wordmark leaves. Both are deliberately small: this is the punctuation at the end of a
+// launch, and anything a person has time to watch on every single launch is too much.
+private const val SPLASH_MARK_DRIFT_DP = 20
+private const val SPLASH_MARK_SWELL = 0.06F

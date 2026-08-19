@@ -12,9 +12,11 @@
   A splash has no background layer, so on ink black that frame's interior merges with the screen and
   the frame itself reads as a grey slab floating in the void.
 
-  Built by docs/branding/build-splash.py, which also writes the night and notnight variants: an
-  override replaces one configuration at a time, and the Japanese line has to change colour between
-  them or it disappears into whichever background it was not drawn for.
+  Built by docs/branding/build-wordmark.py, and a single file now rather than three. The mark used
+  to be blue letters over a Japanese line, and that line had to be recoloured between the light and
+  dark configurations or it vanished into whichever background it was not drawn for. It is now the
+  white brush letters alone, and @color/splash is ink black in *both* configurations — so there is
+  nothing left to vary, and drawable-nodpi answers every case.
 -->
 <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
     android:gravity="fill"
