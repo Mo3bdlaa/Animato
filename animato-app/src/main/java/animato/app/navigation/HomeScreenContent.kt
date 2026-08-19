@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.app.discover.AiringItem
 import animato.app.downloads.DownloadsScreen
 import animato.app.entry.EntryScreen
 import animato.app.history.ContinueScreen
@@ -114,6 +115,9 @@ internal fun HomeScreenContent() {
     }
     val updateItems = remember(state.updateItems, lens) {
         state.updateItems.filter { lens.accepts(it.contentType) }
+    }
+    val airingItems = remember(state.airingItems, lens) {
+        if (lens.accepts(ContentType.ANIME)) state.airingItems else emptyList()
     }
 
     Scaffold(
@@ -196,6 +200,32 @@ internal fun HomeScreenContent() {
                                     },
                                     onHide = { screenModel.hideFromContinue(item) },
                                 )
+                            }
+                        }
+                    }
+                }
+
+                /*
+                 * What has not arrived yet.
+                 *
+                 * The rest of this screen is a record of the past — where you stopped, what turned
+                 * up. Something currently airing has a next episode with a date on it, and that is
+                 * the one fact about a library nothing here was showing: whether to come back on
+                 * Thursday.
+                 *
+                 * Anime only, and only under a lens that includes anime. Manga has no schedule to
+                 * read — a chapter appears when its scanlator finishes it — so there is nothing to
+                 * put in the row and no honest way to fake one.
+                 */
+                if (airingItems.isNotEmpty()) {
+                    item { SectionHeader(text = stringResource(AYMR.strings.home_airing_this_week)) }
+                    item {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = MaterialTheme.padding.medium),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                        ) {
+                            items(items = airingItems, key = { "air-" + it.title }) { item ->
+                                AiringCard(item = item)
                             }
                         }
                     }
@@ -391,6 +421,79 @@ private fun ContinueCard(
         }
     }
 }
+
+/**
+ * A title with an episode still to come, and how long the wait is.
+ *
+ * No click target. Opening the entry would show the episodes that already exist, which is not what
+ * somebody looking at a countdown is asking about, and there is nothing else to open — the episode
+ * does not exist yet on the source or anywhere else. So it reads and does not pretend to act.
+ *
+ * The caption is relative — *in 2 days*, *in 5 hours* — rather than a date and a clock time. A date
+ * has to be converted against today before it means anything, and the only thing being asked here
+ * is how long.
+ */
+@Composable
+private fun AiringCard(item: AiringItem) {
+    Box(
+        modifier = Modifier
+            .width(ContinueCardWidth)
+            .clip(MaterialTheme.shapes.medium),
+    ) {
+        ItemCover.Book(data = item.coverUrl, contentDescription = item.title)
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xCC08080C))))
+                .padding(
+                    start = MaterialTheme.padding.small,
+                    end = MaterialTheme.padding.small,
+                    top = MaterialTheme.padding.medium,
+                    bottom = MaterialTheme.padding.small,
+                ),
+        ) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = stringResource(
+                    AYMR.strings.home_airing_episode_in,
+                    item.episode,
+                    relativeTimeText(item.airingAtMillis),
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White.copy(alpha = 0.75f),
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+/**
+ * *2d*, *5h*, *20m* — how far off, in the largest unit that still says something.
+ *
+ * Deliberately not `relativeDateText`, which rounds to whole days: half of what this rail shows
+ * airs today, and "today" is the answer it is least useful to give.
+ */
+@Composable
+private fun relativeTimeText(atMillis: Long): String {
+    val minutes = ((atMillis - System.currentTimeMillis()) / 60_000L).coerceAtLeast(0L)
+    return when {
+        minutes >= MINUTES_PER_DAY -> stringResource(AYMR.strings.home_airing_days, minutes / MINUTES_PER_DAY)
+        minutes >= MINUTES_PER_HOUR -> stringResource(AYMR.strings.home_airing_hours, minutes / MINUTES_PER_HOUR)
+        else -> stringResource(AYMR.strings.home_airing_minutes, minutes)
+    }
+}
+
+private const val MINUTES_PER_HOUR = 60L
+private const val MINUTES_PER_DAY = 60L * 24L
 
 /**
  * One thing that arrived, as a row.

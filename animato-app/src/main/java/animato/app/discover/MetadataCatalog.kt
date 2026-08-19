@@ -20,6 +20,22 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.LocalDate
 
+/**
+ * A library title with an episode still to come, and when it comes.
+ *
+ * The title is the one that was *asked* about rather than the one AniList answered with, because
+ * this rail is a view of somebody's own shelf and should name things the way their shelf does.
+ */
+@Immutable
+data class AiringItem(
+    val title: String,
+    val episode: Int,
+    val airingAtSeconds: Long,
+    val coverUrl: String?,
+) {
+    val airingAtMillis: Long get() = airingAtSeconds * 1000L
+}
+
 /** One cover in a metadata rail: something that exists in the world, not in anybody's library. */
 @Immutable
 data class MetadataItem(
@@ -231,6 +247,73 @@ class MetadataCatalog(
             .take(limit)
     }
 
+    /**
+     * When the next episode of each of these titles airs, for the ones that are still airing.
+     *
+     * ## Why it is a title search and not an id lookup
+     *
+     * The same reason the suggestion rail is: a library entry came from an extension and carries no
+     * AniList id. Unlike a suggestion, a wrong match here is *visible* — it would put a countdown
+     * for a different show under a name the person recognises — so the answer is thrown away unless
+     * the title AniList returns matches the one asked for once punctuation and case are gone.
+     *
+     * ## Why only some of the library
+     *
+     * One search field per title, aliased into a single request, and AniList's complexity budget
+     * does not stretch to a two-hundred-title library. Whoever asks passes the ones most likely to
+     * be airing — recently added, recently watched — and the rail is honest about being a glance
+     * rather than a schedule.
+     */
+    suspend fun airing(titles: List<String>, limit: Int = MAX_AIRING_SEEDS): List<AiringItem> =
+        withIOContext {
+            val seeds = titles.map { it.trim() }.filter { it.isNotEmpty() }.distinct().take(limit)
+            if (seeds.isEmpty()) return@withIOContext emptyList()
+            runCatching { requestAiring(seeds) }.getOrDefault(emptyList())
+        }
+
+    private suspend fun requestAiring(seeds: List<String>): List<AiringItem> {
+        val fields = seeds.indices.joinToString("\n") { index ->
+            """
+            a$index: Media(search: ${'$'}q$index, type: ANIME, isAdult: false) {
+              id title { userPreferred romaji english } coverImage { large }
+              nextAiringEpisode { episode airingAt }
+            }
+            """.trimIndent()
+        }
+        val declarations = seeds.indices.joinToString(", ") { "${'$'}q$it: String" }
+
+        val body = buildJsonObject {
+            put("query", "query ($declarations) {\n$fields\n}")
+            put(
+                "variables",
+                buildJsonObject { seeds.forEachIndexed { index, title -> put("q$index", title) } },
+            )
+        }
+
+        val request = POST(url = ENDPOINT, body = body.toString().toRequestBody(JSON_MEDIA_TYPE))
+        val response = with(json) {
+            network.client.newCall(request).awaitSuccess().parseAs<AniListAiringResponse>()
+        }
+
+        // Back to the title that was asked for, by alias. The rail names the entry the way the
+        // library names it, not the way AniList does — the person is looking for their own shelf.
+        return seeds.mapIndexedNotNull { index, asked ->
+            val media = response.data["a$index"] ?: return@mapIndexedNotNull null
+            val next = media.nextAiringEpisode ?: return@mapIndexedNotNull null
+            val found = media.title.userPreferred ?: media.title.romaji ?: media.title.english
+            // See the note above: a near match is a countdown for the wrong show.
+            if (found == null || normaliseTitle(found) != normaliseTitle(asked)) {
+                return@mapIndexedNotNull null
+            }
+            AiringItem(
+                title = asked,
+                episode = next.episode,
+                airingAtSeconds = next.airingAt,
+                coverUrl = media.coverImage?.large,
+            )
+        }.sortedBy { it.airingAtSeconds }
+    }
+
     private fun AniListMedia.toItem(contentType: ContentType): MetadataItem? {
         val name = title.userPreferred ?: title.romaji ?: title.english ?: return null
         return MetadataItem(
@@ -250,6 +333,14 @@ class MetadataCatalog(
 
         /** Enough seeds for an overlap to mean something, few enough to stay one modest request. */
         const val MAX_SEEDS = 8
+
+        /**
+         * How many titles the airing question asks about.
+         *
+         * Higher than the suggestion seeds because each field here is one small object rather than
+         * ten recommendations, and low enough that a large library still costs one request.
+         */
+        const val MAX_AIRING_SEEDS = 20
         const val RECOMMENDATIONS_PER_SEED = 10
 
         val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
@@ -323,6 +414,7 @@ private data class AniListMedia(
     val coverImage: AniListCover? = null,
     val averageScore: Int? = null,
     val format: String? = null,
+    val nextAiringEpisode: AniListNextAiring? = null,
 )
 
 @Serializable
@@ -345,6 +437,18 @@ private data class AniListCover(val large: String? = null)
  */
 internal fun normaliseTitle(title: String): String =
     title.lowercase().filter { it.isLetterOrDigit() }
+
+@Serializable
+private data class AniListAiringResponse(
+    val data: Map<String, AniListMedia?> = emptyMap(),
+)
+
+@Serializable
+private data class AniListNextAiring(
+    val episode: Int = 0,
+    /** Unix seconds, which is what AniList stores and the only thing worth carrying around. */
+    val airingAt: Long = 0L,
+)
 
 @Serializable
 private data class AniListSuggestionResponse(

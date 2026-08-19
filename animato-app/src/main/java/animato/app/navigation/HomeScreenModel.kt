@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.app.discover.AiringItem
+import animato.app.discover.MetadataCatalog
 import animato.app.updates.UpdateItem
 import animato.app.updates.toUpdateItem
 import animato.domain.content.ContentPreferences
@@ -19,6 +21,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
 import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.domain.updates.anime.interactor.GetAnimeUpdates
@@ -55,6 +59,14 @@ data class HomeScreenState(
     val isLoading: Boolean = true,
     val continueItems: List<ContinueItem> = emptyList(),
     val updateItems: List<UpdateItem> = emptyList(),
+    /**
+     * Library anime with an episode still to come this week.
+     *
+     * Its own field rather than part of the combine below, because it is the one thing on this
+     * screen that comes off the network. Home must draw instantly from two local databases; a rail
+     * that waits on AniList arrives when it arrives, and until then simply is not there.
+     */
+    val airingItems: List<AiringItem> = emptyList(),
 )
 
 /**
@@ -72,6 +84,8 @@ class HomeScreenModel(
     private val contentPreferences: ContentPreferences = Injekt.get(),
     downloadManager: DownloadManager = Injekt.get(),
     animeDownloadManager: AnimeDownloadManager = Injekt.get(),
+    private val getLibraryAnime: GetLibraryAnime = Injekt.get(),
+    private val metadataCatalog: MetadataCatalog = MetadataCatalog(),
 ) : ViewModel() {
 
     /**
@@ -167,8 +181,12 @@ class HomeScreenModel(
                 updateItems = updateItems,
             )
         }
-            .onEach { newState -> state.value = newState }
+            // Copied onto the existing state rather than replacing it, so a rail that has already
+            // come back from the network is not wiped by the next local emission.
+            .onEach { newState -> state.value = newState.copy(airingItems = state.value.airingItems) }
             .launchIn(viewModelScope)
+
+        loadAiring()
     }
 
     /**
@@ -183,6 +201,32 @@ class HomeScreenModel(
         val manga = lens.includesManga && LibraryUpdateJob.startNow(context)
         val anime = lens.includesAnime && AnimeLibraryUpdateJob.startNow(context)
         return manga || anime
+    }
+
+    /**
+     * Ask what is airing, once per opening of the app.
+     *
+     * Seeded from the most recently added anime, which is the best available guess at what is
+     * currently airing without asking about a whole library — a finished series from four years
+     * ago has no next episode and costs a field in the request to say so.
+     *
+     * Anything already out is dropped along with anything further off than a week: the rail
+     * answers *what is coming*, and a countdown of nineteen days is a fact rather than a plan.
+     */
+    private fun loadAiring() {
+        viewModelScope.launch {
+            val titles = runCatching { getLibraryAnime.await().map { it.anime.title } }
+                .getOrDefault(emptyList())
+                .asReversed()
+            if (titles.isEmpty()) return@launch
+
+            val now = System.currentTimeMillis()
+            val horizon = now + AIRING_WINDOW.inWholeMilliseconds
+            val airing = metadataCatalog.airing(titles)
+                .filter { it.airingAtMillis in now..horizon }
+                .take(AIRING_LIMIT)
+            state.value = state.value.copy(airingItems = airing)
+        }
     }
 
     /** Dismisses one entry from the Continue rail, timestamped so a later open un-dismisses it. */
@@ -209,5 +253,10 @@ class HomeScreenModel(
         private const val UPDATE_LIMIT = 5
 
         private val UPDATE_WINDOW = 30.days
+
+        /** *This week*, taken literally. Past that it is a schedule and belongs on a page. */
+        private val AIRING_WINDOW = 7.days
+
+        private const val AIRING_LIMIT = 12
     }
 }
