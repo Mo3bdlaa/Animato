@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.stremio.StremioAddon
 import animato.anime.stremio.StremioSource
+import animato.anime.stremio.StremioUrls
 import animato.app.source.SourceBrowseScreen
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -71,6 +72,8 @@ class StremioAddonsScreen : Screen() {
         val addons by screenModel.addons.collectAsStateWithLifecycle()
         val installState by screenModel.installState.collectAsStateWithLifecycle()
         var dialogOpen by remember { mutableStateOf(false) }
+        // What the address field opens on. A suggestion fills it; the plus button leaves it blank.
+        var draftUrl by remember { mutableStateOf("") }
 
         // Manifests go stale — an addon adds a catalog and this one would never notice. The
         // catch-up is silent and keeps whatever it already had wherever an addon does not answer.
@@ -87,6 +90,7 @@ class StremioAddonsScreen : Screen() {
 
         if (dialogOpen) {
             AddAddonDialog(
+                initialUrl = draftUrl,
                 state = installState,
                 onAdd = screenModel::install,
                 onDismiss = {
@@ -103,7 +107,12 @@ class StremioAddonsScreen : Screen() {
                     navigateUp = navigator::pop,
                     scrollBehavior = scrollBehavior,
                     actions = {
-                        IconButton(onClick = { dialogOpen = true }) {
+                        IconButton(
+                            onClick = {
+                                draftUrl = ""
+                                dialogOpen = true
+                            },
+                        ) {
                             Icon(
                                 imageVector = Icons.Outlined.Add,
                                 contentDescription = stringResource(AYMR.strings.stremio_add_addon),
@@ -113,20 +122,52 @@ class StremioAddonsScreen : Screen() {
                 )
             },
         ) { contentPadding ->
-            if (addons.isEmpty()) {
-                AnimatoEmptyState(
-                    message = stringResource(AYMR.strings.stremio_addons_empty),
-                    actionLabel = stringResource(AYMR.strings.stremio_add_addon),
-                    onAction = { dialogOpen = true },
-                    modifier = Modifier.padding(contentPadding),
-                )
-                return@Scaffold
-            }
+            // Suggestions the person already took are not suggestions any more.
+            val installed = addons.map { StremioUrls.normalizeBase(it.url) }.toSet()
+            val suggestions = SUGGESTED_ADDONS.filterNot { StremioUrls.normalizeBase(it.url) in installed }
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.medium),
             ) {
+                if (addons.isEmpty()) {
+                    item(key = "empty") {
+                        AnimatoEmptyState(
+                            message = stringResource(AYMR.strings.stremio_addons_empty),
+                            actionLabel = stringResource(AYMR.strings.stremio_add_addon),
+                            onAction = {
+                                draftUrl = ""
+                                dialogOpen = true
+                            },
+                        )
+                    }
+                }
+
+                if (suggestions.isNotEmpty()) {
+                    item(key = "suggested-header") {
+                        Text(
+                            text = stringResource(AYMR.strings.stremio_suggested),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(
+                                start = MaterialTheme.padding.medium,
+                                end = MaterialTheme.padding.medium,
+                                top = MaterialTheme.padding.medium,
+                                bottom = MaterialTheme.padding.small,
+                            ),
+                        )
+                    }
+                    items(items = suggestions, key = { "suggested-" + it.url }) { suggestion ->
+                        SuggestedAddonItem(
+                            suggestion = suggestion,
+                            onPick = {
+                                draftUrl = suggestion.url
+                                dialogOpen = true
+                            },
+                        )
+                    }
+                }
+
                 items(items = addons, key = { it.url }) { addon ->
                     AddonListItem(
                         addon = addon,
@@ -211,11 +252,14 @@ private fun AddonListItem(
 
 @Composable
 private fun AddAddonDialog(
+    initialUrl: String,
     state: AddonInstallState,
     onAdd: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var url by remember { mutableStateOf("") }
+    // Keyed on the address it was opened with, so picking a second suggestion without closing the
+    // dialog replaces the field rather than leaving the first one in it.
+    var url by remember(initialUrl) { mutableStateOf(initialUrl) }
     val working = state is AddonInstallState.Working
     val submit = { if (url.isNotBlank() && !working) onAdd(url) }
 
@@ -262,6 +306,32 @@ private fun AddAddonDialog(
             TextButton(onClick = onDismiss, enabled = !working) {
                 Text(stringResource(MR.strings.action_cancel))
             }
+        },
+    )
+}
+
+/**
+ * One addon worth having, with what it does and nothing else.
+ *
+ * No logo and no install button. A logo would be a network fetch for a row that exists to be read
+ * once, and a bare install button would hide the address — which is the one thing somebody needs to
+ * understand here, and the thing Torrentio in particular needs them to edit.
+ */
+@Composable
+private fun SuggestedAddonItem(
+    suggestion: SuggestedAddon,
+    onPick: () -> Unit,
+) {
+    ListItem(
+        modifier = Modifier.clickable(onClick = onPick),
+        headlineContent = { Text(suggestion.name) },
+        supportingContent = { Text(stringResource(suggestion.description)) },
+        trailingContent = {
+            Icon(
+                imageVector = Icons.Outlined.Add,
+                contentDescription = stringResource(AYMR.strings.stremio_add_addon),
+                tint = MaterialTheme.colorScheme.primary,
+            )
         },
     )
 }
