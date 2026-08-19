@@ -547,27 +547,39 @@ class AnimeDownloader(
         filename: String,
     ) {
         val video = download.video!!
-        TorrentServerService.start()
+
+        // The same failure the player used to have: a native start fails for ordinary reasons —
+        // the port is taken, the library will not load on this ABI — and carrying on regardless
+        // means handing a magnet to a server that is not listening. In a download that surfaces as
+        // a connection error against 127.0.0.1, which explains nothing to anybody.
+        if (!TorrentServerService.start()) {
+            throw Exception(context.stringResource(AYMR.strings.torrent_server_start_failure))
+        }
+
         if (video.videoUrl.startsWith(torrentServerApi.hostUrl)) {
             val hash = video.videoUrl.substringAfter("link=").substringBefore("&")
-            val index = video.videoUrl.substringAfter("index=").substringBefore("&").toInt()
-            val magnet = "magnet:?xt=urn:btih:$hash&index=$index"
+            // Through the shared reader below rather than toInt(): substringAfter returns the whole
+            // string when the marker is absent, so a stream URL without an index — a single-file
+            // torrent — used to throw NumberFormatException out of a download worker.
+            val magnet = "magnet:?xt=urn:btih:$hash&index=${indexIn(video.videoUrl)}"
             video.videoUrl = magnet
         }
         val currentTorrent = torrentServerApi.addTorrent(video.videoUrl, video.videoTitle, "", "", false)
-        var index = 0
-        if (video.videoUrl.contains("index=")) {
-            index = try {
-                video.videoUrl.substringAfter("index=")
-                    .substringBefore("&").toInt()
-            } catch (_: Exception) {
-                0
-            }
-        }
+        val index = indexIn(video.videoUrl)
         val torrentUrl = torrentServerUtils.getTorrentPlayLink(currentTorrent, index)
         video.videoUrl = torrentUrl
         ffmpegDownload(download, tmpDir, videoFile, filename)
     }
+
+    /**
+     * Which file inside a multi-file torrent this video is, or the first.
+     *
+     * `index` is the same field the player reads and the same one Stremio calls `fileIdx`: a season
+     * pack is one torrent with twelve episodes in it, and without this every episode of it would
+     * download the same file.
+     */
+    private fun indexIn(url: String): Int =
+        url.substringAfter("index=", "").substringBefore("&").toIntOrNull() ?: 0
 
     // ffmpeg is always on safe mode
     private suspend fun ffmpegDownload(
