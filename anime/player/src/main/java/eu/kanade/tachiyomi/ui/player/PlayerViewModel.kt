@@ -46,10 +46,10 @@ import animato.anime.player.CustomButtonFetchState
 import animato.anime.player.HosterState
 import animato.anime.player.RememberedQuality
 import animato.anime.player.SubtitleDelayMemory
-import animato.anime.stremio.StremioSource
-import animato.anime.stremio.StremioSubtitleFinder
 import animato.anime.player.getButtons
 import animato.anime.player.getChangedAt
+import animato.anime.stremio.StremioSource
+import animato.anime.stremio.StremioSubtitleFinder
 import animato.anime.util.editBackground
 import animato.anime.util.editCover
 import animato.anime.util.editThumbnail
@@ -1417,9 +1417,6 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     /**
-     * Set the video list for hosters.
-     */
-    /**
      * Subtitle-addon tracks added to an episode that did not come from Stremio.
      *
      * A Stremio source has already asked its neighbours by the time its videos arrive here, so
@@ -1444,6 +1441,9 @@ class PlayerViewModel @JvmOverloads constructor(
         )
     }
 
+    /**
+     * Set the video list for hosters.
+     */
     fun loadHosters(source: AnimeSource, hosterList: List<Hoster>, hosterIndex: Int, videoIndex: Int) {
         val hasFoundPreferredVideo = AtomicBoolean(false)
 
