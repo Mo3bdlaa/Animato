@@ -173,7 +173,14 @@ private fun AddonListItem(
                 // looks like it failed to install.
                 if (!addon.isBrowsable) {
                     Text(
-                        text = stringResource(AYMR.strings.stremio_streams_only),
+                        text = stringResource(
+                            when (addon.supplies) {
+                                StremioAddon.Supplies.STREAMS -> AYMR.strings.stremio_supplies_streams
+                                StremioAddon.Supplies.SUBTITLES -> AYMR.strings.stremio_supplies_subtitles
+                                StremioAddon.Supplies.STREAMS_AND_SUBTITLES ->
+                                    AYMR.strings.stremio_supplies_both
+                            },
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                     )

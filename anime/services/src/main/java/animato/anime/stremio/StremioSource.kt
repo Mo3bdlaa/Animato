@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SAnimeEpisodeUpdate
 import eu.kanade.tachiyomi.animesource.model.SEpisode
+import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.network.GET
@@ -195,12 +196,65 @@ class StremioSource(
         }
 
         val hosters = coroutineScope {
-            providers
+            // Started before the streams rather than after them: subtitle providers are a separate
+            // set of addons and a separate round trip, and asking in sequence would add their
+            // latency to a wait that is already the slowest thing in the app.
+            val subtitles = async { subtitlesFor(type, id) }
+            val answered = providers
                 .map { provider -> async { hosterFor(provider, type, id) } }
                 .awaitAll()
                 .filterNotNull()
+            withSubtitles(answered, subtitles.await())
         }
         return withoutUnplayableTorrents(hosters)
+    }
+
+    /**
+     * Every installed addon's subtitles for this episode, in one list.
+     *
+     * The same composition streams use, for the same reason: a subtitle addon knows nothing about
+     * catalogues and a catalogue knows nothing about subtitles, and they meet on the id. It is
+     * asked once per episode rather than once per stream — a provider can match a specific release
+     * by file size and name, but there is one subtitle list on screen and several streams behind
+     * it, so a per-stream answer would be thrown away the moment somebody switched quality.
+     */
+    private suspend fun subtitlesFor(type: String, id: String): List<Track> {
+        val providers = addonStore.addons.value.filter {
+            it.manifest.canServe(RESOURCE_SUBTITLES, type, id)
+        }
+        if (providers.isEmpty()) return emptyList()
+
+        return coroutineScope {
+            providers.map { provider ->
+                async {
+                    runCatching {
+                        val url = StremioUrls.subtitles(provider.url, type, id)
+                        val response = client.newCall(GET(url, headers)).awaitSuccess()
+                        with(json) { response.parseAs<StremioSubtitleResponse>() }.subtitles
+                    }.getOrElse {
+                        logcat(LogPriority.INFO, it) { "Stremio subtitles: ${provider.url} did not answer" }
+                        emptyList()
+                    }
+                }
+            }.awaitAll().flatten().let(StremioMapper::toTracks)
+        }
+    }
+
+    /**
+     * Addon subtitles appended to whatever each stream already carried.
+     *
+     * Appended, never substituted: a stream that ships its own subtitles is offering the ones timed
+     * for that exact release, and those deserve to stay first in the list.
+     */
+    private fun withSubtitles(hosters: List<Hoster>, subtitles: List<Track>): List<Hoster> {
+        if (subtitles.isEmpty()) return hosters
+        return hosters.map { hoster ->
+            hoster.copy(
+                videoList = hoster.videoList?.map { video ->
+                    video.copy(subtitleTracks = video.subtitleTracks + subtitles)
+                },
+            )
+        }
     }
 
     /**
@@ -370,6 +424,7 @@ class StremioSource(
         private const val EXTRA_SKIP = "skip"
         private const val RESOURCE_META = "meta"
         private const val RESOURCE_STREAM = "stream"
+        private const val RESOURCE_SUBTITLES = "subtitles"
         private const val FILTER_CATALOG = "Catalog"
         private const val ANY_GENRE = "Any"
         private const val IMDB_PREFIX = "tt"

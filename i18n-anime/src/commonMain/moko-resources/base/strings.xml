@@ -343,7 +343,9 @@
     <string name="stremio_error_unreachable">Could not reach that address</string>
     <string name="stremio_error_not_an_addon">That address answered, but not with an addon</string>
     <string name="stremio_error_no_content">This addon offers no listings, details or streams</string>
-    <string name="stremio_streams_only">Supplies streams to your other addons</string>
+    <string name="stremio_supplies_streams">Supplies streams to your other addons</string>
+    <string name="stremio_supplies_subtitles">Supplies subtitles to your other addons</string>
+    <string name="stremio_supplies_both">Supplies streams and subtitles to your other addons</string>
     <string name="stremio_error_needs_configuration">Configure this addon on its own page first, then paste the address it gives you</string>
     <string name="stremio_wrong_screen">That is a Stremio addon, not an extension store. Add it under Sources → Stremio addons.</string>
     <string name="stremio_no_stream_addon">This addon only lists titles. Add a streaming addon to watch them.</string>

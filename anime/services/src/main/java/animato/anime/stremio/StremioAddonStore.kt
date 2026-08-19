@@ -36,6 +36,16 @@ data class StremioAddon(
      * as a place to browse.
      */
     val isBrowsable: Boolean get() = manifest.serves("catalog")
+
+    /** What a non-browsable addon actually contributes, so its row can say so. */
+    val supplies: Supplies
+        get() = when {
+            manifest.serves("stream") && manifest.serves("subtitles") -> Supplies.STREAMS_AND_SUBTITLES
+            manifest.serves("subtitles") -> Supplies.SUBTITLES
+            else -> Supplies.STREAMS
+        }
+
+    enum class Supplies { STREAMS, SUBTITLES, STREAMS_AND_SUBTITLES }
 }
 
 /**
@@ -94,11 +104,11 @@ class StremioAddonStore(
         if (manifest.behaviorHints.configurationRequired) {
             return failure(AYMR.strings.stremio_error_needs_configuration)
         }
-        // Streaming counts. The first version of this check demanded a catalogue or metadata, and
-        // so refused Torrentio — an addon that serves nothing but `stream`, and the single most
-        // installed addon there is. That is precisely backwards: stream-only addons are the ones
-        // that turn a listing into something watchable, and refusing them left the app able to
-        // install only the half that cannot play anything.
+        // Streaming and subtitles count. The first version of this check demanded a catalogue or
+        // metadata, and so refused Torrentio — an addon that serves nothing but `stream`, and the
+        // single most installed addon there is. That was precisely backwards: the single-purpose
+        // addons are the ones that turn a listing into something watchable and something you can
+        // follow, and refusing them left the app able to install only the half that does neither.
         if (USEFUL_RESOURCES.none { manifest.serves(it) }) {
             return failure(AYMR.strings.stremio_error_no_content)
         }
@@ -153,6 +163,6 @@ class StremioAddonStore(
         private const val PREF_KEY = "animato_stremio_addons"
 
         /** Anything an addon can offer that this app has a use for. */
-        private val USEFUL_RESOURCES = listOf("catalog", "meta", "stream")
+        private val USEFUL_RESOURCES = listOf("catalog", "meta", "stream", "subtitles")
     }
 }

@@ -11,6 +11,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeParseException
+import java.util.Locale
 
 /**
  * Stremio's vocabulary translated into ours.
@@ -121,6 +122,41 @@ internal object StremioMapper {
      * only once tapped, which is worse than a shorter list.
      */
     fun toVideos(streams: List<StremioStream>): List<Video> = streams.mapNotNull(::toVideo)
+
+    /**
+     * Subtitle files from an addon, as tracks the player can offer.
+     *
+     * Providers are generous to a fault: ask OpenSubtitles for one episode and it will happily
+     * return sixty files, most of them the same language re-uploaded. So identical URLs collapse,
+     * and each language is capped — past a few options per language nobody is choosing, they are
+     * scrolling.
+     *
+     * The language is shown as a name rather than a code. Providers speak ISO 639-2 (`ara`, `eng`,
+     * `spa`), which is correct and unreadable; a picker listing "ara" is asking the person to know
+     * the standard. Anything the platform cannot name keeps its code, which is still better than
+     * inventing one.
+     */
+    fun toTracks(subtitles: List<StremioSubtitle>): List<Track> {
+        val seen = mutableSetOf<String>()
+        val perLanguage = mutableMapOf<String, Int>()
+        val tracks = mutableListOf<Track>()
+        for (subtitle in subtitles) {
+            if (subtitle.url.isBlank() || !seen.add(subtitle.url)) continue
+            val code = subtitle.lang.trim().lowercase().ifEmpty { UNKNOWN_LANGUAGE }
+            val taken = perLanguage.getOrDefault(code, 0)
+            if (taken >= MAX_SUBTITLES_PER_LANGUAGE) continue
+            perLanguage[code] = taken + 1
+            // Numbered only past the first, so a language with one file reads as a language rather
+            // than as the first of a series.
+            val name = languageName(code).let { if (taken == 0) it else "$it ${taken + 1}" }
+            tracks += Track(subtitle.url, name)
+        }
+        return tracks
+    }
+
+    private fun languageName(code: String): String = runCatching {
+        Locale.forLanguageTag(code).displayLanguage.takeIf { it.isNotBlank() && !it.equals(code, true) }
+    }.getOrNull() ?: code
 
     private fun toVideo(stream: StremioStream): Video? {
         val label = streamLabel(stream)
@@ -241,6 +277,7 @@ internal object StremioMapper {
     private const val MAGNET_NAME_LIMIT = 80
     private const val TRACKER_PREFIX = "tracker:"
     private const val UNKNOWN_LANGUAGE = "und"
+    private const val MAX_SUBTITLES_PER_LANGUAGE = 4
     private const val UNTITLED_STREAM = "Stream"
     private const val UNTITLED_EPISODE = "Episode"
     private const val DEFAULT_SINGLE_EPISODE_NAME = "Film"

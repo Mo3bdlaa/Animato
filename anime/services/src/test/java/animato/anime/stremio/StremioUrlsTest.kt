@@ -92,6 +92,21 @@ class StremioUrlsTest {
     }
 
     @Test
+    fun `subtitles take extras in the same path segment catalogs do`() {
+        StremioUrls.subtitles("https://addon.test", "series", "tt0944947:1:1") shouldBe
+            "https://addon.test/subtitles/series/tt0944947%3A1%3A1.json"
+
+        // A provider matches on the file, so the size and name ride in the path when known.
+        StremioUrls.subtitles(
+            base = "https://addon.test",
+            type = "movie",
+            videoId = "tt1254207",
+            extra = linkedMapOf("videoSize" to "734003200", "filename" to "Big Buck Bunny.mkv"),
+        ) shouldBe
+            "https://addon.test/subtitles/movie/tt1254207/videoSize=734003200&filename=Big%20Buck%20Bunny.mkv.json"
+    }
+
+    @Test
     fun `the manifest hangs off whatever base was given`() {
         StremioUrls.manifest("https://addon.test/config=1") shouldBe "https://addon.test/config=1/manifest.json"
         StremioUrls.manifest("https://addon.test/manifest.json") shouldBe "https://addon.test/manifest.json"

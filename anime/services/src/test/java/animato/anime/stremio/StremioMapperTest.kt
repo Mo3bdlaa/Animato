@@ -281,6 +281,46 @@ class StremioMapperTest {
     }
 
     @Test
+    fun `subtitles are named by language and capped per language`() {
+        // What a real provider returns: the same language many times over, plus a duplicate URL.
+        val tracks = StremioMapper.toTracks(
+            listOf(
+                StremioSubtitle(url = "https://s.test/1", lang = "ara"),
+                StremioSubtitle(url = "https://s.test/1", lang = "ara"),
+                StremioSubtitle(url = "https://s.test/2", lang = "ara"),
+                StremioSubtitle(url = "https://s.test/3", lang = "ara"),
+                StremioSubtitle(url = "https://s.test/4", lang = "ara"),
+                StremioSubtitle(url = "https://s.test/5", lang = "ara"),
+                StremioSubtitle(url = "https://s.test/6", lang = "eng"),
+                StremioSubtitle(url = "", lang = "eng"),
+            ),
+        )
+
+        // ISO 639-2 is correct and unreadable; a picker listing "ara" asks the reader to know the
+        // standard. The first of a language is unnumbered, so one file reads as a language.
+        tracks.map { it.lang } shouldBe listOf("Arabic", "Arabic 2", "Arabic 3", "Arabic 4", "English")
+        tracks.map { it.url } shouldBe listOf(
+            "https://s.test/1",
+            "https://s.test/2",
+            "https://s.test/3",
+            "https://s.test/4",
+            "https://s.test/6",
+        )
+    }
+
+    @Test
+    fun `a language the platform cannot name keeps its code`() {
+        val tracks = StremioMapper.toTracks(
+            listOf(
+                StremioSubtitle(url = "https://s.test/x", lang = "zzz"),
+                StremioSubtitle(url = "https://s.test/y", lang = ""),
+            ),
+        )
+        // Better an unfamiliar code than an invented name, and better a track than none.
+        tracks.map { it.lang } shouldBe listOf("zzz", "und")
+    }
+
+    @Test
     fun `a catalog entry keeps the type it was requested under when it omits its own`() {
         val anime = StremioMapper.toSAnime(StremioMetaPreview(id = "tt1", name = "Untyped"), "series")
         anime.url shouldBe "series:tt1"

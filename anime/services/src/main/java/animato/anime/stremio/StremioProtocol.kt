@@ -264,6 +264,9 @@ data class StremioMetaResponse(val meta: StremioMeta? = null)
 @Serializable
 data class StremioStreamResponse(val streams: List<StremioStream> = emptyList())
 
+@Serializable
+data class StremioSubtitleResponse(val subtitles: List<StremioSubtitle> = emptyList())
+
 /**
  * A JSON value that some addons send as a string and others as a number, read as text either way.
  *

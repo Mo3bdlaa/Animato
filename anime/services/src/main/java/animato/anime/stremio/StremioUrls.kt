@@ -70,6 +70,27 @@ object StremioUrls {
     fun stream(base: String, type: String, videoId: String): String =
         "${normalizeBase(base)}/stream/${type.encodeUriComponent()}/${videoId.encodeUriComponent()}.json"
 
+    /**
+     * Subtitles take extra arguments the way catalogs do, and for the same reason: the addon needs
+     * more than an id to answer well. A subtitle provider matches on the file — its size, its name
+     * — so a release with a different cut gets subtitles timed for *that* cut rather than for
+     * whatever else shares the title.
+     */
+    fun subtitles(
+        base: String,
+        type: String,
+        videoId: String,
+        extra: Map<String, String> = emptyMap(),
+    ): String {
+        val prefix = "${normalizeBase(base)}/subtitles/${type.encodeUriComponent()}/${videoId.encodeUriComponent()}"
+        val present = extra.filterValues { it.isNotBlank() }
+        if (present.isEmpty()) return "$prefix.json"
+        val args = present.entries.joinToString("&") { (key, value) ->
+            "${key.encodeUriComponent()}=${value.encodeUriComponent()}"
+        }
+        return "$prefix/$args.json"
+    }
+
     private const val STREMIO_SCHEME = "stremio://"
     private const val MANIFEST_PATH = "/manifest.json"
 }
