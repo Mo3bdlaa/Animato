@@ -72,6 +72,8 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.NavigatorAdaptiveSheet
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.browse.anime.migration.search.MigrateAnimeSearchScreen
+import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackInfoDialogHomeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
@@ -282,6 +284,33 @@ class EntryScreen(
                                     trackingOpen = true
                                 },
                             )
+                            /*
+                             * Moving a title to another source, which is the thing you need on the
+                             * day a source dies.
+                             *
+                             * Both halves already have the whole flow — search the other sources,
+                             * pick the match, choose what carries over — and it was reachable only
+                             * from the original screens, so a library built on this page had no
+                             * answer at all for an extension that stopped working. This is the
+                             * entrance, not a reimplementation.
+                             *
+                             * Only for a title in the library. Migrating something you have not
+                             * saved is moving nothing from nowhere.
+                             */
+                            if (state.inLibrary) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(MR.strings.action_migrate)) },
+                                    onClick = {
+                                        menuOpen = false
+                                        navigator.push(
+                                            when (contentType) {
+                                                ContentType.MANGA -> MigrateSearchScreen(entryId)
+                                                ContentType.ANIME -> MigrateAnimeSearchScreen(entryId)
+                                            },
+                                        )
+                                    },
+                                )
+                            }
                             DropdownMenuItem(
                                 // Everything this page deliberately does not re-implement is one tap
                                 // away and unchanged.
