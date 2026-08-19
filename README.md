@@ -50,6 +50,53 @@ Content comes from extensions you install and configure yourself. Animato ships 
 Not all of that is wired up yet — this is a pre-release, and
 [ARCHITECTURE.md](ARCHITECTURE.md) tracks what is built and what is not.
 
+## Sources
+
+Animato takes content from two different kinds of place, and the difference is worth knowing.
+
+**Extensions** are small Android packages, one per site, installed from a repository. Sources &
+extensions holds the repositories and the list. This is the model Mihon and Aniyomi use, and it is
+where the manga comes from.
+
+**Stremio addons** are the other shape: a web address that answers JSON. Nothing is installed and
+nothing runs inside the app, so an addon cannot crash it or read its storage — the app only ever
+talks to it. Sources → **Stremio addons** takes an address; the screen suggests four worth starting
+with, and any other addon's `manifest.json` link works the same way.
+
+Addons split the job between them and meet on a shared id, so a working setup is usually more than
+one:
+
+| | Provides |
+| --- | --- |
+| **Anime Kitsu** | An anime catalogue |
+| **Cinemeta** | Films and series, with posters and descriptions |
+| **Torrentio** | Video |
+| **OpenSubtitles v3** | Subtitles, for anything with an IMDb id |
+
+A catalogue addon has no video and a stream addon has no idea what anything is called; installing
+one of each is what makes a title playable. Addons that only supply streams or subtitles never
+appear as sources — they work behind the ones that do.
+
+### Configuring Torrentio
+
+Torrentio's plain address works, but its useful form is configured first, and the configuration
+travels **inside the address** rather than in a settings screen. So it is set up on its own page and
+pasted in afterwards:
+
+1. Open <https://torrentio.strem.fun/configure> in a browser.
+2. Pick your providers. For anime, add **Nyaa.si**, **AniDex** and **TokyoTosho**.
+3. Sort by quality, and filter out `CAM`, `SCR` and `480p` unless you want them.
+4. Copy the install link rather than pressing Install — Install tries to hand the address to the
+   Stremio app, which is not what you are using it for. The link looks like
+   `https://torrentio.strem.fun/providers=…|sort=…/manifest.json`, and the settings you chose are
+   that middle segment.
+5. Paste it into Sources → Stremio addons.
+
+Torrentio serves torrents, so playback goes through the bundled torrent server. It is on by default
+and shows a one-time notice before the first torrent explaining that peer-to-peer sharing uploads as
+well as downloads; it can be turned off under Settings → Player → Torrent, and it shuts down when
+the player closes.
+
 ## Design
 
 ![Animato brand sheet](docs/branding/brand-sheet.png)
