@@ -10,6 +10,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import animato.anime.player.R
+import aniyomi.core.common.torrent.TorrentProgress
 import eu.kanade.tachiyomi.ui.player.controls.components.ControlsButton
 import `is`.xyz.mpv.Utils
 import tachiyomi.i18n.aniyomi.AYMR
@@ -48,6 +50,13 @@ fun MiddlePlayerControls(
     // middle
     isLoading: Boolean,
     isLoadingEpisode: Boolean,
+    /**
+     * What the swarm is doing, when the thing being waited for is a torrent.
+     *
+     * Null for every other kind of video, and the spinner alone is right for those: an HTTP video
+     * either arrives or fails, and there is no middle state worth a number.
+     */
+    torrentProgress: TorrentProgress?,
     controlsShown: Boolean,
     areControlsLocked: Boolean,
     showLoadingCircle: Boolean,
@@ -102,7 +111,12 @@ fun MiddlePlayerControls(
                 )
             }
 
-            (isLoading || isLoadingEpisode) && showLoadingCircle -> CircularProgressIndicator(Modifier.size(96.dp))
+            (isLoading || isLoadingEpisode) && showLoadingCircle ->
+                if (torrentProgress != null) {
+                    TorrentProgressIndicator(torrentProgress)
+                } else {
+                    CircularProgressIndicator(Modifier.size(96.dp))
+                }
             else -> {
                 AnimatedVisibility(
                     visible = controlsShown && !areControlsLocked,
@@ -141,4 +155,73 @@ fun MiddlePlayerControls(
             }
         }
     }
+}
+
+/**
+ * The spinner, with the swarm's answer under it.
+ *
+ * Deliberately a full replacement rather than a caption beside the spinner: this appears in the
+ * dead centre of a black screen and is, for the length of the wait, the only thing on it. Three
+ * lines — what stage, how full, who is on the other end — is all there is to say, and all of it
+ * has to be readable at a glance from across a room.
+ *
+ * The bar is determinate once the buffer's size is known and indeterminate before, because during
+ * the peer search there is genuinely no denominator; a determinate bar at zero would be claiming a
+ * measurement that does not exist yet.
+ */
+@Composable
+private fun TorrentProgressIndicator(progress: TorrentProgress) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        modifier = Modifier.padding(horizontal = MaterialTheme.padding.large),
+    ) {
+        val fraction = progress.fraction
+        if (fraction == null) {
+            CircularProgressIndicator(Modifier.size(64.dp))
+        } else {
+            CircularProgressIndicator(progress = { fraction }, modifier = Modifier.size(64.dp))
+        }
+
+        Text(
+            text = stringResource(
+                when (progress.stage) {
+                    TorrentProgress.Stage.FindingPeers -> AYMR.strings.torrent_stage_finding_peers
+                    TorrentProgress.Stage.Buffering -> AYMR.strings.torrent_stage_buffering
+                    TorrentProgress.Stage.Ready -> AYMR.strings.torrent_stage_ready
+                },
+            ),
+            style = MaterialTheme.typography.titleMedium.copy(shadow = Shadow(Color.Black, blurRadius = 5f)),
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+        )
+
+        if (progress.targetBytes > 0) {
+            Text(
+                text = "${megabytes(progress.loadedBytes)} / ${megabytes(progress.targetBytes)} MB" +
+                    "  ·  ${megabytes(progress.bytesPerSecond)} MB/s",
+                style = MaterialTheme.typography.bodyMedium.copy(shadow = Shadow(Color.Black, blurRadius = 5f)),
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        // The line that decides what to do. Zero peers is a dead torrent and a reason to back out
+        // and pick another stream; a healthy count with a slow bar is a reason to wait.
+        Text(
+            text = stringResource(
+                AYMR.strings.torrent_peers_and_seeders,
+                progress.peers,
+                progress.seeders,
+            ),
+            style = MaterialTheme.typography.bodySmall.copy(shadow = Shadow(Color.Black, blurRadius = 5f)),
+            color = if (progress.peers == 0) MaterialTheme.colorScheme.error else Color.White,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+/** Bytes as a one-decimal megabyte figure, which is the only precision worth reading here. */
+private fun megabytes(bytes: Long): String {
+    val mb = bytes / 1024.0 / 1024.0
+    return ((mb * 10).toLong() / 10.0).toString()
 }

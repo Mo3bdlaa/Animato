@@ -346,6 +346,10 @@
     <string name="stremio_supplies_streams">Supplies streams to your other addons</string>
     <string name="stremio_supplies_subtitles">Supplies subtitles to your other addons</string>
     <string name="stremio_supplies_both">Supplies streams and subtitles to your other addons</string>
+    <string name="torrent_stage_finding_peers">Finding peers</string>
+    <string name="torrent_stage_buffering">Buffering</string>
+    <string name="torrent_stage_ready">Starting playback</string>
+    <string name="torrent_peers_and_seeders">%1$d peers · %2$d seeding</string>
     <string name="stremio_suggested">Worth starting with</string>
     <string name="stremio_community">Community addons</string>
     <string name="stremio_community_summary">Published by their authors in Stremio\'s own list. Tapping one fills in its address.</string>

@@ -53,6 +53,7 @@ import animato.anime.stremio.StremioSubtitleFinder
 import animato.anime.util.editBackground
 import animato.anime.util.editCover
 import animato.anime.util.editThumbnail
+import aniyomi.core.common.torrent.TorrentProgress
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import dev.icerock.moko.resources.StringResource
@@ -210,6 +211,16 @@ class PlayerViewModel @JvmOverloads constructor(
 
     private val _isLoadingEpisode = MutableStateFlow(false)
     val isLoadingEpisode = _isLoadingEpisode.asStateFlow()
+
+    /**
+     * What the torrent is doing, while it is the reason nothing is playing.
+     *
+     * Null for everything that is not a torrent, which is most of what this player opens, and null
+     * again the moment the video starts — the numbers describe the wait and there is nothing to
+     * describe once the wait is over. See [TorrentProgress] for why the wait needed describing.
+     */
+    private val _torrentProgress = MutableStateFlow<TorrentProgress?>(null)
+    val torrentProgress = _torrentProgress.asStateFlow()
 
     private val _currentDecoder = MutableStateFlow(getDecoderFromValue(MPVLib.getPropertyString("hwdec")))
     val currentDecoder = _currentDecoder.asStateFlow()
@@ -386,6 +397,13 @@ class PlayerViewModel @JvmOverloads constructor(
 
     fun updateIsLoadingEpisode(value: Boolean) {
         _isLoadingEpisode.update { _ -> value }
+        // Done loading is done waiting, whatever ended it — the video started, the user backed out,
+        // the server refused. One place to clear it beats three that each have to remember.
+        if (!value) _torrentProgress.value = null
+    }
+
+    fun updateTorrentProgress(progress: TorrentProgress?) {
+        _torrentProgress.value = progress
     }
 
     private fun updateEpisodeList(episodeList: List<Episode>) {

@@ -113,6 +113,7 @@ fun PlayerControls(
     val seekBarShown by viewModel.seekBarShown.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isLoadingEpisode by viewModel.isLoadingEpisode.collectAsState()
+    val torrentProgress by viewModel.torrentProgress.collectAsState()
     val duration by viewModel.duration.collectAsState()
     val position by viewModel.pos.collectAsState()
     val seekPosition by viewModel.seekPosition.collectAsState()
@@ -371,6 +372,7 @@ fun PlayerControls(
                         onSkipNext = { viewModel.changeEpisode(false) },
                         isLoading = isLoading,
                         isLoadingEpisode = isLoadingEpisode,
+                        torrentProgress = torrentProgress,
                         controlsShown = controlsShown,
                         areControlsLocked = areControlsLocked,
                         showLoadingCircle = showLoadingCircle,

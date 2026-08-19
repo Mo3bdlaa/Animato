@@ -131,6 +131,25 @@ class TorrentServerApi(
         return resp.use { json.decodeFromStream<Torrent>(it.body.byteStream()) }
     }
 
+    /**
+     * How one torrent is doing, or nothing if the server will not say.
+     *
+     * Polled once a second while the player waits, so every failure here is silent: a status read
+     * that misses is one missing update on a screen that is about to get another, and logging each
+     * one would fill the log with the ordinary case of a server that is busy fetching video.
+     */
+    suspend fun status(hash: String): Torrent? {
+        if (hash.isBlank()) return null
+        return try {
+            val req = json.encodeToString(TorrentRequest("get", hash = hash))
+            network.client.newCall(
+                POST("$hostUrl/torrents", body = req.toRequestBody(jsonMime)),
+            ).awaitSuccess().use { json.decodeFromStream<Torrent>(it.body.byteStream()) }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     suspend fun uploadTorrent(
         file: InputStream,
         title: String,

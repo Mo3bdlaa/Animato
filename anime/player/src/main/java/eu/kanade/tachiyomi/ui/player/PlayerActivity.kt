@@ -67,6 +67,7 @@ import animato.anime.services.AnimeNotificationReceiver
 import animato.anime.services.AnimeNotifications
 import animato.ui.theme.AnimatoTheme
 import aniyomi.core.common.torrent.TorrentPreferences
+import aniyomi.core.common.torrent.TorrentProgress
 import aniyomi.core.common.torrent.TorrentServerApi
 import aniyomi.core.common.torrent.TorrentServerUtils
 import com.hippo.unifile.UniFile
@@ -95,9 +96,12 @@ import `is`.xyz.mpv.MPVLib
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -158,6 +162,9 @@ class PlayerActivity : BaseActivity() {
      */
     private var startedTorrentServer = false
 
+    /** The poll behind [watchTorrentProgress]; one at a time, cancelled when the player closes. */
+    private var torrentProgressJob: Job? = null
+
     private val noisyReceiver = object : BroadcastReceiver() {
         var initialized = false
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -169,6 +176,14 @@ class PlayerActivity : BaseActivity() {
     }
 
     companion object {
+        /**
+         * A second between status reads.
+         *
+         * Faster would be a request per frame of a number that changes at the speed of a download,
+         * and the server answering it is the server not fetching video.
+         */
+        private const val TORRENT_PROGRESS_INTERVAL_MS = 1000L
+
         fun newIntent(
             context: Context,
             animeId: Long?,
@@ -1321,6 +1336,8 @@ class PlayerActivity : BaseActivity() {
         val currentTorrent = torrentServerApi.addTorrent(videoUrl, title, "", "", false)
         val videoTorrentUrl = torrentServerUtils.getTorrentPlayLink(currentTorrent, index)
 
+        watchTorrentProgress(currentTorrent.hash.orEmpty())
+
         MPVLib.command(
             arrayOf(
                 "loadfile",
@@ -1330,6 +1347,32 @@ class PlayerActivity : BaseActivity() {
                 videoOptions,
             ),
         )
+    }
+
+    /**
+     * Report what the swarm is doing until the video starts.
+     *
+     * Started before `loadfile` rather than after, because `loadfile` is where the wait actually
+     * happens: mpv opens the stream URL and the server holds that request open while it fills the
+     * preload buffer. Polling afterwards would begin only once there was nothing left to report.
+     *
+     * The loop belongs to the activity's own scope, so leaving the player ends it. Its exit
+     * condition is the same flag the spinner reads — one truth about whether anything is still
+     * being waited for, rather than a second one that could disagree.
+     */
+    private fun watchTorrentProgress(hash: String) {
+        if (hash.isBlank()) return
+        torrentProgressJob?.cancel()
+        torrentProgressJob = lifecycleScope.launchIO {
+            while (isActive && viewModel.isLoadingEpisode.value) {
+                val status = torrentServerApi.status(hash)
+                if (status != null) {
+                    viewModel.updateTorrentProgress(TorrentProgress.from(status))
+                }
+                delay(TORRENT_PROGRESS_INTERVAL_MS)
+            }
+            viewModel.updateTorrentProgress(null)
+        }
     }
 
     fun parseVideoUrl(videoUrl: String?): String? {
