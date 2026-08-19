@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.animesource.model.AnimesPage
 import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SAnimeEpisodeUpdate
+import eu.kanade.tachiyomi.animesource.model.SAnimeSeasonUpdate
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
@@ -149,14 +150,53 @@ class StremioSource(
         fetchEpisodes: Boolean,
     ): SAnimeEpisodeUpdate {
         if (!fetchDetails && !fetchEpisodes) return SAnimeEpisodeUpdate(anime, episodes)
-        val (type, id) = StremioMapper.parseEntryUrl(anime.url)
+        // A season entry addresses the same document as its parent and takes a slice of it, so the
+        // season is stripped off before the request and used to filter what comes back.
+        val season = StremioMapper.parseSeasonUrl(anime.url)
+        val (type, id) = StremioMapper.parseEntryUrl(season?.first ?: anime.url)
             ?: return SAnimeEpisodeUpdate(anime, episodes)
         // Details and episodes come out of the same document, so both flags cost one request.
         val meta = requestMeta(type, id) ?: return SAnimeEpisodeUpdate(anime, episodes)
         return SAnimeEpisodeUpdate(
-            anime = if (fetchDetails) StremioMapper.toSAnime(meta, type) else anime,
-            episodes = if (fetchEpisodes) StremioMapper.toEpisodes(meta, type) else episodes,
+            // A season keeps the name and number it was created with. Overwriting them from the
+            // parent's document would rename every season of a series to the series.
+            anime = if (fetchDetails && season == null) StremioMapper.toSAnime(meta, type) else anime,
+            episodes = if (fetchEpisodes) {
+                StremioMapper.toEpisodes(meta, type, onlySeason = season?.second)
+            } else {
+                episodes
+            },
         )
+    }
+
+    /**
+     * The seasons of a series, when it has more than one.
+     *
+     * Free, in a way it is nowhere else: Stremio's meta already carries every episode with its
+     * season stamped on it, so the seasons fall out of the document the episode list was going to
+     * need anyway. No second endpoint, no numbering scheme to infer from titles.
+     */
+    override suspend fun getAnimeSeasonUpdate(
+        anime: SAnime,
+        seasons: List<SAnime>,
+        fetchDetails: Boolean,
+        fetchSeasons: Boolean,
+    ): SAnimeSeasonUpdate {
+        if (!fetchDetails && !fetchSeasons) return SAnimeSeasonUpdate(anime, seasons)
+        val (type, id) = StremioMapper.parseEntryUrl(anime.url)
+            ?: return SAnimeSeasonUpdate(anime, seasons)
+        val meta = requestMeta(type, id) ?: return SAnimeSeasonUpdate(anime, seasons)
+        return SAnimeSeasonUpdate(
+            anime = if (fetchDetails) StremioMapper.toSAnime(meta, type) else anime,
+            seasons = if (fetchSeasons) StremioMapper.toSeasons(meta, type) else seasons,
+        )
+    }
+
+    @Deprecated("Use the combined suspend API instead", ReplaceWith("getAnimeSeasonUpdate"))
+    override suspend fun getSeasonList(anime: SAnime): List<SAnime> {
+        val (type, id) = StremioMapper.parseEntryUrl(anime.url) ?: return emptyList()
+        val meta = requestMeta(type, id) ?: return emptyList()
+        return StremioMapper.toSeasons(meta, type)
     }
 
     override suspend fun getAnimeDetails(anime: SAnime): SAnime {
@@ -166,9 +206,10 @@ class StremioSource(
     }
 
     override suspend fun getEpisodeList(anime: SAnime): List<SEpisode> {
-        val (type, id) = StremioMapper.parseEntryUrl(anime.url) ?: return emptyList()
+        val season = StremioMapper.parseSeasonUrl(anime.url)
+        val (type, id) = StremioMapper.parseEntryUrl(season?.first ?: anime.url) ?: return emptyList()
         val meta = requestMeta(type, id) ?: return emptyList()
-        return StremioMapper.toEpisodes(meta, type)
+        return StremioMapper.toEpisodes(meta, type, onlySeason = season?.second)
     }
 
     /**

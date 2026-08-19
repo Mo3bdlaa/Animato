@@ -13,6 +13,7 @@ import eu.kanade.domain.items.episode.interactor.SetSeenStatus
 import eu.kanade.domain.items.episode.model.applyFilters
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.toSManga
+import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
@@ -78,6 +79,14 @@ data class EntryItem(
     val bookmarked: Boolean,
     val dateUpload: Long,
     val downloaded: Boolean,
+    /**
+     * Whether this row is a season rather than something to watch.
+     *
+     * A season is another entry, with its own episode list, and tapping it has to open that entry
+     * instead of the player. Carried on the item rather than read from the anime at the tap site so
+     * that a list is never half one kind and half the other by accident.
+     */
+    val isSeason: Boolean = false,
 )
 
 /**
@@ -332,7 +341,7 @@ class EntryScreenModel(
             animeTrackRepository.getTracksByAnimeIdAsFlow(entryId).map { it.size },
             animeDownloadManager.queueState.map { },
             entryOverrides.overrides,
-        ) { (anime, episodes, _), trackers, _, overrides ->
+        ) { (anime, episodes, seasons), trackers, _, overrides ->
             val source = animeSourceManager.getOrStub(anime.source)
             val edited = overrides[EntryOverrides.key(ContentType.ANIME, entryId)]
             val ordered = withIOContext { episodes.applyFilters(anime, animeDownloadManager) }
@@ -358,22 +367,47 @@ class EntryScreenModel(
                 nextReleaseDays = daysUntil(anime.expectedNextUpdate?.toEpochMilli()),
                 releaseIntervalDays = anime.fetchInterval.absoluteValue.takeIf { it > 0 },
                 items = withIOContext {
-                    ordered.map { episode ->
-                        EntryItem(
-                            id = episode.id,
-                            name = episode.name,
-                            number = episode.episodeNumber,
-                            scanlator = episode.scanlator,
-                            viewed = episode.seen,
-                            bookmarked = episode.bookmark,
-                            dateUpload = episode.dateUpload,
-                            downloaded = animeDownloadManager.isEpisodeDownloaded(
-                                episodeName = episode.name,
-                                episodeScanlator = episode.scanlator,
-                                animeTitle = anime.title,
-                                sourceId = anime.source,
-                            ),
-                        )
+                    // A series whose source splits it into seasons has no episodes of its own —
+                    // each season is a separate entry carrying its own. The list was being built
+                    // from the empty side, so those titles showed a blank page and looked like a
+                    // source that had stopped working. The seasons were already being fetched and
+                    // then discarded one line above.
+                    if (anime.fetchType == FetchType.Seasons) {
+                        seasons
+                            .sortedBy { it.anime.seasonNumber }
+                            .map { season ->
+                                EntryItem(
+                                    id = season.id,
+                                    name = season.anime.title,
+                                    number = season.anime.seasonNumber,
+                                    scanlator = null,
+                                    // Seen when every episode in it is, which is the only one of
+                                    // these flags that means anything for a whole season.
+                                    viewed = season.seen,
+                                    bookmarked = false,
+                                    dateUpload = season.latestUpload,
+                                    downloaded = false,
+                                    isSeason = true,
+                                )
+                            }
+                    } else {
+                        ordered.map { episode ->
+                            EntryItem(
+                                id = episode.id,
+                                name = episode.name,
+                                number = episode.episodeNumber,
+                                scanlator = episode.scanlator,
+                                viewed = episode.seen,
+                                bookmarked = episode.bookmark,
+                                dateUpload = episode.dateUpload,
+                                downloaded = animeDownloadManager.isEpisodeDownloaded(
+                                    episodeName = episode.name,
+                                    episodeScanlator = episode.scanlator,
+                                    animeTitle = anime.title,
+                                    sourceId = anime.source,
+                                ),
+                            )
+                        }
                     }
                 },
                 trackerCount = trackers,

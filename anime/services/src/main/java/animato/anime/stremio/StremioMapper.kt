@@ -61,7 +61,11 @@ internal object StremioMapper {
         author = meta.director.firstOrNull()
         artist = meta.cast.take(CAST_IN_ARTIST).joinToString(", ").takeIf { it.isNotEmpty() }
         status = statusOf(meta)
-        fetch_type = FetchType.Episodes
+        // Declared here and nowhere earlier, because this is the first moment anything knows. A
+        // catalogue entry carries no videos, so the season count is unknowable until the meta
+        // arrives — and the app fixes an entry's fetch type once it is initialised, which is what
+        // this call does.
+        fetch_type = if (toSeasons(meta, fallbackType).isEmpty()) FetchType.Episodes else FetchType.Seasons
         update_strategy = AnimeUpdateStrategy.ALWAYS_UPDATE
         initialized = true
     }
@@ -79,7 +83,7 @@ internal object StremioMapper {
      * are two episodes the app cannot tell apart. Specials sort last for the same reason they are
      * season 0 — they are extra, and putting them first pushes episode one off the screen.
      */
-    fun toEpisodes(meta: StremioMeta, fallbackType: String): List<SEpisode> {
+    fun toEpisodes(meta: StremioMeta, fallbackType: String, onlySeason: Int? = null): List<SEpisode> {
         val type = meta.type?.takeIf { it.isNotBlank() } ?: fallbackType
         if (meta.videos.isEmpty()) {
             return listOf(
@@ -93,6 +97,7 @@ internal object StremioMapper {
         }
 
         return meta.videos
+            .filter { onlySeason == null || it.season == onlySeason }
             .sortedWith(
                 compareBy(
                     { if (it.season == SPECIALS_SEASON) 1 else 0 },
@@ -111,6 +116,60 @@ internal object StremioMapper {
                     preview_url = video.thumbnail
                 }
             }
+    }
+
+    /**
+     * The distinct seasons of a series, each as an entry of its own.
+     *
+     * Stremio hands over every episode of every season in one document with the season stamped on
+     * each, which is the whole reason this is cheap here and expensive everywhere else: no second
+     * request, no guessing from titles, no numbering scheme to reverse-engineer. Specials keep
+     * their own season 0 rather than being folded in — the addon said they were separate and it is
+     * the one that knows.
+     *
+     * Returns nothing for a single-season series, which is how the caller decides not to insert a
+     * layer: one season behind a tap called "Season 1" is a worse title page than the episode list
+     * it replaced.
+     */
+    fun toSeasons(meta: StremioMeta, fallbackType: String): List<SAnime> {
+        val type = meta.type?.takeIf { it.isNotBlank() } ?: fallbackType
+        val numbers = meta.videos.mapNotNull { it.season }.distinct().sorted()
+        if (numbers.size < 2) return emptyList()
+
+        return numbers
+            .sortedBy { if (it == SPECIALS_SEASON) Int.MAX_VALUE else it }
+            .map { number ->
+                SAnime.create().apply {
+                    url = seasonUrl(type, meta.id, number)
+                    title = seasonTitle(meta.name, number)
+                    thumbnail_url = meta.poster
+                    season_number = number.toDouble()
+                    fetch_type = FetchType.Episodes
+                    update_strategy = AnimeUpdateStrategy.ALWAYS_UPDATE
+                }
+            }
+    }
+
+    /**
+     * A season's address: the entry's own, with the season appended after a slash.
+     *
+     * A slash rather than another colon, because colons are already the separator between type and
+     * id *and* part of the ids themselves. One more of them would make the string ambiguous in a
+     * way no amount of care at the parse site could undo.
+     */
+    fun seasonUrl(type: String, id: String, season: Int): String = "${entryUrl(type, id)}/s$season"
+
+    /** The id and season back out of an address written by [seasonUrl], or null if it has none. */
+    fun parseSeasonUrl(url: String): Pair<String, Int>? {
+        val marker = url.lastIndexOf("/s")
+        if (marker < 0) return null
+        val season = url.substring(marker + 2).toIntOrNull() ?: return null
+        return url.substring(0, marker) to season
+    }
+
+    private fun seasonTitle(name: String, number: Int): String = when (number) {
+        SPECIALS_SEASON -> "$name — Specials"
+        else -> "$name — Season $number"
     }
 
     /**

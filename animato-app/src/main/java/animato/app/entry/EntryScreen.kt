@@ -162,16 +162,23 @@ class EntryScreen(
         }
 
         val open: (EntryItem) -> Unit = { item ->
-            when (contentType) {
-                ContentType.MANGA ->
-                    context.startActivity(ReaderActivity.newIntent(context, entryId, item.id))
-                ContentType.ANIME -> scope.launch {
-                    PlayerLauncher.startPlayerActivity(
-                        context = context,
-                        animeId = entryId,
-                        episodeId = item.id,
-                        extPlayer = false,
-                    )
+            // A season is another entry, not something to play. Opening it here rather than
+            // branching inside the player keeps the player's contract simple: everything it is
+            // handed is a thing with a video.
+            if (item.isSeason) {
+                navigator.push(EntryScreen(item.id, ContentType.ANIME))
+            } else {
+                when (contentType) {
+                    ContentType.MANGA ->
+                        context.startActivity(ReaderActivity.newIntent(context, entryId, item.id))
+                    ContentType.ANIME -> scope.launch {
+                        PlayerLauncher.startPlayerActivity(
+                            context = context,
+                            animeId = entryId,
+                            episodeId = item.id,
+                            extPlayer = false,
+                        )
+                    }
                 }
             }
         }

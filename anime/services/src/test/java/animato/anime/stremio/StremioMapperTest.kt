@@ -321,6 +321,74 @@ class StremioMapperTest {
     }
 
     @Test
+    fun `a multi-season series becomes seasons, and a single-season one does not`() {
+        val many = StremioMeta(
+            id = "tt0944947",
+            type = "series",
+            name = "Test Series",
+            videos = listOf(
+                StremioVideo(id = "a", season = 1, episode = 1),
+                StremioVideo(id = "b", season = 2, episode = 1),
+                StremioVideo(id = "c", season = 0, episode = 1),
+            ),
+        )
+
+        val seasons = StremioMapper.toSeasons(many, "series")
+
+        // Specials last, for the same reason they sort last among episodes.
+        seasons.map { it.title } shouldBe listOf(
+            "Test Series — Season 1",
+            "Test Series — Season 2",
+            "Test Series — Specials",
+        )
+        seasons.map { it.season_number } shouldBe listOf(1.0, 2.0, 0.0)
+
+        // One season behind a tap called "Season 1" is a worse title page than the episode list it
+        // would replace, so a single-season series gets no layer at all.
+        val one = StremioMeta(
+            id = "x",
+            type = "series",
+            name = "One Season",
+            videos = listOf(StremioVideo(id = "a", season = 1, episode = 1)),
+        )
+        StremioMapper.toSeasons(one, "series") shouldBe emptyList()
+    }
+
+    @Test
+    fun `a season address survives the ids that already contain colons`() {
+        val url = StremioMapper.seasonUrl("series", "kitsu:1234", 2)
+
+        // A slash, not another colon: colons already separate the type from the id and appear
+        // inside the ids, so one more would make this unparseable.
+        url shouldBe "series:kitsu:1234/s2"
+        StremioMapper.parseSeasonUrl(url) shouldBe ("series:kitsu:1234" to 2)
+        StremioMapper.parseEntryUrl(StremioMapper.parseSeasonUrl(url)!!.first) shouldBe ("series" to "kitsu:1234")
+
+        // An ordinary entry has no season in it and must not be read as though it had.
+        StremioMapper.parseSeasonUrl("series:tt0944947") shouldBe null
+    }
+
+    @Test
+    fun `a season takes only its own episodes`() {
+        val meta = StremioMeta(
+            id = "tt1",
+            type = "series",
+            name = "S",
+            videos = listOf(
+                StremioVideo(id = "s1e1", season = 1, episode = 1),
+                StremioVideo(id = "s1e2", season = 1, episode = 2),
+                StremioVideo(id = "s2e1", season = 2, episode = 1),
+            ),
+        )
+
+        val second = StremioMapper.toEpisodes(meta, "series", onlySeason = 2)
+
+        second.map { it.url } shouldBe listOf("series:s2e1")
+        // Numbered from one within the season, not carried over from the whole series.
+        second.single().episode_number shouldBe 1f
+    }
+
+    @Test
     fun `a catalog entry keeps the type it was requested under when it omits its own`() {
         val anime = StremioMapper.toSAnime(StremioMetaPreview(id = "tt1", name = "Untyped"), "series")
         anime.url shouldBe "series:tt1"
