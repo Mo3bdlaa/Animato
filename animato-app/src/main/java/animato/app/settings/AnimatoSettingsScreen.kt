@@ -8,6 +8,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
+import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 /**
  * The settings root, with the anime section on it.
@@ -24,13 +25,23 @@ import eu.kanade.presentation.util.Screen
  * navigator; that is worth having and is not worth copying twice, so it comes when the settings get
  * their own tablet pass.
  */
-class AnimatoSettingsScreen : Screen() {
+class AnimatoSettingsScreen(
+    /**
+     * Where the settings open, when the caller has somewhere in mind.
+     *
+     * The default is the list, which is what a *Settings* button means. Somewhere that already
+     * knows the section — the tracking hub's *Sign in*, whose whole purpose is the tracking
+     * screen — passes it and skips the list, and Back still returns to the caller rather than to a
+     * settings root that was never visited.
+     */
+    private val startAt: VoyagerScreen = AnimatoSettingsMainScreen,
+) : Screen() {
 
     @Composable
     override fun Content() {
         val parentNavigator = LocalNavigator.currentOrThrow
         Navigator(
-            screen = AnimatoSettingsMainScreen,
+            screen = startAt,
             onBackPressed = null,
         ) { navigator ->
             val pop: () -> Unit = {

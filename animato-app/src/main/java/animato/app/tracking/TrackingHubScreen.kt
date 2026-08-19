@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.settings.AnimatoSettingsScreen
+import animato.app.settings.AnimatoSettingsTrackingScreen
 import animato.ui.components.AnimatoEmptyState
 import animato.ui.theme.LocalAnimatoPalette
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -106,7 +107,10 @@ class TrackingHubScreen : Screen() {
                     AccountRow(
                         account = account,
                         onSync = { screenModel.sync(account) },
-                        onSignIn = { navigator.push(AnimatoSettingsScreen()) },
+                        // Straight to the tracking screen, which is the only reason this button
+                        // exists. It used to open the settings list, leaving the person to find
+                        // tracking in it — a button that says *Sign in* and delivers a menu.
+                        onSignIn = { navigator.push(AnimatoSettingsScreen(AnimatoSettingsTrackingScreen)) },
                     )
                 }
             }

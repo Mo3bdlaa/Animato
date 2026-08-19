@@ -69,10 +69,13 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.components.DropdownMenu
+import eu.kanade.presentation.components.NavigatorAdaptiveSheet
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
+import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackInfoDialogHomeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
+import eu.kanade.tachiyomi.ui.manga.track.TrackInfoDialogHomeScreen
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import kotlinx.coroutines.launch
@@ -124,6 +127,7 @@ class EntryScreen(
         val state by screenModel.state.collectAsStateWithLifecycle()
         var menuOpen by remember { mutableStateOf(false) }
         var editOpen by remember { mutableStateOf(false) }
+        var trackingOpen by remember { mutableStateOf(false) }
 
         if (editOpen) {
             EditEntryDialog(
@@ -131,6 +135,41 @@ class EntryScreen(
                 onSave = screenModel::saveOverride,
                 onDismiss = { editOpen = false },
             )
+        }
+
+        /*
+         * Tracking, on this page rather than on the way to another one.
+         *
+         * *Tracking* in the overflow used to push the original title screen, which opens its own
+         * tracking sheet only if you press its own tracking icon — so the menu item that said
+         * tracking delivered a different page and one more press. The sheet is a Voyager screen in
+         * its own right; showing it here is what the original screen does, minus the detour.
+         *
+         * Two of them, because the two halves each have their own — the one thing on this page
+         * that could not be unified, since a track row belongs to one library or the other.
+         */
+        if (trackingOpen && !state.isLoading) {
+            val dismiss = { trackingOpen = false }
+            when (contentType) {
+                ContentType.MANGA -> NavigatorAdaptiveSheet(
+                    screen = TrackInfoDialogHomeScreen(
+                        mangaId = state.entryId,
+                        mangaTitle = state.title,
+                        sourceId = state.sourceId,
+                    ),
+                    enableSwipeDismiss = { it.lastItem is TrackInfoDialogHomeScreen },
+                    onDismissRequest = dismiss,
+                )
+                ContentType.ANIME -> NavigatorAdaptiveSheet(
+                    screen = AnimeTrackInfoDialogHomeScreen(
+                        animeId = state.entryId,
+                        animeTitle = state.title,
+                        sourceId = state.sourceId,
+                    ),
+                    enableSwipeDismiss = { it.lastItem is AnimeTrackInfoDialogHomeScreen },
+                    onDismissRequest = dismiss,
+                )
+            }
         }
         var showAbout by rememberSaveable { mutableStateOf(false) }
         val snackbarHostState = remember { SnackbarHostState() }
@@ -227,8 +266,8 @@ class EntryScreen(
                             DropdownMenuItem(
                                 // Here rather than as an icon in the header, where it had no label
                                 // and a glyph that read as refresh. Binding *this* title to a
-                                // tracker is the original screen's dialog, which is where the
-                                // per-title work lives; the hub in Settings is about accounts.
+                                // tracker is the original screen's dialog, opened over this page;
+                                // the hub in Settings is about accounts rather than titles.
                                 text = { Text(stringResource(AYMR.strings.entry_tracking)) },
                                 trailingIcon = {
                                     if (state.trackerCount > 0) {
@@ -240,12 +279,7 @@ class EntryScreen(
                                 },
                                 onClick = {
                                     menuOpen = false
-                                    navigator.push(
-                                        when (contentType) {
-                                            ContentType.MANGA -> MangaScreen(entryId)
-                                            ContentType.ANIME -> AnimeScreen(entryId)
-                                        },
-                                    )
+                                    trackingOpen = true
                                 },
                             )
                             DropdownMenuItem(

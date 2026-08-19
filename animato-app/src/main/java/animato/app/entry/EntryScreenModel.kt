@@ -127,6 +127,14 @@ data class EntryState(
     val statusLabel: dev.icerock.moko.resources.StringResource? = null,
     val sourceName: String = "",
     /**
+     * Which source this entry came from.
+     *
+     * Carried for the tracking sheet, which takes a source id: what it does with it is decide
+     * whether the source is one of the trackers in disguise — a Komga or a Jellyfin server, where
+     * the link is the entry's own url and there is nothing to search for.
+     */
+    val sourceId: Long = 0L,
+    /**
      * The entry's page on the source's own site, when it has one.
      *
      * Null for a local entry and for a source that is a stub because its extension is gone — in
@@ -300,6 +308,7 @@ class EntryScreenModel(
                 override = edited,
                 statusLabel = statusLabel(manga.status),
                 sourceName = source.name,
+                sourceId = manga.source,
                 webViewUrl = (source as? HttpSource)?.runCatching { getMangaUrl(manga.toSManga()) }?.getOrNull(),
                 coverData = manga.asMangaCover(),
                 inLibrary = manga.favorite,
@@ -358,6 +367,7 @@ class EntryScreenModel(
                 override = edited,
                 statusLabel = statusLabel(anime.status),
                 sourceName = source.name,
+                sourceId = anime.source,
                 webViewUrl = (source as? AnimeHttpSource)?.runCatching { getAnimeUrl(anime.toSAnime()) }?.getOrNull(),
                 coverData = anime.asAnimeCover(),
                 inLibrary = anime.favorite,
