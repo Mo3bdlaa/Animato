@@ -57,10 +57,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.stremio.StremioAddonStore
+import animato.anime.stremio.StremioSource
 import animato.anime.ui.stores.AnimeExtensionStoresScreen
 import animato.app.navigation.LensButton
 import animato.app.source.SourceBrowseScreen
 import animato.app.stremio.StremioAddonsScreen
+import animato.app.stremio.stremioAddons
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -128,6 +130,8 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
     val state by screenModel.state.collectAsStateWithLifecycle()
     var segment by rememberSaveable { mutableStateOf(ExtensionSegment.INSTALLED) }
     var languagesOpen by rememberSaveable { mutableStateOf(false) }
+    val stremioStore = remember { Injekt.get<StremioAddonStore>() }
+    val addons by stremioStore.addons.collectAsStateWithLifecycle()
 
     // The merge a device asked for: an installed extension is somewhere you can GO, not just
     // a thing you manage. One source opens straight into its browse screen; several open a
@@ -199,13 +203,19 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
              * The repositories row and the segments stay put above it. They govern both lists, so
              * sliding them out from under a swipe would be answering a question nobody asked.
              */
-        val pagerState = rememberPagerState(initialPage = segment.ordinal) { ExtensionSegment.entries.size }
+        val segments = ExtensionSegment.entries.filterNot {
+            it == ExtensionSegment.STREMIO && state.lens == ContentFilter.MANGA
+        }
+        val pagerState = rememberPagerState(initialPage = segments.indexOf(segment).coerceAtLeast(0)) {
+            segments.size
+        }
 
-        LaunchedEffect(segment) {
-            if (pagerState.currentPage != segment.ordinal) pagerState.animateScrollToPage(segment.ordinal)
+        LaunchedEffect(segment, segments) {
+            val target = segments.indexOf(segment).coerceAtLeast(0)
+            if (pagerState.currentPage != target) pagerState.animateScrollToPage(target)
         }
         LaunchedEffect(pagerState.settledPage) {
-            val settled = ExtensionSegment.entries[pagerState.settledPage]
+            val settled = segments.getOrNull(pagerState.settledPage) ?: return@LaunchedEffect
             if (segment != settled) segment = settled
         }
 
@@ -215,18 +225,16 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                 storeCount = state.storeCount,
                 navigator = navigator,
             )
-            // Addons serve video and nothing else, so under the manga lens they are furniture.
-            if (state.lens != ContentFilter.MANGA) {
-                StremioAddonsRow(navigator = navigator)
-            }
-            SegmentRow(selected = segment, onSelect = { segment = it })
+            // Addons serve video and nothing else, so under the manga lens the segment is
+            // furniture — and a tab that opens an empty list is worse than one that is absent.
+            SegmentRow(selected = segment, segments = segments, onSelect = { segment = it })
 
             HorizontalPager(state = pagerState) { page ->
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = MaterialTheme.padding.medium),
                 ) {
-                    when (ExtensionSegment.entries[page]) {
+                    when (segments[page]) {
                         ExtensionSegment.INSTALLED ->
                             if (state.installed.isEmpty()) {
                                 item(key = "ships-empty") {
@@ -235,6 +243,25 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                             } else {
                                 extensionRows(state.installed, screenModel, openSource)
                             }
+
+                        ExtensionSegment.STREMIO -> {
+                            stremioAddons(
+                                addons = addons,
+                                onOpen = { addon ->
+                                    navigator.push(
+                                        SourceBrowseScreen(
+                                            StremioSource.idFor(addon.url),
+                                            ContentType.ANIME,
+                                        ),
+                                    )
+                                },
+                                onRemove = { url -> stremioStore.remove(url) },
+                                // The dedicated screen owns the address field and everything that
+                                // can go wrong at it; this segment sends people there rather than
+                                // growing a second copy of the dialog.
+                                onAdd = { navigator.push(StremioAddonsScreen()) },
+                            )
+                        }
 
                         ExtensionSegment.AVAILABLE ->
                             // Nothing on offer drew nothing at all: the segments, and then
@@ -267,6 +294,17 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
 private enum class ExtensionSegment(val labelRes: StringResource) {
     INSTALLED(MR.strings.ext_installed),
     AVAILABLE(AYMR.strings.label_available),
+
+    /**
+     * The other kind of source, in the same row as the two kinds of extension.
+     *
+     * From a device: *"put Stremio next to installed and available, and let me go into them."* It
+     * had a row above the segments that navigated away, which said "this is somewhere else" about
+     * the one thing on this screen that is not somewhere else — it is a source, like everything
+     * beside it, and opening one should land in its catalogue exactly as tapping an installed
+     * extension does.
+     */
+    STREMIO(AYMR.strings.stremio_addons),
 }
 
 private fun LazyListScope.extensionRows(
@@ -338,40 +376,7 @@ private fun RepositoriesRow(
 }
 
 /**
- * The other kind of source, one row below the repositories that serve the usual kind.
- *
- * It sits here rather than in settings because it answers the same question the row above it does
- * — *where is Animato getting things from* — and because the two are alternatives to each other:
- * an extension is a package we install and run, an addon is an address we only ever ask. Someone
- * looking for more sources should find both without knowing that distinction first.
- *
- * The subtitle names the addons once there are any, and explains what one is while there are none.
- * A bare count would be the least useful thing this line could say on either side of that.
- */
-@Composable
-private fun StremioAddonsRow(navigator: Navigator) {
-    val store = remember { Injekt.get<StremioAddonStore>() }
-    val addons by store.addons.collectAsStateWithLifecycle()
-
-    ListItem(
-        modifier = Modifier.clickable { navigator.push(StremioAddonsScreen()) },
-        headlineContent = { Text(stringResource(AYMR.strings.stremio_addons)) },
-        supportingContent = {
-            Text(
-                text = if (addons.isEmpty()) {
-                    stringResource(AYMR.strings.stremio_addons_summary)
-                } else {
-                    addons.joinToString { it.manifest.name.ifBlank { it.url } }
-                },
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-    )
-}
-
-/**
- * Installed · Available, as an underlined label each.
+ * Installed · Available · Stremio, as an underlined label each.
  *
  * Not a chip row and not a TabRow: a chip row would collide with the lens and category chips used
  * everywhere else, and Material's TabRow insists on filling the width and carrying its own ripple,
@@ -388,6 +393,7 @@ private fun StremioAddonsRow(navigator: Navigator) {
 @Composable
 private fun SegmentRow(
     selected: ExtensionSegment,
+    segments: List<ExtensionSegment>,
     onSelect: (ExtensionSegment) -> Unit,
 ) {
     Row(
@@ -396,7 +402,7 @@ private fun SegmentRow(
             .padding(horizontal = MaterialTheme.padding.medium),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.large),
     ) {
-        ExtensionSegment.entries.forEach { entry ->
+        segments.forEach { entry ->
             val active = entry == selected
             Column(
                 modifier = Modifier

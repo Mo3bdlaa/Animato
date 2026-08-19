@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -122,73 +123,82 @@ class StremioAddonsScreen : Screen() {
                 )
             },
         ) { contentPadding ->
-            // Suggestions the person already took are not suggestions any more.
-            val installed = addons.map { StremioUrls.normalizeBase(it.url) }.toSet()
-            val suggestions = SUGGESTED_ADDONS.filterNot { StremioUrls.normalizeBase(it.url) in installed }
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.medium),
             ) {
-                if (addons.isEmpty()) {
-                    item(key = "empty") {
-                        AnimatoEmptyState(
-                            message = stringResource(AYMR.strings.stremio_addons_empty),
-                            actionLabel = stringResource(AYMR.strings.stremio_add_addon),
-                            onAction = {
-                                draftUrl = ""
-                                dialogOpen = true
-                            },
-                        )
-                    }
-                }
-
-                if (suggestions.isNotEmpty()) {
-                    item(key = "suggested-header") {
-                        Text(
-                            text = stringResource(AYMR.strings.stremio_suggested),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(
-                                start = MaterialTheme.padding.medium,
-                                end = MaterialTheme.padding.medium,
-                                top = MaterialTheme.padding.medium,
-                                bottom = MaterialTheme.padding.small,
-                            ),
-                        )
-                    }
-                    items(items = suggestions, key = { "suggested-" + it.url }) { suggestion ->
-                        SuggestedAddonItem(
-                            suggestion = suggestion,
-                            onPick = {
-                                draftUrl = suggestion.url
-                                dialogOpen = true
-                            },
-                        )
-                    }
-                }
-
-                items(items = addons, key = { it.url }) { addon ->
-                    AddonListItem(
-                        addon = addon,
-                        // An addon with a catalogue is somewhere you can go, the same way an
-                        // installed extension is. A stream-only one is not — it has nothing to
-                        // show, and opening an empty grid would be a worse answer than not
-                        // offering to open it.
-                        onOpen = if (addon.isBrowsable) {
-                            {
-                                navigator.push(
-                                    SourceBrowseScreen(StremioSource.idFor(addon.url), ContentType.ANIME),
-                                )
-                            }
-                        } else {
-                            null
-                        },
-                        onRemove = { screenModel.remove(addon.url) },
-                    )
-                }
+                stremioAddons(
+                    addons = addons,
+                    onOpen = { addon ->
+                        navigator.push(SourceBrowseScreen(StremioSource.idFor(addon.url), ContentType.ANIME))
+                    },
+                    onRemove = screenModel::remove,
+                    onAdd = { url ->
+                        draftUrl = url
+                        dialogOpen = true
+                    },
+                )
             }
         }
+    }
+}
+
+/**
+ * The addon list, wherever it is being drawn.
+ *
+ * It has two homes: its own screen, reached from Sources, and a segment beside Installed and
+ * Available on that same screen — from a device, *"put Stremio next to installed and available"*.
+ * Both are the same list, so it is one function rather than two that drift apart, and it is
+ * [LazyListScope] rather than a composable because the segment it lives in is already a lazy list
+ * and nesting a second scroller inside one is how a page ends up with two.
+ */
+internal fun LazyListScope.stremioAddons(
+    addons: List<StremioAddon>,
+    onOpen: (StremioAddon) -> Unit,
+    onRemove: (String) -> Unit,
+    onAdd: (String) -> Unit,
+) {
+    // Suggestions the person already took are not suggestions any more.
+    val installed = addons.map { StremioUrls.normalizeBase(it.url) }.toSet()
+    val suggestions = SUGGESTED_ADDONS.filterNot { StremioUrls.normalizeBase(it.url) in installed }
+    if (addons.isEmpty()) {
+        item(key = "stremio-empty") {
+            AnimatoEmptyState(
+                message = stringResource(AYMR.strings.stremio_addons_empty),
+                actionLabel = stringResource(AYMR.strings.stremio_add_addon),
+                onAction = { onAdd("") },
+            )
+        }
+    }
+
+    if (suggestions.isNotEmpty()) {
+        item(key = "stremio-suggested-header") {
+            Text(
+                text = stringResource(AYMR.strings.stremio_suggested),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(
+                    start = MaterialTheme.padding.medium,
+                    end = MaterialTheme.padding.medium,
+                    top = MaterialTheme.padding.medium,
+                    bottom = MaterialTheme.padding.small,
+                ),
+            )
+        }
+        items(items = suggestions, key = { "stremio-suggested-" + it.url }) { suggestion ->
+            SuggestedAddonItem(suggestion = suggestion, onPick = { onAdd(suggestion.url) })
+        }
+    }
+
+    items(items = addons, key = { "stremio-" + it.url }) { addon ->
+        AddonListItem(
+            addon = addon,
+            // An addon with a catalogue is somewhere you can go, the same way an installed
+            // extension is. A stream-only one is not — it has nothing to show, and opening an
+            // empty grid would be a worse answer than not offering to open it.
+            onOpen = if (addon.isBrowsable) ({ onOpen(addon) }) else null,
+            onRemove = { onRemove(addon.url) },
+        )
     }
 }
 
