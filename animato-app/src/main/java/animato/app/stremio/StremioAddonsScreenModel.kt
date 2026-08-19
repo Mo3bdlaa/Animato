@@ -7,6 +7,7 @@ import animato.anime.stremio.DirectoryAddon
 import animato.anime.stremio.StremioAddon
 import animato.anime.stremio.StremioAddonDirectory
 import animato.anime.stremio.StremioAddonStore
+import eu.kanade.domain.source.service.SourcePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +34,7 @@ sealed interface AddonInstallState {
 class StremioAddonsScreenModel(
     private val store: StremioAddonStore = Injekt.get(),
     private val directory: StremioAddonDirectory = StremioAddonDirectory(),
+    sourcePreferences: SourcePreferences = Injekt.get(),
 ) : ViewModel() {
 
     val addons: StateFlow<List<StremioAddon>> = store.addons
@@ -49,7 +51,13 @@ class StremioAddonsScreenModel(
     val directoryAddons: StateFlow<List<DirectoryAddon>> = _directoryAddons.asStateFlow()
 
     init {
-        viewModelScope.launchIO { _directoryAddons.value = directory.listed() }
+        viewModelScope.launchIO {
+            // The same setting that hides NSFW extensions hides the addons that describe
+            // themselves as adult — one answer to one question, asked once in Settings, rather
+            // than a second switch on a screen about something else.
+            val showAdult = sourcePreferences.showNsfwSource.get()
+            _directoryAddons.value = directory.listed().filter { showAdult || !it.isAdult }
+        }
     }
 
     private val _installState = MutableStateFlow<AddonInstallState>(AddonInstallState.Idle)

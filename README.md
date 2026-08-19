@@ -60,8 +60,17 @@ where the manga comes from.
 
 **Stremio addons** are the other shape: a web address that answers JSON. Nothing is installed and
 nothing runs inside the app, so an addon cannot crash it or read its storage — the app only ever
-talks to it. Sources → **Stremio addons** takes an address; the screen suggests four worth starting
-with, and any other addon's `manifest.json` link works the same way.
+talks to it. Sources → **Extension stores** → **Stremio** is where they are added: the screen
+suggests four worth starting with, lists several hundred the community has published, and takes any
+other addon's `manifest.json` link the same way. The **Stremio** segment beside *Installed* and
+*Available* is what is already added — open one to browse it, or remove it.
+
+That long list is two lists merged. Stremio publishes its own collection as JSON and the app reads
+it at launch, which keeps the popular half current. The rest is a snapshot of
+[stremio-addons.net](https://stremio-addons.net), which has no API, scraped by
+`docs/stremio/build-addon-directory.py` and shipped with the app — so it is as fresh as the release
+you are running. Addons that describe themselves as adult are marked in that snapshot and hidden
+unless *Show NSFW sources* is on.
 
 Addons split the job between them and meet on a shared id, so a working setup is usually more than
 one:
