@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.player.loader
 
+import android.app.Application
 import animato.anime.player.HosterState
 import animato.anime.player.describeForUser
 import eu.kanade.domain.items.episode.model.toSEpisode
@@ -12,9 +13,11 @@ import eu.kanade.tachiyomi.animesource.online.ParsedAnimeHttpSource
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.source.local.entries.anime.LocalAnimeSource
 import tachiyomi.source.local.io.anime.LocalAnimeSourceFileSystem
 import uy.kohesive.injekt.Injekt
@@ -39,7 +42,17 @@ class EpisodeLoader {
                 isDownloaded -> getHostersOnDownloaded(episode, anime, source)
                 source is AnimeHttpSource -> getHostersOnHttp(episode, source)
                 source is LocalAnimeSource -> getHostersOnLocal(episode)
-                else -> error("source not supported")
+                // Every source that can serve video is one of the two above, so reaching here means
+                // there is no source: `getOrStub` handed back a placeholder because nothing in the
+                // app answers to this entry's source id. An extension was uninstalled, or an addon
+                // or playlist was removed — and since a Stremio addon's id comes from its address,
+                // re-adding the same service under a different address counts as removing it.
+                //
+                // This was inherited as `error("source not supported")`: untranslated, and phrased
+                // as if the app had met a kind of source it does not handle rather than no source
+                // at all. It is the last thing a person sees before playback fails, so it says the
+                // thing that is actually true and that they can act on.
+                else -> error(Injekt.get<Application>().stringResource(AYMR.strings.failure_source_missing))
             }
         }
 

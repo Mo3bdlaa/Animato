@@ -204,6 +204,17 @@ data class EntryState(
      */
     val form: EntryForm = EntryForm.Serial,
     /**
+     * Whether nothing in the app answers to this entry's source id any more.
+     *
+     * An extension uninstalled, or an addon or playlist removed. Worth its own field rather than
+     * inferring it from [sourceName], because the name survives: the app keeps a stub row per
+     * source so a title from a missing one still reads as *Cinemeta* rather than as a number.
+     * That is right for the name and wrong as an answer to *can this play* — which is a question
+     * the page could not answer at all until now, so the first time anybody found out was a
+     * failure the moment they pressed play.
+     */
+    val sourceMissing: Boolean = false,
+    /**
      * The seasons this series is split into, or empty for the things that are not.
      *
      * Present only where the source splits a title that way — a Stremio series with a `videos`
@@ -438,6 +449,7 @@ class EntryScreenModel(
                 missingCount = ordered.map { it.chapterNumber }.missingChaptersCount(),
                 nextReleaseDays = daysUntil(manga.expectedNextUpdate?.toEpochMilliseconds()),
                 releaseIntervalDays = manga.fetchInterval.absoluteValue.takeIf { it > 0 },
+                sourceMissing = sourceManager.get(manga.source) == null,
                 items = withIOContext {
                     ordered.map { chapter ->
                         EntryItem(
@@ -522,6 +534,7 @@ class EntryScreenModel(
                 nextReleaseDays = daysUntil(anime.expectedNextUpdate?.toEpochMilli()),
                 releaseIntervalDays = anime.fetchInterval.absoluteValue.takeIf { it > 0 },
                 form = source.entryForm(anime.url),
+                sourceMissing = animeSourceManager.get(anime.source) == null,
                 /*
                  * Seasons as a picker, not as a list you navigate into.
                  *

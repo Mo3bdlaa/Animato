@@ -304,6 +304,8 @@
     <string name="no_available_videos">No available videos</string>
     <string name="failure_extension_crashed">The extension crashed; it is likely outdated</string>
     <string name="failure_source_not_installed">The extension for this source is not installed</string>
+    <string name="failure_source_missing">The source this came from is no longer installed</string>
+    <string name="entry_source_missing">%1$s is not installed, so nothing here can play or refresh. Install it again, or migrate this title to another source.</string>
     <string name="failure_site_changed">The site changed; this extension needs an update</string>
     <string name="failure_site_unreachable">Could not reach the site</string>
     <string name="failure_site_timed_out">The site took too long to answer</string>

@@ -43,6 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -354,6 +355,34 @@ class EntryScreen(
                             }
                         },
                     )
+                }
+
+                /*
+                 * The source is gone, said here rather than at the moment of failure.
+                 *
+                 * Reported from a device: an addon removed and added back, and every title from it
+                 * answering "source not supported" on play, with nothing anywhere on the page
+                 * having hinted at it. The name survives — the app keeps a stub per source so the
+                 * row still reads Cinemeta — which is exactly what made it invisible.
+                 *
+                 * Migrate is offered because it is the real answer when the source is gone for
+                 * good, and it is otherwise buried in the overflow behind a word nobody reaches for
+                 * until they already know what is wrong.
+                 */
+                if (state.sourceMissing) {
+                    item(key = "source-missing") {
+                        SourceMissingNotice(
+                            sourceName = state.sourceName,
+                            onMigrate = {
+                                navigator.push(
+                                    when (contentType) {
+                                        ContentType.MANGA -> MigrateSearchScreen(entryId)
+                                        ContentType.ANIME -> MigrateAnimeSearchScreen(entryId)
+                                    },
+                                )
+                            },
+                        )
+                    }
                 }
 
                 item(key = "about") {
@@ -945,3 +974,39 @@ private val CoverWidth = 112.dp
 private val CoverRadius = 12.dp
 private val NumberBoxSize = 40.dp
 private val NumberBoxRadius = 8.dp
+private val NoticeRadius = 12.dp
+private const val NOTICE_ALPHA = 0.18f
+
+/**
+ * The one state on this page that is about the app rather than about the title.
+ *
+ * Drawn in the warning colour and not in the error one: nothing is broken and nothing was lost.
+ * The title, its progress and its history are all still here — what is missing is the thing that
+ * would fetch and play them, and that is a state with two ordinary ways out.
+ */
+@Composable
+private fun SourceMissingNotice(
+    sourceName: String,
+    onMigrate: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small)
+            .clip(RoundedCornerShape(NoticeRadius))
+            .background(LocalAnimatoPalette.current.warning.copy(alpha = NOTICE_ALPHA))
+            .padding(MaterialTheme.padding.medium),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
+    ) {
+        Text(
+            text = stringResource(AYMR.strings.entry_source_missing, sourceName),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = onMigrate) {
+            Text(stringResource(MR.strings.action_migrate))
+        }
+    }
+}
