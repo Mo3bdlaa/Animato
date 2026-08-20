@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +36,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -206,23 +208,19 @@ class EntryScreen(
         }
 
         val open: (EntryItem) -> Unit = { item ->
-            // A season is another entry, not something to play. Opening it here rather than
-            // branching inside the player keeps the player's contract simple: everything it is
-            // handed is a thing with a video.
-            if (item.isSeason) {
-                navigator.push(EntryScreen(item.id, ContentType.ANIME))
-            } else {
-                when (contentType) {
-                    ContentType.MANGA ->
-                        context.startActivity(ReaderActivity.newIntent(context, entryId, item.id))
-                    ContentType.ANIME -> scope.launch {
-                        PlayerLauncher.startPlayerActivity(
-                            context = context,
-                            animeId = entryId,
-                            episodeId = item.id,
-                            extPlayer = false,
-                        )
-                    }
+            when (contentType) {
+                ContentType.MANGA ->
+                    context.startActivity(ReaderActivity.newIntent(context, entryId, item.id))
+                // The season's id, not this page's, when a season is showing. The player is handed
+                // an anime and an episode and expects them to belong together; giving it the series
+                // and one of season two's episodes is a pair that matches nothing.
+                ContentType.ANIME -> scope.launch {
+                    PlayerLauncher.startPlayerActivity(
+                        context = context,
+                        animeId = state.itemOwnerId,
+                        episodeId = item.id,
+                        extPlayer = false,
+                    )
                 }
             }
         }
@@ -367,6 +365,24 @@ class EntryScreen(
                 }
 
                 /*
+                 * Which season, as a row above the episodes rather than a page to travel to.
+                 *
+                 * The episodes underneath belong to whichever chip is lit. That is the whole
+                 * change: the seasons were rows in this list, each one a link to another copy of
+                 * this page, so reaching season three meant back, tap, and a page whose cover,
+                 * description and tracking all described a season instead of the series.
+                 */
+                if (state.seasons.isNotEmpty()) {
+                    item(key = "seasons") {
+                        SeasonRow(
+                            seasons = state.seasons,
+                            selectedId = state.selectedSeasonId,
+                            onSelect = screenModel::selectSeason,
+                        )
+                    }
+                }
+
+                /*
                  * The count, the cadence and the gaps — all three of them questions about a list
                  * that grows.
                  *
@@ -456,7 +472,18 @@ class EntryScreen(
                 // A source that lists nothing left the page as a header over black. It is a real
                 // state — a title page opened straight from a search, before anything is known
                 // about it — and the refresh in the header is the one thing that could change it.
-                if (state.items.isEmpty()) {
+                if (state.isLoadingSeason) {
+                    item(key = "season-loading") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(MaterialTheme.padding.large),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else if (state.items.isEmpty()) {
                     item(key = "no-items") {
                         AnimatoEmptyState(
                             message = stringResource(AYMR.strings.entry_no_items),
@@ -478,6 +505,54 @@ class EntryScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Which season, one chip each.
+ *
+ * A row rather than a dropdown: the count is small — a series with more than a dozen seasons is
+ * rare enough that scrolling a few chips is fine, and a dropdown hides the number of seasons
+ * behind a tap, which is one of the two things somebody wants to know on arrival. The other is
+ * how much of it is left, which is why an unfinished season carries its unseen count.
+ */
+@Composable
+private fun SeasonRow(
+    seasons: List<EntrySeason>,
+    selectedId: Long?,
+    onSelect: (Long) -> Unit,
+) {
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(
+            horizontal = MaterialTheme.padding.medium,
+            vertical = MaterialTheme.padding.small,
+        ),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+    ) {
+        items(items = seasons, key = { it.id }) { season ->
+            FilterChip(
+                selected = season.id == selectedId,
+                onClick = { onSelect(season.id) },
+                label = {
+                    Text(
+                        text = season.name,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                trailingIcon = {
+                    // Only where there is something left. A finished season with "0" beside it is
+                    // a number that has to be read before it can be dismissed.
+                    if (season.unseenCount > 0) {
+                        Text(
+                            text = season.unseenCount.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    }
+                },
+            )
         }
     }
 }

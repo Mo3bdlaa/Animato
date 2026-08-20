@@ -17,36 +17,44 @@ import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.toSManga
 import eu.kanade.domain.track.anime.interactor.AddAnimeTracks
 import eu.kanade.domain.track.interactor.AddTracks
-import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.LogPriority
 import mihon.domain.source.interactor.UpdateAnimeFromRemote
 import mihon.domain.source.interactor.UpdateMangaFromRemote
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.chapter.interactor.GetChapter
 import tachiyomi.domain.chapter.interactor.UpdateChapter
 import tachiyomi.domain.chapter.model.ChapterUpdate
 import tachiyomi.domain.chapter.service.missingChaptersCount
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.GetAnimeWithEpisodesAndSeasons
+import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.entries.anime.model.AnimeUpdate
 import tachiyomi.domain.entries.anime.model.asAnimeCover
 import tachiyomi.domain.items.episode.interactor.GetEpisode
 import tachiyomi.domain.items.episode.interactor.UpdateEpisode
+import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.model.EpisodeUpdate
 import tachiyomi.domain.items.episode.service.missingEntriesCount
 import tachiyomi.domain.manga.interactor.GetManga
@@ -83,14 +91,24 @@ data class EntryItem(
     val bookmarked: Boolean,
     val dateUpload: Long,
     val downloaded: Boolean,
-    /**
-     * Whether this row is a season rather than something to watch.
-     *
-     * A season is another entry, with its own episode list, and tapping it has to open that entry
-     * instead of the player. Carried on the item rather than read from the anime at the tap site so
-     * that a list is never half one kind and half the other by accident.
-     */
-    val isSeason: Boolean = false,
+)
+
+/**
+ * One season of a series, as the picker above the episode list sees it.
+ *
+ * Not an [EntryItem]. A season used to be a row in the same list the episodes are in, which is what
+ * made it a *destination* — tap it, land on another page, press back to reach a different season.
+ * A season is not a thing you go to, it is which part of this thing you are looking at, and a type
+ * that cannot be put in the item list is what keeps that distinction from eroding.
+ */
+@Immutable
+data class EntrySeason(
+    /** The season's own entry id. Seasons really are separate rows; only the navigation was wrong. */
+    val id: Long,
+    val name: String,
+    val number: Double,
+    val unseenCount: Long,
+    val totalCount: Long,
 )
 
 /**
@@ -185,6 +203,24 @@ data class EntryState(
      * "1 Episodes" is the page describing our data model instead of the thing they opened.
      */
     val form: EntryForm = EntryForm.Serial,
+    /**
+     * The seasons this series is split into, or empty for the things that are not.
+     *
+     * Present only where the source splits a title that way — a Stremio series with a `videos`
+     * array spanning several seasons. Every extension in the ecosystem has one flat episode list
+     * and gets an empty list here, which is the state this screen was built assuming.
+     */
+    val seasons: List<EntrySeason> = emptyList(),
+    /**
+     * Which season the item list below is showing.
+     *
+     * Null while the seasons are still arriving, and null forever for anything with no seasons.
+     * When it is set, [items] are that season's episodes and not this entry's — a series split into
+     * seasons has none of its own.
+     */
+    val selectedSeasonId: Long? = null,
+    /** Whether the chosen season is being fetched for the first time. */
+    val isLoadingSeason: Boolean = false,
     val trackerCount: Int = 0,
     val isRefreshing: Boolean = false,
     /** What the last refresh found, held until the screen shows it once. */
@@ -200,6 +236,15 @@ data class EntryState(
      */
     val nextItem: EntryItem?
         get() = if (sortDescending) items.lastOrNull { !it.viewed } else items.firstOrNull { !it.viewed }
+
+    /**
+     * The entry the items actually belong to, which is the season when there is one.
+     *
+     * Everything that acts on an item needs this rather than [entryId]: the player is launched with
+     * an anime id and an episode id and refuses a pair that do not belong together, and the
+     * downloader names a file after the anime it was given.
+     */
+    val itemOwnerId: Long get() = selectedSeasonId ?: entryId
 
     val viewedCount: Int get() = items.count { it.viewed }
 
@@ -263,6 +308,17 @@ class EntryScreenModel(
 
     private var firstFetchDone = false
 
+    /**
+     * Which season's episodes to show, as a flow so the observer can follow it.
+     *
+     * Kept here rather than in the state because the state is written *from* the pipeline this
+     * feeds: reading the selection back out of the thing it produces would be a cycle.
+     */
+    private val selectedSeason = MutableStateFlow<Long?>(null)
+
+    /** Seasons already fetched once in this session, so a second visit does not re-ask. */
+    private val fetchedSeasons = mutableSetOf<Long>()
+
     init {
         viewModelScope.launch {
             when (contentType) {
@@ -293,6 +349,56 @@ class EntryScreenModel(
                 // did not make — is the app talking over its own screen. The refresh button
                 // reports properly, because that one was asked for.
                 refresh(announce = false)
+            }
+        }
+
+        /*
+         * Land on a season rather than on nothing.
+         *
+         * A series split into seasons has no episodes of its own, so with nothing selected the page
+         * is a header over an empty list. The one to open is the one being watched: the earliest
+         * with anything unseen in it, which for a finished series is the first and for one in
+         * progress is where you left off. Falling back to the first, because a fully-seen series
+         * still has to show something.
+         */
+        viewModelScope.launch {
+            val seasons = state.map { it.seasons }.first { it.isNotEmpty() }
+            if (selectedSeason.value == null) {
+                selectSeason(seasons.firstOrNull { it.unseenCount > 0 }?.id ?: seasons.first().id)
+            }
+        }
+    }
+
+    /**
+     * Show a season, fetching it the first time.
+     *
+     * A season row exists in the database from the moment the series was fetched, but its episodes
+     * do not — they arrive when somebody asks for that season. That used to happen because opening
+     * a season *was* opening a page, and the page's own first-fetch ran. There is no second page
+     * any more, so the fetch belongs here, and it is done once per season per session for the same
+     * reason the entry's own is: a picker you tap along costs one request per tap otherwise.
+     */
+    fun selectSeason(seasonId: Long) {
+        if (selectedSeason.value == seasonId) return
+        selectedSeason.value = seasonId
+        if (!fetchedSeasons.add(seasonId)) return
+
+        viewModelScope.launchIO {
+            val season = getAnime.await(seasonId) ?: return@launchIO
+            // Only when it has nothing. A season fetched in an earlier session is already complete,
+            // and re-asking would spend a request to be told so.
+            if (getAnimeWithEpisodes.awaitEpisodes(seasonId).isNotEmpty()) return@launchIO
+            runCatching {
+                updateAnimeFromRemote.awaitEpisodesUpdate(
+                    anime = season,
+                    fetchDetails = false,
+                    fetchEpisodes = true,
+                    manualFetch = false,
+                )
+            }.onFailure {
+                // Let it be re-tried, since nothing on screen said it failed.
+                fetchedSeasons.remove(seasonId)
+                logcat(LogPriority.INFO, it) { "Season $seasonId could not be fetched" }
             }
         }
     }
@@ -360,15 +466,39 @@ class EntryScreenModel(
     }
 
     private suspend fun observeAnime(animeTrackRepository: AnimeTrackRepository) {
+        /*
+         * The chosen season's own row and episodes, observed alongside this entry's.
+         *
+         * A fifth source for the combine below rather than a second writer to the same state: two
+         * pipelines both calling `state.value =` race, and the loser's copy silently undoes the
+         * winner's. `flatMapLatest` also gets the cancellation right for free — picking season
+         * three while season two is still loading drops season two's query rather than letting it
+         * arrive late and overwrite.
+         */
+        val chosenSeason: Flow<Pair<Anime, List<Episode>>?> =
+            selectedSeason.flatMapLatest { seasonId ->
+                if (seasonId == null) {
+                    flowOf(null)
+                } else {
+                    flow { emitAll(getAnimeWithEpisodes.subscribe(seasonId)) }
+                        .map { (season, episodes, _) -> season to episodes }
+                }
+            }
+
         combine(
             getAnimeWithEpisodes.subscribe(entryId),
             animeTrackRepository.getTracksByAnimeIdAsFlow(entryId).map { it.size },
             animeDownloadManager.queueState.map { },
             entryOverrides.overrides,
-        ) { (anime, episodes, seasons), trackers, _, overrides ->
+            chosenSeason,
+        ) { (anime, episodes, seasons), trackers, _, overrides, chosen ->
             val source = animeSourceManager.getOrStub(anime.source)
             val edited = overrides[EntryOverrides.key(ContentType.ANIME, entryId)]
-            val ordered = withIOContext { episodes.applyFilters(anime, animeDownloadManager) }
+            // The entry whose episodes are on screen: this one, or the season being shown. They are
+            // the same object for everything that is not split into seasons.
+            val owner = chosen?.first ?: anime
+            val shown = chosen?.second ?: episodes
+            val ordered = withIOContext { shown.applyFilters(owner, animeDownloadManager) }
             EntryState(
                 entryId = entryId,
                 contentType = ContentType.ANIME,
@@ -386,54 +516,57 @@ class EntryScreenModel(
                 webViewUrl = (source as? AnimeHttpSource)?.runCatching { getAnimeUrl(anime.toSAnime()) }?.getOrNull(),
                 coverData = anime.asAnimeCover(),
                 inLibrary = anime.favorite,
-                sortDescending = anime.sortDescending(),
+                sortDescending = owner.sortDescending(),
                 initialized = anime.initialized,
                 missingCount = ordered.map { it.episodeNumber }.missingEntriesCount(),
                 nextReleaseDays = daysUntil(anime.expectedNextUpdate?.toEpochMilli()),
                 releaseIntervalDays = anime.fetchInterval.absoluteValue.takeIf { it > 0 },
                 form = source.entryForm(anime.url),
+                /*
+                 * Seasons as a picker, not as a list you navigate into.
+                 *
+                 * They used to be rows in this very list — tap season two, land on another copy of
+                 * this page, press back and tap again to reach season three. Two levels for a
+                 * choice that is one word wide, and a page whose title, cover, description and
+                 * tracking all belonged to a season rather than to the series.
+                 *
+                 * They stay separate entries in the database. That part was never wrong: a season
+                 * has its own episodes, its own progress and its own fetch. Only the navigation
+                 * was, so only the navigation changes.
+                 */
+                seasons = seasons
+                    .sortedBy { it.anime.seasonNumber }
+                    .map { season ->
+                        EntrySeason(
+                            id = season.id,
+                            name = season.anime.title,
+                            number = season.anime.seasonNumber,
+                            unseenCount = season.unseenCount,
+                            totalCount = season.totalCount,
+                        )
+                    },
+                selectedSeasonId = chosen?.first?.id,
+                isLoadingSeason = seasons.isNotEmpty() && chosen == null,
                 items = withIOContext {
-                    // A series whose source splits it into seasons has no episodes of its own —
-                    // each season is a separate entry carrying its own. The list was being built
-                    // from the empty side, so those titles showed a blank page and looked like a
-                    // source that had stopped working. The seasons were already being fetched and
-                    // then discarded one line above.
-                    if (anime.fetchType == FetchType.Seasons) {
-                        seasons
-                            .sortedBy { it.anime.seasonNumber }
-                            .map { season ->
-                                EntryItem(
-                                    id = season.id,
-                                    name = season.anime.title,
-                                    number = season.anime.seasonNumber,
-                                    scanlator = null,
-                                    // Seen when every episode in it is, which is the only one of
-                                    // these flags that means anything for a whole season.
-                                    viewed = season.seen,
-                                    bookmarked = false,
-                                    dateUpload = season.latestUpload,
-                                    downloaded = false,
-                                    isSeason = true,
-                                )
-                            }
-                    } else {
-                        ordered.map { episode ->
-                            EntryItem(
-                                id = episode.id,
-                                name = episode.name,
-                                number = episode.episodeNumber,
-                                scanlator = episode.scanlator,
-                                viewed = episode.seen,
-                                bookmarked = episode.bookmark,
-                                dateUpload = episode.dateUpload,
-                                downloaded = animeDownloadManager.isEpisodeDownloaded(
-                                    episodeName = episode.name,
-                                    episodeScanlator = episode.scanlator,
-                                    animeTitle = anime.title,
-                                    sourceId = anime.source,
-                                ),
-                            )
-                        }
+                    ordered.map { episode ->
+                        EntryItem(
+                            id = episode.id,
+                            name = episode.name,
+                            number = episode.episodeNumber,
+                            scanlator = episode.scanlator,
+                            viewed = episode.seen,
+                            bookmarked = episode.bookmark,
+                            dateUpload = episode.dateUpload,
+                            // Named after the owner: a downloaded episode of season two sits in a
+                            // folder called after season two, and asking under the series' name
+                            // finds nothing and draws every row as not downloaded.
+                            downloaded = animeDownloadManager.isEpisodeDownloaded(
+                                episodeName = episode.name,
+                                episodeScanlator = episode.scanlator,
+                                animeTitle = owner.title,
+                                sourceId = owner.source,
+                            ),
+                        )
                     }
                 },
                 trackerCount = trackers,
@@ -601,12 +734,28 @@ class EntryScreenModel(
                         manualFetch = true,
                     ).map { it.newChapters.size }
                 }
+                // The series, and then the season on screen. Both, because they hold different
+                // things: the series carries the details and the list of seasons, and the season
+                // carries the episodes somebody is looking at. Refreshing only the series left the
+                // episode list exactly as it was, which is a refresh button that appears to do
+                // nothing on the one page where seasons exist.
                 ContentType.ANIME -> getAnime.await(entryId)?.let { anime ->
-                    updateAnimeFromRemote.awaitEpisodesUpdate(
+                    val parent = updateAnimeFromRemote.awaitEpisodesUpdate(
                         anime = anime,
                         fetchDetails = true,
                         fetchEpisodes = true,
                         manualFetch = true,
+                    ).map { it.newEpisodes.size }
+
+                    val seasonId = state.value.selectedSeasonId
+                    val season = seasonId?.takeIf { it != entryId }?.let { getAnime.await(it) }
+                        ?: return@let parent
+                    updateAnimeFromRemote.awaitEpisodesUpdate(
+                        anime = season,
+                        fetchDetails = false,
+                        fetchEpisodes = true,
+                        manualFetch = true,
+                        // Counted from the season, since that is the list the number is about.
                     ).map { it.newEpisodes.size }
                 }
             }
@@ -696,7 +845,10 @@ class EntryScreenModel(
                     }
                 }
                 ContentType.ANIME -> {
-                    val anime = getAnime.await(entryId) ?: return@launchNonCancellable
+                    // The season, when one is showing: the downloader names the folder after the
+                    // anime it is handed, and handing it the series would file season two's
+                    // episodes under the series and lose track of them.
+                    val anime = getAnime.await(state.value.itemOwnerId) ?: return@launchNonCancellable
                     val episode = getEpisode.await(item.id) ?: return@launchNonCancellable
                     if (item.downloaded) {
                         animeDownloadManager.deleteEpisodes(
