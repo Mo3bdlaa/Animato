@@ -78,11 +78,21 @@ data class StremioAddon(
      */
     val servesOnDemand: Boolean
         get() = declaredTypes.isEmpty() || declaredTypes.any { it != TYPE_TV }
-
-    private companion object {
-        const val TYPE_TV = "tv"
-    }
 }
+
+/**
+ * Stremio's type for a live channel.
+ *
+ * A file-level constant, and it has to be. It was a `private companion object` inside
+ * [StremioAddon] for two releases, which crashed the app: the serialization plugin puts
+ * `serializer()` on a serializable class's companion, so making that companion private makes the
+ * generated `Companion` field private too — and [StremioAddonStore], a different class, is what
+ * calls it. That compiles and then throws `IllegalAccessError` at runtime under R8.
+ *
+ * The rule, stated so it is not rediscovered: **a `@Serializable` class must not declare a private
+ * companion object.**
+ */
+private const val TYPE_TV = "tv"
 
 /**
  * The addons the user has added, and the only place they are added or removed.
