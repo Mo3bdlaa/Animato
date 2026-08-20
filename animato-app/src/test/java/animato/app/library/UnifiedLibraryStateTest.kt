@@ -223,6 +223,10 @@ class UnifiedLibraryStateTest {
         override val entryId = id
         override val contentType = type
         override val sourceId = 0L
+
+        // Nothing here reads it: no test source implements KnowsEntryForm, so every entry in this
+        // file is a serial and the url is never parsed. Present because the interface requires it.
+        override val url = "/$id"
         override val categoryIds = categories
         override val title = title
         override val thumbnailUrl: String? = null
