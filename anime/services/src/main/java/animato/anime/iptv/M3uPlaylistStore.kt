@@ -118,6 +118,18 @@ class M3uPlaylistStore(
         }
     }
 
+    /**
+     * The groups this playlist uses, from what is already in hand.
+     *
+     * Non-suspending, because the one caller is a source building its filter list and that is not
+     * a suspending call. Empty until the playlist has been read once in this process — which after
+     * a restart means the group picker is missing on the first browse and present on every one
+     * after. Fetching a ten-thousand-line file to draw a dropdown that has not been opened yet is
+     * the worse trade.
+     */
+    fun cachedGroups(url: String): List<String> =
+        channelCache[url]?.let(M3uParser::groupsOf).orEmpty()
+
     /** Drop what is held so the next browse gets today's file. */
     fun invalidate(url: String) {
         channelCache.remove(url)

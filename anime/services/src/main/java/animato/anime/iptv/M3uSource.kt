@@ -1,5 +1,6 @@
 package animato.anime.iptv
 
+import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
@@ -69,7 +70,23 @@ class M3uSource(
      */
     override val supportsLatest: Boolean = false
 
-    override fun getFilterList(): AnimeFilterList = AnimeFilterList()
+    /**
+     * The playlist's own groups, as a picker.
+     *
+     * `group-title` is the only categorisation an M3U file carries, and it is the one a provider
+     * actually curates — Sport, News, a country, a package. Without this, a ten-thousand-channel
+     * playlist offered a grid and a search box and no way to say *show me the sports channels*,
+     * which is how anybody who has used an IPTV app expects to start.
+     *
+     * Empty on the first browse after a restart. The groups come out of the parsed file and this
+     * call cannot suspend to fetch one, so the picker appears once the playlist has been read —
+     * see [M3uPlaylistStore.cachedGroups].
+     */
+    override fun getFilterList(): AnimeFilterList {
+        val groups = store.cachedGroups(playlist.url)
+        if (groups.isEmpty()) return AnimeFilterList()
+        return AnimeFilterList(GroupFilter(groups))
+    }
 
     override suspend fun getPopularAnime(page: Int): AnimesPage = pageOf(channels(), page)
 
@@ -84,14 +101,17 @@ class M3uSource(
      */
     override suspend fun getSearchAnime(page: Int, query: String, filters: AnimeFilterList): AnimesPage {
         val needle = query.trim()
-        val matching = if (needle.isEmpty()) {
-            channels()
-        } else {
-            channels().filter {
-                it.name.contains(needle, ignoreCase = true) ||
+        val group = filters.filterIsInstance<GroupFilter>().firstOrNull()?.selected()
+
+        val matching = channels()
+            .filter { group == null || it.group == group }
+            .filter {
+                needle.isEmpty() ||
+                    it.name.contains(needle, ignoreCase = true) ||
+                    // Still matched against the group even with the picker available: typing
+                    // "sport" is faster than opening a sheet, and both should work.
                     it.group?.contains(needle, ignoreCase = true) == true
             }
-        }
         return pageOf(matching, page)
     }
 
@@ -196,6 +216,11 @@ class M3uSource(
         return AnimesPage(slice.map(::toSAnime), from + slice.size < channels.size)
     }
 
+    private class GroupFilter(groups: List<String>) :
+        AnimeFilter.Select<String>(FILTER_GROUP, (listOf(ANY_GROUP) + groups).toTypedArray()) {
+        fun selected(): String? = values.getOrNull(state)?.takeIf { it != ANY_GROUP }
+    }
+
     companion object {
         /**
          * A stable id for a playlist address.
@@ -214,5 +239,7 @@ class M3uSource(
         private const val MULTI_LANG = "all"
         private const val PAGE_SIZE = 60
         private const val LIVE_ITEM_NAME = "Live"
+        private const val FILTER_GROUP = "Group"
+        private const val ANY_GROUP = "All"
     }
 }
