@@ -58,9 +58,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.iptv.M3uPlaylistStore
 import animato.anime.iptv.M3uSource
+import animato.anime.jellyfin.JellyfinServerStore
+import animato.anime.jellyfin.JellyfinSource
 import animato.anime.stremio.StremioAddonStore
 import animato.anime.stremio.StremioSource
 import animato.anime.ui.stores.AnimeExtensionStoresScreen
+import animato.app.jellyfin.JellyfinSignInDialog
+import animato.app.jellyfin.jellyfinServers
 import animato.app.navigation.LensButton
 import animato.app.source.SourceBrowseScreen
 import animato.app.stremio.StremioAddonsScreen
@@ -137,6 +141,9 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
     val addons by stremioStore.addons.collectAsStateWithLifecycle()
     val playlistStore = remember { Injekt.get<M3uPlaylistStore>() }
     val playlists by playlistStore.playlists.collectAsStateWithLifecycle()
+    val serverStore = remember { Injekt.get<JellyfinServerStore>() }
+    val servers by serverStore.servers.collectAsStateWithLifecycle()
+    var signInOpen by remember { mutableStateOf(false) }
 
     // The merge a device asked for: an installed extension is somewhere you can GO, not just
     // a thing you manage. One source opens straight into its browse screen; several open a
@@ -150,6 +157,16 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
             languages = state.languages,
             onToggle = screenModel::toggleLanguage,
             onDismiss = { languagesOpen = false },
+        )
+    }
+
+    if (signInOpen) {
+        JellyfinSignInDialog(
+            store = serverStore,
+            onDismiss = { signInOpen = false },
+            // Nothing else to do on success: the store's flow is what the segment reads and what
+            // the source manager watches, so the row and the source both appear on their own.
+            onSignedIn = { signInOpen = false },
         )
     }
 
@@ -210,7 +227,7 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
              */
         // Addons and channels serve video and nothing else, so under the manga lens both segments
         // are furniture — and a tab that opens an empty list is worse than one that is absent.
-        val videoSegments = setOf(ExtensionSegment.STREMIO, ExtensionSegment.IPTV)
+        val videoSegments = setOf(ExtensionSegment.STREMIO, ExtensionSegment.IPTV, ExtensionSegment.SERVERS)
         val segments = ExtensionSegment.entries.filterNot {
             it in videoSegments && state.lens == ContentFilter.MANGA
         }
@@ -306,6 +323,22 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                             )
                         }
 
+                        ExtensionSegment.SERVERS -> {
+                            jellyfinServers(
+                                servers = servers,
+                                onOpen = { server ->
+                                    navigator.push(
+                                        SourceBrowseScreen(
+                                            JellyfinSource.idFor(server.url, server.userId),
+                                            ContentType.ANIME,
+                                        ),
+                                    )
+                                },
+                                onRemove = { url -> serverStore.remove(url) },
+                                onAdd = { signInOpen = true },
+                            )
+                        }
+
                         ExtensionSegment.AVAILABLE ->
                             // Nothing on offer drew nothing at all: the segments, and then
                             // black. The two causes are both actionable and both named,
@@ -360,6 +393,15 @@ private enum class ExtensionSegment(val labelRes: StringResource) {
      * An addon that publishes films and channels both appears under both, which is true of it.
      */
     IPTV(AYMR.strings.iptv_segment),
+
+    /**
+     * The user's own machine, beside the strangers' websites.
+     *
+     * A Jellyfin or Emby server is a source like any other here, and the only thing that sets its
+     * segment apart is that adding one happens on it: there is no directory of servers to browse,
+     * because the only server anybody can add is one they already run.
+     */
+    SERVERS(AYMR.strings.servers_segment),
 }
 
 private fun LazyListScope.extensionRows(

@@ -3,6 +3,8 @@ package eu.kanade.tachiyomi.source.anime
 import android.content.Context
 import animato.anime.iptv.M3uPlaylistStore
 import animato.anime.iptv.M3uSource
+import animato.anime.jellyfin.JellyfinServerStore
+import animato.anime.jellyfin.JellyfinSource
 import animato.anime.stremio.StremioAddonStore
 import animato.anime.stremio.StremioSource
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -36,7 +38,22 @@ class AndroidAnimeSourceManager(
     private val sourceRepository: AnimeStubSourceRepository,
     private val stremioAddonStore: StremioAddonStore,
     private val m3uPlaylistStore: M3uPlaylistStore,
+    private val jellyfinServerStore: JellyfinServerStore,
 ) : AnimeSourceManager {
+
+    /**
+     * The four things a source can come from, in one object.
+     *
+     * A named holder rather than a `Triple` grown a fourth field: `combine` is arity-limited and
+     * the destructuring at the collect site is positional, so an unnamed tuple of four is four
+     * chances to swap two lists that are both `List<something>`.
+     */
+    private data class SourceInputs(
+        val extensions: List<eu.kanade.tachiyomi.extension.anime.model.AnimeExtension.Installed>,
+        val addons: List<animato.anime.stremio.StremioAddon>,
+        val playlists: List<animato.anime.iptv.M3uPlaylist>,
+        val servers: List<animato.anime.jellyfin.JellyfinServer>,
+    )
 
     private val _isInitialized = MutableStateFlow(false)
     override val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
@@ -61,8 +78,11 @@ class AndroidAnimeSourceManager(
                 extensionManager.installedExtensionsFlow,
                 stremioAddonStore.addons,
                 m3uPlaylistStore.playlists,
-            ) { extensions, addons, playlists -> Triple(extensions, addons, playlists) }
-                .collectLatest { (extensions, addons, playlists) ->
+                jellyfinServerStore.servers,
+            ) { extensions, addons, playlists, servers ->
+                SourceInputs(extensions, addons, playlists, servers)
+            }
+                .collectLatest { (extensions, addons, playlists, servers) ->
                     val mutableMap = ConcurrentHashMap<Long, AnimeSource>(
                         mapOf(
                             LocalAnimeSource.ID to LocalAnimeSource(
@@ -95,6 +115,14 @@ class AndroidAnimeSourceManager(
                     // filter out the way there is for a stream-only addon.
                     playlists.forEach { playlist ->
                         val source = M3uSource(playlist)
+                        mutableMap[source.id] = source
+                        registerStubSource(StubAnimeSource.from(source))
+                    }
+                    // Every signed-in server is browsable: a sign-in is the only way one gets here
+                    // and a server with nothing in it is an empty library rather than a broken
+                    // source, so there is no equivalent of the stream-only addon to filter out.
+                    servers.forEach { server ->
+                        val source = JellyfinSource(server)
                         mutableMap[source.id] = source
                         registerStubSource(StubAnimeSource.from(source))
                     }
