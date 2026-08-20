@@ -1,5 +1,6 @@
 package animato.anime.stremio
 
+import animato.anime.content.EntryForm
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import io.kotest.matchers.shouldBe
@@ -426,5 +427,31 @@ class StremioMapperTest {
         // An unreadable date costs the episode its date and nothing else.
         dateOf("not a date") shouldBe 0L
         dateOf(null) shouldBe 0L
+    }
+
+    @Test
+    fun `the form of an entry is read off the type the addon gave it`() {
+        // The three that are decided, and the one that decides them: the type prefix, not the
+        // catalogue it came from and not what the entry turned out to hold.
+        StremioMapper.formOf("tv:iptv-org-bbc-news") shouldBe EntryForm.Live
+        StremioMapper.formOf("movie:tt0111161") shouldBe EntryForm.Single
+        StremioMapper.formOf("series:tt0944947") shouldBe EntryForm.Serial
+
+        // A `channel` is a list of videos despite the name — a YouTube feed, not a broadcast. It
+        // is the one type whose plain-English reading points the wrong way.
+        StremioMapper.formOf("channel:UCabc") shouldBe EntryForm.Serial
+
+        // The 74 addons that declare `anime` were, until this existed, indistinguishable from
+        // every other unknown label. They land where they belong anyway, which is the point of
+        // defaulting to a serial rather than throwing.
+        StremioMapper.formOf("anime:kitsu:1234") shouldBe EntryForm.Serial
+        StremioMapper.formOf("podcast:whatever-comes-next") shouldBe EntryForm.Serial
+
+        // A season address still carries the type at the front, so a season of a series is a
+        // serial rather than an unreadable address.
+        StremioMapper.formOf(StremioMapper.seasonUrl("series", "tt0944947", 2)) shouldBe EntryForm.Serial
+
+        // Nothing to read: an address with no type is the shape the whole app already assumes.
+        StremioMapper.formOf("tt0944947") shouldBe EntryForm.Serial
     }
 }

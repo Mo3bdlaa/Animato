@@ -1,5 +1,6 @@
 package animato.anime.stremio
 
+import animato.anime.content.EntryForm
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -187,6 +188,24 @@ internal object StremioMapper {
      * way no amount of care at the parse site could undo.
      */
     fun seasonUrl(type: String, id: String, season: Int): String = "${entryUrl(type, id)}/s$season"
+
+    /**
+     * What shape the entry at this address is, read off the type the addon gave it.
+     *
+     * The one thing Stremio tells us that no extension does. An addon labels every entry it
+     * publishes, and those labels answer exactly the question [EntryForm] asks: a `movie` is
+     * complete, a `tv` is on now, and everything else — `series`, `anime`, and a `channel`, which
+     * despite the name is a list of videos rather than a broadcast — arrives an episode at a time.
+     *
+     * Unknown types count as serials rather than as an error. The type list is open: an addon may
+     * publish `podcast` or something invented next month, and the safe reading of an unfamiliar
+     * label is the one every source in the app already gets.
+     */
+    fun formOf(entryUrl: String): EntryForm = when (parseEntryUrl(entryUrl)?.first) {
+        TYPE_TV -> EntryForm.Live
+        TYPE_MOVIE -> EntryForm.Single
+        else -> EntryForm.Serial
+    }
 
     /** The id and season back out of an address written by [seasonUrl], or null if it has none. */
     fun parseSeasonUrl(url: String): Pair<String, Int>? {
@@ -379,6 +398,9 @@ internal object StremioMapper {
      * What did not work was the shape of the entry, which is what the two uses below fix.
      */
     private const val TYPE_TV = "tv"
+
+    /** Stremio's type for one complete work. Everything else it publishes arrives in parts. */
+    private const val TYPE_MOVIE = "movie"
 
     /** What a channel's one item is called, since "Film" is not it. */
     private const val LIVE_ITEM_NAME = "Live"

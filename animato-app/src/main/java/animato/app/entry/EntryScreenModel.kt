@@ -3,6 +3,8 @@ package animato.app.entry
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.content.EntryForm
+import animato.anime.content.entryForm
 import animato.anime.player.describeForUser
 import animato.domain.content.ContentType
 import eu.kanade.domain.chapter.interactor.SetReadStatus
@@ -174,6 +176,15 @@ data class EntryState(
     val nextReleaseDays: Int? = null,
     /** How often releases have been arriving, in days. Absolute: a user-set interval is negative. */
     val releaseIntervalDays: Int? = null,
+    /**
+     * What shape this entry is, as its source describes it.
+     *
+     * [EntryForm.Serial] for everything on the manga side and for every extension, which is the
+     * assumption the whole screen was built on. It is a field rather than an assumption now
+     * because the screen also draws films and live channels, and telling somebody a channel has
+     * "1 Episodes" is the page describing our data model instead of the thing they opened.
+     */
+    val form: EntryForm = EntryForm.Serial,
     val trackerCount: Int = 0,
     val isRefreshing: Boolean = false,
     /** What the last refresh found, held until the screen shows it once. */
@@ -380,6 +391,7 @@ class EntryScreenModel(
                 missingCount = ordered.map { it.episodeNumber }.missingEntriesCount(),
                 nextReleaseDays = daysUntil(anime.expectedNextUpdate?.toEpochMilli()),
                 releaseIntervalDays = anime.fetchInterval.absoluteValue.takeIf { it > 0 },
+                form = source.entryForm(anime.url),
                 items = withIOContext {
                     // A series whose source splits it into seasons has no episodes of its own —
                     // each season is a separate entry carrying its own. The list was being built

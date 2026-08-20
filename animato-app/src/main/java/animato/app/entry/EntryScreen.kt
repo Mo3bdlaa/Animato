@@ -366,78 +366,89 @@ class EntryScreen(
                     )
                 }
 
-                item(key = "items-header") {
-                    Column(
-                        modifier = Modifier.padding(
-                            horizontal = MaterialTheme.padding.medium,
-                            vertical = MaterialTheme.padding.small,
-                        ),
-                    ) {
-                        Text(
-                            text = stringResource(
-                                when (contentType) {
-                                    ContentType.MANGA -> AYMR.strings.entry_chapters_count
-                                    ContentType.ANIME -> AYMR.strings.entry_episodes_count
-                                },
-                                state.items.size.toString(),
+                /*
+                 * The count, the cadence and the gaps — all three of them questions about a list
+                 * that grows.
+                 *
+                 * A film has one row and a channel has one row, and neither of them is "1 Episodes"
+                 * with nothing due next. The header is not reworded for them, it is absent: there
+                 * is nothing here a person opening a film wants to be told, and the row underneath
+                 * already carries the film's name or the word Live.
+                 */
+                if (state.form.canGrow) {
+                    item(key = "items-header") {
+                        Column(
+                            modifier = Modifier.padding(
+                                horizontal = MaterialTheme.padding.medium,
+                                vertical = MaterialTheme.padding.small,
                             ),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        /*
-                         * How often this thing arrives, and when the next one is due.
-                         *
-                         * Aniyomi's screen spends one of four action buttons on an hourglass
-                         * reading "5 days", or "N/A" when it has nothing — a control that mostly
-                         * says nothing, and never says what the number is *of*. A device asked
-                         * for the fact and not the button: *"add the bit about roughly how often
-                         * an episode drops."* So it is a sentence here, under the count it is
-                         * about, and it is simply absent when there is no prediction — which is
-                         * every entry outside the library, since the update job is what computes
-                         * it, and every completed work, which has no next one by definition.
-                         */
-                        val cadence = state.releaseIntervalDays?.let { days ->
-                            stringResource(
-                                when (contentType) {
-                                    ContentType.MANGA -> AYMR.strings.entry_release_every_chapters
-                                    ContentType.ANIME -> AYMR.strings.entry_release_every_episodes
-                                },
-                                pluralStringResource(MR.plurals.day, days, days),
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    when (contentType) {
+                                        ContentType.MANGA -> AYMR.strings.entry_chapters_count
+                                        ContentType.ANIME -> AYMR.strings.entry_episodes_count
+                                    },
+                                    state.items.size.toString(),
+                                ),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
                             )
-                        }
-                        val next = state.nextReleaseDays?.let { days ->
-                            if (days == 0) {
-                                stringResource(AYMR.strings.entry_release_next_soon)
-                            } else {
+                            /*
+                             * How often this thing arrives, and when the next one is due.
+                             *
+                             * Aniyomi's screen spends one of four action buttons on an hourglass
+                             * reading "5 days", or "N/A" when it has nothing — a control that mostly
+                             * says nothing, and never says what the number is *of*. A device asked
+                             * for the fact and not the button: *"add the bit about roughly how often
+                             * an episode drops."* So it is a sentence here, under the count it is
+                             * about, and it is simply absent when there is no prediction — which is
+                             * every entry outside the library, since the update job is what computes
+                             * it, and every completed work, which has no next one by definition.
+                             */
+                            val cadence = state.releaseIntervalDays?.let { days ->
                                 stringResource(
-                                    AYMR.strings.entry_release_next_in,
+                                    when (contentType) {
+                                        ContentType.MANGA -> AYMR.strings.entry_release_every_chapters
+                                        ContentType.ANIME -> AYMR.strings.entry_release_every_episodes
+                                    },
                                     pluralStringResource(MR.plurals.day, days, days),
                                 )
                             }
-                        }
-                        listOfNotNull(cadence, next).takeIf { it.isNotEmpty() }?.let { parts ->
-                            Text(
-                                text = parts.joinToString(" · "),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                            val next = state.nextReleaseDays?.let { days ->
+                                if (days == 0) {
+                                    stringResource(AYMR.strings.entry_release_next_soon)
+                                } else {
+                                    stringResource(
+                                        AYMR.strings.entry_release_next_in,
+                                        pluralStringResource(MR.plurals.day, days, days),
+                                    )
+                                }
+                            }
+                            listOfNotNull(cadence, next).takeIf { it.isNotEmpty() }?.let { parts ->
+                                Text(
+                                    text = parts.joinToString(" · "),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
 
-                        // A gap in the numbering, said out loud. A list that jumps from 40 to 71
-                        // without comment reads as a list somebody has already read the middle of.
-                        if (state.missingCount > 0) {
-                            Text(
-                                text = pluralStringResource(
-                                    when (contentType) {
-                                        ContentType.MANGA -> MR.plurals.missing_chapters
-                                        ContentType.ANIME -> AYMR.plurals.missing_items
-                                    },
-                                    state.missingCount,
-                                    state.missingCount,
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = LocalAnimatoPalette.current.warning,
-                            )
+                            // A gap in the numbering, said out loud. A list that jumps from 40 to 71
+                            // without comment reads as a list somebody has already read the middle of.
+                            if (state.missingCount > 0) {
+                                Text(
+                                    text = pluralStringResource(
+                                        when (contentType) {
+                                            ContentType.MANGA -> MR.plurals.missing_chapters
+                                            ContentType.ANIME -> AYMR.plurals.missing_items
+                                        },
+                                        state.missingCount,
+                                        state.missingCount,
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = LocalAnimatoPalette.current.warning,
+                                )
+                            }
                         }
                     }
                 }
@@ -459,6 +470,7 @@ class EntryScreen(
                     ItemRow(
                         item = item,
                         contentType = contentType,
+                        showNumber = state.form.canGrow,
                         onClick = { open(item) },
                         onToggleViewed = { screenModel.setViewed(item, !item.viewed) },
                         onToggleBookmark = { screenModel.toggleBookmark(item) },
@@ -730,6 +742,14 @@ private fun AboutSection(
 private fun ItemRow(
     item: EntryItem,
     contentType: ContentType,
+    /**
+     * Whether "Episode 4" is a thing worth saying about this row.
+     *
+     * False for a film and for a channel, where the list is one row long and the number is a fact
+     * about our storage rather than about the title — the row is called *Live*, or is called after
+     * the film, and "· Episode 1" underneath it adds nothing and claims there is an episode 2.
+     */
+    showNumber: Boolean,
     onClick: () -> Unit,
     onToggleViewed: () -> Unit,
     onToggleBookmark: () -> Unit,
@@ -781,7 +801,7 @@ private fun ItemRow(
                                 ContentType.ANIME -> AYMR.strings.caption_episodes
                             },
                             formatNumber(item.number),
-                        ),
+                        ).takeIf { showNumber },
                         stringResource(MR.strings.label_downloaded).takeIf { item.downloaded },
                     ).joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,

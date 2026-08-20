@@ -42,6 +42,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import animato.anime.content.entryForm
 import animato.anime.player.CustomButtonFetchState
 import animato.anime.player.HosterState
 import animato.anime.player.RememberedQuality
@@ -1830,12 +1831,16 @@ class PlayerViewModel @JvmOverloads constructor(
         if (isLoadingEpisode.value) return
         val currentEp = currentEpisode.value ?: return
         if (episodeId == -1L) return
-        // A live stream has no duration, and everything below this line is a fraction of one:
-        // how far through, whether that is far enough to count as seen, whether to fetch the next
-        // one. None of those questions mean anything about a television channel, so it keeps no
-        // progress, is never marked seen, and never disappears into a *seen* filter. That was
-        // already true because of this guard; it is written down now because IPTV made it a
-        // decision rather than an accident.
+        // Everything below this line is a fraction of a duration: how far through, whether that is
+        // far enough to count as seen, whether to fetch the next one. None of those questions mean
+        // anything about a television channel, so it keeps no progress, is never marked seen, and
+        // never disappears into a *seen* filter.
+        //
+        // Asked of the source first and of the stream second. A live stream reporting no duration
+        // used to be the only thing standing here — correct, but by accident, and silent about
+        // why. A source that declares its entries live is saying it on purpose, and says it before
+        // the first second arrives rather than after the player has had a look.
+        if (!currentSource.value.entryForm(currentAnime.value?.url.orEmpty()).hasProgress) return
         if (duration == 0) return
 
         val seconds = position * 1000L

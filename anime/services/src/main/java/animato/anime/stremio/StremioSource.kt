@@ -1,6 +1,8 @@
 package animato.anime.stremio
 
 import android.app.Application
+import animato.anime.content.EntryForm
+import animato.anime.content.KnowsEntryForm
 import aniyomi.core.common.torrent.TorrentPreferences
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
@@ -59,7 +61,7 @@ import java.security.MessageDigest
  */
 class StremioSource(
     val addon: StremioAddon,
-) : AnimeHttpSource() {
+) : AnimeHttpSource(), KnowsEntryForm {
 
     private val json: Json by injectLazy()
 
@@ -95,6 +97,14 @@ class StremioSource(
     override val supportsLatest: Boolean by lazy {
         latestCatalogs().isNotEmpty() && latestCatalogs() != popularCatalogs()
     }
+
+    /**
+     * The addon's own label for the entry, read back out of the address we stored it under.
+     *
+     * One addon can serve all three forms at once — Cinemeta publishes films and series, and there
+     * are addons that add channels alongside both — so this is per entry rather than per source.
+     */
+    override fun formOf(entryUrl: String): EntryForm = StremioMapper.formOf(entryUrl)
 
     private val catalogs: List<StremioCatalog> get() = addon.manifest.catalogs
 

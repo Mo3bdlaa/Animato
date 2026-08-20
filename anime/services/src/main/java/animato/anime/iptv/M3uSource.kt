@@ -1,5 +1,7 @@
 package animato.anime.iptv
 
+import animato.anime.content.EntryForm
+import animato.anime.content.KnowsEntryForm
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
@@ -33,13 +35,12 @@ import java.security.MessageDigest
  * ## What a channel is here
  *
  * An entry with exactly one thing to play, which is *now*. It keeps no progress, is never marked
- * as seen and is fetched once — see [AnimeUpdateStrategy.ONLY_FETCH_ONCE] below and the duration
- * guard in the player, which between them mean a channel never behaves like a half-watched
- * episode.
+ * as seen and is fetched once — see [AnimeUpdateStrategy.ONLY_FETCH_ONCE] below and [formOf], which
+ * between them mean a channel never behaves like a half-watched episode.
  */
 class M3uSource(
     val playlist: M3uPlaylist,
-) : AnimeHttpSource() {
+) : AnimeHttpSource(), KnowsEntryForm {
 
     private val store: M3uPlaylistStore by injectLazy()
 
@@ -69,6 +70,15 @@ class M3uSource(
      * There is one order and it is the file's, so a second shelf would be the same shelf twice.
      */
     override val supportsLatest: Boolean = false
+
+    /**
+     * Everything in a playlist is live, without having to look.
+     *
+     * An M3U file holds channels and nothing else — there is no per-entry type to read and no
+     * exception to make — so the answer is the same for every url this source ever hands out. It is
+     * stated here so the app stops inferring it from a stream that happens to report no duration.
+     */
+    override fun formOf(entryUrl: String): EntryForm = EntryForm.Live
 
     /**
      * The playlist's own groups, as a picker.
