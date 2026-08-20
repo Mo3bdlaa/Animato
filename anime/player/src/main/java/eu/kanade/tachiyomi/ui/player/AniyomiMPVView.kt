@@ -23,6 +23,7 @@ import android.os.Environment
 import android.util.AttributeSet
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
+import animato.anime.net.ProxyPreferences
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.player.controls.components.panels.toColorHexString
 import eu.kanade.tachiyomi.ui.player.settings.AdvancedPlayerPreferences
@@ -46,6 +47,7 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet) : BaseMPVView(c
     private val audioPreferences: AudioPreferences by injectLazy()
     private val advancedPreferences: AdvancedPlayerPreferences by injectLazy()
     private val networkPreferences: NetworkPreferences by injectLazy()
+    private val proxyPreferences: ProxyPreferences by injectLazy()
 
     var isExiting = false
 
@@ -131,6 +133,20 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet) : BaseMPVView(c
         MPVLib.setPropertyBoolean("input-default-bindings", true)
 
         MPVLib.setOptionString("ytdl", "no")
+        /*
+         * The app's proxy, said again for mpv.
+         *
+         * Everything else in the app goes through a default `ProxySelector`, which mpv is not
+         * reached by: it does its networking in ffmpeg, below Java entirely, so a proxy the rest of
+         * the app is using would be bypassed by the one connection that carries the video — and the
+         * whole reason for setting a proxy here is usually a stream that is blocked.
+         *
+         * HTTP proxies only, and that is ffmpeg's limit rather than a shortcut: `http-proxy` is an
+         * HTTP-level option and there is no SOCKS equivalent for it. Somebody on SOCKS gets a proxy
+         * for browsing and catalogues and a direct connection for playback, which the settings
+         * screen says out loud rather than leaving to be discovered mid-episode.
+         */
+        MPVLib.setOptionString("http-proxy", proxyPreferences.httpProxyUrl().orEmpty())
         MPVLib.setOptionString("tls-verify", "yes")
         MPVLib.setOptionString("tls-ca-file", "${context.filesDir.path}/${PlayerActivity.MPV_DIR}/cacert.pem")
 

@@ -153,12 +153,20 @@ object AnimatoSettingsSourcesScreen : SearchableSettings {
                 ),
             ),
         ) + Preference.PreferenceGroup(
+            // The two things that go wrong between the app and a site, together. One is a check
+            // to pass, the other is an address to come from, and both are repairs for "this
+            // source will not load" rather than settings anybody visits for fun.
             title = stringResource(AYMR.strings.pref_cloudflare_title),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(AYMR.strings.pref_cloudflare_title),
                     subtitle = stringResource(AYMR.strings.pref_cloudflare_summary),
                     onClick = { navigator.push(AnimatoCloudflareScreen) },
+                ),
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(AYMR.strings.pref_proxy_title),
+                    subtitle = stringResource(AYMR.strings.pref_proxy_summary),
+                    onClick = { navigator.push(AnimatoProxyScreen) },
                 ),
             ),
         )

@@ -6,6 +6,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import animato.anime.net.AnimatoProxySelector
 import animato.anime.services.AnimeNotifications
 
 /**
@@ -54,6 +55,17 @@ class AnimeInjektInitializer : ContentProvider() {
 
     override fun onCreate(): Boolean {
         val app = context?.applicationContext as? android.app.Application ?: return false
+        /*
+         * Before the post, not inside it, and this is the one thing here that must be.
+         *
+         * OkHttp captures the default proxy selector when a client is *built*, so ours has to be
+         * the default before the first client exists. `App.onCreate` can build one, and it runs
+         * between this method returning and the posted message — so a client built there would
+         * capture the previous default and keep it for the life of the process.
+         *
+         * Safe this early because it reads nothing: see AnimatoProxySelector.install.
+         */
+        AnimatoProxySelector.install()
         Handler(Looper.getMainLooper()).postAtFrontOfQueue {
             AnimeInjekt.ensureRegistered(app)
             AnimeNotifications.createChannels(app)

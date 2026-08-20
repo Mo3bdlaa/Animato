@@ -1,6 +1,7 @@
 package animato.di
 
 import android.app.Application
+import animato.anime.net.ProxyPreferences
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.entry.EntryOverrides
 import animato.app.library.UnifiedLibraryPreferences
@@ -34,6 +35,7 @@ class AnimePreferenceModule(@Suppress("unused") val app: Application) : InjektMo
         addSingletonFactory { AnimeSourcePreferences(get()) }
         addSingletonFactory { AnimeTrackPreferences(get()) }
         addSingletonFactory { TorrentPreferences(get()) }
+        addSingletonFactory { ProxyPreferences(get()) }
         addSingletonFactory { ContentPreferences(get()) }
         addSingletonFactory { DownloadCleanupPreferences(get()) }
         addSingletonFactory { UnifiedLibraryPreferences(get()) }
