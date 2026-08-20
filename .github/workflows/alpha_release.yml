@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       notes:
-        description: "What to test in this build (optional)"
+        description: "Anything worth testing beyond the commit list (optional)"
         required: false
         type: string
 
@@ -45,6 +45,11 @@ jobs:
 
       - name: Clone repo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          # The whole history, because the release notes are written from it. The default shallow
+          # clone has one commit and no tags, which is exactly the two things needed to answer
+          # "what changed since the last alpha".
+          fetch-depth: 0
 
       - name: Set up JDK
         uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
@@ -165,6 +170,57 @@ jobs:
           done
           ls -la upload/
 
+      # What changed, written from the commits rather than from memory.
+      #
+      # This used to be a free-text input, and the input was left empty on almost every build — so
+      # every release said only which commit it came from, and the in-app update dialog, which
+      # shows this same text, said nothing at all about what it was offering. A note that depends
+      # on somebody remembering is a note that is usually missing.
+      #
+      # Subjects only, and merges dropped. Commit subjects in this repo are written as sentences
+      # about what changed and why, so the list reads as release notes without being rewritten
+      # into them.
+      - name: Write the release notes
+        # Through the environment rather than interpolated into the script. A workflow input pasted
+        # straight into shell breaks on the first apostrophe somebody types, and is a command
+        # injection besides — the fact that only the owner can dispatch this is not a reason to
+        # write it the wrong way.
+        env:
+          EXTRA_NOTES: ${{ inputs.notes }}
+        run: |
+          previous=$(git tag --list 'v0.1.0-alpha.*' --sort=-version:refname | head -1)
+          {
+            echo "**What changed**"
+            echo
+            if [ -n "$previous" ]; then
+              git log --no-merges --format='- %s' "$previous"..HEAD
+            else
+              # No previous alpha: the last handful, rather than the entire history of the project.
+              git log --no-merges --format='- %s' -20
+            fi
+            echo
+            if [ -n "$EXTRA_NOTES" ]; then
+              echo "**Worth testing**"
+              echo
+              echo "$EXTRA_NOTES"
+              echo
+            fi
+            echo "---"
+            echo
+            echo "Built from \`$GITHUB_SHA\`."
+            echo
+            echo "**Which file:** \`arm64-v8a\` for any phone from roughly 2017 onward."
+            echo "\`armeabi-v7a\` if that one refuses to install."
+            echo
+            echo "**Coming from a debug build?** Uninstall it first. Android rejects an update"
+            echo "signed by a different certificate, and this one is signed with the release key."
+            echo "Uninstalling loses the app's data."
+            echo
+            echo "Alphas never become \"latest\" — this is marked as a prerelease on purpose."
+          } > release-notes.md
+          echo "--- notes ---"
+          cat release-notes.md
+
       - name: Publish prerelease
         uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
         with:
@@ -172,18 +228,9 @@ jobs:
           name: Animato ${{ env.VERSION_TAG }}
           files: upload/*.apk
           prerelease: true
-          body: |
-            Alpha build from `${{ github.sha }}`.
-
-            ${{ inputs.notes }}
-
-            **Which file:** `arm64-v8a` for any phone from roughly 2017 onward. `armeabi-v7a` if
-            that one refuses to install.
-
-            **Coming from a debug build?** Uninstall it first. Android rejects an update signed by a
-            different certificate, and this one is signed with the release key. Uninstalling loses
-            the app's data.
-
-            Alphas never become "latest" — this is marked as a prerelease on purpose.
+          # A file rather than an inline block: the notes are generated, and the changes have to
+          # come first — the in-app update dialog shows this whole body, so install instructions
+          # above the list would be the first thing somebody reads about a new version.
+          body_path: release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
