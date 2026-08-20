@@ -7,6 +7,8 @@ import animato.anime.jellyfin.JellyfinServerStore
 import animato.anime.jellyfin.JellyfinSource
 import animato.anime.stremio.StremioAddonStore
 import animato.anime.stremio.StremioSource
+import animato.anime.torznab.TorznabIndexerStore
+import animato.anime.torznab.TorznabSource
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
@@ -39,6 +41,7 @@ class AndroidAnimeSourceManager(
     private val stremioAddonStore: StremioAddonStore,
     private val m3uPlaylistStore: M3uPlaylistStore,
     private val jellyfinServerStore: JellyfinServerStore,
+    private val torznabIndexerStore: TorznabIndexerStore,
 ) : AnimeSourceManager {
 
     /**
@@ -53,6 +56,7 @@ class AndroidAnimeSourceManager(
         val addons: List<animato.anime.stremio.StremioAddon>,
         val playlists: List<animato.anime.iptv.M3uPlaylist>,
         val servers: List<animato.anime.jellyfin.JellyfinServer>,
+        val indexers: List<animato.anime.torznab.TorznabIndexer>,
     )
 
     private val _isInitialized = MutableStateFlow(false)
@@ -79,10 +83,11 @@ class AndroidAnimeSourceManager(
                 stremioAddonStore.addons,
                 m3uPlaylistStore.playlists,
                 jellyfinServerStore.servers,
-            ) { extensions, addons, playlists, servers ->
-                SourceInputs(extensions, addons, playlists, servers)
+                torznabIndexerStore.indexers,
+            ) { extensions, addons, playlists, servers, indexers ->
+                SourceInputs(extensions, addons, playlists, servers, indexers)
             }
-                .collectLatest { (extensions, addons, playlists, servers) ->
+                .collectLatest { (extensions, addons, playlists, servers, indexers) ->
                     val mutableMap = ConcurrentHashMap<Long, AnimeSource>(
                         mapOf(
                             LocalAnimeSource.ID to LocalAnimeSource(
@@ -123,6 +128,13 @@ class AndroidAnimeSourceManager(
                     // source, so there is no equivalent of the stream-only addon to filter out.
                     servers.forEach { server ->
                         val source = JellyfinSource(server)
+                        mutableMap[source.id] = source
+                        registerStubSource(StubAnimeSource.from(source))
+                    }
+                    // An indexer is browsable by definition too: adding one is a `t=caps` request
+                    // that had to succeed, so there is no unusable-but-installed state here either.
+                    indexers.forEach { indexer ->
+                        val source = TorznabSource(indexer)
                         mutableMap[source.id] = source
                         registerStubSource(StubAnimeSource.from(source))
                     }

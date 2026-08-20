@@ -8,6 +8,7 @@ import animato.anime.player.PlayerEpisodeVideoResolver
 import animato.anime.player.cast.CastController
 import animato.anime.services.download.EpisodeVideoResolver
 import animato.anime.stremio.StremioAddonStore
+import animato.anime.torznab.TorznabIndexerStore
 import animato.anime.track.AnimeTrackerManager
 import animato.app.discover.MetadataCatalog
 import animato.data.AnimeUpdateStrategyColumnAdapter
@@ -120,7 +121,10 @@ class AnimeAppModule(val app: Application) : InjektModule {
         addSingletonFactory { StremioAddonStore() }
         addSingletonFactory { M3uPlaylistStore() }
         addSingletonFactory { JellyfinServerStore() }
-        addSingletonFactory<AnimeSourceManager> { AndroidAnimeSourceManager(app, get(), get(), get(), get(), get()) }
+        addSingletonFactory { TorznabIndexerStore() }
+        addSingletonFactory<AnimeSourceManager> {
+            AndroidAnimeSourceManager(app, get(), get(), get(), get(), get(), get())
+        }
         addSingletonFactory { AnimeExtensionManager(app) }
 
         // The anime half of the trackers. Each wraps the Mihon tracker of the same id and shares

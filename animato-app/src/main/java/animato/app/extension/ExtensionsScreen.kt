@@ -62,6 +62,8 @@ import animato.anime.jellyfin.JellyfinServerStore
 import animato.anime.jellyfin.JellyfinSource
 import animato.anime.stremio.StremioAddonStore
 import animato.anime.stremio.StremioSource
+import animato.anime.torznab.TorznabIndexerStore
+import animato.anime.torznab.TorznabSource
 import animato.anime.ui.stores.AnimeExtensionStoresScreen
 import animato.app.jellyfin.JellyfinSignInDialog
 import animato.app.jellyfin.jellyfinServers
@@ -70,6 +72,8 @@ import animato.app.source.SourceBrowseScreen
 import animato.app.stremio.StremioAddonsScreen
 import animato.app.stremio.installedAddons
 import animato.app.stremio.m3uPlaylists
+import animato.app.torznab.TorznabAddDialog
+import animato.app.torznab.torznabIndexers
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -144,6 +148,9 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
     val serverStore = remember { Injekt.get<JellyfinServerStore>() }
     val servers by serverStore.servers.collectAsStateWithLifecycle()
     var signInOpen by remember { mutableStateOf(false) }
+    val indexerStore = remember { Injekt.get<TorznabIndexerStore>() }
+    val indexers by indexerStore.indexers.collectAsStateWithLifecycle()
+    var addIndexerOpen by remember { mutableStateOf(false) }
 
     // The merge a device asked for: an installed extension is somewhere you can GO, not just
     // a thing you manage. One source opens straight into its browse screen; several open a
@@ -157,6 +164,14 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
             languages = state.languages,
             onToggle = screenModel::toggleLanguage,
             onDismiss = { languagesOpen = false },
+        )
+    }
+
+    if (addIndexerOpen) {
+        TorznabAddDialog(
+            store = indexerStore,
+            onDismiss = { addIndexerOpen = false },
+            onAdded = { addIndexerOpen = false },
         )
     }
 
@@ -324,6 +339,16 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                         }
 
                         ExtensionSegment.SERVERS -> {
+                            // Two kinds of thing under one heading, the way IPTV holds playlists
+                            // and addons. Both are something the person runs themselves, both are
+                            // added by typing an address, and neither has a directory to browse —
+                            // which is what makes them one segment rather than two.
+                            item(key = "servers-header") {
+                                SourceSectionHeader(
+                                    title = stringResource(AYMR.strings.servers_title),
+                                    subtitle = stringResource(AYMR.strings.servers_summary),
+                                )
+                            }
                             jellyfinServers(
                                 servers = servers,
                                 onOpen = { server ->
@@ -336,6 +361,25 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                                 },
                                 onRemove = { url -> serverStore.remove(url) },
                                 onAdd = { signInOpen = true },
+                            )
+                            item(key = "indexers-header") {
+                                SourceSectionHeader(
+                                    title = stringResource(AYMR.strings.indexers_title),
+                                    subtitle = stringResource(AYMR.strings.indexers_summary),
+                                )
+                            }
+                            torznabIndexers(
+                                indexers = indexers,
+                                onOpen = { indexer ->
+                                    navigator.push(
+                                        SourceBrowseScreen(
+                                            TorznabSource.idFor(indexer.url),
+                                            ContentType.ANIME,
+                                        ),
+                                    )
+                                },
+                                onRemove = { url -> indexerStore.remove(url) },
+                                onAdd = { addIndexerOpen = true },
                             )
                         }
 
@@ -364,6 +408,36 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
                 }
             }
         }
+    }
+}
+
+/**
+ * A heading over one part of a segment that holds more than one kind of thing.
+ *
+ * Only the Servers segment uses it: media servers and indexers are both things the person runs
+ * themselves and both belong under one chip, but they are not the same kind of thing and a list
+ * that ran them together would read as one list of servers, half of which behave oddly.
+ */
+@Composable
+private fun SourceSectionHeader(title: String, subtitle: String) {
+    Column(
+        modifier = Modifier.padding(
+            start = MaterialTheme.padding.medium,
+            end = MaterialTheme.padding.medium,
+            top = MaterialTheme.padding.medium,
+            bottom = MaterialTheme.padding.small,
+        ),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

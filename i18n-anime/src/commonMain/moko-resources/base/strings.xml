@@ -341,6 +341,15 @@
     <string name="servers_password_hint">Leave empty if your account has none</string>
     <string name="servers_sign_in">Sign in</string>
     <string name="servers_signing_in">Signing in…</string>
+    <string name="indexers_title">Indexers</string>
+    <string name="indexers_summary">Jackett or Prowlarr: search your own trackers</string>
+    <string name="indexers_add">Add an indexer</string>
+    <string name="indexers_address">Torznab address</string>
+    <string name="indexers_address_hint">The URL you would paste into Sonarr</string>
+    <string name="indexers_key">API key</string>
+    <string name="indexers_name">Name (optional)</string>
+    <string name="indexers_add_action">Add</string>
+    <string name="indexers_checking">Checking…</string>
     <string name="pref_proxy_title">Proxy</string>
     <string name="pref_proxy_summary">Send the app\'s requests through a proxy</string>
     <string name="pref_proxy_enabled">Use a proxy</string>
