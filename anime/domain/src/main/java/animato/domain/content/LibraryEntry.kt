@@ -23,6 +23,16 @@ interface LibraryEntry {
     val sourceId: Long
 
     /**
+     * Where the source keeps this entry.
+     *
+     * Carried for one question: what shape the thing is. A Stremio address begins with the type the
+     * addon gave it — `movie:`, `tv:`, `series:` — so a film, a channel and a series are told apart
+     * without asking the source anything, and without a column that could disagree with the url
+     * beside it. Nothing here fetches it; see `EntryForm`.
+     */
+    val url: String
+
+    /**
      * Every category this entry is in.
      *
      * A list rather than one id because manga can be in several at once, and the library groups by

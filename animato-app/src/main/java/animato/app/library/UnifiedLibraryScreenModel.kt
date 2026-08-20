@@ -2,6 +2,8 @@ package animato.app.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.content.EntryForm
+import animato.anime.content.KnowsEntryForm
 import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
 import animato.domain.content.LibraryEntry
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.category.anime.interactor.GetVisibleAnimeCategories
 import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 import tachiyomi.domain.track.repository.TrackRepository
 import uy.kohesive.injekt.Injekt
@@ -49,6 +52,7 @@ class UnifiedLibraryScreenModel(
     private val downloadCache: DownloadCache = Injekt.get(),
     private val animeDownloadCache: AnimeDownloadCache = Injekt.get(),
     private val preferences: UnifiedLibraryPreferences = Injekt.get(),
+    private val animeSourceManager: AnimeSourceManager = Injekt.get(),
     private val quickActions: LibraryQuickActions = LibraryQuickActions(),
 ) : ViewModel() {
 
@@ -63,6 +67,7 @@ class UnifiedLibraryScreenModel(
                     unviewedOnly = preferences.unviewedOnly.get(),
                     downloadedOnly = preferences.downloadedOnly.get(),
                     trackedOnly = preferences.trackedOnly.get(),
+                    form = EntryForm.entries.firstOrNull { it.name == preferences.formFilter.get() },
                 ),
                 columns = preferences.columns.get(),
                 showUnviewedCount = preferences.showUnviewedCount.get(),
@@ -104,9 +109,11 @@ class UnifiedLibraryScreenModel(
         }
             .onEach { snapshot ->
                 val downloaded = withIOContext { snapshot.entries.filterDownloaded() }
+                val forms = withIOContext { snapshot.entries.formsByEntry() }
                 state.value = state.value.copy(
                     isLoading = false,
                     entries = snapshot.entries,
+                    entryForms = forms,
                     downloadedEntryKeys = downloaded,
                     trackedEntryKeys = snapshot.tracked,
                     categories = snapshot.categories,
@@ -168,6 +175,32 @@ class UnifiedLibraryScreenModel(
             }
             (entry.contentType to entry.entryId).takeIf { count > 0 }
         }
+
+    /**
+     * What shape each entry is, for the ones that are not the ordinary kind.
+     *
+     * The source is asked, not the entry — see `KnowsEntryForm`. Sources are resolved once each
+     * rather than once per entry: a playlist with four hundred channels in the library is four
+     * hundred rows sharing one source, and the answer for all of them is the same word.
+     *
+     * Serials are left out, so a library of nothing but extensions produces an empty map and this
+     * costs a pass over a list. Off the main thread because it is one, and it runs whenever the
+     * library changes.
+     */
+    private fun List<LibraryEntry>.formsByEntry(): Map<Pair<ContentType, Long>, EntryForm> {
+        val knowers = mutableMapOf<Long, KnowsEntryForm?>()
+        return buildMap {
+            this@formsByEntry.forEach { entry ->
+                // Manga has one shape and no source that says otherwise.
+                if (entry.contentType != ContentType.ANIME) return@forEach
+                val source = knowers.getOrPut(entry.sourceId) {
+                    animeSourceManager.get(entry.sourceId) as? KnowsEntryForm
+                } ?: return@forEach
+                val form = runCatching { source.formOf(entry.url) }.getOrDefault(EntryForm.Serial)
+                if (form != EntryForm.Serial) put(entry.contentType to entry.entryId, form)
+            }
+        }
+    }
 
     /**
      * The same refresh the Updates screen runs: ask both libraries for anything new, per the
@@ -233,6 +266,7 @@ class UnifiedLibraryScreenModel(
         preferences.unviewedOnly.set(filters.unviewedOnly)
         preferences.downloadedOnly.set(filters.downloadedOnly)
         preferences.trackedOnly.set(filters.trackedOnly)
+        preferences.formFilter.set(filters.form?.name.orEmpty())
         state.value = state.value.copy(filters = filters)
     }
 

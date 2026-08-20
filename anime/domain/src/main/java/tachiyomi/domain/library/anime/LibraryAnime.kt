@@ -35,6 +35,8 @@ data class LibraryAnime(
 
     override val sourceId: Long get() = anime.source
 
+    override val url: String get() = anime.url
+
     // The anime query returns one row per category, so this is always a single id.
     override val categoryIds: List<Long> get() = listOf(category)
 

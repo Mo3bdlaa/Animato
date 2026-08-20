@@ -1,6 +1,7 @@
 package animato.app.library
 
 import androidx.compose.runtime.Immutable
+import animato.anime.content.EntryForm
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.domain.content.LibraryEntry
@@ -86,14 +87,31 @@ data class LibraryFilters(
     val unviewedOnly: Boolean = false,
     val downloadedOnly: Boolean = false,
     val trackedOnly: Boolean = false,
+    /**
+     * Which shape of thing to show, or null for all of them.
+     *
+     * Single-valued rather than a fourth checkbox, because unlike the three above it these are
+     * mutually exclusive — a title is a series or a film or a channel and never two of them, so a
+     * row of "series ✓ films ✓ live ✗" is three controls describing one choice.
+     *
+     * ## Why it is not on the lens
+     *
+     * The lens asks *which library*, and it asks it of every screen at once: Home, Discover,
+     * Updates, Downloads and the extension list all read it. Films and channels are not a library —
+     * they are things inside one — and hanging them off the lens would put the question *where are
+     * the films* to Discover and to the extension store, which have no answer to give. So it lives
+     * where the other questions about what a title *is* already live.
+     */
+    val form: EntryForm? = null,
 ) {
 
-    val any: Boolean get() = unviewedOnly || downloadedOnly || trackedOnly
+    val any: Boolean get() = unviewedOnly || downloadedOnly || trackedOnly || form != null
 
-    fun accepts(entry: LibraryEntry, downloaded: Boolean, tracked: Boolean): Boolean {
+    fun accepts(entry: LibraryEntry, downloaded: Boolean, tracked: Boolean, form: EntryForm): Boolean {
         if (unviewedOnly && entry.unviewedItems <= 0) return false
         if (downloadedOnly && !downloaded) return false
         if (trackedOnly && !tracked) return false
+        if (this.form != null && this.form != form) return false
         return true
     }
 }
@@ -127,6 +145,14 @@ data class UnifiedLibraryState(
     val entries: List<LibraryEntry> = emptyList(),
     val downloadedEntryKeys: Set<Pair<ContentType, Long>> = emptySet(),
     val trackedEntryKeys: Set<Pair<ContentType, Long>> = emptySet(),
+    /**
+     * The entries that are not ordinary serials, and what they are instead.
+     *
+     * Only those. Every extension in the ecosystem and the whole manga side have serials and
+     * nothing else, so holding a value for each of them would be a map the size of the library
+     * saying the same word over and over — [formOf] fills in the default. See `EntryForm`.
+     */
+    val entryForms: Map<Pair<ContentType, Long>, EntryForm> = emptyMap(),
     val categories: List<LibraryCategory> = emptyList(),
     val lens: ContentFilter = ContentFilter.ALL,
     val selectedCategory: String? = null,
@@ -208,11 +234,36 @@ data class UnifiedLibraryState(
             .asSequence()
             .filter {
                 val key = it.contentType to it.entryId
-                filters.accepts(it, downloaded = key in downloadedEntryKeys, tracked = key in trackedEntryKeys)
+                filters.accepts(
+                    entry = it,
+                    downloaded = key in downloadedEntryKeys,
+                    tracked = key in trackedEntryKeys,
+                    form = formOf(it),
+                )
             }
             .filter { query == null || it.title.contains(query, ignoreCase = true) }
             .sortedWith(sortMode.comparator())
             .toList()
+    }
+
+    /** What shape an entry is, with the assumption the whole app makes filled in. */
+    fun formOf(entry: LibraryEntry): EntryForm =
+        entryForms[entry.contentType to entry.entryId] ?: EntryForm.Serial
+
+    /**
+     * The shapes actually present, so the picker only offers what is there.
+     *
+     * A library with no channels in it should not offer a Live chip that empties the grid — the
+     * row is a description of the collection before it is a control over it. Series is always
+     * offered when anything at all is in the library, since anything not listed is one.
+     */
+    val availableForms: List<EntryForm> by lazy {
+        val present = shelfEntries.mapTo(mutableSetOf()) { formOf(it) }
+        // Plus whatever is currently chosen, even when this shelf has none of it. Otherwise
+        // filtering to Live and then walking into a category of nothing but series takes the Live
+        // chip away along with the only visible way to stop filtering by it.
+        filters.form?.let(present::add)
+        EntryForm.entries.filter { it in present }
     }
 
     /** Whether the grid is empty because of something that was set, rather than because it is. */

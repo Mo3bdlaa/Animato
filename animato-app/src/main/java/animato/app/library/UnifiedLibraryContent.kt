@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.content.EntryForm
 import animato.anime.player.PlayerLauncher
 import animato.app.entry.EntryScreen
 import animato.app.navigation.LensButton
@@ -65,6 +66,7 @@ import animato.ui.navigation.AnimatoTab
 import animato.ui.tv.tvClickable
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
@@ -518,6 +520,46 @@ private fun LibraryDisplaySheet(
                 onCheckedChange = { onFilters(state.filters.copy(trackedOnly = it)) },
             )
 
+            /*
+             * Series, films or channels — offered only when the library has more than one of them.
+             *
+             * Chips rather than a fourth checkbox, because a title is exactly one of these and
+             * three checkboxes would be three controls describing one choice. Absent entirely for
+             * a library of nothing but series, which is every library that has never added a
+             * playlist or a film addon: a row whose only real option is *All* is a control that
+             * cannot do anything.
+             */
+            if (state.availableForms.size > 1 || state.filters.form != null) {
+                SheetSection(stringResource(AYMR.strings.filter_form))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(
+                            horizontal = MaterialTheme.padding.medium,
+                            vertical = MaterialTheme.padding.small,
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                ) {
+                    FilterChip(
+                        selected = state.filters.form == null,
+                        onClick = { onFilters(state.filters.copy(form = null)) },
+                        label = { Text(stringResource(AYMR.strings.filter_form_any)) },
+                    )
+                    state.availableForms.forEach { form ->
+                        FilterChip(
+                            selected = state.filters.form == form,
+                            // Tapping the chosen one clears it, so the chip and *All* are the same
+                            // control seen twice and nothing has to be scrolled back to.
+                            onClick = {
+                                onFilters(state.filters.copy(form = form.takeIf { it != state.filters.form }))
+                            },
+                            label = { Text(stringResource(form.labelRes)) },
+                        )
+                    }
+                }
+            }
+
             HorizontalDivider()
             SheetSection(stringResource(MR.strings.pref_category_display))
             Row(
@@ -650,3 +692,11 @@ private fun LibraryEmptyState(
 private val CoverRadius = 12.dp
 private val PillInset = 6.dp
 private val SheetRadius = 28.dp
+
+/** The shapes, in this screen's words rather than the model's. */
+private val EntryForm.labelRes: StringResource
+    get() = when (this) {
+        EntryForm.Serial -> AYMR.strings.filter_form_serial
+        EntryForm.Single -> AYMR.strings.filter_form_single
+        EntryForm.Live -> AYMR.strings.filter_form_live
+    }

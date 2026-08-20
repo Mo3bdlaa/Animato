@@ -325,6 +325,11 @@
     <string name="action_manage_sources">Manage</string>
     <string name="source_browse_empty">This source has nothing to show for that</string>
     <string name="source_categories">Categories</string>
+    <string name="filter_form">Kind</string>
+    <string name="filter_form_any">All</string>
+    <string name="filter_form_serial">Series</string>
+    <string name="filter_form_single">Films</string>
+    <string name="filter_form_live">Live</string>
     <string name="source_categories_none">No category matches that</string>
     <string name="home_continue_empty">Nothing started yet</string>
     <string name="entry_caught_up">Caught up</string>

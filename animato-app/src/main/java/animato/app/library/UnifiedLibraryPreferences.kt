@@ -29,6 +29,15 @@ class UnifiedLibraryPreferences(
     val trackedOnly = preferenceStore.getBoolean("animato_library_filter_tracked", false)
 
     /**
+     * Which shape of title to show, by [animato.anime.content.EntryForm] name, or empty for all.
+     *
+     * A string rather than an enum preference because the value is genuinely nullable and *all* is
+     * not one of the shapes — adding a fourth enum entry meaning "no filter" would put a
+     * not-a-shape into the type every other reader has to then ignore.
+     */
+    val formFilter = preferenceStore.getString("animato_library_filter_form", "")
+
+    /**
      * Covers per row.
      *
      * Three is the default because the grid is designed at three: 16 + 3×112 + 2×12 + 16 comes to

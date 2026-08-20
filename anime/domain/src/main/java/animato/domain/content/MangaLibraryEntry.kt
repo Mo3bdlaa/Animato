@@ -23,6 +23,8 @@ value class MangaLibraryEntry(val libraryManga: LibraryManga) : LibraryEntry {
 
     override val sourceId: Long get() = libraryManga.manga.source
 
+    override val url: String get() = libraryManga.manga.url
+
     override val categoryIds: List<Long> get() = libraryManga.categories
 
     override val title: String get() = libraryManga.manga.title
