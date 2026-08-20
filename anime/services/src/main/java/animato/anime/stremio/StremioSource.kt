@@ -1,8 +1,10 @@
 package animato.anime.stremio
 
 import android.app.Application
+import animato.anime.content.BrowsableByCategory
 import animato.anime.content.EntryForm
 import animato.anime.content.KnowsEntryForm
+import animato.anime.content.SourceCategory
 import aniyomi.core.common.torrent.TorrentPreferences
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
@@ -61,7 +63,7 @@ import java.security.MessageDigest
  */
 class StremioSource(
     val addon: StremioAddon,
-) : AnimeHttpSource(), KnowsEntryForm {
+) : AnimeHttpSource(), KnowsEntryForm, BrowsableByCategory {
 
     private val json: Json by injectLazy()
 
@@ -541,6 +543,39 @@ class StremioSource(
             animes = interleaved.distinctBy { it.url },
             hasNextPage = pages.any { it.hasNextPage },
         )
+    }
+
+    /**
+     * Every catalog, and every genre each catalog declares.
+     *
+     * Two levels flattened into one list, because that is what they are on screen: a catalog is a
+     * category — *Top Movies* is a perfectly good thing to want — and a genre is a category inside
+     * it. The [SourceCategory.group] is what keeps *Action in Top Movies* apart from *Action in New
+     * Series*, which the filter sheet was rendering as two identical-looking dropdown entries in
+     * two different dropdowns.
+     *
+     * Search-only catalogs are left out. They answer nothing without a query, and a chip that
+     * returns an empty grid every time is worse than no chip.
+     */
+    override suspend fun categories(): List<SourceCategory> = buildList {
+        browsableCatalogs().forEachIndexed { index, catalog ->
+            add(SourceCategory(id = StremioMapper.categoryId(index), label = catalog.displayName))
+            catalog.optionsFor(EXTRA_GENRE).forEach { genre ->
+                add(
+                    SourceCategory(
+                        id = StremioMapper.categoryId(index, genre),
+                        label = genre,
+                        group = catalog.displayName,
+                    ),
+                )
+            }
+        }
+    }
+
+    override suspend fun browseCategory(categoryId: String, page: Int): AnimesPage {
+        val (index, genre) = StremioMapper.parseCategoryId(categoryId) ?: return AnimesPage(emptyList(), false)
+        val catalog = browsableCatalogs().getOrNull(index) ?: return AnimesPage(emptyList(), false)
+        return fetchCatalog(catalog, page, query = "", genre = genre)
     }
 
     private class CatalogFilter(names: List<String>) :

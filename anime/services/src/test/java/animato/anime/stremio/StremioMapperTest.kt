@@ -454,4 +454,26 @@ class StremioMapperTest {
         // Nothing to read: an address with no type is the shape the whole app already assumes.
         StremioMapper.formOf("tt0944947") shouldBe EntryForm.Serial
     }
+
+    @Test
+    fun `a category id survives a genre with a slash in it`() {
+        // The catalog on its own.
+        StremioMapper.parseCategoryId(StremioMapper.categoryId(3)) shouldBe (3 to null)
+
+        // A genre inside it. Round-tripped rather than asserted as a literal string: the encoding
+        // is nobody's business but the mapper's, and only the pair coming back out matters.
+        val plain = StremioMapper.categoryId(0, "Comedy")
+        StremioMapper.parseCategoryId(plain) shouldBe (0 to "Comedy")
+
+        // The reason the split is on the first separator only. Addons publish these.
+        val slashed = StremioMapper.categoryId(2, "Action/Adventure")
+        StremioMapper.parseCategoryId(slashed) shouldBe (2 to "Action/Adventure")
+
+        StremioMapper.parseCategoryId(StremioMapper.categoryId(1, "Sci-Fi & Fantasy")) shouldBe
+            (1 to "Sci-Fi & Fantasy")
+
+        // Nothing readable in front of the separator, and nothing readable at all.
+        StremioMapper.parseCategoryId("top/Action") shouldBe null
+        StremioMapper.parseCategoryId("") shouldBe null
+    }
 }

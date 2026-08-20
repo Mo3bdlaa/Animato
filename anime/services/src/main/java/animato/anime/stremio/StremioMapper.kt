@@ -207,6 +207,27 @@ internal object StremioMapper {
         else -> EntryForm.Serial
     }
 
+    /**
+     * A category's address: a catalog's position, and the genre inside it if there is one.
+     *
+     * The position rather than the catalog's own id, because an addon publishes several catalogs
+     * under the same id — Cinemeta's are `top` for films and `top` for series — so the id alone
+     * does not identify one. The position is stable for as long as the manifest is.
+     */
+    fun categoryId(index: Int, genre: String? = null): String =
+        if (genre == null) "$index" else "$index$CATEGORY_SEPARATOR$genre"
+
+    /** The catalog position and genre back out of an id written by [categoryId]. */
+    fun parseCategoryId(id: String): Pair<Int, String?>? {
+        val separator = id.indexOf(CATEGORY_SEPARATOR)
+        if (separator < 0) return id.toIntOrNull()?.let { it to null }
+        // Split on the first separator only. A genre is free text and addons publish ones with a
+        // slash in them — `Action/Adventure` is common, and reading only up to the second separator
+        // would ask for a genre nothing serves.
+        val index = id.substring(0, separator).toIntOrNull() ?: return null
+        return index to id.substring(separator + 1)
+    }
+
     /** The id and season back out of an address written by [seasonUrl], or null if it has none. */
     fun parseSeasonUrl(url: String): Pair<String, Int>? {
         val marker = url.lastIndexOf("/s")
@@ -401,6 +422,9 @@ internal object StremioMapper {
 
     /** Stremio's type for one complete work. Everything else it publishes arrives in parts. */
     private const val TYPE_MOVIE = "movie"
+
+    /** Between a catalog's position and a genre, in an id nothing outside here reads. */
+    private const val CATEGORY_SEPARATOR = '/'
 
     /** What a channel's one item is called, since "Film" is not it. */
     private const val LIVE_ITEM_NAME = "Live"

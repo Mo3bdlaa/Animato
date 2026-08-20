@@ -1,6 +1,7 @@
 package animato.app.source
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,11 +13,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -31,10 +35,12 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -54,6 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import animato.anime.content.SourceCategory
 import animato.app.entry.EntryScreen
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -113,6 +120,7 @@ class SourceBrowseScreen(
         }
         val state by screenModel.state.collectAsStateWithLifecycle()
         var filtersOpen by remember { mutableStateOf(false) }
+        var categoriesOpen by remember { mutableStateOf(false) }
         var isRefreshing by rememberSaveable { mutableStateOf(false) }
 
         val gridState = rememberLazyGridState()
@@ -125,6 +133,18 @@ class SourceBrowseScreen(
         }
         LaunchedEffect(nearEnd, state.items.size) {
             if (nearEnd) screenModel.loadMore()
+        }
+
+        if (categoriesOpen) {
+            CategorySheet(
+                categories = state.categories,
+                selectedId = state.selectedCategoryId,
+                onSelect = {
+                    categoriesOpen = false
+                    screenModel.selectCategory(it)
+                },
+                onDismiss = { categoriesOpen = false },
+            )
         }
 
         if (filtersOpen) {
@@ -260,6 +280,30 @@ class SourceBrowseScreen(
                                 )
                             }
                         }
+
+                        /*
+                         * The source's own divisions, where the thumb is.
+                         *
+                         * This row is the whole point of the category work. A playlist's groups and
+                         * an addon's genres were reachable only through the filter sheet: open it,
+                         * find the right dropdown, scroll a list of four hundred, choose, apply.
+                         * Four gestures and a scroll to reach *Sport*, which is the first thing
+                         * anybody does in an IPTV app. It is one tap now.
+                         *
+                         * Horizontal and scrolling, with a *More* chip at the end when there are
+                         * more than a screenful. A horizontal scroll through four hundred groups
+                         * is not a way to find one, so past that point the sheet — which can be
+                         * searched and is grouped by catalog — is the real answer and the row
+                         * is a shortlist.
+                         */
+                        if (state.categories.isNotEmpty()) {
+                            CategoryRow(
+                                categories = state.categories,
+                                selectedId = state.selectedCategoryId,
+                                onSelect = screenModel::selectCategory,
+                                onSeeAll = { categoriesOpen = true },
+                            )
+                        }
                     }
                 }
             },
@@ -372,6 +416,178 @@ class SourceBrowseScreen(
     }
 }
 
+/**
+ * The shortlist of categories, one tap each.
+ *
+ * Capped, and the cap is the reason the sheet exists. A playlist with four hundred groups drawn as
+ * four hundred chips is a horizontal scroll nobody reaches the end of, and it costs a layout pass
+ * per chip on a row that is redrawn every time the grid scrolls. The first few are the ones a
+ * provider put first, which is the closest thing an M3U file has to an order of importance.
+ */
+@Composable
+private fun CategoryRow(
+    categories: List<SourceCategory>,
+    selectedId: String?,
+    onSelect: (String) -> Unit,
+    onSeeAll: () -> Unit,
+) {
+    // The selected one is always drawn, even when it sits past the cap: a chip row that does not
+    // show what is selected is a screen showing filtered results with no visible reason.
+    val shown = remember(categories, selectedId) {
+        val head = categories.take(CATEGORY_CHIPS)
+        val selected = categories.firstOrNull { it.id == selectedId }
+        if (selected == null || selected in head) head else head + selected
+    }
+
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(
+            start = MaterialTheme.padding.medium,
+            end = MaterialTheme.padding.medium,
+            bottom = MaterialTheme.padding.small,
+        ),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+    ) {
+        items(items = shown, key = { it.id }) { category ->
+            FilterChip(
+                selected = category.id == selectedId,
+                onClick = { onSelect(category.id) },
+                label = {
+                    Text(
+                        text = category.label,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+            )
+        }
+        if (categories.size > CATEGORY_CHIPS) {
+            item(key = "see-all") {
+                FilterChip(
+                    selected = false,
+                    onClick = onSeeAll,
+                    label = { Text(stringResource(AYMR.strings.action_see_all)) },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * All of them, searchable, grouped the way the source grouped them.
+ *
+ * The search field is not decoration. Four hundred IPTV groups and a hundred and sixty Stremio
+ * genres are both lists you find something in by typing, and both were previously offered as a
+ * dropdown with no way to type at all.
+ *
+ * Headings come from [SourceCategory.group], which is how *Action in Top Movies* stays apart from
+ * *Action in New Series* — two chips reading the same word, which without the heading above them
+ * is a list that looks duplicated and behaves unpredictably.
+ */
+@Composable
+private fun CategorySheet(
+    categories: List<SourceCategory>,
+    selectedId: String?,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var query by remember { mutableStateOf("") }
+    val matching = remember(categories, query) {
+        val needle = query.trim()
+        if (needle.isEmpty()) {
+            categories
+        } else {
+            categories.filter {
+                it.label.contains(needle, ignoreCase = true) ||
+                    it.group?.contains(needle, ignoreCase = true) == true
+            }
+        }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
+        Column(modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium)) {
+            Text(
+                text = stringResource(AYMR.strings.source_categories),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(bottom = MaterialTheme.padding.small),
+            )
+            TextField(
+                value = query,
+                onValueChange = { query = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text(stringResource(MR.strings.action_search_hint)) },
+                leadingIcon = { Icon(imageVector = Icons.Outlined.Search, contentDescription = null) },
+                singleLine = true,
+                shape = RoundedCornerShape(FieldRadius),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                ),
+            )
+
+            if (matching.isEmpty()) {
+                Text(
+                    text = stringResource(AYMR.strings.source_categories_none),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = MaterialTheme.padding.medium),
+                )
+                return@Column
+            }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(vertical = MaterialTheme.padding.small),
+            ) {
+                // Grouped in place rather than up front: the grouping has to follow the search, and
+                // a heading over nothing is worse than no heading.
+                var heading: String? = null
+                matching.forEach { category ->
+                    if (category.group != heading) {
+                        heading = category.group
+                        category.group?.let { name ->
+                            item(key = "group-${category.id}") {
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(
+                                        top = MaterialTheme.padding.small,
+                                        bottom = MaterialTheme.padding.extraSmall,
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                    item(key = category.id) {
+                        Text(
+                            text = category.label,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (category.id == selectedId) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (category.id == selectedId) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelect(category.id) }
+                                .padding(vertical = MaterialTheme.padding.small),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 private const val PREFETCH_DISTANCE = 8
 private val GridItemMinWidth = 104.dp
 private val CoverRadius = 12.dp
@@ -379,3 +595,6 @@ private val FieldRadius = 24.dp
 private val TopBarElevation = 3.dp
 private val FavoriteBadgeSize = 18.dp
 private val MoreSpinnerSize = 24.dp
+
+/** How many chips fit before the row stops being a shortcut and becomes a scroll. */
+private const val CATEGORY_CHIPS = 12

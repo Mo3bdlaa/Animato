@@ -1,7 +1,9 @@
 package animato.anime.iptv
 
+import animato.anime.content.BrowsableByCategory
 import animato.anime.content.EntryForm
 import animato.anime.content.KnowsEntryForm
+import animato.anime.content.SourceCategory
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
@@ -40,7 +42,7 @@ import java.security.MessageDigest
  */
 class M3uSource(
     val playlist: M3uPlaylist,
-) : AnimeHttpSource(), KnowsEntryForm {
+) : AnimeHttpSource(), KnowsEntryForm, BrowsableByCategory {
 
     private val store: M3uPlaylistStore by injectLazy()
 
@@ -97,6 +99,19 @@ class M3uSource(
         if (groups.isEmpty()) return AnimeFilterList()
         return AnimeFilterList(GroupFilter(groups))
     }
+
+    /**
+     * The playlist's groups, as the thing you pick before anything else.
+     *
+     * This reads the file rather than the cache, which is the difference between it and
+     * [getFilterList]: it can suspend, so the categories are there the first time the screen opens
+     * instead of appearing only after something else has already fetched.
+     */
+    override suspend fun categories(): List<SourceCategory> =
+        M3uParser.groupsOf(channels()).map { SourceCategory(id = it, label = it) }
+
+    override suspend fun browseCategory(categoryId: String, page: Int): AnimesPage =
+        pageOf(channels().filter { it.group == categoryId }, page)
 
     override suspend fun getPopularAnime(page: Int): AnimesPage = pageOf(channels(), page)
 

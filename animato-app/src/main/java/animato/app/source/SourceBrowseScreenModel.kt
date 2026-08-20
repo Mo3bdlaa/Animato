@@ -3,6 +3,8 @@ package animato.app.source
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.content.BrowsableByCategory
+import animato.anime.content.SourceCategory
 import animato.domain.content.ContentType
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.manga.interactor.UpdateManga
@@ -33,8 +35,14 @@ import uy.kohesive.injekt.api.get
 import tachiyomi.domain.entries.anime.model.Anime as DomainAnime
 import tachiyomi.domain.manga.model.Manga as DomainManga
 
-/** What the source is being asked for. Search is the third because it replaces the other two. */
-enum class SourceListing { POPULAR, LATEST, SEARCH }
+/**
+ * What the source is being asked for.
+ *
+ * Search is the third because it replaces the other two — a query is not a shelf you can also be
+ * on. [CATEGORY] is a fourth for the same reason: a playlist's *Sport* is neither popular nor
+ * latest nor a search, it is the whole of what the grid is showing.
+ */
+enum class SourceListing { POPULAR, LATEST, SEARCH, CATEGORY }
 
 @Immutable
 data class SourceBrowseItem(
@@ -61,9 +69,20 @@ data class SourceBrowseState(
     val animeFilters: AnimeFilterList? = null,
     /** The source's own site, for the pages an extension can no longer parse. */
     val webViewUrl: String? = null,
+    /**
+     * How this source divides up what it holds, if it says.
+     *
+     * Empty for every scraper extension and for the whole manga side — see [BrowsableByCategory].
+     * The chip row is simply absent then, which is the state the screen has always been in.
+     */
+    val categories: List<SourceCategory> = emptyList(),
+    val selectedCategoryId: String? = null,
 ) {
     val hasFilters: Boolean
         get() = (mangaFilters?.isNotEmpty() ?: false) || (animeFilters?.isNotEmpty() ?: false)
+
+    val selectedCategory: SourceCategory?
+        get() = categories.firstOrNull { it.id == selectedCategoryId }
 
     val isEmpty: Boolean get() = !isLoading && items.isEmpty() && failure == null
 }
@@ -130,12 +149,59 @@ class SourceBrowseScreenModel(
                 )
             }
         }
+        loadCategories()
         reload()
+    }
+
+    /**
+     * The source's own divisions, fetched once and then held.
+     *
+     * Off the main thread and outside the first page's wait: a playlist has to be downloaded before
+     * its groups are known, and making the grid wait for a chip row would put a spinner over the
+     * whole screen for something that is not the content. The chips appear when they arrive.
+     *
+     * A failure is silence. There is no error to show for a row that was never promised.
+     */
+    private fun loadCategories() {
+        val source = animeSourceManager.get(sourceId) as? BrowsableByCategory ?: return
+        viewModelScope.launch {
+            val categories = runCatching { withIOContext { source.categories() } }
+                .getOrElse {
+                    logcat(LogPriority.INFO, it) { "Categories of source $sourceId could not be read" }
+                    return@launch
+                }
+            state.update { it.copy(categories = categories) }
+        }
     }
 
     fun selectListing(listing: SourceListing) {
         if (listing == state.value.listing && listing != SourceListing.SEARCH) return
-        state.update { it.copy(listing = listing, query = if (listing == SourceListing.SEARCH) it.query else "") }
+        state.update {
+            it.copy(
+                listing = listing,
+                query = if (listing == SourceListing.SEARCH) it.query else "",
+                selectedCategoryId = null,
+            )
+        }
+        reload()
+    }
+
+    /**
+     * Pick a category, or tap the selected one again to come back out of it.
+     *
+     * Toggling rather than requiring a separate *All* chip: the shelf chips are right there and
+     * one of them lights up the moment a category is dropped, so the way back is never missing.
+     */
+    fun selectCategory(categoryId: String) {
+        val current = state.value
+        val leaving = current.selectedCategoryId == categoryId
+        state.update {
+            it.copy(
+                listing = if (leaving) SourceListing.POPULAR else SourceListing.CATEGORY,
+                selectedCategoryId = if (leaving) null else categoryId,
+                query = "",
+            )
+        }
         reload()
     }
 
@@ -146,7 +212,14 @@ class SourceBrowseScreenModel(
     /** Runs the typed query. A blank one is a request to go back to the source's own front page. */
     fun search() {
         val query = state.value.query
-        state.update { it.copy(listing = if (query.isBlank()) SourceListing.POPULAR else SourceListing.SEARCH) }
+        state.update {
+            it.copy(
+                listing = if (query.isBlank()) SourceListing.POPULAR else SourceListing.SEARCH,
+                // Typing leaves the category behind. A query narrowed to whichever group happened
+                // to be selected is a result set nobody asked for and nothing on screen explains.
+                selectedCategoryId = null,
+            )
+        }
         reload()
     }
 
@@ -156,7 +229,7 @@ class SourceBrowseScreenModel(
 
     /** Filters are a search with no words: the source decides what an empty query plus filters means. */
     fun applyFilters() {
-        state.update { it.copy(listing = SourceListing.SEARCH) }
+        state.update { it.copy(listing = SourceListing.SEARCH, selectedCategoryId = null) }
         reload()
     }
 
@@ -230,7 +303,9 @@ class SourceBrowseScreenModel(
         val result = when (current.listing) {
             SourceListing.POPULAR -> source.getPopularManga(page)
             SourceListing.LATEST -> source.getLatestUpdates(page)
-            SourceListing.SEARCH -> source.getSearchManga(
+            // No manga source publishes categories, so this can only be reached by a listing set
+            // before the source was resolved. The front page is the honest answer.
+            SourceListing.SEARCH, SourceListing.CATEGORY -> source.getSearchManga(
                 page = page,
                 query = current.query,
                 filters = current.mangaFilters ?: FilterList(),
@@ -264,6 +339,16 @@ class SourceBrowseScreenModel(
                 query = current.query,
                 filters = current.animeFilters ?: AnimeFilterList(),
             )
+            SourceListing.CATEGORY -> {
+                val category = current.selectedCategoryId
+                // Both halves of the guard are the same missing thing seen from two sides: a
+                // listing that outlived its category, or a source that stopped declaring any.
+                if (source is BrowsableByCategory && category != null) {
+                    source.browseCategory(category, page)
+                } else {
+                    source.getPopularAnime(page)
+                }
+            }
         }
         val items = result.animes.map { networkAnime ->
             val local = networkToLocalAnime.await(

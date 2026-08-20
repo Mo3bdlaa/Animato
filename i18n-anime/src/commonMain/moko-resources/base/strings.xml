@@ -324,6 +324,8 @@
     <string name="entry_release_next_soon">next expected soon</string>
     <string name="action_manage_sources">Manage</string>
     <string name="source_browse_empty">This source has nothing to show for that</string>
+    <string name="source_categories">Categories</string>
+    <string name="source_categories_none">No category matches that</string>
     <string name="home_continue_empty">Nothing started yet</string>
     <string name="entry_caught_up">Caught up</string>
     <string name="no_available_videos_source_empty">The source has no video for this episode</string>
