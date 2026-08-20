@@ -59,6 +59,7 @@ import androidx.media.AudioAttributesCompat
 import androidx.media.AudioFocusRequestCompat
 import androidx.media.AudioManagerCompat
 import animato.anime.player.databinding.PlayerLayoutBinding
+import animato.anime.player.describeForUser
 import animato.anime.player.getFontsDirectory
 import animato.anime.player.getScriptOptsDirectory
 import animato.anime.player.getScriptsDirectory
@@ -1205,7 +1206,36 @@ class PlayerActivity : BaseActivity() {
                     return@launchIO
                 }
                 startedTorrentServer = true
-                torrentLinkHandler(video.videoUrl, video.videoTitle, videoOptions)
+                /*
+                 * Caught, because everything inside it can throw and nothing above it was
+                 * catching.
+                 *
+                 * Handing a magnet to the server is an HTTP call, and `awaitSuccess` throws on
+                 * anything that is not a 2xx — a malformed magnet, a link the server will not
+                 * parse, a torrent file that is not one. In a coroutine on the activity's scope
+                 * that is not an error message, it is an uncaught exception, which is the app
+                 * closing. Reported from a device as *"if I play something from a torrent addon
+                 * and it cannot download, sometimes it crashes"*, and the *sometimes* is the
+                 * difference between a torrent the server accepts and never fills — which only
+                 * hangs — and one it rejects outright.
+                 *
+                 * Ends the same way the failed-to-start branch does: say what happened, and leave.
+                 * The server goes down with the player, so backing out of a torrent that will not
+                 * open does not leave one running.
+                 */
+                runCatching {
+                    torrentLinkHandler(video.videoUrl, video.videoTitle, videoOptions)
+                }.onFailure { error ->
+                    logcat(LogPriority.ERROR, error) { "Torrent could not be opened" }
+                    withUIContext {
+                        viewModel.updateIsLoadingEpisode(false)
+                        toast(
+                            error.describeForUser()
+                                ?: stringResource(AYMR.strings.torrent_could_not_open),
+                        )
+                        finish()
+                    }
+                }
             }
         } else {
             launchIO {
