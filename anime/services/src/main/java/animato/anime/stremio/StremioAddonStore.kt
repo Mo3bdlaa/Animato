@@ -78,6 +78,16 @@ data class StremioAddon(
      */
     val servesOnDemand: Boolean
         get() = declaredTypes.isEmpty() || declaredTypes.any { it != TYPE_TV }
+
+    /**
+     * Whether it says, in the manifest, that it deals in anime.
+     *
+     * Stremio has a type for it and 74 of the addons in the bundled directory declare it, which
+     * until now was a field this app read past — in an app whose whole subject is anime. It is not
+     * a guess about the catalogue's contents: an addon that does not say so is not counted, even
+     * where the name makes it obvious, because a name is not a promise and the type is.
+     */
+    val servesAnime: Boolean get() = TYPE_ANIME in declaredTypes
 }
 
 /**
@@ -93,6 +103,11 @@ data class StremioAddon(
  * companion object.**
  */
 private const val TYPE_TV = "tv"
+
+/**
+ * Stremio's type for anime, kept beside [TYPE_TV] and file-level for the same reason.
+ */
+private const val TYPE_ANIME = "anime"
 
 /**
  * The addons the user has added, and the only place they are added or removed.

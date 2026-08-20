@@ -349,6 +349,7 @@
     <string name="iptv_community_summary">Addons that publish live channels. Tapping one fills in its address.</string>
     <string name="stremio_search_hint">Search addons</string>
     <string name="addon_kind_all">All</string>
+    <string name="addon_anime">Anime</string>
     <!-- The four kinds, named for what you get rather than for the protocol's resource names. -->
     <string name="addon_kind_complete">Browse and play</string>
     <string name="addon_kind_video">Video only</string>

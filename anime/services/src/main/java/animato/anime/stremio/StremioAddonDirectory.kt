@@ -41,7 +41,18 @@ data class DirectoryAddon(
     val isUseful: Boolean get() = resources.any { it in StremioAddonStore.USEFUL_RESOURCES }
 
     val kind: AddonKind get() = AddonKind.of(resources)
+
+    /**
+     * Whether it declares Stremio's `anime` type.
+     *
+     * The reason the store has an Anime chip. Seventy-four of the addons in the snapshot say this
+     * about themselves and the app was reading straight past it, so an anime app's addon store
+     * offered five hundred rows with no way to ask for the ones that are the point.
+     */
+    val servesAnime: Boolean get() = types.any { it.equals(TYPE_ANIME, ignoreCase = true) }
 }
+
+private const val TYPE_ANIME = "anime"
 
 /**
  * What an addon actually does for you, as one word.

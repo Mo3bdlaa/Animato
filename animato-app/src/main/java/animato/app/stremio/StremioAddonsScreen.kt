@@ -102,6 +102,7 @@ class StremioAddonsScreen(
         // the field and the other shows an empty one. SearchToolbar draws the difference.
         var query by remember { mutableStateOf<String?>(null) }
         var kind by remember { mutableStateOf<AddonKind?>(null) }
+        var animeOnly by remember { mutableStateOf(false) }
         // Which field the one dialog is showing. A playlist and an addon are both an address in a
         // box, and two dialogs that look identical would be two places to maintain the same
         // keyboard handling and the same error line.
@@ -203,6 +204,8 @@ class StremioAddonsScreen(
                     query = query.orEmpty(),
                     kind = kind,
                     onKindChange = { kind = it },
+                    animeOnly = animeOnly,
+                    onAnimeOnlyChange = { animeOnly = it },
                     showAdult = screenModel.showAdult,
                     liveTvOnly = liveTvOnly,
                     onOpen = { addon ->
@@ -280,6 +283,9 @@ internal fun LazyListScope.addonStore(
      */
     kind: AddonKind?,
     onKindChange: (AddonKind?) -> Unit,
+    /** Whether the community list is narrowed to addons that declare Stremio's `anime` type. */
+    animeOnly: Boolean,
+    onAnimeOnlyChange: (Boolean) -> Unit,
     /** Whether adult addons are offered at all — see [StremioAddonsScreenModel.showAdult]. */
     showAdult: Boolean,
     /** Narrow everything to addons that publish live channels — see [StremioAddonsScreen]. */
@@ -313,7 +319,10 @@ internal fun LazyListScope.addonStore(
     // Counted before the kind filter, so a chip can say how many it would leave and an empty one
     // is visibly empty rather than missing.
     val counts = searched.groupingBy { it.kind }.eachCount()
-    val community = searched.filter { kind == null || it.kind == kind }
+    val animeCount = searched.count { it.servesAnime }
+    val community = searched
+        .filter { kind == null || it.kind == kind }
+        .filter { !animeOnly || it.servesAnime }
 
     if (mine.isEmpty() && suggestions.isEmpty() && searched.isEmpty()) {
         item(key = "stremio-no-match") {
@@ -367,7 +376,14 @@ internal fun LazyListScope.addonStore(
             )
         }
         item(key = "stremio-kind-chips") {
-            KindChips(selected = kind, counts = counts, onSelect = onKindChange)
+            KindChips(
+                selected = kind,
+                counts = counts,
+                onSelect = onKindChange,
+                animeOnly = animeOnly,
+                animeCount = animeCount,
+                onAnimeOnlyChange = onAnimeOnlyChange,
+            )
         }
         // The chosen kind, said once above the rows it explains. A chip has room for a name and
         // not for the consequence, and the consequence — *nothing plays until you also install a
@@ -422,6 +438,16 @@ private fun KindChips(
     selected: AddonKind?,
     counts: Map<AddonKind, Int>,
     onSelect: (AddonKind?) -> Unit,
+    /**
+     * The Anime chip, which is a separate question from the kind and so a separate control.
+     *
+     * A kind says what an addon *does* and this says what it is *about*; they compose — a complete
+     * anime addon is both — so folding anime into the kind row as a fifth mutually-exclusive
+     * option would make the two most useful filters cancel each other out.
+     */
+    animeOnly: Boolean,
+    animeCount: Int,
+    onAnimeOnlyChange: (Boolean) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -443,6 +469,15 @@ private fun KindChips(
                 selected = selected == kind,
                 onClick = { onSelect(if (selected == kind) null else kind) },
                 label = { Text("${stringResource(kind.labelRes)}  $count") },
+            )
+        }
+        // Last rather than first, because it narrows a list the kind chips have already described
+        // and reading it in that order is how it behaves.
+        if (animeCount > 0) {
+            FilterChip(
+                selected = animeOnly,
+                onClick = { onAnimeOnlyChange(!animeOnly) },
+                label = { Text("${stringResource(AYMR.strings.addon_anime)}  $animeCount") },
             )
         }
     }
