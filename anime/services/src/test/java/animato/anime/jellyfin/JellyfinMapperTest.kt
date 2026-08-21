@@ -1,6 +1,7 @@
 package animato.anime.jellyfin
 
 import animato.anime.content.EntryForm
+import animato.anime.content.SourceProgress
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import io.kotest.matchers.shouldBe
@@ -169,5 +170,40 @@ class JellyfinMapperTest {
         )
 
         JellyfinMapper.videoLibraries(views).map { it.name } shouldBe listOf("Films", "Everything else")
+    }
+
+    @Test
+    fun `what the server already watched is carried across`() {
+        val watched = JellyfinMapper.toEpisodes(
+            listOf(
+                episode("e1", 1, 1).copy(userData = JellyfinUserData(played = true)),
+                // Ticks are hundred-nanosecond units: 90 seconds is 900,000,000 of them.
+                episode("e2", 1, 2).copy(
+                    userData = JellyfinUserData(playbackPositionTicks = 900_000_000L),
+                ),
+                episode("e3", 1, 3),
+            ),
+        ).associateBy { it.url }
+
+        SourceProgress.seenIn(watched.getValue("Episode:e1").memo) shouldBe true
+        SourceProgress.positionIn(watched.getValue("Episode:e2").memo) shouldBe 90_000L
+        // Nothing said means nothing carried, which is what every other source in the app looks
+        // like — and is what stops this from writing over local progress with an empty answer.
+        SourceProgress.seenIn(watched.getValue("Episode:e3").memo) shouldBe false
+        SourceProgress.positionIn(watched.getValue("Episode:e3").memo) shouldBe 0L
+    }
+
+    @Test
+    fun `a film carries its own watched state too`() {
+        val film = JellyfinItem(
+            id = "f",
+            name = "Arrival",
+            type = JellyfinMapper.TYPE_MOVIE,
+            userData = JellyfinUserData(played = true, playbackPositionTicks = 12_000_000L),
+        )
+
+        val memo = JellyfinMapper.toSingleEpisode(film).memo
+        SourceProgress.seenIn(memo) shouldBe true
+        SourceProgress.positionIn(memo) shouldBe 1_200L
     }
 }

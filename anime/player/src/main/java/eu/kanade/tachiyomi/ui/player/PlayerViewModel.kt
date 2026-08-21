@@ -42,6 +42,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import animato.anime.content.asProgressReporter
 import animato.anime.content.entryForm
 import animato.anime.player.CustomButtonFetchState
 import animato.anime.player.HosterState
@@ -1171,6 +1172,14 @@ class PlayerViewModel @JvmOverloads constructor(
      * The position in the current video. Used to restore from process kill.
      */
     private var episodePosition = savedState.get<Long>("episode_position")
+
+    /**
+     * When the source was last told about the position, so it is not told every second.
+     *
+     * Reset with the episode: a new episode starts at zero and its first report should go out
+     * immediately rather than waiting out the interval left over from the previous one.
+     */
+    private var lastReportedPositionMs = 0L
         set(value) {
             savedState["episode_position"] = value
             field = value
@@ -1811,6 +1820,9 @@ class PlayerViewModel @JvmOverloads constructor(
                 )
 
                 this@PlayerViewModel.episodeId = currentEpisode.id!!
+                // A new episode starts at zero, so its first report should go out at once rather
+                // than waiting out whatever was left of the previous episode's interval.
+                lastReportedPositionMs = 0L
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { e.message ?: "Error getting links" }
             }
@@ -1860,6 +1872,7 @@ class PlayerViewModel @JvmOverloads constructor(
         }
 
         saveWatchingProgress(currentEp)
+        reportProgressToSource(currentEp, seconds, totalSeconds)
 
         val inDownloadRange = seconds.toDouble() / totalSeconds > 0.35
         if (inDownloadRange) {
@@ -1867,8 +1880,36 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Tell the source where the viewer is, for the sources that keep their own record.
+     *
+     * Only a media server does — see ReportsProgress. Everything else in the app is a catalogue or a
+     * file with no account behind it and nothing to be told, so for every other source this is a
+     * type check that fails and returns.
+     *
+     * Throttled, and that is the whole reason this is not simply a line inside the loop above: this
+     * runs once a second, and a request per second to somebody's home server for the length of an
+     * episode is fourteen hundred requests to say a thing that changes meaningfully every half
+     * minute. Jellyfin's own clients report on about this cadence for the same reason.
+     */
+    private fun reportProgressToSource(currentEp: Episode, positionMs: Long, durationMs: Long) {
+        val reporter = currentSource.value.asProgressReporter() ?: return
+        if (positionMs - lastReportedPositionMs < PROGRESS_REPORT_INTERVAL_MS) return
+        lastReportedPositionMs = positionMs
+        val episodeUrl = currentEp.url
+        viewModelScope.launchNonCancellable {
+            reporter.reportProgress(episodeUrl, positionMs, durationMs)
+        }
+    }
+
     private suspend fun updateEpisodeProgressOnComplete(currentEp: Episode) {
         currentEp.seen = true
+        // The same fact, told to the server that will be asked about it from another device. Inside
+        // the completion path rather than beside it, so it happens exactly when the app itself
+        // decides something was watched and never on a different rule.
+        currentSource.value.asProgressReporter()?.let { reporter ->
+            runCatching { reporter.reportFinished(currentEp.url) }
+        }
         updateTrackEpisodeSeen(currentEp)
         deleteEpisodeIfNeeded(currentEp)
 
@@ -2372,3 +2413,12 @@ fun Float.normalize(inMin: Float, inMax: Float, outMin: Float, outMax: Float): F
 
 /** mpv talks in seconds; the delay panel and everything stored here talk in milliseconds. */
 private const val MILLIS_IN_A_SECOND = 1000.0
+
+/**
+ * How often a source that keeps its own record is told where the viewer is.
+ *
+ * Thirty seconds, which is roughly what Jellyfin's own clients use. The progress loop runs once a
+ * second, and reporting at that rate would be fourteen hundred requests to somebody's home server
+ * over one episode to say a thing that only changes meaningfully every half minute.
+ */
+private const val PROGRESS_REPORT_INTERVAL_MS = 30_000L

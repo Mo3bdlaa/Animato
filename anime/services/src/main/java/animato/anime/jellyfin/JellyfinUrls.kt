@@ -140,6 +140,23 @@ object JellyfinUrls {
         return "${normalizeBase(base)}/Videos/${itemId.escaped()}/stream${query.asQuery()}"
     }
 
+    /**
+     * Where playback progress is reported.
+     *
+     * The same endpoint every Jellyfin client uses while playing. It is a session update rather than
+     * a write to the item, which is why it takes no user id: the token identifies the account.
+     */
+    fun playingProgress(base: String): String = "${normalizeBase(base)}/Sessions/Playing/Progress"
+
+    /**
+     * Marking an item watched.
+     *
+     * A separate call from progress, because on Jellyfin they are separate facts: an item can be
+     * marked played with no position, and a position past the end is not the same as finished.
+     */
+    fun playedItem(base: String, userId: String, itemId: String): String =
+        "${normalizeBase(base)}/Users/${userId.escaped()}/PlayedItems/${itemId.escaped()}"
+
     /** The item's own page in the server's web UI, for *open in browser*. */
     fun webPage(base: String, itemId: String, serverId: String): String {
         val query = listOf("id" to itemId, "serverId" to serverId)

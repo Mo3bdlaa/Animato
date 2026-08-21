@@ -3,6 +3,7 @@ package animato.anime.jellyfin
 import animato.anime.content.BrowsableByCategory
 import animato.anime.content.EntryForm
 import animato.anime.content.KnowsEntryForm
+import animato.anime.content.ReportsProgress
 import animato.anime.content.SourceCategory
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
@@ -12,10 +13,15 @@ import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.parseAs
 import kotlinx.serialization.json.Json
+import logcat.LogPriority
 import okhttp3.Headers
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.injectLazy
 import java.security.MessageDigest
 
@@ -42,7 +48,7 @@ import java.security.MessageDigest
  */
 class JellyfinSource(
     val server: JellyfinServer,
-) : AnimeHttpSource(), KnowsEntryForm, BrowsableByCategory {
+) : AnimeHttpSource(), KnowsEntryForm, BrowsableByCategory, ReportsProgress {
 
     private val json: Json by injectLazy()
 
@@ -178,6 +184,45 @@ class JellyfinSource(
         )
     }
 
+    /**
+     * Tell the server where the viewer is.
+     *
+     * The point of this whole class pair: a server is watched from more than one place, and without
+     * this the app knows about the phone while the server knows about everything else. Reported
+     * while playing rather than at the end, because a video app being closed is usually the system
+     * killing it — the position people most want carried is from the episode they walked away from.
+     *
+     * A failure is swallowed. This is a courtesy to a second device, and an error over a playing
+     * video about a request the viewer did not make is worse than the drift it would report.
+     */
+    override suspend fun reportProgress(episodeUrl: String, positionMs: Long, durationMs: Long) {
+        val (_, itemId) = JellyfinMapper.parseEntryUrl(episodeUrl) ?: return
+        val body = json.encodeToString(
+            JellyfinProgress(
+                itemId = itemId,
+                positionTicks = positionMs * JellyfinMapper.TICKS_PER_MILLISECOND,
+            ),
+        )
+        post(JellyfinUrls.playingProgress(server.url), body)
+    }
+
+    override suspend fun reportFinished(episodeUrl: String) {
+        val (_, itemId) = JellyfinMapper.parseEntryUrl(episodeUrl) ?: return
+        // No body: the endpoint is the statement. Jellyfin treats a POST to it as "this account
+        // watched this", which is exactly what is being said.
+        post(JellyfinUrls.playedItem(server.url, server.userId, itemId), body = "")
+    }
+
+    private suspend fun post(url: String, body: String) {
+        runCatching {
+            client.newCall(POST(url, jellyfinHeaders(), body.toRequestBody(JSON_MEDIA_TYPE)))
+                .awaitSuccess()
+                .close()
+        }.onFailure {
+            logcat(LogPriority.INFO, it) { "Jellyfin did not accept a progress report" }
+        }
+    }
+
     override fun getAnimeUrl(anime: SAnime): String {
         val id = JellyfinMapper.parseEntryUrl(anime.url)?.second ?: return baseUrl
         return JellyfinUrls.webPage(server.url, id, server.serverId)
@@ -229,6 +274,8 @@ class JellyfinSource(
             return (0..7).map { bytes[it].toLong() and 0xff shl 8 * (7 - it) }
                 .reduce(Long::or) and Long.MAX_VALUE
         }
+
+        private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
         private const val MULTI_LANG = "all"
         private const val PAGE_SIZE = 60

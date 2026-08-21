@@ -1,5 +1,6 @@
 package eu.kanade.domain.items.episode.interactor
 
+import animato.anime.content.SourceProgress
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.toSAnime
@@ -109,7 +110,18 @@ class SyncEpisodesWithSource(
                     maxSeenUploadDate = max(maxSeenUploadDate, sourceEpisode.dateUpload)
                     episode
                 }
-                newEpisodes.add(toAddEpisode)
+                /*
+                 * What the source already knew, for an episode this app has never stored.
+                 *
+                 * A media server has its own record of what has been watched — see SourceProgress —
+                 * and it is authoritative right up until this app has a record of its own. So it is
+                 * applied here, in the branch for a new row, and nowhere else: applying it on an
+                 * update would let a refresh overwrite local progress with a server value from
+                 * before the last episode, which would look like watching being undone.
+                 *
+                 * Every other source leaves the memo empty and this costs a map lookup.
+                 */
+                newEpisodes.add(toAddEpisode.withSourceProgress())
             } else {
                 if (shouldUpdateDbEpisode.await(dbEpisode, episode)) {
                     val shouldRenameEpisode = downloadProvider.isEpisodeDirNameChanged(
@@ -239,4 +251,16 @@ class SyncEpisodesWithSource(
 
         return updatedToAdd.filterNot { it.url in changedOrDuplicateReadUrls }
     }
+}
+
+/**
+ * A new episode, carrying whatever its source said about having been watched.
+ *
+ * Absent from the memo means untouched, which is what every source but a media server says.
+ */
+private fun Episode.withSourceProgress(): Episode {
+    val seen = SourceProgress.seenIn(memo)
+    val position = SourceProgress.positionIn(memo)
+    if (!seen && position <= 0) return this
+    return copy(seen = seen, lastSecondSeen = position)
 }

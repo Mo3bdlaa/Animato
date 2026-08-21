@@ -1,10 +1,13 @@
 package animato.anime.jellyfin
 
 import animato.anime.content.EntryForm
+import animato.anime.content.SourceProgress
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
+import kotlinx.serialization.json.JsonObject
+import mihon.core.common.extensions.EMPTY
 import java.time.Instant
 import java.time.format.DateTimeParseException
 
@@ -96,6 +99,7 @@ internal object JellyfinMapper {
                 episode_number = (index + 1).toFloat()
                 date_upload = parseDate(episode.premiereDate)
                 summary = episode.overview
+                memo = progressMemo(episode)
             }
         }
         .reversed()
@@ -112,6 +116,7 @@ internal object JellyfinMapper {
         episode_number = 1f
         date_upload = parseDate(item.premiereDate)
         summary = item.overview
+        memo = progressMemo(item)
     }
 
     /**
@@ -124,6 +129,23 @@ internal object JellyfinMapper {
      */
     fun videoLibraries(views: List<JellyfinItem>): List<JellyfinItem> = views.filterNot {
         it.collectionType?.lowercase() in NON_VIDEO_LIBRARIES
+    }
+
+    /**
+     * What the server already knows about this episode, carried across.
+     *
+     * The reason someone signs a server in and finds their history intact rather than starting from
+     * nothing on a library they have been watching for years. Ticks are Jellyfin's unit — ten
+     * thousand to the millisecond — and are converted here so nothing downstream has to know that.
+     *
+     * Only ever read for an episode this app has not stored before; see [SourceProgress].
+     */
+    private fun progressMemo(item: JellyfinItem): JsonObject {
+        val data = item.userData ?: return JsonObject.EMPTY
+        return SourceProgress.memoOf(
+            seen = data.played,
+            positionMs = data.playbackPositionTicks / TICKS_PER_MILLISECOND,
+        )
     }
 
     private fun episodeName(episode: JellyfinItem): String {
@@ -178,6 +200,9 @@ internal object JellyfinMapper {
     const val TYPE_MOVIE = "Movie"
     const val TYPE_SERIES = "Series"
     const val TYPE_EPISODE = "Episode"
+
+    /** Jellyfin counts in ticks of a hundred nanoseconds. */
+    const val TICKS_PER_MILLISECOND = 10_000L
 
     private const val SPECIALS_SEASON = 0
     private const val CAST_SHOWN = 4

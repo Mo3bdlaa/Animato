@@ -93,3 +93,17 @@ data class JellyfinUserData(
     @SerialName("Played") val played: Boolean = false,
     @SerialName("PlaybackPositionTicks") val playbackPositionTicks: Long = 0,
 )
+
+/**
+ * A progress report, as the server expects it.
+ *
+ * `IsPaused` is always false: this is only sent while something is actually playing, and a paused
+ * report would show the app as an idle session in the server's dashboard for as long as the pause
+ * lasted.
+ */
+@Serializable
+data class JellyfinProgress(
+    @SerialName("ItemId") val itemId: String,
+    @SerialName("PositionTicks") val positionTicks: Long,
+    @SerialName("IsPaused") val isPaused: Boolean = false,
+)
