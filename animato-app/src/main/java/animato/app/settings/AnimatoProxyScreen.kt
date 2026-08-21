@@ -9,6 +9,7 @@ import animato.anime.net.ProxyPreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -113,10 +114,38 @@ object AnimatoProxyScreen : SearchableSettings {
                     Preference.PreferenceItem.InfoPreference(
                         title = stringResource(AYMR.strings.pref_proxy_credentials_summary),
                     ),
-                ),
+                ).addAll(httpLoginWarning(kind, username, password)).toPersistentList(),
             ),
             Preference.PreferenceItem.InfoPreference(
                 title = stringResource(AYMR.strings.pref_proxy_not_a_vpn),
+            ),
+        )
+    }
+
+    /**
+     * The one combination that half works, said out loud.
+     *
+     * A SOCKS proxy's login is handled below OkHttp, inside the socket, through the JVM's
+     * authenticator — which this app can reach. An HTTP proxy's is handled by OkHttp's own
+     * `proxyAuthenticator`, which is set on the client builder in Mihon's `NetworkHelper` and is not
+     * ours to change. So the credentials reach mpv, which takes them in its proxy URL, and reach
+     * nothing else.
+     *
+     * On a device that fails as *every request refused while playback works*, which is a shape
+     * nobody would guess at from either half. Shown only once somebody has actually typed a
+     * credential under HTTP, because until then it is a warning about nothing.
+     */
+    @Composable
+    private fun httpLoginWarning(
+        kind: ProxyKind,
+        username: String,
+        password: String,
+    ): List<Preference.PreferenceItem.InfoPreference> {
+        if (kind != ProxyKind.Http) return emptyList()
+        if (username.isBlank() && password.isEmpty()) return emptyList()
+        return listOf(
+            Preference.PreferenceItem.InfoPreference(
+                title = stringResource(AYMR.strings.pref_proxy_http_login_warning),
             ),
         )
     }

@@ -1,5 +1,9 @@
 package animato.anime.torznab
 
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
 
@@ -123,6 +127,26 @@ object TorznabFeed {
     fun magnetFor(infoHash: String, title: String): String =
         "$MAGNET_SCHEME?xt=urn:btih:$infoHash&dn=" + title.take(MAGNET_NAME_LIMIT).encodeForMagnet()
 
+    /**
+     * What has to survive a restart: the magnet, and the date the row shows.
+     *
+     * Not the whole release. The title is already the entry's title and the size and seeders are
+     * already in its description, so storing them again would be two copies of the same facts that
+     * can disagree — and a seeder count was true when the search ran and is not worth preserving.
+     */
+    fun memoOf(release: TorznabRelease): JsonObject = JsonObject(
+        buildMap {
+            put(MEMO_MAGNET, JsonPrimitive(release.magnet))
+            if (release.publishedAt > 0) put(MEMO_PUBLISHED, JsonPrimitive(release.publishedAt))
+        },
+    )
+
+    fun magnetIn(memo: JsonObject): String? =
+        runCatching { memo[MEMO_MAGNET]?.jsonPrimitive?.content }.getOrNull()?.takeIf { it.isNotBlank() }
+
+    fun publishedIn(memo: JsonObject): Long =
+        runCatching { memo[MEMO_PUBLISHED]?.jsonPrimitive?.long }.getOrNull() ?: 0L
+
     /** The hash out of a magnet, if it is spelled the ordinary way. */
     fun infoHashOf(magnet: String): String? =
         INFO_HASH.find(magnet)?.groupValues?.getOrNull(1)?.lowercase()
@@ -148,6 +172,9 @@ object TorznabFeed {
 
     private fun String.encodeForMagnet(): String =
         java.net.URLEncoder.encode(this, "UTF-8").replace("+", "%20")
+
+    private const val MEMO_MAGNET = "animato.torznab.magnet"
+    private const val MEMO_PUBLISHED = "animato.torznab.published"
 
     private const val MAGNET_SCHEME = "magnet:"
     private const val MAGNET_NAME_LIMIT = 80

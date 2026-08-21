@@ -363,6 +363,7 @@
     <string name="pref_proxy_username">Username</string>
     <string name="pref_proxy_password">Password</string>
     <string name="pref_proxy_credentials_summary">Leave both empty if the proxy needs no login</string>
+    <string name="pref_proxy_http_login_warning">A username and password are sent to an HTTP proxy only during playback. Browsing and covers go through it unauthenticated, which most proxies will refuse — use SOCKS5 if your proxy needs a login.</string>
     <string name="pref_proxy_not_set">Not set</string>
     <string name="pref_proxy_password_set">Set</string>
     <string name="pref_proxy_scope_socks">Video plays over a direct connection: mpv can only use an HTTP proxy, so a SOCKS proxy covers browsing, search and covers but not playback.</string>

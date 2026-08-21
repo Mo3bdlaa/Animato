@@ -201,4 +201,38 @@ class TorznabFeedTest {
         TorznabFeed.parseCaps("<error code=\"100\" description=\"Invalid API Key\" />")
             .categories shouldBe emptyList()
     }
+
+    @Test
+    fun `the magnet survives being stored on the entry and read back`() {
+        val release = TorznabRelease(
+            title = "Show S01E01",
+            magnet = "magnet:?xt=urn:btih:9999zzzz&dn=Show",
+            category = "5070",
+            sizeBytes = 1024,
+            seeders = 9,
+            publishedAt = 1_700_000_000_000L,
+        )
+
+        val memo = TorznabFeed.memoOf(release)
+
+        // The whole reason this exists: an indexer cannot be asked about one result, so anything
+        // saved to the library stops working at the next restart unless the magnet is kept.
+        TorznabFeed.magnetIn(memo) shouldBe release.magnet
+        TorznabFeed.publishedIn(memo) shouldBe release.publishedAt
+    }
+
+    @Test
+    fun `an entry with no stored magnet reads back as nothing rather than as empty`() {
+        val empty = TorznabFeed.memoOf(
+            TorznabRelease("t", "magnet:?xt=urn:btih:abcd", null, 0, 0, publishedAt = 0),
+        )
+        // A release with no date stores no date, rather than storing a zero that would later be
+        // shown as a moment in 1970.
+        TorznabFeed.publishedIn(empty) shouldBe 0L
+
+        // Somebody else's memo, or an entry from before this was written.
+        val foreign = kotlinx.serialization.json.JsonObject(mapOf())
+        TorznabFeed.magnetIn(foreign) shouldBe null
+        TorznabFeed.publishedIn(foreign) shouldBe 0L
+    }
 }

@@ -39,11 +39,22 @@ import java.util.concurrent.ConcurrentHashMap
  * wants posters wants a catalogue addon in front of a stream provider, which the Stremio side
  * already does; this is the other thing, and it is the one that finds a release nothing else has.
  *
- * ## Where the results come from between calls
+ * ## Where the magnet comes from later
  *
- * A search response is held for the life of the process, keyed by release id. There is no
- * per-release endpoint in Torznab — no way to ask an indexer about one result — so the magnet has
- * to still be in hand when somebody taps a row that was listed a minute ago.
+ * There is no per-release endpoint in Torznab. An indexer answers searches and cannot be asked
+ * about one result, so nothing can look a release up again once it has scrolled out of a response —
+ * the magnet has to be kept, or the row is dead.
+ *
+ * It is kept twice. In memory for the life of the process, which covers browsing; and in the
+ * entry's own `memo`, which is the field the source API provides for a source to store its own
+ * data and which survives into the database and back out.
+ *
+ * The first version of this kept only the first, reasoning that a magnet points at a swarm that may
+ * be gone tomorrow and that a stale one is a row which fails on tap. That got the comparison
+ * backwards: the alternative was not a working row, it was a row that fails on tap *always* rather
+ * than sometimes. Anything added to the library from an indexer simply stopped working at the next
+ * restart. A magnet that no longer has seeders fails no worse than one that is not there, and one
+ * that still does is the whole point.
  */
 class TorznabSource(
     val indexer: TorznabIndexer,
@@ -106,15 +117,25 @@ class TorznabSource(
     override suspend fun getAnimeDetails(anime: SAnime): SAnime =
         held(anime.url)?.let(::toSAnime)?.apply { initialized = true } ?: anime
 
-    /** One row, because a release is one thing. */
+    /**
+     * One row, because a release is one thing.
+     *
+     * Built from whatever is in hand: the search result if this process listed it, and otherwise
+     * the entry's own memo — which is the case for anything opened out of the library after a
+     * restart, and the reason the memo is written at all.
+     */
     override suspend fun getEpisodeList(anime: SAnime): List<SEpisode> {
-        val release = held(anime.url) ?: return emptyList()
+        val release = held(anime.url)
+        val magnet = release?.magnet ?: TorznabFeed.magnetIn(anime.memo) ?: return emptyList()
         return listOf(
             SEpisode.create().apply {
-                url = release.id
-                name = release.title
+                url = anime.url
+                name = release?.title ?: anime.title
                 episode_number = 1f
-                date_upload = release.publishedAt
+                date_upload = release?.publishedAt ?: TorznabFeed.publishedIn(anime.memo)
+                // Carried onto the episode as well as the entry, because the episode is what the
+                // player is handed and it must not have to reach back for the row it came from.
+                memo = release?.let(TorznabFeed::memoOf) ?: anime.memo
             },
         )
     }
@@ -128,12 +149,14 @@ class TorznabSource(
      * available to anybody.
      */
     override suspend fun getHosterList(episode: SEpisode): List<Hoster> {
-        val release = releases[episode.url] ?: return emptyList()
+        val release = releases[episode.url]
+        val magnet = release?.magnet ?: TorznabFeed.magnetIn(episode.memo) ?: return emptyList()
+        val title = release?.title ?: episode.name
         return listOf(
             Hoster(
-                hosterUrl = release.magnet,
+                hosterUrl = magnet,
                 hosterName = indexer.name,
-                videoList = listOf(Video(videoUrl = release.magnet, videoTitle = release.title)),
+                videoList = listOf(Video(videoUrl = magnet, videoTitle = title)),
             ),
         )
     }
@@ -173,6 +196,7 @@ class TorznabSource(
 
     private fun toSAnime(release: TorznabRelease): SAnime = SAnime.create().apply {
         url = release.id
+        memo = TorznabFeed.memoOf(release)
         title = release.title
         // What there is to say, which is what somebody chooses a release by. Seeders first: a
         // release with none is one that will never start, whatever else is true of it.
