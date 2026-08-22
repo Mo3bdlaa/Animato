@@ -1,5 +1,6 @@
 package animato.anime.torznab
 
+import animato.anime.util.credentialString
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -45,7 +46,9 @@ class TorznabIndexerStore(
     private val network: NetworkHelper = Injekt.get(),
     private val json: Json = Injekt.get(),
 ) {
-    private val stored = preferenceStore.getString(PREF_KEY, "")
+    // Private for the same reason as the servers: an indexer entry is an API key with a URL
+    // attached, and it is useless — and unshareable — without the key.
+    private val stored = preferenceStore.credentialString(PREF_KEY)
 
     private val _indexers = MutableStateFlow(read())
     val indexers: StateFlow<List<TorznabIndexer>> = _indexers.asStateFlow()

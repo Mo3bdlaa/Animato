@@ -1,5 +1,6 @@
 package animato.anime.net
 
+import animato.anime.util.credentialString
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
 import java.net.InetSocketAddress
@@ -33,8 +34,13 @@ enum class ProxyKind {
  *
  * In the ordinary preference store, in the clear, exactly like every extension login and tracker
  * token the app already holds. Not because that is ideal but because it is the truth: an app that
- * encrypted this one field would be claiming a protection it does not offer anywhere else, and a
- * proxy password is not more sensitive than the MyAnimeList token sitting beside it.
+ * encrypted this one field would be claiming a protection it does not offer anywhere else.
+ *
+ * That reasoning originally ended *and a proxy password is no more sensitive than the MyAnimeList
+ * token sitting beside it*, which was right about the comparison and wrong about the fact. The
+ * tracker token is marked private, so it is the one thing a backup leaves out; this pair was not,
+ * and so went into every backup in plain text. Being no more sensitive than the token is a reason
+ * to treat it the same way, not a reason to treat it as public — see [credentialString].
  */
 class ProxyPreferences(
     private val preferenceStore: PreferenceStore,
@@ -54,9 +60,12 @@ class ProxyPreferences(
      */
     val port = preferenceStore.getString("animato_proxy_port", "")
 
-    val username = preferenceStore.getString("animato_proxy_username", "")
+    // The pair, not just the password. A login is both halves, and the tracker preferences this
+    // follows mark the username private for the same reason. The host and port above stay public:
+    // they are the part worth keeping across a restore, and neither one is a secret.
+    val username = preferenceStore.credentialString("animato_proxy_username")
 
-    val password = preferenceStore.getString("animato_proxy_password", "")
+    val password = preferenceStore.credentialString("animato_proxy_password")
 
     /**
      * The proxy as configured, or null when there is not one to use.

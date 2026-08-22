@@ -17,10 +17,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.player.components.PlayerSheet
 import eu.kanade.presentation.player.components.SwitchPreference
 import eu.kanade.tachiyomi.ui.player.ArtType
 import eu.kanade.tachiyomi.ui.player.controls.components.dialogs.PlayerDialog
+import eu.kanade.tachiyomi.util.system.toast
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.ActionButton
@@ -45,6 +47,24 @@ fun ScreenshotSheet(
     modifier: Modifier = Modifier,
 ) {
     var setArtTypeAs: ArtType? by remember { mutableStateOf(null) }
+    val context = LocalContext.current
+
+    /**
+     * The capture, or a message saying it did not happen.
+     *
+     * mpv returns null here for reasons that are ordinary rather than exceptional — a frame it
+     * cannot read back under hardware decoding, a stream that has not decoded one yet, which is
+     * most of the first seconds of a torrent. Every one of those used to be `!!`, so a screenshot
+     * that could not be taken took the app down with it.
+     */
+    fun captured(action: (() -> InputStream) -> Unit) {
+        val stream = takeScreenshot(cachePath, showSubtitles)
+        if (stream == null) {
+            context.toast(AYMR.strings.screenshot_failed)
+        } else {
+            action { stream }
+        }
+    }
 
     PlayerSheet(
         onDismissRequest = onDismissRequest,
@@ -80,7 +100,7 @@ fun ScreenshotSheet(
                     title = stringResource(MR.strings.action_share),
                     icon = Icons.Outlined.Share,
                     onClick = {
-                        onShare { takeScreenshot(cachePath, showSubtitles)!! }
+                        captured(onShare)
                     },
                 )
                 ActionButton(
@@ -88,7 +108,7 @@ fun ScreenshotSheet(
                     title = stringResource(MR.strings.action_save),
                     icon = Icons.Outlined.Save,
                     onClick = {
-                        onSave { takeScreenshot(cachePath, showSubtitles)!! }
+                        captured(onSave)
                     },
                 )
             }
@@ -115,12 +135,7 @@ fun ScreenshotSheet(
             title = stringResource(MR.strings.confirm_set_image_as_cover),
             modifier = Modifier.fillMaxWidth(fraction = 0.6F).padding(MaterialTheme.padding.medium),
             onConfirmRequest = {
-                onSetAsArt(setArtTypeAs!!) {
-                    takeScreenshot(
-                        cachePath,
-                        showSubtitles,
-                    )!!
-                }
+                setArtTypeAs?.let { type -> captured { stream -> onSetAsArt(type, stream) } }
             },
             onDismissRequest = { setArtTypeAs = null },
         )

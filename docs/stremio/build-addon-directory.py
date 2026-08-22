@@ -51,6 +51,14 @@ ADULT_MARKERS = (
 BARREN_PAGES_MEANING_END = 2
 POLITE_DELAY_SECONDS = 0.12
 
+# What counts as a run worth keeping — see the check at the end of main().
+#
+# Two numbers rather than one: the absolute floor catches a first run or a catastrophically broken
+# one, and the proportion catches the subtler case of a site change that halves the yield. Addons
+# do get delisted, so some shrinkage is real; losing a third of them in a month is not.
+MINIMUM_PLAUSIBLE = 100
+ACCEPTABLE_SHRINK = 0.66
+
 
 def get(url):
     request = urllib.request.Request(
@@ -131,10 +139,15 @@ def addon(slug):
 
     # A resource is either a bare name or an object carrying its own type and id constraints; only
     # the name matters here, since the app re-reads the real manifest before it installs anything.
-    resources = sorted({
+    #
+    # Kept as a set until after the intersection below. It used to be sorted into a list on this
+    # line, which made `resources & USEFUL` a TypeError — caught by the deliberately broad handler
+    # in main(), once per addon, so the script did not fail, it simply skipped every single one and
+    # wrote an empty file. See the floor in main() for why that can no longer pass silently.
+    resources = {
         (r if isinstance(r, str) else r.get("name", "")).lower()
         for r in manifest.get("resources", [])
-    } - {""})
+    } - {""}
     if not (resources & USEFUL):
         return None
 
@@ -144,7 +157,7 @@ def addon(slug):
         "name": name,
         "description": description,
         "url": url.group(1),
-        "resources": resources,
+        "resources": sorted(resources),
         "types": [str(t) for t in manifest.get("types", [])],
     }
     if any(marker in f"{name} {description}".lower() for marker in ADULT_MARKERS):
@@ -178,9 +191,24 @@ def main():
         unique.setdefault(entry["url"].rstrip("/").lower(), entry)
     final = sorted(unique.values(), key=lambda e: e["name"].lower())
 
+    # Nothing is written unless the run produced a plausible list.
+    #
+    # The per-addon handler above is deliberately broad, so that one bad page cannot end a run of
+    # five hundred. The cost of that is the failure mode this script actually had: a bug in the
+    # shared path raised on every addon, was swallowed every time, and the script reported success
+    # while writing an empty file over a good one. A run that is not obviously a directory is a
+    # broken run, and a broken run must leave the last good snapshot exactly where it is.
+    existing = json.loads(ASSET.read_text(encoding="utf8")) if ASSET.exists() else []
+    floor = max(MINIMUM_PLAUSIBLE, int(len(existing) * ACCEPTABLE_SHRINK))
+    if len(final) < floor:
+        raise SystemExit(
+            f"Refusing to write {len(final)} addons: expected at least {floor}. "
+            f"The previous snapshot ({len(existing)}) is untouched.",
+        )
+
     ASSET.parent.mkdir(parents=True, exist_ok=True)
     ASSET.write_text(json.dumps(final, indent=1, ensure_ascii=False) + "\n", encoding="utf8")
-    print(f"\n{ASSET.relative_to(ASSET.parent.parent.parent.parent.parent)}  {len(final)} addons")
+    print(f"\n{ASSET.name}  {len(final)} addons")
 
 
 if __name__ == "__main__":

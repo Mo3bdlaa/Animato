@@ -1,5 +1,6 @@
 package animato.anime.jellyfin
 
+import animato.anime.util.credentialString
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -65,7 +66,9 @@ class JellyfinServerStore(
     private val network: NetworkHelper = Injekt.get(),
     private val json: Json = Injekt.get(),
 ) {
-    private val stored = preferenceStore.getString(PREF_KEY, "")
+    // Private, because the record is an access token with a URL attached: a server entry
+    // without its token is nothing you could restore, so the whole thing is the secret.
+    private val stored = preferenceStore.credentialString(PREF_KEY)
 
     private val _servers = MutableStateFlow(read())
     val servers: StateFlow<List<JellyfinServer>> = _servers.asStateFlow()

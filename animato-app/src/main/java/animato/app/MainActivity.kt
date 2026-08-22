@@ -50,6 +50,7 @@ import androidx.lifecycle.lifecycleScope
 import animato.anime.backup.create.AnimatoBackupCreateJob
 import animato.anime.services.AnimeConstants
 import animato.anime.services.AnimeNotifications
+import animato.anime.ui.stores.AnimeExtensionStoresScreen
 import animato.app.coil.AnimatoImageLoader
 import animato.app.crash.CrashRecorder
 import animato.app.crash.CrashReportPrompt
@@ -705,11 +706,17 @@ class MainActivity : BaseActivity() {
                     // an Aniyomi backup as a Mihon one, and Mihon's reader rejects those outright.
                     navigator.push(AniyomiImportScreen(intent.data.toString(), isAniyomiImport = false))
                 }
-                // Deep link to add extension store
+                // Deep link to add extension store, to whichever half the scheme names
                 else if (intent.isAddExtensionStoreIntent()) {
                     intent.data?.getQueryParameter("url")?.let { repoUrl ->
                         navigator.popUntilRoot()
-                        navigator.push(ExtensionStoresScreen(repoUrl))
+                        navigator.push(
+                            if (intent.isAddAnimeExtensionStoreIntent()) {
+                                AnimeExtensionStoresScreen(repoUrl)
+                            } else {
+                                ExtensionStoresScreen(repoUrl)
+                            },
+                        )
                     }
                 }
                 null
@@ -727,8 +734,24 @@ class MainActivity : BaseActivity() {
 
     private fun Intent.isAddExtensionStoreIntent(): Boolean {
         return (scheme == "tachiyomi" && data?.host == "add-repo") ||
-            (scheme == "mihon" && data?.host == "extension-store")
+            (scheme == "mihon" && data?.host == "extension-store") ||
+            isAddAnimeExtensionStoreIntent()
     }
+
+    /**
+     * Whether this link is an *anime* store link, which is a question the URL cannot answer.
+     *
+     * An index address looks the same for both halves, so the only thing that says which one a
+     * link means is the scheme it was published under — and the ecosystems are separate: an anime
+     * repository is shared as `aniyomi://add-repo`, a manga one as `tachiyomi://` or `mihon://`.
+     *
+     * Until now only the second pair was handled and every link, whichever it was, opened the
+     * manga stores screen. Following an anime repository link therefore added it as a manga store,
+     * where it lists nothing at all — the failure looks like a dead repository rather than like a
+     * link that went to the wrong place.
+     */
+    private fun Intent.isAddAnimeExtensionStoreIntent(): Boolean =
+        scheme == "aniyomi" && data?.host == "add-repo"
 
     companion object {
         const val INTENT_SEARCH = "eu.kanade.tachiyomi.SEARCH"

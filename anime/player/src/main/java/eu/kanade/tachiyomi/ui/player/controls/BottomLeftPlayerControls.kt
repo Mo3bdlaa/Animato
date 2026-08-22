@@ -26,7 +26,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import dev.vivvvek.seeker.Segment
@@ -72,15 +76,32 @@ fun BottomLeftPlayerControls(
             },
             onLongClick = { onOpenSheet(Sheets.PlaybackSpeed) },
         )
+        /*
+         * The chapter is held, rather than read again inside the animation.
+         *
+         * AnimatedVisibility keeps composing its content all the way through the exit animation,
+         * so the condition being false is exactly when the content runs one last time — and the
+         * `!!` this replaces was reading the value that had just become null. Leaving a chapter
+         * behind, which is when this hides, was therefore a crash on a fade-out.
+         *
+         * Remembering the last non-null one also makes the animation right: the label fades out
+         * showing the chapter being left, instead of blanking a frame before it starts.
+         */
+        var lastChapter by remember { mutableStateOf(currentChapter) }
+        LaunchedEffect(currentChapter) {
+            if (currentChapter != null) lastChapter = currentChapter
+        }
         AnimatedVisibility(
             currentChapter != null && playerPreferences.showCurrentChapter().get(),
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            CurrentChapter(
-                chapter = currentChapter!!,
-                onClick = { onOpenSheet(Sheets.Chapters) },
-            )
+            lastChapter?.let {
+                CurrentChapter(
+                    chapter = it,
+                    onClick = { onOpenSheet(Sheets.Chapters) },
+                )
+            }
         }
     }
 }

@@ -524,10 +524,13 @@ class PlayerViewModel @JvmOverloads constructor(
 
     fun loadChapters() {
         val chapters = mutableListOf<IndexedSegment>()
-        val count = MPVLib.getPropertyInt("chapter-list/count")!!
+        // No chapters is an answer, not a failure. mpv reports the list as changed before every
+        // entry in it can be read, and answers null outright for a file that has none — both of
+        // which threw here, on the UI thread, out of an observer with nothing on screen to blame.
+        val count = MPVLib.getPropertyInt("chapter-list/count") ?: return
         for (i in 0 until count) {
             val title = MPVLib.getPropertyString("chapter-list/$i/title")
-            val time = MPVLib.getPropertyInt("chapter-list/$i/time")!!
+            val time = MPVLib.getPropertyInt("chapter-list/$i/time") ?: continue
             chapters.add(
                 IndexedSegment(
                     name = title,

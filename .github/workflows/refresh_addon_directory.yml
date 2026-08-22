@@ -1,0 +1,70 @@
+name: Refresh addon directory
+
+# The bundled Stremio addon list is a snapshot, and a snapshot goes stale.
+#
+# stremio-addons.net has no API — the list is rendered into its pages by Next.js and nothing
+# serves it as data — so it is scraped offline and shipped as an asset rather than parsed on a
+# device. That trade is the right one (see docs/stremio/build-addon-directory.py) and it has one
+# cost: between releases the file only says what was true the day somebody last ran the script by
+# hand, which in practice means whenever anybody remembers.
+#
+# So it runs here instead, monthly, and commits the result only when the result actually changed.
+# Nothing about the app depends on this succeeding: a failed run leaves the previous snapshot in
+# place, which is exactly the situation before this file existed.
+
+on:
+  schedule:
+    # Monthly, at an hour nobody is waiting on. The list moves slowly — addons are published over
+    # weeks, not hours — so anything more often would be a commit that says nothing.
+    - cron: '17 4 1 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    name: Rebuild the bundled snapshot
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: '3.12'
+
+      - name: Rebuild the directory
+        run: python3 docs/stremio/build-addon-directory.py
+
+      - name: Check what changed
+        id: diff
+        run: |
+          asset=anime/services/src/main/assets/stremio-addons.json
+          if git diff --quiet -- "$asset"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "The directory is unchanged since the last run."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            # The count is the whole story of this commit, so it goes in the message.
+            echo "count=$(python3 -c 'import json;print(len(json.load(open("'"$asset"'"))))')" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit the new snapshot
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name  'Mo3bdlaa'
+          git config user.email '3bdlaa.20@gmail.com'
+          git add anime/services/src/main/assets/stremio-addons.json
+          git commit -m "Refresh the bundled Stremio addon directory
+
+          ${{ steps.diff.outputs.count }} addons, as stremio-addons.net lists them today.
+          Rebuilt by the monthly job rather than by hand, so a release carries a list from
+          this month rather than from whenever somebody last remembered to run the script."
+          git push

@@ -85,6 +85,22 @@
                 <data android:host="extension-store" />
             </intent-filter>
 
+            <!--
+                The same link for the other half. An anime repository is shared as
+                aniyomi://add-repo, and with no filter for it the app never saw one at all — so
+                following such a link did nothing, and pasting its address by hand was the only
+                way in.
+            -->
+            <intent-filter android:label="@string/action_addExtensionStore">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="aniyomi" />
+                <data android:host="add-repo" />
+            </intent-filter>
+
             <!-- Open backup files -->
             <intent-filter android:label="@string/pref_restore_backup">
                 <action android:name="android.intent.action.VIEW" />

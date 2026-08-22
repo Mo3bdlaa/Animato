@@ -257,13 +257,25 @@ class PlayerActivity : BaseActivity() {
 
             viewModel.updateIsLoadingHosters(false)
 
-            lifecycleScope.launch {
-                viewModel.loadHosters(
-                    source = viewModel.currentSource.value!!,
-                    hosterList = initResult.first.hosterList ?: emptyList(),
-                    hosterIndex = initResult.first.videoIndex.first,
-                    videoIndex = initResult.first.videoIndex.second,
-                )
+            /*
+             * Only with a source to load from.
+             *
+             * This asserted one, and there is a real way not to have one: an entry whose source
+             * has been uninstalled, which is a case the app otherwise handles — the title page
+             * says so and offers to migrate. Opening the same entry from Continue instead went
+             * straight here and crashed. The error above has already been shown by then; carrying
+             * on to assert the very thing that failed only turns a message into a crash.
+             */
+            val source = viewModel.currentSource.value
+            if (source != null) {
+                lifecycleScope.launch {
+                    viewModel.loadHosters(
+                        source = source,
+                        hosterList = initResult.first.hosterList ?: emptyList(),
+                        hosterIndex = initResult.first.videoIndex.first,
+                        videoIndex = initResult.first.videoIndex.second,
+                    )
+                }
             }
         }
 
@@ -1062,7 +1074,10 @@ class PlayerActivity : BaseActivity() {
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        if (player.onKey(event!!)) return true
+        // The parameter is nullable because the framework may pass null, which this asserted away
+        // — while onKeyDown, four lines up, handles the same value with `?.let`. Same fix, and it
+        // matters most on a television, where every button press goes through here.
+        if (event != null && player.onKey(event)) return true
         return super.onKeyUp(keyCode, event)
     }
 
