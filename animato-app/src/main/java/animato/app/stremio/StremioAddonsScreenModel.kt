@@ -35,7 +35,7 @@ sealed interface AddonInstallState {
 
 class StremioAddonsScreenModel(
     private val store: StremioAddonStore = Injekt.get(),
-    private val directory: StremioAddonDirectory = StremioAddonDirectory(),
+    private val directory: StremioAddonDirectory = Injekt.get(),
     private val playlistStore: M3uPlaylistStore = Injekt.get(),
     sourcePreferences: SourcePreferences = Injekt.get(),
 ) : ViewModel() {

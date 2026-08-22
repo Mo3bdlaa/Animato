@@ -103,6 +103,7 @@ import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -234,12 +235,23 @@ class MainActivity : BaseActivity() {
         // across an app update on some devices, and re-enqueueing on every launch is idempotent.
         LibrarySyncJob.setupTask(this)
 
-        // NSFW hidden unless somebody chose otherwise, and anything adult incognito by default —
-        // extensions by their own flag, Stremio addons by the directory's. See NsfwDefaults for
-        // why all three are seeded data rather than changed defaults.
-        NsfwDefaults.seedHiddenByDefault()
-        lifecycleScope.launch { NsfwDefaults.seedIncognitoForNsfw() }
-        lifecycleScope.launch { NsfwDefaults.seedIncognitoForAdultAddons() }
+        /*
+         * NSFW hidden unless somebody chose otherwise, and anything adult incognito by default —
+         * extensions by their own flag, Stremio addons by the directory's. See NsfwDefaults for
+         * why all three are seeded data rather than changed defaults.
+         *
+         * Each one is walled off, because none of them is worth an app that will not start. That
+         * is not hypothetical: the addon seeding shipped asking Injekt for something never
+         * registered, and an exception in a coroutine launched from `onCreate` is an exception in
+         * `onCreate` — the app died on the splash screen, every launch, with no way back in from
+         * the device. Defaults are housekeeping; housekeeping fails quietly and gets looked at in
+         * the log.
+         */
+        seedQuietly("NSFW hidden by default") { NsfwDefaults.seedHiddenByDefault() }
+        lifecycleScope.launch { seedQuietly("NSFW incognito") { NsfwDefaults.seedIncognitoForNsfw() } }
+        lifecycleScope.launch {
+            seedQuietly("adult addon incognito") { NsfwDefaults.seedIncognitoForAdultAddons() }
+        }
 
         /*
          * Schedule the periodic anime library update, and keep it scheduled.
@@ -730,6 +742,22 @@ class MainActivity : BaseActivity() {
 
         ready = true
         return true
+    }
+
+    /**
+     * Run a first-launch default, and let it fail without taking the app with it.
+     *
+     * Cancellation is rethrown, since a cancelled scope is the activity going away rather than the
+     * work going wrong, and swallowing it would leave a coroutine that outlives its own screen.
+     */
+    private inline fun seedQuietly(what: String, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            logcat(LogPriority.ERROR, e) { "Seeding $what failed; carrying on without it" }
+        }
     }
 
     private fun Intent.isAddExtensionStoreIntent(): Boolean {

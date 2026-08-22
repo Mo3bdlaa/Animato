@@ -7,6 +7,7 @@ import animato.anime.jellyfin.JellyfinServerStore
 import animato.anime.player.PlayerEpisodeVideoResolver
 import animato.anime.player.cast.CastController
 import animato.anime.services.download.EpisodeVideoResolver
+import animato.anime.stremio.StremioAddonDirectory
 import animato.anime.stremio.StremioAddonStore
 import animato.anime.torznab.TorznabIndexerStore
 import animato.anime.track.AnimeTrackerManager
@@ -119,6 +120,11 @@ class AnimeAppModule(val app: Application) : InjektModule {
         // very first emission: a source list that starts short and grows a moment later is a
         // source list people have already scrolled past.
         addSingletonFactory { StremioAddonStore() }
+        // A singleton because it holds a parsed copy of a few hundred kilobytes of bundled JSON,
+        // and because two things now want it: the addon store screen, and the launch-time seeding
+        // that makes adult addons incognito. It was previously constructed at its one call site,
+        // which is why asking Injekt for it crashed the app on start.
+        addSingletonFactory { StremioAddonDirectory() }
         addSingletonFactory { M3uPlaylistStore() }
         addSingletonFactory { JellyfinServerStore() }
         addSingletonFactory { TorznabIndexerStore() }
