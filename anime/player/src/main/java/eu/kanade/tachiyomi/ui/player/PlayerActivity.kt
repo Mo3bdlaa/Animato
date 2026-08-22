@@ -157,6 +157,9 @@ class PlayerActivity : BaseActivity() {
     }
 
     private var pipReceiver: BroadcastReceiver? = null
+
+    /** Whatever was handling uncaught exceptions before the player took over — see [onCreate]. */
+    private var previousExceptionHandler: Thread.UncaughtExceptionHandler? = null
     private var httpServer: HttpServer? = null
 
     /**
@@ -294,6 +297,19 @@ class PlayerActivity : BaseActivity() {
         setupMediaSession()
         setupPlayerOrientation()
 
+        /*
+         * A player crash closes the player rather than the app — but only while the player is open.
+         *
+         * This is process-wide and it was never taken back down. Once somebody had opened a video
+         * once, every uncaught exception anywhere in the app for the rest of the process — the
+         * library, the downloader, settings — was routed into `toast` and `finish()` on a
+         * PlayerActivity that no longer existed. That swallowed the real crash report, and it is
+         * why some failures in this app have shown up as a brief unexplained toast rather than as
+         * anything anybody could report. It also pinned this activity in memory for good.
+         *
+         * So the previous handler is kept and put back in [onDestroy].
+         */
+        previousExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
             runOnUiThread {
                 toast(throwable.message)
@@ -368,6 +384,19 @@ class PlayerActivity : BaseActivity() {
         if (startedTorrentServer) {
             startedTorrentServer = false
             TorrentServerService.stop()
+        }
+
+        // Before anything else here can throw: leaving ours installed is the failure described
+        // where it was set, and it outlives every other thing this method undoes.
+        Thread.setDefaultUncaughtExceptionHandler(previousExceptionHandler)
+        previousExceptionHandler = null
+
+        // Unregistered here as well as on the mode change, because the two are not the same event:
+        // an activity destroyed while still in the little window never gets that callback, and the
+        // receiver then outlives the activity it holds a reference to.
+        pipReceiver?.let {
+            runCatching { unregisterReceiver(it) }
+            pipReceiver = null
         }
 
         audioFocusRequest?.let {

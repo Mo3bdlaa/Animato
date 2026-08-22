@@ -20,6 +20,7 @@ import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.parseAs
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -250,16 +251,32 @@ class StremioSource(
             )
         }
 
+        val failures = java.util.Collections.synchronizedList(mutableListOf<Throwable>())
         val hosters = coroutineScope {
             // Started before the streams rather than after them: subtitle providers are a separate
             // set of addons and a separate round trip, and asking in sequence would add their
             // latency to a wait that is already the slowest thing in the app.
             val subtitles = async { subtitlesFor(type, id) }
             val answered = providers
-                .map { provider -> async { hosterFor(provider, type, id) } }
+                .map { provider -> async { hosterFor(provider, type, id, failures) } }
                 .awaitAll()
                 .filterNotNull()
             withSubtitles(answered, subtitles.await())
+        }
+        /*
+         * Nobody answered *and* somebody failed — so say which, rather than "no videos".
+         *
+         * The two are completely different situations that looked identical here. No streams for
+         * this episode is a fact about the episode; every provider erroring is a fact about the
+         * setup, and the commonest instance of it by far is a debrid key that has expired, which
+         * Torrentio reports as a 401. Told "no videos available", nobody would ever think to go
+         * and look at their subscription.
+         *
+         * Only when nothing came back at all: a provider that failed while another succeeded is
+         * the case the per-provider swallow above is right about.
+         */
+        if (hosters.isEmpty()) {
+            failures.firstOrNull()?.let { throw it }
         }
         return withoutUnplayableTorrents(hosters)
     }
@@ -415,7 +432,12 @@ class StremioSource(
      * A provider that is down, slow or simply has this title is not an error for the others — the
      * whole point of asking several is that any one of them may come back empty.
      */
-    private suspend fun hosterFor(provider: StremioAddon, type: String, id: String): Hoster? = runCatching {
+    private suspend fun hosterFor(
+        provider: StremioAddon,
+        type: String,
+        id: String,
+        failures: MutableList<Throwable>,
+    ): Hoster? = runCatching {
         val response = client.newCall(GET(StremioUrls.stream(provider.url, type, id), headers)).awaitSuccess()
         val streams = with(json) { response.parseAs<StremioStreamResponse>() }.streams
         StremioMapper.toVideos(streams).takeIf { it.isNotEmpty() }?.let { videos ->
@@ -427,6 +449,10 @@ class StremioSource(
         }
     }.getOrElse {
         logcat(LogPriority.INFO, it) { "Stremio stream provider ${provider.url} did not answer for $type/$id" }
+        // Kept, not just logged. One provider failing is nothing; every provider failing is the
+        // whole answer, and it is worth more than the empty list it would otherwise become — see
+        // where this list is read.
+        if (it !is CancellationException) failures += it
         null
     }
 

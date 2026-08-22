@@ -1,6 +1,7 @@
 package animato.anime.jellyfin
 
 import animato.anime.util.credentialString
+import animato.anime.util.decodeOrSalvage
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -172,15 +173,10 @@ class JellyfinServerStore(
     private fun hostOf(url: String): String =
         runCatching { java.net.URI(url).host }.getOrNull()?.takeIf { it.isNotBlank() } ?: url
 
-    private fun read(): List<JellyfinServer> {
-        val raw = stored.get()
-        if (raw.isEmpty()) return emptyList()
-        return runCatching { json.decodeFromString<List<JellyfinServer>>(raw) }
-            .getOrElse {
-                logcat(LogPriority.ERROR, it) { "Stored Jellyfin servers could not be read" }
-                emptyList()
-            }
-    }
+    private fun read(): List<JellyfinServer> =
+        preferenceStore.decodeOrSalvage(stored, PREF_KEY, emptyList()) {
+            json.decodeFromString<List<JellyfinServer>>(it)
+        }
 
     private fun write(servers: List<JellyfinServer>) {
         stored.set(json.encodeToString(servers))

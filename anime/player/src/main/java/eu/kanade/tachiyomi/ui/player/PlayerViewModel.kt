@@ -1788,8 +1788,20 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Replace one entry, unless the list it belonged to is already gone.
+     *
+     * Every hoster resolves in its own `async` and writes its result back here by index. Changing
+     * episode empties these lists synchronously, so a loader that returns a moment later is
+     * indexing into an empty list — and the write is not a suspension point, so cancelling the job
+     * does not stop it. That is an IndexOutOfBoundsException out of the load coroutine, triggered
+     * by nothing more exotic than pressing next-episode while the mirrors are still resolving.
+     *
+     * Dropped rather than clamped: the result belongs to an episode nobody is watching any more.
+     */
     private fun <T> MutableStateFlow<List<T>>.updateAt(index: Int, newValue: T) {
         this.update { values ->
+            if (index !in values.indices) return@update values
             values.toMutableList().apply {
                 this[index] = newValue
             }

@@ -127,10 +127,21 @@ class ProxyPreferences(
      * attached, which fails in a way that looks like the proxy being down.
      */
     private fun String.encoded(): String = buildString {
-        this@encoded.toByteArray().forEach { byte ->
-            val char = byte.toInt().toChar()
-            if (char.isLetterOrDigit() || char in UNRESERVED) {
-                append(char)
+        toByteArray(Charsets.UTF_8).forEach { byte ->
+            /*
+             * `byte >= 0` first, and that is the whole fix.
+             *
+             * A byte above 0x7F is negative in Kotlin, and `toInt().toChar()` on a negative sign-
+             * extends into U+FF80–U+FFFF. Much of that range is halfwidth Hangul, for which
+             * `isLetterOrDigit()` answers **true** — so the bytes of a password containing é, ü or
+             * anything Cyrillic were appended raw instead of escaped, while its neighbours a few
+             * code points away escaped correctly. The proxy URL handed to mpv came out mangled,
+             * authentication failed, and it looked exactly like the proxy being down.
+             *
+             * The correct version of this routine was already in the tree, in StremioUrls.
+             */
+            if (byte >= 0 && byte.toInt().toChar() in UNRESERVED) {
+                append(byte.toInt().toChar())
             } else {
                 append('%').append("%02X".format(byte.toInt() and 0xFF))
             }
@@ -140,6 +151,9 @@ class ProxyPreferences(
     companion object {
         const val MAX_PORT = 65535
 
-        private const val UNRESERVED = "-._~"
+        // Spelled out rather than asking `isLetterOrDigit`, which answers for the whole of
+        // Unicode and is the reason the bug above existed.
+        private const val UNRESERVED =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
     }
 }

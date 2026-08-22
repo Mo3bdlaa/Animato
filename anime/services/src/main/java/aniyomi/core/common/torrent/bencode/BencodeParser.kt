@@ -5,6 +5,15 @@ import java.io.InputStream
 import java.util.TreeMap
 
 class BencodeParser private constructor(val input: InputStream) {
+    /**
+     * How deep the containers currently nest.
+     *
+     * `llllll…` recursed until the stack ran out, and StackOverflowError is not something the
+     * caller was catching. A torrent file is a dictionary of dictionaries and one list of paths;
+     * anything approaching the cap is not a description of a torrent.
+     */
+    private var depth = 0
+
     companion object {
         fun parse(input: InputStream): BencodeValue {
             val parser = BencodeParser(input)
@@ -17,6 +26,16 @@ class BencodeParser private constructor(val input: InputStream) {
         private const val BYTE_CHAR_LOWERCASE_L: Byte = 'l'.code.toByte()
         private const val BYTE_CHAR_LOWERCASE_D: Byte = 'd'.code.toByte()
         private const val BYTE_CHAR_LOWERCASE_E: Byte = 'e'.code.toByte()
+
+        /** A torrent file is metadata; nothing legitimate inside one is a hundred megabytes. */
+        private const val MAX_STRING_LENGTH = 100L * 1024 * 1024
+
+        /** Comfortably past the widest real integer here (a file size) and short of overflowing. */
+        private const val MAX_NUMBER_DIGITS = 19
+
+        /** A dictionary of dictionaries with one list of path components. Five is generous. */
+        private const val MAX_DEPTH = 32
+
         private const val BYTE_CHAR_COLON: Byte = ':'.code.toByte()
         private const val BYTE_CHAR_HYPHEN: Byte = '-'.code.toByte()
         private const val BYTE_CHAR_0: Byte = '0'.code.toByte()
@@ -48,13 +67,24 @@ class BencodeParser private constructor(val input: InputStream) {
         return BencodeValue.ByteString(result)
     }
 
+    /**
+     * A declared length, bounded by what a torrent file plausibly contains.
+     *
+     * The `require` only ever rejected negatives, and nothing compared the declared length against
+     * the bytes actually available — so `2147483647:` at the end of a truncated file allocated two
+     * gigabytes and then hit EOF, and an OutOfMemoryError is an Error that nothing on this path
+     * catches. A cap is the honest guard: no legitimate string inside a `.torrent` is anywhere
+     * near it, and a file claiming otherwise is one to refuse rather than to try.
+     */
     private fun parseStringLength(head: Byte): Int {
         val result = parseNumberHelper(head, BYTE_CHAR_COLON)
-        require(result in 0..Int.MAX_VALUE) { "Invalid string length" }
+        require(result in 0..MAX_STRING_LENGTH) { "Invalid string length" }
         return result.toInt()
     }
 
     private fun parseList(): BencodeValue.List {
+        depth++
+        require(depth <= MAX_DEPTH) { "Nesting too deep" }
         val result = ArrayList<BencodeValue>()
         while (true) {
             val b = readNextByte()
@@ -63,10 +93,13 @@ class BencodeParser private constructor(val input: InputStream) {
             }
             result.add(parseValue(b))
         }
+        depth--
         return BencodeValue.List(result)
     }
 
     private fun parseDictionary(): BencodeValue.Dictionary {
+        depth++
+        require(depth <= MAX_DEPTH) { "Nesting too deep" }
         val result = TreeMap<BencodeValue.ByteString, BencodeValue>()
         while (true) {
             val b = readNextByte()
@@ -77,6 +110,7 @@ class BencodeParser private constructor(val input: InputStream) {
             require(result.isEmpty() || result.lastKey() < key) { "Dictionary keys out of order" }
             result[key] = parseValue(readNextByte())
         }
+        depth--
         return BencodeValue.Dictionary(result)
     }
 
@@ -96,6 +130,9 @@ class BencodeParser private constructor(val input: InputStream) {
                 else -> (b in BYTE_CHAR_0..BYTE_CHAR_9)
             }
             require(ok) { "Unexpected integer character" }
+            // Every character was checked and the count never was, so a long enough run of digits
+            // reached `toLong()` as a NumberFormatException instead of as a rejected file.
+            require(sb.length < MAX_NUMBER_DIGITS) { "Integer too long" }
             sb.append(Char(b.toUShort()))
         } while ((readNextByte().also { b = it }) != terminatingCharacter)
 

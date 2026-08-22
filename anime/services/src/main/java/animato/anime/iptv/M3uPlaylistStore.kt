@@ -1,5 +1,6 @@
 package animato.anime.iptv
 
+import animato.anime.util.salvageKeyFor
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -147,9 +148,26 @@ class M3uPlaylistStore(
         return runCatching { java.net.URI(url).host }.getOrNull()?.takeIf { it.isNotBlank() } ?: url
     }
 
-    private fun read(): List<M3uPlaylist> = stored.get().mapNotNull {
-        runCatching { json.decodeFromString<M3uPlaylist>(it) }.getOrNull()
-    }.sortedBy { it.name.lowercase() }
+    /**
+     * One entry per playlist, so a bad one costs that playlist rather than the set — but it still
+     * costs it permanently, because [write] rewrites the whole set from what was decoded. Anything
+     * unreadable is kept aside first; see [decodeOrSalvage] for why that matters.
+     */
+    private fun read(): List<M3uPlaylist> {
+        val raw = stored.get()
+        val decoded = raw.map { entry ->
+            entry to runCatching { json.decodeFromString<M3uPlaylist>(entry) }.getOrNull()
+        }
+        val unreadable = decoded.filter { it.second == null }.map { it.first }
+        if (unreadable.isNotEmpty()) {
+            val salvage = preferenceStore.getStringSet(salvageKeyFor(PREF_KEY), emptySet())
+            if (!salvage.isSet()) salvage.set(unreadable.toSet())
+            logcat(LogPriority.ERROR) {
+                "${unreadable.size} stored M3U playlists could not be read; kept at ${salvageKeyFor(PREF_KEY)}"
+            }
+        }
+        return decoded.mapNotNull { it.second }.sortedBy { it.name.lowercase() }
+    }
 
     private fun write(playlists: List<M3uPlaylist>) {
         stored.set(playlists.map { json.encodeToString(it) }.toSet())

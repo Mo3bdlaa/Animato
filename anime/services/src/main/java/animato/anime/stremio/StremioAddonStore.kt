@@ -1,6 +1,7 @@
 package animato.anime.stremio
 
 import android.app.Application
+import animato.anime.util.decodeOrSalvage
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -207,15 +208,10 @@ class StremioAddonStore(
         _addons.value = addons
     }
 
-    private fun load(): List<StremioAddon> {
-        val raw = preference.get()
-        if (raw.isEmpty()) return emptyList()
-        return runCatching { json.decodeFromString<List<StremioAddon>>(raw) }
-            .getOrElse {
-                logcat(LogPriority.ERROR, it) { "Stored Stremio addons could not be read" }
-                emptyList()
-            }
-    }
+    private fun load(): List<StremioAddon> =
+        preferenceStore.decodeOrSalvage(preference, PREF_KEY, emptyList()) {
+            json.decodeFromString<List<StremioAddon>>(it)
+        }
 
     private fun failure(resource: dev.icerock.moko.resources.StringResource): Result<StremioAddon> =
         Result.failure(IllegalArgumentException(Injekt.get<Application>().stringResource(resource)))

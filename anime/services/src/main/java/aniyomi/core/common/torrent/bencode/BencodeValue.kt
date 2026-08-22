@@ -21,10 +21,19 @@ sealed interface BencodeValue {
             }
         }
 
-        fun toUTF8String(): String {
-            val decoder = Charsets.UTF_8.newDecoder()
-            return decoder.decode(ByteBuffer.wrap(this.value)).toString()
-        }
+        /**
+         * The bytes as text, substituting rather than refusing.
+         *
+         * A bencode byte string is bytes: the format says nothing about encoding, and torrent
+         * names for exactly the releases this app is for are routinely Shift-JIS or CP1251.
+         * `newDecoder()` defaults to rejecting anything that is not valid UTF-8, so this threw
+         * MalformedInputException on ordinary, well-formed files — and the caller's catch is for
+         * ClassCastException, so it escaped as a crash rather than as "invalid torrent file".
+         *
+         * A name with a few replacement characters in it is a name somebody can still read and
+         * choose by. A crash is not.
+         */
+        fun toUTF8String(): String = String(this.value, Charsets.UTF_8)
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

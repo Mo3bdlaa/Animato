@@ -43,10 +43,16 @@ class AppTorrentInfoProvider(
         return TorrentInfo(
             overrideTitle ?: torrent.title,
             torrent.fileStats?.map { file ->
-                TorrentFile(file.path, file.id ?: 0, file.length, torrent.hash!!, torrent.trackers ?: emptyList())
+                TorrentFile(
+                    file.path,
+                    file.id ?: 0,
+                    file.length,
+                    torrent.hash.orEmpty(),
+                    torrent.trackers ?: emptyList(),
+                )
             } ?: emptyList(),
-            torrent.hash!!,
-            torrent.torrentSize!!,
+            torrent.hash.orEmpty(),
+            torrent.torrentSize ?: 0L,
             torrent.trackers ?: emptyList(),
         )
     }

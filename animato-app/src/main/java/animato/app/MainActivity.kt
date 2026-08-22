@@ -248,10 +248,26 @@ class MainActivity : BaseActivity() {
          * the log.
          */
         seedQuietly("NSFW hidden by default") { NsfwDefaults.seedHiddenByDefault() }
-        lifecycleScope.launch { seedQuietly("NSFW incognito") { NsfwDefaults.seedIncognitoForNsfw() } }
-        lifecycleScope.launch {
+        /*
+         * One coroutine for both, and on IO.
+         *
+         * Both of them read-modify-write the same two preferences — the incognito set, and the
+         * record of what has already been seeded. Run side by side they can each read the set
+         * before either has written, and the loser's addition is lost; because the *seeded* record
+         * is what says "already handled", the lost entry is never retried on a later launch. The
+         * result would be an extension or an addon that silently stays out of incognito for good.
+         *
+         * IO rather than the default Main.immediate, because the first of these evaluates
+         * `AnimeExtensionManager.installedExtensionsFlow` before its first suspension — and
+         * building that manager loads and DEX-verifies every installed extension. On the main
+         * thread, inside onCreate, that is the launch freezing for as long as that takes.
+         *
+         * The first never completes, so the second is started after it rather than sequenced by it.
+         */
+        lifecycleScope.launchIO {
             seedQuietly("adult addon incognito") { NsfwDefaults.seedIncognitoForAdultAddons() }
         }
+        lifecycleScope.launchIO { seedQuietly("NSFW incognito") { NsfwDefaults.seedIncognitoForNsfw() } }
 
         /*
          * Schedule the periodic anime library update, and keep it scheduled.
@@ -288,10 +304,16 @@ class MainActivity : BaseActivity() {
          * where someone who wants a number can ask for one.
          */
         lifecycleScope.launchIO {
-            if (downloadCleanupPreferences.deleteWhenRemovedFromLibrary().get()) {
-                val result = OrphanedDownloadSweeper().sweep()
-                if (result.total > 0) {
-                    logcat { "Removed ${result.manga} manga and ${result.anime} anime download folders" }
+            // Same wall as the seeds above, for the same reason: this is the other piece of
+            // launch-time housekeeping, and building the sweeper resolves the source manager —
+            // which for many launches is the first touch of the anime database, and therefore
+            // where a failed migration would surface. Tidying up is not worth the app.
+            seedQuietly("orphaned download sweep") {
+                if (downloadCleanupPreferences.deleteWhenRemovedFromLibrary().get()) {
+                    val result = OrphanedDownloadSweeper().sweep()
+                    if (result.total > 0) {
+                        logcat { "Removed ${result.manga} manga and ${result.anime} anime download folders" }
+                    }
                 }
             }
         }

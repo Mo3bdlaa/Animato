@@ -13,9 +13,11 @@ import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +27,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.anime.model.StubAnimeSource
 import tachiyomi.domain.source.anime.repository.AnimeStubSourceRepository
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
@@ -64,7 +68,21 @@ class AndroidAnimeSourceManager(
 
     private val downloadManager: AnimeDownloadManager by injectLazy()
 
-    private val scope = CoroutineScope(Job() + Dispatchers.IO)
+    /**
+     * Supervised, and told what to do when something in it fails.
+     *
+     * With a plain `Job` and no handler this was two separate faults at once. A throw in any child
+     * — and the children read the database and construct sources — was an uncaught exception at
+     * startup, so the app died. And because siblings of a plain Job cancel together, one failing
+     * stub-source write also killed the collector that maintains the source map, which on screen
+     * is every source the person has disappearing at once.
+     */
+    private val scope = CoroutineScope(
+        SupervisorJob() + Dispatchers.IO +
+            CoroutineExceptionHandler { _, error ->
+                logcat(LogPriority.ERROR, error) { "Anime source manager failed" }
+            },
+    )
 
     private val sourcesMapFlow = MutableStateFlow(ConcurrentHashMap<Long, AnimeSource>())
 

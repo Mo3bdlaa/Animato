@@ -1,6 +1,7 @@
 package animato.anime.torznab
 
 import animato.anime.util.credentialString
+import animato.anime.util.decodeOrSalvage
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -99,15 +100,10 @@ class TorznabIndexerStore(
     private fun hostOf(url: String): String =
         runCatching { java.net.URI(url).host }.getOrNull()?.takeIf { it.isNotBlank() } ?: url
 
-    private fun read(): List<TorznabIndexer> {
-        val raw = stored.get()
-        if (raw.isEmpty()) return emptyList()
-        return runCatching { json.decodeFromString<List<TorznabIndexer>>(raw) }
-            .getOrElse {
-                logcat(LogPriority.ERROR, it) { "Stored Torznab indexers could not be read" }
-                emptyList()
-            }
-    }
+    private fun read(): List<TorznabIndexer> =
+        preferenceStore.decodeOrSalvage(stored, PREF_KEY, emptyList()) {
+            json.decodeFromString<List<TorznabIndexer>>(it)
+        }
 
     private fun write(indexers: List<TorznabIndexer>) {
         stored.set(json.encodeToString(indexers))

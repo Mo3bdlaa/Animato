@@ -5,6 +5,7 @@ import aniyomi.core.common.torrent.bencode.BencodeValue
 import aniyomi.core.common.torrent.bencode.BencodeWriter
 import aniyomi.core.common.torrent.model.FileStats
 import aniyomi.core.common.torrent.model.Torrent
+import kotlinx.coroutines.CancellationException
 import java.io.InputStream
 import java.io.OutputStream
 import java.security.DigestOutputStream
@@ -65,7 +66,27 @@ object TorrentHelpers {
                 trackers,
                 fileStats,
             )
-        } catch (e: ClassCastException) {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            /*
+             * Everything a hostile or merely broken file can do, not just the one that was
+             * anticipated.
+             *
+             * `getByString` returns a nullable, so `as BencodeValue.Dictionary` on a missing key
+             * compiles to a *NullPointerException* rather than a ClassCastException — the catch
+             * this replaces did not cover the failure it was written for. Beyond that: a declared
+             * length with no bytes behind it is an EOFException, an oversized integer is a
+             * NumberFormatException, and a deeply nested file is a StackOverflowError.
+             *
+             * All of them mean the same thing to the person who tapped a row, and it is the
+             * sentence below. Errors are included because an OutOfMemoryError here is a file
+             * claiming a size it does not have, not a device out of memory.
+             */
+            throw RuntimeException("Invalid torrent file", e)
+        } catch (e: StackOverflowError) {
+            throw RuntimeException("Invalid torrent file", e)
+        } catch (e: OutOfMemoryError) {
             throw RuntimeException("Invalid torrent file", e)
         }
     }

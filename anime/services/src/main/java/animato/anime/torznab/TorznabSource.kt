@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.awaitSuccess
+import java.io.IOException
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 
@@ -214,8 +215,18 @@ class TorznabSource(
 
     private fun held(entryUrl: String): TorznabRelease? = releases[entryUrl]
 
-    private suspend fun fetch(url: String): String =
-        client.newCall(GET(url, headers)).awaitSuccess().body.string()
+    /**
+     * A response, or the indexer's complaint said out loud.
+     *
+     * The complaint arrives with a 200, so `awaitSuccess` is satisfied and the parse below simply
+     * finds nothing — see [TorznabFeed.errorIn]. Thrown rather than returned empty because the
+     * browse screen renders a thrown message and shows an empty grid for an empty list.
+     */
+    private suspend fun fetch(url: String): String {
+        val body = client.newCall(GET(url, headers)).awaitSuccess().body.string()
+        TorznabFeed.errorIn(body)?.let { throw IOException("${indexer.name}: $it") }
+        return body
+    }
 
     private fun humanSize(bytes: Long): String {
         if (bytes < UNIT) return "$bytes B"

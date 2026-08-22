@@ -68,6 +68,24 @@ data class TorznabCategory(
  */
 object TorznabFeed {
 
+    /**
+     * The indexer's own error, if that is what this response is.
+     *
+     * Jackett and Prowlarr answer a rejected API key with **HTTP 200** and an `<error>` document,
+     * so every layer above reads it as a successful response containing no items — which on screen
+     * is a catalogue that is simply empty, on an indexer that worked yesterday. Keys get rotated,
+     * so this is not a rare state, and "empty" is the least diagnosable thing this app can show.
+     *
+     * Checked on every response rather than only when adding an indexer, which is where the one
+     * existing check lives.
+     */
+    fun errorIn(xml: String): String? {
+        val error = Jsoup.parse(xml, "", Parser.xmlParser()).selectFirst("error") ?: return null
+        val description = error.attr("description").takeIf { it.isNotBlank() }
+        val code = error.attr("code").takeIf { it.isNotBlank() }
+        return description ?: code?.let { "Indexer error $it" } ?: "The indexer refused the request"
+    }
+
     fun parseCaps(xml: String): TorznabCaps {
         val document = Jsoup.parse(xml, "", Parser.xmlParser())
         val categories = document.select("categories > category").flatMap { category ->
