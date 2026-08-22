@@ -109,7 +109,10 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
             logcat(LogPriority.ERROR, e) { "Not allowed to set foreground job" }
         }
 
-        libraryPreferences.lastUpdatedTimestamp.set(Instant.now().toEpochMilli())
+        // Stamped after the work, not before it. Set here it advanced on every failure path too,
+        // including the one that gives up entirely — so "last updated: just now" was true of the
+        // attempt rather than of the library.
+        val startedAt = Instant.now().toEpochMilli()
 
         val categoryId = inputData.getLong(KEY_CATEGORY, -1L)
         addAnimeToQueue(categoryId)
@@ -117,6 +120,7 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
         return withIOContext {
             try {
                 updateEpisodeList()
+                libraryPreferences.lastUpdatedTimestamp.set(startedAt)
                 Result.success()
             } catch (e: Exception) {
                 if (e is CancellationException) {

@@ -115,8 +115,27 @@ class OrphanedDownloadSweeper(
         }
     }
 
+    /**
+     * ## Seasons are kept too, and forgetting them deleted people's downloads
+     *
+     * A season is a row in the same table as its show, and it is never a favourite in its own
+     * right — nothing sets that flag on one, and the library update job identifies seasons by
+     * exactly that. But a season's episodes download into a folder named after the *season*,
+     * because the download call is handed whichever entry is on screen.
+     *
+     * So a keep-list built from favourites alone contained no season folder at all, and every
+     * downloaded season was an unclaimed directory to be removed. On every launch, with the
+     * preference on by default, silently, reported only as a count in a log. Somebody who
+     * downloaded a series to watch offline would have found it gone the next time they opened the
+     * app, with nothing to connect it to.
+     *
+     * Children of favourites, then — not every row with a parent, which would keep the downloads
+     * of a show that has been removed from the library and defeat the point of sweeping at all.
+     */
     private suspend fun sweepAnime(): Int {
-        val keepBySource = animeRepository.getAnimeFavorites()
+        val favourites = animeRepository.getAnimeFavorites()
+        val kept = favourites + favourites.flatMap { animeRepository.getChildrenByParentId(it.id) }
+        val keepBySource = kept
             .groupBy(
                 keySelector = { it.source },
                 valueTransform = { animeProvider.getAnimeDirName(it.title) },

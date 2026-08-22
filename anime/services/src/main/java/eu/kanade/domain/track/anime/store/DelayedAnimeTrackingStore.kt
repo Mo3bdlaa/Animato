@@ -29,11 +29,13 @@ class DelayedAnimeTrackingStore(context: Context) {
     }
 
     fun getAnimeItems(): List<DelayedAnimeTrackingItem> {
+        // Actually nullable now. `mapNotNull` sat over a lambda that could never return null, on
+        // two unchecked parses of a persisted preferences file — so one stray key threw out of the
+        // queue read and disabled offline tracking permanently, with nothing said anywhere.
         return preferences.all.mapNotNull {
-            DelayedAnimeTrackingItem(
-                trackId = it.key.toLong(),
-                lastEpisodeSeen = it.value.toString().toFloat(),
-            )
+            val trackId = it.key.toLongOrNull() ?: return@mapNotNull null
+            val seen = it.value?.toString()?.toFloatOrNull() ?: return@mapNotNull null
+            DelayedAnimeTrackingItem(trackId = trackId, lastEpisodeSeen = seen)
         }
     }
 

@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
@@ -114,23 +115,43 @@ class AniyomiBackupRestorer(
             restoreAmount += backup.animeExtensionStores.size + backup.mangaExtensionStores.size
         }
 
-        coroutineScope {
-            if (options.categories) {
-                restoreCategories(backup)
-            }
-            if (options.appSettings) {
-                restoreAppPreferences(backup, options)
-            }
-            if (options.sourceSettings) {
-                restoreSourcePreferences(backup)
-            }
-            if (options.libraryEntries) {
+        /*
+         * Categories first, and finished, before anything is filed into them.
+         *
+         * These all used to start at once inside one `coroutineScope`. Two things followed from
+         * that, both silent. An entry restored before the category insert had committed looked its
+         * category up by name, did not find it, and was filed nowhere — restore reported success
+         * and the shelves came back empty. And because `coroutineScope` cancels siblings, a throw
+         * in any step killed the library restore *mid-write*: a partial library, and the collected
+         * per-entry errors discarded on the way out, so the one thing that would have said which
+         * entries were lost never got written.
+         *
+         * The steps that can be concurrent still are — preferences and stores touch nothing the
+         * library restore touches. They are supervised so that a preference blob from a different
+         * app version, which is exactly the input this path exists for, cannot abort a library that
+         * is halfway restored.
+         */
+        if (options.categories) {
+            coroutineScope { restoreCategories(backup) }
+        }
+
+        if (options.libraryEntries) {
+            coroutineScope {
                 restoreAnime(
                     parents = parents,
                     seasonsByParent = seasonsByParent,
                     categories = if (options.categories) backup.animeCategories else emptyList(),
                 )
                 restoreManga(backup, if (options.categories) backup.mangaCategories else emptyList())
+            }
+        }
+
+        supervisorScope {
+            if (options.appSettings) {
+                restoreAppPreferences(backup, options)
+            }
+            if (options.sourceSettings) {
+                restoreSourcePreferences(backup)
             }
             if (options.extensionStores) {
                 restoreExtensionStores(backup)

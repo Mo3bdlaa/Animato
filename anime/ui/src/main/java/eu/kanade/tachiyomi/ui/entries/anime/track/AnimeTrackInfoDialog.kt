@@ -80,6 +80,7 @@ import tachiyomi.domain.track.anime.interactor.DeleteAnimeTrack
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.domain.track.anime.model.AnimeTrack
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.components.material.AlertDialogContent
 import tachiyomi.presentation.core.components.material.padding
@@ -873,12 +874,30 @@ private data class TrackerAnimeRemoveScreen(
 
         fun isDeletable() = tracker is DeletableAnimeTracker
 
+        /**
+         * Remove it from the tracker's own list, and say so if that did not happen.
+         *
+         * The local row is deleted either way, and the dialog closes immediately — so a failure
+         * here used to be invisible twice over: the entry vanished from the screen, which reads as
+         * the removal having worked, and the row that would have let somebody try again was gone.
+         * The title stayed on their AniList or MAL list, and nothing ever said so. Being offline
+         * or holding an expired token is enough to reach it.
+         *
+         * A toast rather than a retry, because by this point there is nothing left to retry with;
+         * what is owed is the truth, so they can remove it on the site themselves.
+         */
         fun deleteAnimeFromService() {
             viewModelScope.launchNonCancellable {
                 try {
                     (tracker as DeletableAnimeTracker).delete(track)
                 } catch (e: Exception) {
                     logcat(LogPriority.ERROR, e) { "Failed to delete anime entry from service" }
+                    val context = Injekt.get<Application>()
+                    withUIContext {
+                        context.toast(
+                            context.stringResource(AYMR.strings.tracker_delete_failed, tracker.name),
+                        )
+                    }
                 }
             }
         }
