@@ -374,7 +374,21 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
         )
             .getOrThrow()
 
-        return if (update.anime.favorite) update.newEpisodes else emptyList()
+        /*
+         * A season's new episodes count as new episodes.
+         *
+         * The favourite check is here to stop an entry that is not in the library from producing
+         * notifications — but a season is never a favourite in its own right, and the queue above
+         * selects seasons by exactly that. So for every season this job updated, this returned
+         * nothing: the episodes landed in the database and then the notification, the unread badge
+         * and the automatic download of new episodes were all short-circuited on the way out.
+         *
+         * Somebody with "update seasons" turned on had a setting that did half its job and said so
+         * nowhere. Having a parent is the thing that distinguishes a season from a row that really
+         * is not in the library — and nothing without one is ever queued.
+         */
+        val inLibrary = update.anime.favorite || update.anime.parentId != null
+        return if (inLibrary) update.newEpisodes else emptyList()
     }
 
     private suspend fun withUpdateNotification(

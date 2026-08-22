@@ -313,8 +313,18 @@ class PlayerViewModel @JvmOverloads constructor(
         }.getOrElse { 0f },
     )
     val currentVolume = MutableStateFlow(activity.audioManager.getStreamVolume(AudioManager.STREAM_MUSIC))
-    val currentMPVVolume = MutableStateFlow(MPVLib.getPropertyInt("volume"))
-    var volumeBoostCap: Int = MPVLib.getPropertyInt("volume-max")
+
+    /*
+     * Defaults, because mpv answers null for a property it does not have yet.
+     *
+     * Both of these read at view-model construction, which is before mpv is guaranteed to have
+     * loaded anything — and both assign a platform type to a non-null Kotlin one, so the compiler
+     * inserts an unboxing null check and the failure is an NPE while the player is being built.
+     * The volume flow's null would also have surfaced far away, in the gesture handler's
+     * arithmetic, with nothing pointing back here.
+     */
+    val currentMPVVolume = MutableStateFlow(MPVLib.getPropertyInt("volume") ?: DEFAULT_MPV_VOLUME)
+    var volumeBoostCap: Int = MPVLib.getPropertyInt("volume-max") ?: DEFAULT_MPV_VOLUME
 
     // Pair(startingPosition, seekAmount)
     val gestureSeekAmount = MutableStateFlow<Pair<Int, Int>?>(null)
@@ -547,7 +557,10 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     fun selectChapter(index: Int) {
-        val time = chapters.value[index].start
+        // `getOrNull`, because the caller computes this index with `indexOf` over a remembered
+        // snapshot — which answers -1 the moment the chapter list is replaced underneath it, and
+        // AniSkip replaces it seconds into every episode. Tapping a chapter then crashed.
+        val time = chapters.value.getOrNull(index)?.start ?: return
         seekTo(time.toInt())
     }
 
@@ -656,8 +669,21 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
+    /**
+     * One tile out of a tilemap, cropped to the rectangle the extension said it was at.
+     *
+     * That rectangle is third-party metadata, and `createBitmap` throws when it runs past the edge
+     * of the image actually fetched — an extension with slightly wrong tile geometry, or a tile
+     * the server downscaled, was a crash while dragging the seek bar. No preview is the right
+     * outcome for a preview that cannot be cut out.
+     */
     private fun createThumbnail(tileBitmap: Bitmap, tileInfo: TileInfo) {
-        val thumbnail = Bitmap.createBitmap(tileBitmap, tileInfo.x, tileInfo.y, tileInfo.width, tileInfo.height)
+        val thumbnail = runCatching {
+            Bitmap.createBitmap(tileBitmap, tileInfo.x, tileInfo.y, tileInfo.width, tileInfo.height)
+        }.getOrElse {
+            logcat(LogPriority.WARN, it) { "Thumbnail tile does not fit the image it came from" }
+            return
+        }
         _thumbnailImage.update { _ -> thumbnail.asImageBitmap() }
     }
 
@@ -813,7 +839,8 @@ class PlayerViewModel @JvmOverloads constructor(
 
     val maxVolume = activity.audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
     fun changeVolumeBy(change: Int) {
-        val mpvVolume = MPVLib.getPropertyInt("volume")
+        // Same platform type, same unboxing NPE — this one on a volume-key press.
+        val mpvVolume = MPVLib.getPropertyInt("volume") ?: return
         if (volumeBoostCap > 0 && currentVolume.value == maxVolume) {
             if (mpvVolume == 100 && change < 0) changeVolumeTo(currentVolume.value + change)
             val finalMPVVolume = (mpvVolume + change).coerceAtLeast(100)
@@ -947,14 +974,24 @@ class PlayerViewModel @JvmOverloads constructor(
                 }
             }
             "launch_int_picker" -> {
-                val (title, nameFormat, start, stop, step, pickerProperty) = data.split("|")
-                val defaultValue = MPVLib.getPropertyInt(pickerProperty)
+                /*
+                 * A payload from somebody's own script, treated as input rather than as a promise.
+                 *
+                 * Custom Lua buttons are a supported feature, so this string is written by a
+                 * person — and five fields instead of six threw IndexOutOfBounds, on the main
+                 * thread, out of an mpv observer, from pressing a button. Malformed now means the
+                 * button does nothing.
+                 */
+                val parts = data.split("|")
+                if (parts.size < LUA_PICKER_FIELDS) return
+                val (title, nameFormat, start, stop, step, pickerProperty) = parts
+                val defaultValue = MPVLib.getPropertyInt(pickerProperty) ?: return
                 showDialog(
                     Dialogs.IntegerPicker(
                         defaultValue = defaultValue,
-                        minValue = start.toInt(),
-                        maxValue = stop.toInt(),
-                        step = step.toInt(),
+                        minValue = start.toIntOrNull() ?: return,
+                        maxValue = stop.toIntOrNull() ?: return,
+                        step = step.toIntOrNull() ?: return,
                         nameFormat = nameFormat,
                         title = title,
                         onChange = { MPVLib.setPropertyInt(pickerProperty, it) },
@@ -969,16 +1006,21 @@ class PlayerViewModel @JvmOverloads constructor(
                     "pauseunpause" -> pauseUnpause()
                 }
             }
+            // Same again: two fields and a number, from a script this app did not write.
             "seek_to_with_text" -> {
-                val (seekValue, text) = data.split("|", limit = 2)
-                seekToWithText(seekValue.toInt(), text)
+                val (seekValue, text) = data.split("|", limit = 2).let {
+                    (it.getOrNull(0) ?: return) to (it.getOrNull(1) ?: return)
+                }
+                seekToWithText(seekValue.toIntOrNull() ?: return, text)
             }
             "seek_by_with_text" -> {
-                val (seekValue, text) = data.split("|", limit = 2)
-                seekByWithText(seekValue.toInt(), text)
+                val (seekValue, text) = data.split("|", limit = 2).let {
+                    (it.getOrNull(0) ?: return) to (it.getOrNull(1) ?: return)
+                }
+                seekByWithText(seekValue.toIntOrNull() ?: return, text)
             }
-            "seek_by" -> seekByWithText(data.toInt(), null)
-            "seek_to" -> seekToWithText(data.toInt(), null)
+            "seek_by" -> seekByWithText(data.toIntOrNull() ?: return, null)
+            "seek_to" -> seekToWithText(data.toIntOrNull() ?: return, null)
             "toggle_button" -> {
                 fun showButton() {
                     if (_primaryButton.value == null) {
@@ -1560,9 +1602,12 @@ class PlayerViewModel @JvmOverloads constructor(
                                 throw noVideosError(hosterState.value)
                             }
 
-                            val video = (hosterState.value[hosterIdx] as HosterState.Ready).videoList[videoIdx]
+                            // Two reads of a flow the sibling loaders are still writing to, so
+                            // the state can have flipped to Error between choosing and fetching.
+                            val ready = hosterState.value.getOrNull(hosterIdx) as? HosterState.Ready
+                            val video = ready?.videoList?.getOrNull(videoIdx)
 
-                            loadVideo(source, video, hosterIdx, videoIdx)
+                            if (video != null) loadVideo(source, video, hosterIdx, videoIdx)
                         }
                     }
                 }
@@ -1599,7 +1644,7 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     private suspend fun loadVideo(source: AnimeSource?, video: Video, hosterIndex: Int, videoIndex: Int): Boolean {
-        val selectedHosterState = (_hosterState.value[hosterIndex] as? HosterState.Ready) ?: return false
+        val selectedHosterState = (_hosterState.value.getOrNull(hosterIndex) as? HosterState.Ready) ?: return false
         updateIsLoadingEpisode(true)
 
         val oldSelectedIndex = _selectedHosterVideoIndex.value
@@ -1637,7 +1682,8 @@ class PlayerViewModel @JvmOverloads constructor(
                     }
                 }
 
-                val newVideo = (hosterState.value[newHosterIdx] as HosterState.Ready).videoList[newVideoIdx]
+                val newReady = hosterState.value.getOrNull(newHosterIdx) as? HosterState.Ready
+                val newVideo = newReady?.videoList?.getOrNull(newVideoIdx) ?: return false
 
                 return loadVideo(source, newVideo, newHosterIdx, newVideoIdx)
             } else {
@@ -1696,9 +1742,9 @@ class PlayerViewModel @JvmOverloads constructor(
         val (newHosterIndex, newVideoIndex) = HosterLoader.selectBestVideo(_hosterState.value)
         if (newHosterIndex == -1) return false
 
-        val newVideo = (_hosterState.value[newHosterIndex] as HosterState.Ready)
-            .videoList
-            .getOrNull(newVideoIndex)
+        val newVideo = (_hosterState.value.getOrNull(newHosterIndex) as? HosterState.Ready)
+            ?.videoList
+            ?.getOrNull(newVideoIndex)
             ?: return false
 
         // Clear the current video so loadVideo treats this as a fresh selection and keeps walking
@@ -1709,7 +1755,7 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     fun onVideoClicked(hosterIndex: Int, videoIndex: Int) {
-        val hosterState = _hosterState.value[hosterIndex] as? HosterState.Ready
+        val hosterState = _hosterState.value.getOrNull(hosterIndex) as? HosterState.Ready
         val video = hosterState?.videoList
             ?.getOrNull(videoIndex)
             ?: return // Shouldn't happen, but just in case™
@@ -1739,25 +1785,35 @@ class PlayerViewModel @JvmOverloads constructor(
         }
     }
 
+    /**
+     * A row in the quality sheet was tapped.
+     *
+     * Every list read here is bounds-checked, because the sheet stays composed across an episode
+     * change while `resetState` empties all of them synchronously. Tapping a hoster at the moment
+     * autoplay rolled over was an IndexOutOfBounds on the main thread — and the source was read
+     * through `!!` besides, which is null for an entry whose extension has gone.
+     */
     fun onHosterClicked(index: Int) {
-        when (hosterState.value[index]) {
+        val hoster = hosterList.value.getOrNull(index) ?: return
+        when (hosterState.value.getOrNull(index)) {
             is HosterState.Ready -> {
-                _hosterExpandedList.updateAt(index, !_hosterExpandedList.value[index])
+                val expanded = _hosterExpandedList.value.getOrNull(index) ?: return
+                _hosterExpandedList.updateAt(index, !expanded)
             }
             is HosterState.Idle -> {
-                val hosterName = hosterList.value[index].hosterName
-                _hosterState.updateAt(index, HosterState.Loading(hosterName))
+                _hosterState.updateAt(index, HosterState.Loading(hoster.hosterName))
 
                 viewModelScope.launchIO {
+                    val source = currentSource.value ?: return@launchIO
                     val hosterState = EpisodeLoader.loadHosterVideos(
-                        source = currentSource.value!!,
-                        hoster = hosterList.value[index],
+                        source = source,
+                        hoster = hoster,
                         force = true,
                     )
                     _hosterState.updateAt(index, hosterState)
                 }
             }
-            is HosterState.Loading, is HosterState.Error -> {}
+            is HosterState.Loading, is HosterState.Error, null -> {}
         }
     }
 
@@ -2130,8 +2186,12 @@ class PlayerViewModel @JvmOverloads constructor(
         val seconds = timePos?.let { Utils.prettyTime(it) } ?: return
         val filename = generateFilename(anime, seconds) ?: return
 
-        try {
-            viewModelScope.launchIO {
+        // The try goes *inside* the builder, as it does in saveImage and setAsArt. Outside it,
+        // `launchIO` returns immediately and the catch could only ever have caught a dispatch
+        // failure — so a full cache directory or an unwritable one closed the player instead of
+        // logging, which is the opposite of what this looked like it did.
+        viewModelScope.launchIO {
+            try {
                 destDir.deleteRecursively()
                 val uri = imageSaver.save(
                     image = Image.Page(
@@ -2141,9 +2201,9 @@ class PlayerViewModel @JvmOverloads constructor(
                     ),
                 )
                 eventChannel.send(Event.ShareImage(uri, seconds))
+            } catch (e: Throwable) {
+                logcat(LogPriority.ERROR, e)
             }
-        } catch (e: Throwable) {
-            logcat(LogPriority.ERROR, e)
         }
     }
 
@@ -2425,6 +2485,12 @@ fun CustomButton.executeLongPress() {
 fun Float.normalize(inMin: Float, inMax: Float, outMin: Float, outMax: Float): Float {
     return (this - inMin) * (outMax - outMin) / (inMax - inMin) + outMin
 }
+
+/** Title, name format, start, stop, step and the property to write — see `handleLuaInvocation`. */
+private const val LUA_PICKER_FIELDS = 6
+
+/** mpv's own default, for the window before it will answer what the volume actually is. */
+private const val DEFAULT_MPV_VOLUME = 100
 
 /** mpv talks in seconds; the delay panel and everything stored here talk in milliseconds. */
 private const val MILLIS_IN_A_SECOND = 1000.0

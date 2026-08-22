@@ -21,6 +21,7 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -128,8 +129,18 @@ class LibrarySyncJob(
             .filter { file -> file.name?.let { SyncFile.parse(it)?.deviceId } == deviceId }
             .forEach { it.delete() }
 
+        /*
+         * A rename that fails is a sync that did not happen, so it must not report success.
+         *
+         * The name is the whole protocol here: `SyncFile.parse` is what another device uses to
+         * recognise this one's state, and a file still called `<package>_<date>.tachibk` is
+         * invisible to it — and to the cleanup pass above, so it accumulates. Logging and carrying
+         * on meant `doWork` stamped "last synced" and returned success while no other device ever
+         * saw anything, indefinitely, on any provider that refuses rename. Several do.
+         */
         if (!created.renameTo(name)) {
-            logcat(LogPriority.WARN) { "Library sync wrote a backup it could not rename to $name" }
+            created.delete()
+            throw IOException("Library sync could not name its backup $name")
         }
     }
 

@@ -46,10 +46,21 @@ internal fun Uri.resolveUri(context: Context): String? {
     return filepath
 }
 
+/**
+ * The display name a provider gives this URI, if it gives one.
+ *
+ * Both answers were assumed. `getColumnIndex` returns -1 for a provider that does not expose
+ * `DISPLAY_NAME`, and `moveToFirst()`'s result was discarded, so an empty cursor went straight into
+ * `getString` — a CursorIndexOutOfBoundsException on the main thread, immediately after picking an
+ * external subtitle or audio track. Several cloud and DocumentsProvider implementations return
+ * exactly that shape.
+ */
 internal fun Uri.getFileName(context: Context): String? {
-    return context.contentResolver.query(this, null, null, null, null)?.use { cursor ->
-        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        cursor.moveToFirst()
-        cursor.getString(nameIndex)
-    }
+    return runCatching {
+        context.contentResolver.query(this, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (nameIndex < 0 || !cursor.moveToFirst()) return@use null
+            cursor.getString(nameIndex)
+        }
+    }.getOrNull()
 }

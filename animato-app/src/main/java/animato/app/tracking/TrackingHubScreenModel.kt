@@ -13,8 +13,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import logcat.LogPriority
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 import tachiyomi.domain.track.repository.TrackRepository
 import uy.kohesive.injekt.Injekt
@@ -146,20 +148,37 @@ class TrackingHubScreenModel(
         setSyncing(account.id, true)
 
         viewModelScope.launchIO {
-            val mangaIds = trackRepository.getTracksAsFlow().first()
-                .filter { it.trackerId == account.id }
-                .map { it.mangaId }
-                .distinct()
-            val animeIds = animeTrackRepository.getAnimeTracksAsFlow().first()
-                .filter { it.trackerId == account.id }
-                .map { it.animeId }
-                .distinct()
-
+            /*
+             * The row must stop spinning whatever happens, and "last synced" must mean it synced.
+             *
+             * Neither was true. The reads and refreshes had no catch, so a database failure or a
+             * throw from `getTracks` — which sits outside the per-track supervisor inside
+             * RefreshAnimeTracks — escaped to a scope with no handler, crashed the app, and left
+             * the row spinning on the way out. And the timestamp was written unconditionally, so a
+             * sync where every single title failed still reported itself as having just happened.
+             */
             var failures = 0
-            mangaIds.forEach { failures += refreshTracks.await(it).size }
-            animeIds.forEach { failures += refreshAnimeTracks.await(it).size }
+            val synced = try {
+                val mangaIds = trackRepository.getTracksAsFlow().first()
+                    .filter { it.trackerId == account.id }
+                    .map { it.mangaId }
+                    .distinct()
+                val animeIds = animeTrackRepository.getAnimeTracksAsFlow().first()
+                    .filter { it.trackerId == account.id }
+                    .map { it.animeId }
+                    .distinct()
 
-            lastSync(account.id).set(System.currentTimeMillis())
+                mangaIds.forEach { failures += refreshTracks.await(it).size }
+                animeIds.forEach { failures += refreshAnimeTracks.await(it).size }
+                // Nothing attempted is not a failed sync; everything attempted having failed is.
+                failures == 0 || failures < mangaIds.size + animeIds.size
+            } catch (e: Throwable) {
+                logcat(LogPriority.ERROR, e) { "Tracker sync failed for ${account.id}" }
+                failures++
+                false
+            }
+
+            if (synced) lastSync(account.id).set(System.currentTimeMillis())
             setSyncing(account.id, false, failures = failures)
         }
     }

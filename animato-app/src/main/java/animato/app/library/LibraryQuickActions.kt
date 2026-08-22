@@ -187,11 +187,20 @@ class LibraryQuickActions(
         }
     }
 
+    /*
+     * A stub is enough, and `get` was not.
+     *
+     * Deleting downloads needs the source only for the name of its folder, which a stub answers.
+     * `get` returns null for an extension that has been uninstalled — so "remove and delete the
+     * downloads" un-favourited the entry and then abandoned the deletion, keeping the files. That
+     * is exactly backwards: an entry whose extension is gone is the most likely one to be removed,
+     * and the one whose files are least likely ever to be wanted again.
+     */
     private fun sourceOf(sourceId: Long) =
-        Injekt.get<tachiyomi.domain.source.service.SourceManager>().get(sourceId)
+        Injekt.get<tachiyomi.domain.source.service.SourceManager>().getOrStub(sourceId)
 
     private fun animeSourceOf(sourceId: Long) =
-        Injekt.get<tachiyomi.domain.source.anime.service.AnimeSourceManager>().get(sourceId)
+        Injekt.get<tachiyomi.domain.source.anime.service.AnimeSourceManager>().getOrStub(sourceId)
 
     companion object {
         /**

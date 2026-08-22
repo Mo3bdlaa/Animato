@@ -18,8 +18,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import logcat.LogPriority
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -153,11 +155,18 @@ class DownloadsScreenModel(
      */
     fun refreshStorage() {
         viewModelScope.launchIO {
-            val bytes = withIOContext {
-                animeDownloadManager.getDownloadSize() + mangaDownloadBytes()
+            // Walking the download tree touches storage that can be unmounted, revoked or simply
+            // gone. This runs from `init`, so an unreachable root meant the Downloads screen
+            // crashed on opening rather than showing a size it could not work out.
+            runCatching {
+                val bytes = withIOContext {
+                    animeDownloadManager.getDownloadSize() + mangaDownloadBytes()
+                }
+                val items = downloadManager.getDownloadCount() + animeDownloadManager.getDownloadCount()
+                state.value = state.value.copy(storage = StorageSummary(bytes = bytes, items = items))
+            }.onFailure {
+                logcat(LogPriority.WARN, it) { "Could not measure the downloads" }
             }
-            val items = downloadManager.getDownloadCount() + animeDownloadManager.getDownloadCount()
-            state.value = state.value.copy(storage = StorageSummary(bytes = bytes, items = items))
         }
     }
 
@@ -210,10 +219,18 @@ class DownloadsScreenModel(
     fun cleanUp(onResult: (OrphanedDownloadSweeper.Result) -> Unit) {
         state.value = state.value.copy(isCleaning = true)
         viewModelScope.launchIO {
-            val result = sweeper.sweep()
-            state.value = state.value.copy(isCleaning = false)
-            refreshStorage()
-            onResult(result)
+            // The reset is in `finally`, because it was the throw that skipped it: a sweep over
+            // unreachable storage left the spinner turning for as long as the screen was open,
+            // with the failure delivered as a crash rather than as a stopped spinner.
+            try {
+                val result = sweeper.sweep()
+                refreshStorage()
+                onResult(result)
+            } catch (e: Throwable) {
+                logcat(LogPriority.ERROR, e) { "Cleaning up downloads failed" }
+            } finally {
+                state.value = state.value.copy(isCleaning = false)
+            }
         }
     }
 
