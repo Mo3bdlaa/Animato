@@ -53,6 +53,7 @@ import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.media.AudioAttributesCompat
@@ -149,6 +150,16 @@ class PlayerActivity : BaseActivity() {
     private var restoreAudioFocus: () -> Unit = {}
 
     private var pipRect: Rect? = null
+
+    /**
+     * Set between asking for picture-in-picture and actually being in it.
+     *
+     * [onPause] runs during that gap and `isInPictureInPictureMode` is still false while it does,
+     * so the guard there fell through and paused the very playback that was being moved into the
+     * little window. Reported from a device: going Home produced a paused, black PiP window that
+     * had to be started again by hand.
+     */
+    private var enteringPip = false
     val isPipSupportedAndEnabled by lazy {
         packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) &&
             playerPreferences.enablePip().get()
@@ -314,7 +325,7 @@ class PlayerActivity : BaseActivity() {
                     viewModel = viewModel,
                     onBackPress = {
                         if (isPipSupportedAndEnabled && player.paused == false && playerPreferences.pipOnExit().get()) {
-                            enterPictureInPictureMode(createPipParams())
+                            enterPip()
                         } else {
                             finish()
                         }
@@ -381,7 +392,9 @@ class PlayerActivity : BaseActivity() {
     override fun onPause() {
         viewModel.saveCurrentEpisodeWatchingProgress()
 
-        if (isInPictureInPictureMode) {
+        // `enteringPip` as well as the mode itself: this runs inside the gap between asking for
+        // the little window and being in it, and asking the system produces false during that gap.
+        if (isInPictureInPictureMode || enteringPip) {
             super.onPause()
             return
         }
@@ -404,8 +417,31 @@ class PlayerActivity : BaseActivity() {
             }
         }
 
-        if (isInPictureInPictureMode && powerManager.isInteractive) {
-            viewModel.deletePendingEpisodes()
+        // Cleared here as well as on the mode change, for the case where the system refuses the
+        // request: nothing calls back then, and the flag would otherwise stay set for the rest of
+        // the activity's life and stop [onPause] ever pausing anything again.
+        enteringPip = false
+
+        if (isInPictureInPictureMode) {
+            if (powerManager.isInteractive) {
+                viewModel.deletePendingEpisodes()
+            }
+        } else {
+            /*
+             * No window left, so nothing playing. Stated here as an invariant rather than left to
+             * the paths that are supposed to have handled it, because one of them did not.
+             *
+             * Dismissing the little window never paused anything: the activity was already paused
+             * when it went into picture-in-picture, so `onPause` had run and taken its early
+             * return, and dismissing does not call it again — it goes straight to here. Playback
+             * carried on in a stopped activity until the app was swiped out of recents, which is
+             * exactly what was reported.
+             *
+             * Deliberately not extended to the screen going off while in picture-in-picture: that
+             * window is still there and comes back with the screen, and something playing on with
+             * the screen off is a thing people do on purpose.
+             */
+            viewModel.pause()
         }
 
         super.onStop()
@@ -413,9 +449,20 @@ class PlayerActivity : BaseActivity() {
 
     override fun onUserLeaveHint() {
         if (isPipSupportedAndEnabled && player.paused == false && playerPreferences.pipOnExit().get()) {
-            enterPictureInPictureMode()
+            enterPip()
         }
         super.onUserLeaveHint()
+    }
+
+    /**
+     * The only way into picture-in-picture, so the flag cannot be forgotten at a call site.
+     *
+     * There are three of them — Home, back, and the back arrow in the controls — and each one is
+     * followed by [onPause] before the mode change lands.
+     */
+    private fun enterPip() {
+        enteringPip = true
+        enterPictureInPictureMode(createPipParams())
     }
 
     @Deprecated("Deprecated in Java")
@@ -425,7 +472,7 @@ class PlayerActivity : BaseActivity() {
                 viewModel.panelShown.value == Panels.None &&
                 viewModel.dialogShown.value == Dialogs.None
             ) {
-                enterPictureInPictureMode()
+                enterPip()
             }
         } else {
             super.onBackPressed()
@@ -901,11 +948,27 @@ class PlayerActivity : BaseActivity() {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         if (!isInPictureInPictureMode) {
+            enteringPip = false
             pipReceiver?.let {
                 unregisterReceiver(pipReceiver)
                 pipReceiver = null
             }
+            /*
+             * Closed, rather than restored to full screen.
+             *
+             * The two arrive here identically and only the lifecycle tells them apart: restoring
+             * brings the activity back to STARTED, while the × leaves it heading for stopped, so
+             * it is still CREATED when this runs. Without the distinction the activity simply
+             * stayed alive in the background — and `onDestroy`, which tears the player down
+             * properly, was never reached.
+             */
+            if (lifecycle.currentState == Lifecycle.State.CREATED) {
+                finish()
+                super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+                return
+            }
         } else {
+            enteringPip = false
             setPictureInPictureParams(createPipParams())
             viewModel.hideControls()
             viewModel.hideSeekBar()
