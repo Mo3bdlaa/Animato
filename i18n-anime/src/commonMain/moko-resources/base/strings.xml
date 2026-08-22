@@ -850,6 +850,15 @@
     <string name="extensions_ships_empty">Animato ships empty by design — you choose where content comes from.</string>
     <string name="extensions_none_available">No extensions on offer — check your repositories, or turn on more languages</string>
     <string name="action_browse_available">Browse available</string>
+    <string name="recovery_title">Animato did not start</string>
+    <string name="recovery_body">The last two attempts to open the app ended in a crash before it finished loading. Checking whether a newer version fixes it.</string>
+    <string name="recovery_checking">Checking for a newer version…</string>
+    <string name="recovery_update_found">Version %1$s is available, and it may already contain the fix.</string>
+    <string name="recovery_update_none">This is the newest version, so an update will not help yet.</string>
+    <string name="recovery_update_failed">Could not reach the update server. Check your connection and try again.</string>
+    <string name="recovery_action_retry">Check again</string>
+    <string name="recovery_action_open">Open anyway</string>
+    <string name="recovery_action_share">Share the crash report</string>
     <string name="known_stores_title">Known stores</string>
     <string name="known_stores_summary">Addresses that were working when this version was built. Tapping one asks before it adds anything.</string>
     <string name="known_store_keiyoushi">Manga · the community store, around 1,300 extensions</string>

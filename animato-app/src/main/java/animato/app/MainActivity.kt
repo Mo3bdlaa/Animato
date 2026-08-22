@@ -54,6 +54,8 @@ import animato.anime.ui.stores.AnimeExtensionStoresScreen
 import animato.app.coil.AnimatoImageLoader
 import animato.app.crash.CrashRecorder
 import animato.app.crash.CrashReportPrompt
+import animato.app.crash.RecoveryScreen
+import animato.app.crash.StartupGuard
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.downloads.OrphanedDownloadSweeper
 import animato.app.entry.EntryScreen
@@ -105,6 +107,7 @@ import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
@@ -216,6 +219,30 @@ class MainActivity : BaseActivity() {
         // on the device rather than a report sent anywhere.
         CrashRecorder.install(application)
 
+        /*
+         * Whether the last two launches got this far and no further.
+         *
+         * Counted here rather than deeper in, because everything below this line is a candidate for
+         * being the thing that fails — and the whole point is to find out *before* attempting it.
+         * When the answer is yes, this method stops here and the recovery screen goes and looks for
+         * a release that fixes it. See StartupGuard: a crash on the way in is the one kind that
+         * also disables the way out.
+         */
+        StartupGuard.beginStartup()
+        if (StartupGuard.isLooping()) {
+            setContent {
+                RecoveryScreen(
+                    onOpenAnyway = {
+                        // Cleared, so choosing to go in is not a choice that has to be made again
+                        // on the next launch. Two more failures and this comes back.
+                        StartupGuard.forget()
+                        recreate()
+                    },
+                )
+            }
+            return
+        }
+
         // Before a frame is drawn, because it is what makes an anime cover loadable at all. See
         // AnimatoImageLoader for why it extends Mihon's loader instead of building one.
         AnimatoImageLoader.install(this)
@@ -247,6 +274,23 @@ class MainActivity : BaseActivity() {
          * the device. Defaults are housekeeping; housekeeping fails quietly and gets looked at in
          * the log.
          */
+        /*
+         * And, once the app has actually stayed up, forget the failed attempts.
+         *
+         * Delayed rather than done at the end of this method or on the first frame: the crash that
+         * made [StartupGuard] necessary arrived from a coroutine a moment *after* onCreate
+         * returned, so either of those would have recorded it as a successful start and the
+         * counter would never have reached the threshold. Surviving a few seconds is the weaker
+         * claim that is actually true.
+         *
+         * On the activity's own scope, so leaving before then simply cancels it — and leaving
+         * within five seconds is not a start worth counting either way.
+         */
+        lifecycleScope.launch {
+            delay(StartupGuard.SETTLE_MILLIS)
+            StartupGuard.succeeded()
+        }
+
         seedQuietly("NSFW hidden by default") { NsfwDefaults.seedHiddenByDefault() }
         /*
          * One coroutine for both, and on IO.
