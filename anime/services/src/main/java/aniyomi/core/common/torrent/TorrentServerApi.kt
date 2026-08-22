@@ -22,6 +22,7 @@ import java.io.InputStream
 class TorrentServerApi(
     private val network: NetworkHelper,
     private val json: Json,
+    private val preferences: TorrentPreferences,
 ) {
     val hostUrl
         get() = "http://127.0.0.1:$port"
@@ -84,6 +85,21 @@ class TorrentServerApi(
                     put("PreloadCache", PRELOAD_PERCENT)
                     put("ReaderReadAHead", READ_AHEAD_PERCENT)
                     put("ConnectionsLimit", CONNECTIONS)
+                    /*
+                     * Two settings this server may or may not have, depending on its version.
+                     *
+                     * Written only when the record we just read already carries the key. A `set`
+                     * replaces the whole record and the server parses it into a fixed struct, so
+                     * inventing a field is silently ignored rather than harmful — but "silently
+                     * ignored" is exactly how a setting comes to look implemented while doing
+                     * nothing, and asking the record what it holds costs nothing and cannot lie.
+                     */
+                    if (DISABLE_UPLOAD in current) {
+                        put(DISABLE_UPLOAD, !preferences.torrServerUpload().get())
+                    }
+                    if (DHT_LIMIT in current) {
+                        put(DHT_LIMIT, DHT_CONNECTIONS)
+                    }
                     // The tracker list this app installs is only consulted in mode 1. A server that
                     // came up in mode 0 — an older install, a settings file somebody edited — would
                     // ignore every one of them and fall back to whatever the magnet itself named.
@@ -185,17 +201,38 @@ class TorrentServerApi(
         /**
          * How much of the cache to fill before the first frame, as a percent.
          *
-         * Fifteen of 192 MB is about 29 MB — near enough to what the untouched server fetched
-         * (half of 64) that the wait does not grow, while leaving the rest of the buffer to fill
-         * behind the picture instead of in front of it.
+         * Five of 192 MB is about 10 MB. It was fifteen, which is about 29 MB, and that number was
+         * chosen against the wrong case: on a healthy torrent 29 MB arrives in seconds and nobody
+         * notices either figure. The case that matters is the thin swarm, where 29 MB at the rate
+         * two seeders can manage is minutes of spinner — reported from a device as the app getting
+         * stuck rather than as a torrent being slow.
+         *
+         * Starting on 10 MB does not make the download faster. It makes the *wait* shorter, and
+         * lets the rest of the buffer fill behind a picture instead of in front of one. The cost is
+         * that a swarm barely keeping up with the bitrate will now stutter where it used to make
+         * you wait — and a video that plays and stutters is worth more than a spinner that does
+         * not, which is the whole trade.
          */
-        const val PRELOAD_PERCENT = 15
+        const val PRELOAD_PERCENT = 5
 
         /** The server's own default, restated because everything around it is being changed. */
         const val READ_AHEAD_PERCENT = 95
 
         const val CONNECTIONS = 120
         const val RETRACKERS_ADD = 1
+
+        /**
+         * How many peers to look for through the DHT at once.
+         *
+         * Finding peers and downloading from them are separate budgets, and on a thin torrent the
+         * first is the one that is short. Raising it is the closest thing there is to "look harder
+         * while you wait" — the swarm is searched more widely in parallel with whatever is already
+         * arriving, rather than the app sitting on the few peers it found first.
+         */
+        const val DHT_CONNECTIONS = 500
+
+        const val DISABLE_UPLOAD = "DisableUpload"
+        const val DHT_LIMIT = "DhtConnectionLimit"
 
         /** Written unconditionally, so they are the keys not to copy from the old record. */
         val TUNED_KEYS = setOf(
@@ -205,6 +242,8 @@ class TorrentServerApi(
             "ConnectionsLimit",
             "RetrackersMode",
             "ResponsiveMode",
+            DISABLE_UPLOAD,
+            DHT_LIMIT,
         )
     }
 }

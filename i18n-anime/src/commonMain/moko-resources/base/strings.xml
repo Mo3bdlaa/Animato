@@ -244,12 +244,15 @@
     <string name="pref_player_torrents">Torrent</string>
     <string name="pref_player_torrents_summary">TorrServer options</string>
     <string name="pref_player_torrents_enable">Enable TorrServer</string>
+    <string name="pref_player_torrents_upload">Share while watching</string>
+    <string name="pref_player_torrents_upload_summary">Off by default. Sending pieces back keeps a swarm alive and can get you served faster, but it costs mobile data and battery and makes you visible as a source rather than just a viewer.</string>
     <string name="pref_player_torrents_notice">Legal Notice</string>
     <string name="pref_player_torrents_notice_text">TorrServer relies on peer to peer file sharing to access content. By doing so, you also upload files to others. Any content you share is your sole responsibility.</string>
     <string name="pref_player_torrents_notice_footer">No further notices will be issued.</string>
     <string name="torrent_notice_declined">Torrent playback stays off. Turn it on under Settings → Player → Torrent.</string>
     <string name="torrent_server_start_failure">The torrent server would not start. Try another port under Settings → Player → Torrent.</string>
     <string name="torrent_could_not_open">This torrent could not be opened. Try another stream for this episode.</string>
+    <string name="torrent_no_seeders">Nobody is seeding this one — try another stream</string>
     <string name="pref_player_torrents_port">TorrServer port</string>
     <string name="pref_player_torrents_port_summary">Enter 0 to let system choose a port</string>
     <string name="pref_player_torrents_port_error">Port must be a number between 0 and 65535</string>

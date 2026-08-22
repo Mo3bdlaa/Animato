@@ -153,7 +153,7 @@ class AnimeAppModule(val app: Application) : InjektModule {
         // started it.
         addSingletonFactory { CastController() }
 
-        addSingletonFactory { TorrentServerApi(get(), get()) }
+        addSingletonFactory { TorrentServerApi(get(), get(), get()) }
         addSingletonFactory { TorrentServerUtils(get(), get()) }
 
         // What TorrentUtils in the extension API resolves at runtime. Without this registration,

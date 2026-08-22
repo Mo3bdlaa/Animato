@@ -64,6 +64,25 @@ class TorrentPreferences(
            http://t.nyaatracker.com:80/announce""".replace(" ", ""),
     )
 
+    /**
+     * Whether to send pieces back to the swarm while watching.
+     *
+     * Off by default, which is a deliberate departure from how BitTorrent is meant to work and is
+     * worth saying plainly. Uploading is the thing that keeps a swarm alive, and an app that takes
+     * without giving is a worse citizen of it.
+     *
+     * It is off anyway for two reasons. A phone on a mobile plan pays for every byte it sends and
+     * pays again in battery, and neither is something to spend on somebody's behalf without asking.
+     * And uploading is the half of BitTorrent that makes you visible as a *source* rather than as
+     * one more downloader, which is a different exposure and not one this app should opt anybody
+     * into by default.
+     *
+     * The trade is real and cuts the other way too: many clients favour peers that give something
+     * back, so a torrent that never uploads can be served more slowly than one that does. Somebody
+     * who wants the swarm to work properly turns this on, and that is a fair thing to want.
+     */
+    fun torrServerUpload() = preferenceStore.getBoolean("pref_torrserver_upload", false)
+
     fun torrServerProxyMode() = preferenceStore.getEnum("pref_torrserver_proxymode", ProxyMode.None)
     fun torrServerProxyUrl() = preferenceStore.getString("pref_torrserver_proxyurl", "")
 }

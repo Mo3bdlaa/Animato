@@ -20,10 +20,12 @@ import animato.ui.settings.editTextInfoPreference
 import animato.ui.settings.multiLineEditTextPreference
 import aniyomi.core.common.torrent.ProxyMode
 import aniyomi.core.common.torrent.TorrentPreferences
+import aniyomi.core.common.torrent.TorrentServerApi
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.tachiyomi.data.torrent.service.TorrentServerService
 import kotlinx.collections.immutable.toPersistentMap
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.padding
@@ -43,6 +45,7 @@ object PlayerSettingsTorrentScreen : SearchableSettings {
         var isDialogShown by rememberSaveable { mutableStateOf(false) }
 
         val torrentPreferences = remember { Injekt.get<TorrentPreferences>() }
+        val torrentApi = remember { Injekt.get<TorrentServerApi>() }
 
         val torrentEnablePref = torrentPreferences.torrServerEnable()
         val torrentEnable by torrentEnablePref.collectAsState()
@@ -85,6 +88,39 @@ object PlayerSettingsTorrentScreen : SearchableSettings {
                     }
                     if (!it) {
                         TorrentServerService.stop()
+                    }
+                    true
+                },
+            ),
+            /*
+             * Uploading, as a choice rather than as a default.
+             *
+             * BitTorrent works because peers give pieces back, and an app that only takes is a
+             * worse citizen of every swarm it joins. It is still off by default: a phone on a
+             * mobile plan pays for every byte it sends and pays again in battery, and uploading is
+             * the half of the protocol that makes you a *source* rather than one more downloader.
+             * Neither is something to spend on somebody's behalf before they have chosen it.
+             *
+             * The subtitle says what turning it on buys, because the trade genuinely runs both
+             * ways — clients favour peers that share, so a torrent that never uploads can be
+             * served more slowly than one that does.
+             */
+            Preference.PreferenceItem.SwitchPreference(
+                preference = torrentPreferences.torrServerUpload(),
+                title = stringResource(AYMR.strings.pref_player_torrents_upload),
+                subtitle = stringResource(AYMR.strings.pref_player_torrents_upload_summary),
+                enabled = torrentEnable,
+                // Pushed to a running server rather than left for the next start, which is what
+                // every other setting on this screen does. Somebody who has just switched
+                // uploading off means *now* — a switch that reads off while the thing it names
+                // carries on until the service happens to restart is the worst kind of wrong, and
+                // on this particular setting it is wrong about somebody's data and their exposure.
+                onValueChanged = { wantsUpload ->
+                    // Written here rather than left to the caller, because the tune below reads
+                    // the preference and the caller writes it only after this returns.
+                    torrentPreferences.torrServerUpload().set(wantsUpload)
+                    if (torrentApi.getPort() != 0) {
+                        withIOContext { torrentApi.tuneForStreaming() }
                     }
                     true
                 },

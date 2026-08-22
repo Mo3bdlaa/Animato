@@ -185,6 +185,15 @@ class PlayerActivity : BaseActivity() {
          */
         private const val TORRENT_PROGRESS_INTERVAL_MS = 1000L
 
+        /**
+         * How long a torrent may show no peers and no bytes before it is called dead.
+         *
+         * Long enough to cover a cold start — a magnet has to find the swarm through the DHT
+         * before it can find a peer in it, and forty seconds is generous for that on a slow
+         * connection. Short enough that it is an answer rather than another kind of waiting.
+         */
+        private const val DEAD_TORRENT_SECONDS = 40L
+
         fun newIntent(
             context: Context,
             animeId: Long?,
@@ -1394,10 +1403,40 @@ class PlayerActivity : BaseActivity() {
         if (hash.isBlank()) return
         torrentProgressJob?.cancel()
         torrentProgressJob = lifecycleScope.launchIO {
+            var deadSeconds = 0L
             while (isActive && viewModel.isLoadingEpisode.value) {
                 val status = torrentServerApi.status(hash)
                 if (status != null) {
-                    viewModel.updateTorrentProgress(TorrentProgress.from(status))
+                    val progress = TorrentProgress.from(status)
+                    viewModel.updateTorrentProgress(progress)
+
+                    /*
+                     * Stop pretending, once it is clear nothing is coming.
+                     *
+                     * A torrent with no peers and no bytes is not slow, it is dead — nobody is
+                     * seeding it and no amount of waiting changes that. The numbers on screen said
+                     * so already, but only to somebody who knew that a peer count of zero is
+                     * different from a slow one, and the app itself went on spinning either way.
+                     *
+                     * Only when *both* are zero. One peer that has sent nothing yet is a swarm
+                     * waking up, and a byte counter that moved is a torrent working however slowly
+                     * — both are worth waiting through, and the progress display is there so the
+                     * waiting is an informed choice rather than a guess.
+                     */
+                    deadSeconds = if (progress.peers == 0 && progress.loadedBytes == 0L) {
+                        deadSeconds + TORRENT_PROGRESS_INTERVAL_MS / 1000
+                    } else {
+                        0
+                    }
+                    if (deadSeconds >= DEAD_TORRENT_SECONDS) {
+                        withUIContext {
+                            viewModel.updateTorrentProgress(null)
+                            viewModel.updateIsLoadingEpisode(false)
+                            toast(AYMR.strings.torrent_no_seeders)
+                            finish()
+                        }
+                        return@launchIO
+                    }
                 }
                 delay(TORRENT_PROGRESS_INTERVAL_MS)
             }
