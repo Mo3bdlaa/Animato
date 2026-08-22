@@ -511,6 +511,7 @@ private fun RepositoriesRow(
     navigator: Navigator,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
+    var knownStoresOpen by remember { mutableStateOf(false) }
 
     Box {
         ListItem(
@@ -566,7 +567,27 @@ private fun RepositoriesRow(
                     navigator.push(StremioAddonsScreen(liveTvOnly = true))
                 },
             )
+            /*
+             * Last, because it answers a different question from the four above it.
+             *
+             * Those are *where do I manage this kind of source*; this one is *what do I even put
+             * in the box*, which is the question somebody with an empty app actually has. It sits
+             * under the same row rather than on the store screens because one of those two screens
+             * is upstream's and not ours to add a section to — and splitting the answer across two
+             * places would be worse than not having it.
+             */
+            DropdownMenuItem(
+                text = { Text(stringResource(AYMR.strings.known_stores_title)) },
+                onClick = {
+                    menuOpen = false
+                    knownStoresOpen = true
+                },
+            )
         }
+    }
+
+    if (knownStoresOpen) {
+        KnownStoresDialog(navigator = navigator, onDismissRequest = { knownStoresOpen = false })
     }
 }
 

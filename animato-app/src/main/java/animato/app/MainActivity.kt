@@ -233,10 +233,12 @@ class MainActivity : BaseActivity() {
         // across an app update on some devices, and re-enqueueing on every launch is idempotent.
         LibrarySyncJob.setupTask(this)
 
-        // NSFW hidden unless somebody chose otherwise, and NSFW extensions incognito by default.
-        // See NsfwDefaults for why both are seeded data rather than changed defaults.
+        // NSFW hidden unless somebody chose otherwise, and anything adult incognito by default —
+        // extensions by their own flag, Stremio addons by the directory's. See NsfwDefaults for
+        // why all three are seeded data rather than changed defaults.
         NsfwDefaults.seedHiddenByDefault()
         lifecycleScope.launch { NsfwDefaults.seedIncognitoForNsfw() }
+        lifecycleScope.launch { NsfwDefaults.seedIncognitoForAdultAddons() }
 
         /*
          * Schedule the periodic anime library update, and keep it scheduled.

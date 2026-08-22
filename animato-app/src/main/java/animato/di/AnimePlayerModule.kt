@@ -53,6 +53,6 @@ class AnimePlayerModule(val app: Application) : InjektModule {
         addFactory { TrackEpisode(get(), get(), get(), get()) }
         addFactory { AddAnimeTracks(get(), get(), get(), get()) }
         addFactory { SetAnimeViewerFlags(get()) }
-        addFactory { GetAnimeIncognitoState(get(), get(), get()) }
+        addFactory { GetAnimeIncognitoState(get(), get(), get(), get()) }
     }
 }

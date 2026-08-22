@@ -151,15 +151,6 @@ class PlayerActivity : BaseActivity() {
 
     private var pipRect: Rect? = null
 
-    /**
-     * Set between asking for picture-in-picture and actually being in it.
-     *
-     * [onPause] runs during that gap and `isInPictureInPictureMode` is still false while it does,
-     * so the guard there fell through and paused the very playback that was being moved into the
-     * little window. Reported from a device: going Home produced a paused, black PiP window that
-     * had to be started again by hand.
-     */
-    private var enteringPip = false
     val isPipSupportedAndEnabled by lazy {
         packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) &&
             playerPreferences.enablePip().get()
@@ -324,8 +315,8 @@ class PlayerActivity : BaseActivity() {
                 PlayerControls(
                     viewModel = viewModel,
                     onBackPress = {
-                        if (isPipSupportedAndEnabled && player.paused == false && playerPreferences.pipOnExit().get()) {
-                            enterPip()
+                        if (wantsPipOnExit()) {
+                            enterPictureInPictureMode(createPipParams())
                         } else {
                             finish()
                         }
@@ -392,9 +383,9 @@ class PlayerActivity : BaseActivity() {
     override fun onPause() {
         viewModel.saveCurrentEpisodeWatchingProgress()
 
-        // `enteringPip` as well as the mode itself: this runs inside the gap between asking for
-        // the little window and being in it, and asking the system produces false during that gap.
-        if (isInPictureInPictureMode || enteringPip) {
+        // The wish as well as the mode itself: this runs inside the gap between leaving and being
+        // in the little window, and the system says "not in picture-in-picture" for all of it.
+        if (isInPictureInPictureMode || wantsPipOnExit()) {
             super.onPause()
             return
         }
@@ -416,11 +407,6 @@ class PlayerActivity : BaseActivity() {
                 playerPreferences.playerBrightnessValue().set(it)
             }
         }
-
-        // Cleared here as well as on the mode change, for the case where the system refuses the
-        // request: nothing calls back then, and the flag would otherwise stay set for the rest of
-        // the activity's life and stop [onPause] ever pausing anything again.
-        enteringPip = false
 
         if (isInPictureInPictureMode) {
             if (powerManager.isInteractive) {
@@ -448,31 +434,44 @@ class PlayerActivity : BaseActivity() {
     }
 
     override fun onUserLeaveHint() {
-        if (isPipSupportedAndEnabled && player.paused == false && playerPreferences.pipOnExit().get()) {
-            enterPip()
+        if (wantsPipOnExit()) {
+            enterPictureInPictureMode(createPipParams())
         }
         super.onUserLeaveHint()
     }
 
     /**
-     * The only way into picture-in-picture, so the flag cannot be forgotten at a call site.
+     * Whether leaving this screen right now should shrink it rather than end it.
      *
-     * There are three of them — Home, back, and the back arrow in the controls — and each one is
-     * followed by [onPause] before the mode change lands.
+     * One function rather than the same three-part condition written out at each of the four
+     * places that need it — the three ways out, and [onPause], which has to know the answer to
+     * avoid pausing playback that is on its way into the little window. It used to learn that from
+     * a flag set alongside the manual call, which was wrong for the path that matters most: on
+     * Android 12 and up the system enters picture-in-picture by itself, calls nothing on the way
+     * in, and the flag stayed false. Asking the question directly has no such gap.
      */
-    private fun enterPip() {
-        enteringPip = true
-        enterPictureInPictureMode(createPipParams())
+    private fun wantsPipOnExit(): Boolean =
+        isPipSupportedAndEnabled && player.paused == false && playerPreferences.pipOnExit().get()
+
+    /**
+     * Hand the system the current parameters, ignoring the one way that can fail.
+     *
+     * It throws if the activity is finishing or gone, and every caller here is some piece of
+     * playback reporting a change rather than anything that knows about the activity's lifecycle.
+     */
+    private fun applyPipParams() {
+        if (!isPipSupportedAndEnabled) return
+        runCatching { setPictureInPictureParams(createPipParams()) }
     }
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        if (isPipSupportedAndEnabled && player.paused == false && playerPreferences.pipOnExit().get()) {
+        if (wantsPipOnExit()) {
             if (viewModel.sheetShown.value == Sheets.None &&
                 viewModel.panelShown.value == Panels.None &&
                 viewModel.dialogShown.value == Dialogs.None
             ) {
-                enterPip()
+                enterPictureInPictureMode(createPipParams())
             }
         } else {
             super.onBackPressed()
@@ -481,7 +480,7 @@ class PlayerActivity : BaseActivity() {
 
     override fun onStart() {
         super.onStart()
-        setPictureInPictureParams(createPipParams())
+        applyPipParams()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.setFlags(
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -804,9 +803,7 @@ class PlayerActivity : BaseActivity() {
                     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
 
-                runCatching {
-                    setPictureInPictureParams(createPipParams())
-                }
+                applyPipParams()
             }
 
             "paused-for-cache" -> {
@@ -849,7 +846,22 @@ class PlayerActivity : BaseActivity() {
         if (player.isExiting) return
         when (property) {
             "speed" -> viewModel.playbackSpeed.update { value.toFloat() }
-            "video-params/aspect" -> if (isPipSupportedAndEnabled) createPipParams()
+            /*
+             * The moment the little window becomes possible, and the reason it was a coin toss.
+             *
+             * This built the parameters and dropped them on the floor — no `set` call, so neither
+             * the aspect ratio nor, more importantly, auto-enter ever reached the system from
+             * here. Auto-enter is what Android 12 and up uses to shrink an app on the way to Home;
+             * without it the only way in is [onUserLeaveHint], which gesture navigation does not
+             * reliably deliver.
+             *
+             * That left one place that armed it: the pause observer, which fires on a *change*.
+             * Whether picture-in-picture worked therefore came down to whether the pause property
+             * happened to change after playback began — which is why it worked sometimes and not
+             * others, on the same video. This event fires when the video's own dimensions arrive,
+             * which is exactly when there is something to shrink.
+             */
+            "video-params/aspect" -> applyPipParams()
         }
     }
 
@@ -922,9 +934,11 @@ class PlayerActivity : BaseActivity() {
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val autoEnter = playerPreferences.pipOnExit().get()
-            builder.setAutoEnterEnabled(player.paused == false && autoEnter)
-            builder.setSeamlessResizeEnabled(player.paused == false && autoEnter)
+            // The same question the three ways out ask, so what the system does on its own and
+            // what a button does are never two different answers.
+            val auto = wantsPipOnExit()
+            builder.setAutoEnterEnabled(auto)
+            builder.setSeamlessResizeEnabled(auto)
         }
         builder.setActions(
             createPipActions(
@@ -936,11 +950,16 @@ class PlayerActivity : BaseActivity() {
             ),
         )
         builder.setSourceRectHint(pipRect)
-        player.videoH?.let {
-            val height = it
-            val width = it * player.getVideoOutAspect()!!
-            val rational = Rational(height, width.toInt()).toFloat()
-            if (rational in 0.42..2.38) builder.setAspectRatio(Rational(width.toInt(), height))
+        // Both halves, or neither. The aspect was read with `!!` on a value that is null until the
+        // video's dimensions arrive — and this is now called from the event that delivers them, so
+        // the window where that throws is exactly the window this runs in.
+        val height = player.videoH
+        val aspect = player.getVideoOutAspect()
+        if (height != null && aspect != null) {
+            val width = (height * aspect).toInt()
+            if (width > 0 && Rational(height, width).toFloat() in 0.42..2.38) {
+                builder.setAspectRatio(Rational(width, height))
+            }
         }
         return builder.build()
     }
@@ -948,7 +967,6 @@ class PlayerActivity : BaseActivity() {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         if (!isInPictureInPictureMode) {
-            enteringPip = false
             pipReceiver?.let {
                 unregisterReceiver(pipReceiver)
                 pipReceiver = null
@@ -968,8 +986,7 @@ class PlayerActivity : BaseActivity() {
                 return
             }
         } else {
-            enteringPip = false
-            setPictureInPictureParams(createPipParams())
+            applyPipParams()
             viewModel.hideControls()
             viewModel.hideSeekBar()
             viewModel.isBrightnessSliderShown.update { false }
@@ -985,7 +1002,7 @@ class PlayerActivity : BaseActivity() {
                         PIP_PREVIOUS -> viewModel.changeEpisode(true)
                         PIP_SKIP -> viewModel.seekBy(10)
                     }
-                    setPictureInPictureParams(createPipParams())
+                    applyPipParams()
                 }
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

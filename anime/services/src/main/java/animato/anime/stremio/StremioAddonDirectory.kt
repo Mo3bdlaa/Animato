@@ -176,6 +176,21 @@ class StremioAddonDirectory(
     }
 
     /**
+     * Every address the directory calls adult, without going near the network.
+     *
+     * Only the bundled half is read, and that is not a shortcut: the flag is decided offline by
+     * the generator from an addon's own name and description, so [fetched] never carries one and
+     * the snapshot is the whole of what is known. What wants this wants it on launch, before
+     * anybody has opened a screen — and making that wait on a request to Stremio would mean an
+     * addon is briefly not incognito on a bad connection, which is the one moment it matters.
+     *
+     * Normalised, because it is compared against addresses somebody typed.
+     */
+    suspend fun adultUrls(): Set<String> = withIOContext {
+        bundled().filter { it.isAdult }.map { StremioUrls.normalizeBase(it.url) }.toSet()
+    }
+
+    /**
      * Stremio's own collection, or nothing.
      *
      * Failure is an empty list rather than an error. There is a bundled list behind this, so a

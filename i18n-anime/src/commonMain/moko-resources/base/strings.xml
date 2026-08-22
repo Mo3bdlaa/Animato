@@ -849,6 +849,11 @@
     <string name="extensions_ships_empty">Animato ships empty by design — you choose where content comes from.</string>
     <string name="extensions_none_available">No extensions on offer — check your repositories, or turn on more languages</string>
     <string name="action_browse_available">Browse available</string>
+    <string name="known_stores_title">Known stores</string>
+    <string name="known_stores_summary">Addresses that were working when this version was built. Tapping one asks before it adds anything.</string>
+    <string name="known_store_keiyoushi">Manga · the community store, around 1,300 extensions</string>
+    <string name="known_store_aniyomi">Anime · small, and utilities rather than streaming sources</string>
+    <string name="known_stores_anime_note">There is no public store of anime streaming extensions any more. For anime it is Stremio addons, an M3U playlist, or your own server.</string>
 
     <!-- Discover -->
     <string name="discover_search_hint">Search anime and manga</string>
