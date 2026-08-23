@@ -1,13 +1,13 @@
 # Prebuilt
 
-`ShahedPro-14.0.1-testkey.apk` — the ShahedPro source in `../extension-template/src/shahedpro`,
+`ShahedPro-14.0.2-testkey.apk` — the ShahedPro source in `../extension-template/src/shahedpro`,
 built from that template so it can be installed and tried without setting up a build.
 
 |  |  |
 |---|---|
-| version | 14.0.1 (version code 1) |
+| version | 14.0.2 (version code 2) |
 | package | `eu.kanade.tachiyomi.animeextension.ar.shahedpro` |
-| SHA-256 | `54456a28716ae8e84be01149e25a349e1750892c548e853aacc8161e35f62aec` |
+| SHA-256 | `4744f8ced4100791f7aac835ceb9b349e2eb7f49a32ab62502ede117f17940bb` |
 
 ## The key it is signed with is a throwaway
 

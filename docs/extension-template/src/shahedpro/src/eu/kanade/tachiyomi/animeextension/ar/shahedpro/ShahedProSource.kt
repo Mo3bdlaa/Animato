@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.animeextension.ar.shahedpro
 
 import android.util.Base64
+import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
 import eu.kanade.tachiyomi.animesource.model.SAnime
@@ -15,6 +16,7 @@ import okhttp3.Response
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import java.util.Calendar
 
 /**
  * shahedpro.com — a WordPress site with a theme of its own, serving films and series.
@@ -34,16 +36,24 @@ import org.jsoup.nodes.Element
  * path goes: episode page -> its `watch/` child -> the servers, base64-encoded in `data-enc` ->
  * fetch the embed -> unpack -> the HLS playlist.
  *
- * That last stretch was checked end to end against morencius, which turned out to be a VidHide
- * clone — it says so in its own player config — serving a jwplayer setup inside a Dean Edwards
- * packed script. The whole family packs the same way, so [unpackIfPacked] is written once and is
- * not host-specific.
+ * Most of the hosts are VidHide clones — morencius says so in its own player config — serving a
+ * jwplayer setup inside a Dean Edwards packed script. They all pack the same way, so
+ * [unpackIfPacked] is written once and is not host-specific: morencius, luluvdo, minochinos and
+ * audinifer were all confirmed playing without a line of code between them, and mxdrop joined them
+ * once the media pattern stopped insisting on a scheme.
  *
- * The servers seen while writing this were mivalyo, kravaxxa, listeamed, doodstream (d-s.io),
- * morencius and hgcloud; the set differs per entry and changes over time. Only morencius was
- * confirmed working. The others were not reachable from where this was written, so whether the
- * unpacker is enough for them is unknown rather than ruled out — d-s.io in particular is
- * doodstream, which hands its URL out over a separate request and will need a branch in [videos].
+ * Across a sample of sixteen entries the site offered seventeen different hosts and this resolved
+ * five of them, which covered every film tried and about a third of the series. What the rest need
+ * is not more parsing:
+ *
+ * - **voe** is the most offered host of all and sits behind a DDoS-Guard JS challenge. The app's
+ *   CloudflareInterceptor only recognises Cloudflare (it matches on the `Server` header), so this
+ *   is not something an extension can answer on its own.
+ * - **doodstream**, which is what playmogo, myvidplay and d-s.io all are, answers with a
+ *   Cloudflare Turnstile captcha rather than a player. Same problem, different vendor.
+ *
+ * Both may behave differently from a phone than from a datacenter address, since these are
+ * reputation checks — so they are worth retrying on a real device before being written off.
  */
 class ShahedProSource : AnimeHttpSource() {
 
@@ -77,12 +87,20 @@ class ShahedProSource : AnimeHttpSource() {
     override fun latestUpdatesParse(response: Response): AnimesPage = listingParse(response)
 
     override fun searchAnimeRequest(page: Int, query: String, filters: AnimeFilterList): Request {
-        // Built rather than concatenated: search terms are Arabic, and one containing `&` or `#`
-        // would otherwise end up as a second query parameter instead of part of the term.
-        val url = "$baseUrl/${pagePath(page)}".toHttpUrl().newBuilder()
-            .addQueryParameter("s", query.trim())
-            .build()
-        return GET(url.toString(), headers)
+        val term = query.trim()
+        if (term.isNotEmpty()) {
+            // Built rather than concatenated: search terms are Arabic, and one containing `&` or
+            // `#` would otherwise end up as a second query parameter instead of part of the term.
+            val url = "$baseUrl/${pagePath(page)}".toHttpUrl().newBuilder()
+                .addQueryParameter("s", term)
+                .build()
+            return GET(url.toString(), headers)
+        }
+
+        // No term: browse whatever the filters point at. The first one set wins — see getFilterList.
+        val path = filters.filterIsInstance<PathFilter>().firstNotNullOfOrNull { it.path }
+            ?: DEFAULT_PATH
+        return GET("$baseUrl/$path/${pagePath(page)}", headers)
     }
 
     override fun searchAnimeParse(response: Response): AnimesPage = listingParse(response)
@@ -127,6 +145,56 @@ class ShahedProSource : AnimeHttpSource() {
 
     private fun Element.pageNumber(): Int =
         PAGE_NUMBER.find(attr("href"))?.groupValues?.get(1)?.toIntOrNull() ?: 1
+
+    // ---------------------------------------------------------------- filters
+
+    /**
+     * Browsing by category.
+     *
+     * The site indexes everything under WordPress taxonomies — `genres/<name>`, `dtyear/<year>`,
+     * `dtnetworks/<service>`, `dtquality/<label>` — each of which is an ordinary listing page and
+     * parses with [listingParse] like any other.
+     *
+     * **They do not combine.** Asking for a genre and a year together returns the genre's listing
+     * and silently drops the year, whichever order they are given in, and putting a taxonomy on a
+     * section path (`movies/?genres=...`) drops the section the same way. So rather than build a
+     * request the site will quietly reinterpret, one filter is used and the rest are ignored: the
+     * first one set, reading down the list below. The header says so, because a filter that looks
+     * applied and is not is worse than one that is not offered.
+     *
+     * A typed search overrides all of it — the site's search takes no taxonomy.
+     */
+    override fun getFilterList() = AnimeFilterList(
+        AnimeFilter.Header("فلتر واحد فقط هو اللي بيشتغل: الأول من فوق"),
+        AnimeFilter.Header("والبحث بالاسم بيتجاهل الفلاتر كلها"),
+        GenreFilter(),
+        NetworkFilter(),
+        QualityFilter(),
+        YearFilter(),
+        SectionFilter(),
+    )
+
+    /**
+     * A one-of-many filter that stands for a path on the site.
+     *
+     * [path] is null for the "any" row, which is what lets [searchAnimeRequest] take the first
+     * filter somebody actually set.
+     */
+    private open class PathFilter(name: String, private val options: List<Pair<String, String>>) :
+        AnimeFilter.Select<String>(name, options.map { it.first }.toTypedArray()) {
+
+        val path: String? get() = options.getOrNull(state)?.second?.takeIf { it.isNotEmpty() }
+    }
+
+    private class GenreFilter : PathFilter("النوع", GENRES)
+
+    private class NetworkFilter : PathFilter("الشبكة", NETWORKS)
+
+    private class QualityFilter : PathFilter("الجودة", QUALITIES)
+
+    private class YearFilter : PathFilter("السنة", YEARS)
+
+    private class SectionFilter : PathFilter("القسم", SECTIONS)
 
     // ---------------------------------------------------------------- details
 
@@ -306,7 +374,9 @@ class ShahedProSource : AnimeHttpSource() {
         }
 
         return MEDIA_URL.findAll(page)
-            .map { it.groupValues[1] }
+            // A scheme-less `//host/...` is a real address to the page it came from and a broken
+            // one to the player, which is handed it out of context.
+            .map { it.groupValues[1].let { link -> if (link.startsWith("//")) "https:$link" else link } }
             .distinct()
             .map { link ->
                 Video(
@@ -369,9 +439,103 @@ class ShahedProSource : AnimeHttpSource() {
     private fun Response.asDocument(): Document = Jsoup.parse(body.string(), request.url.toString())
 
     companion object {
+        /**
+         * Where a listing with nothing selected goes.
+         *
+         * Not the site root: it serves a page of cards but has no pagination and answers 404 for
+         * `/page/2/`, so it is a dead end after the first screen.
+         */
+        private const val DEFAULT_PATH = "movies"
+
+        private val SECTIONS = listOf(
+            "أفلام" to "movies",
+            "مسلسلات" to "tvshows",
+            "مواسم" to "seasons",
+        )
+
+        // Taken from the site's own menu rather than invented; an unknown slug is a 404, not an
+        // empty listing.
+        private val GENRES = listOf(
+            "كل الأنواع" to "",
+            "أفلام اجنبي" to "genres/أفلام-اجنبي",
+            "أفلام اسيوية" to "genres/أفلام-اسيوية",
+            "أفلام تركية" to "genres/أفلام-تركية",
+            "أفلام عربية" to "genres/أفلام-عربية",
+            "أفلام هندية" to "genres/أفلام-هندية",
+            "أوبرا صابونية" to "genres/أوبرا-صابونية",
+            "إثارة" to "genres/إثارة",
+            "افلام ابيض واسود" to "genres/افلام-ابيض-واسود",
+            "افلام انمى" to "genres/افلام-انمى",
+            "افلام بدون ترجمة" to "genres/افلام-بدون-ترجمة",
+            "اكشن" to "genres/اكشن",
+            "برامج تلفزيونية" to "genres/برامج-تلفزيونية",
+            "برامج تليفزيونية" to "genres/برامج-تليفزيونية",
+            "تاريخ" to "genres/تاريخ",
+            "جريمة" to "genres/جريمة",
+            "حرب" to "genres/حرب",
+            "حرب وسياسة" to "genres/حرب-وسياسة",
+            "حركة" to "genres/حركة",
+            "حركة ومغامرة" to "genres/حركة-مغامرة",
+            "خيال علمي" to "genres/خيال-علمي",
+            "خيال علمي وفانتازيا" to "genres/خيال-علمي-فانتازيا",
+            "دراما" to "genres/دراما",
+            "رسوم متحركة" to "genres/رسوم-متحركة",
+            "رعب" to "genres/رعب",
+            "رومنسية" to "genres/رومنسية",
+            "رياضي" to "genres/رياضي",
+            "سيرة ذاتية" to "genres/سيرة-ذاتية",
+            "عائلي" to "genres/عائلي",
+            "عروض المصارعة الحرة" to "genres/عروض-المصارعة-الحرة",
+            "غربي" to "genres/غربي",
+            "غموض" to "genres/غموض",
+            "فانتازيا" to "genres/فانتازيا",
+            "فيلم تلفازي" to "genres/فيلم-تلفازي",
+            "كوميديا" to "genres/كوميديا",
+            "مسلسلات اجنبية" to "genres/مسلسلات-اجنبية",
+            "مسلسلات اسيوي" to "genres/مسلسلات-اسيوي",
+            "مسلسلات انمي" to "genres/مسلسلات-انمي",
+            "مسلسلات تركى" to "genres/مسلسلات-تركى",
+            "مسلسلات رمضان 2024" to "genres/مسلسلات-رمضان-2024",
+            "مسلسلات رمضان 2025" to "genres/مسلسلات-رمضان-2025",
+            "مسلسلات رمضان 2026" to "genres/مسلسلات-رمضان-2026",
+            "مسلسلات للكبار فقط" to "genres/مسلسلات-للكبار-فقط",
+            "مسلسلات هندى" to "genres/مسلسلات-هندى",
+            "مغامرة" to "genres/مغامرة",
+            "موسيقى" to "genres/موسيقى",
+            "واقع" to "genres/واقع",
+            "وثائقي" to "genres/وثائقي",
+        )
+
+        private val NETWORKS = listOf(
+            "كل الشبكات" to "",
+            "Netflix" to "dtnetworks/netflix",
+            "Disney" to "dtnetworks/disney",
+            "Hulu" to "dtnetworks/hulu",
+            "Prime Video" to "dtnetworks/prime-video",
+            "شاهد" to "dtnetworks/shahid",
+            "Vivamax" to "dtnetworks/vivamax",
+        )
+
+        private val QUALITIES = listOf(
+            "كل الجودات" to "",
+            "1080p WEB-DL" to "dtquality/1080p-web-dl",
+            "720p WEB-DL" to "dtquality/720p-web-dl",
+            "1080p BluRay" to "dtquality/1080p-bluray",
+        )
+
+        /**
+         * Counted back from today rather than written down, so the newest year is still on the
+         * list next January.
+         */
+        private val YEARS = listOf("كل السنوات" to "") +
+            (Calendar.getInstance().get(Calendar.YEAR) downTo 2010)
+                .map { "$it" to "dtyear/$it" }
+
         private val PAGE_NUMBER = Regex("""/page/(\d+)""")
         private val SEASON_ID = Regex("""ss(\d+)""")
-        private val MEDIA_URL = Regex("""(https?://[^"'\s\\<>]+\.(?:m3u8|mp4)[^"'\s\\<>]*)""")
+        // The scheme is optional because some players are handed `//host/file.mp4` — mxdrop is one
+        // — and a pattern that insists on http(s) silently finds nothing on those.
+        private val MEDIA_URL = Regex("""((?:https?:)?//[^"'\s\\<>]+\.(?:m3u8|mp4)[^"'\s\\<>]*)""")
         private val RESOLUTION = Regex("""(\d{3,4})[pP]""")
 
         private val PACKED = Regex(
