@@ -5,9 +5,9 @@ plugins {
 
 // These four are what the index generator and the APK name are built from.
 ext {
-    set("extName", "Example")
-    set("pkgNameSuffix", "ar.example")
-    set("extClass", ".ExampleSource")
+    set("extName", "ShahedPro")
+    set("pkgNameSuffix", "ar.shahedpro")
+    set("extClass", ".ShahedProSource")
     set("extVersionCode", 1)
 }
 
@@ -16,7 +16,7 @@ ext {
 val extLibVersion = "14.0"
 
 android {
-    namespace = "eu.kanade.tachiyomi.animeextension.ar.example"
+    namespace = "eu.kanade.tachiyomi.animeextension.ar.shahedpro"
     compileSdk = 35
 
     defaultConfig {
@@ -45,7 +45,7 @@ android {
 
         // What Animato and the store listing call this extension. Without it the loader falls back
         // to the APK's label, which falls back to the package name — so the extension shows up as
-        // "eu.kanade.tachiyomi.animeextension.ar.example" instead of its name.
+        // "eu.kanade.tachiyomi.animeextension.ar.shahedpro" instead of its name.
         manifestPlaceholders["extLabel"] = property("extName") as String
     }
 

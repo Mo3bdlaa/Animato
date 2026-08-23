@@ -28,7 +28,7 @@
         -->
         <meta-data
             android:name="tachiyomi.animeextension.class"
-            android:value=".ExampleSource" />
+            android:value=".ShahedProSource" />
 
         <!--
             Whether this source carries adult content. Animato hides NSFW sources by default and

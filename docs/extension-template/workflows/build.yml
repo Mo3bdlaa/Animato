@@ -12,6 +12,9 @@ on:
 permissions:
   contents: write
 
+env:
+  BUILD_TOOLS: "34.0.0"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,10 +35,18 @@ jobs:
       # The keystore is a repository secret, base64-encoded. It is never committed: a signing key
       # in a repository is a signing key everybody has, and the store records its fingerprint —
       # so losing control of it means every future update comes from whoever holds it.
+      #
+      # Checked rather than assumed, because a missing secret would otherwise decode to an empty
+      # file and fail several steps later as something that looks like a Gradle problem.
       - name: Restore the signing key
         env:
           KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE }}
-        run: echo "$KEYSTORE_B64" | base64 -d > signing.jks
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::SIGNING_KEYSTORE is not set. Animato refuses to load an unsigned extension, so there is nothing worth building — see README.md, 'Signing'."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > signing.jks
 
       - name: Build every extension
         env:
@@ -44,15 +55,33 @@ jobs:
           KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: ./gradlew assembleRelease
 
+      # An unsigned build does not fail — it leaves `*-release-unsigned.apk` behind, which this
+      # pattern deliberately does not match. Empty here means the signing config did not apply.
       - name: Collect the APKs
         run: |
           mkdir -p repo/apk
           find src -name "*-release.apk" -exec cp {} repo/apk/ \;
+          if [ -z "$(ls -A repo/apk)" ]; then
+            echo "::error::No signed release APKs were produced. assembleRelease leaves *-release-unsigned.apk when signing is not configured, and Animato will not load one — check the signing secrets."
+            exit 1
+          fi
+
+      # The loader checks for a signature before it looks at anything else, and an APK that fails
+      # this check is one nobody can install over an earlier release either.
+      - name: Check every APK is signed
+        run: |
+          APKSIGNER="$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner"
+          for apk in repo/apk/*.apk; do
+            if ! "$APKSIGNER" verify "$apk" > /dev/null 2>&1; then
+              echo "::error::$apk is not signed — Animato will refuse to load it."
+              exit 1
+            fi
+            echo "signed  $(basename "$apk")"
+          done
 
       - name: Build the index
         run: |
-          echo "$ANDROID_HOME/build-tools/34.0.0" >> "$GITHUB_PATH"
-          export PATH="$ANDROID_HOME/build-tools/34.0.0:$PATH"
+          export PATH="$ANDROID_HOME/build-tools/$BUILD_TOOLS:$PATH"
           python3 tools/build-index.py
 
       # A separate branch, so the repository's history stays source and the served files are one
