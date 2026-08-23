@@ -8,7 +8,7 @@ ext {
     set("extName", "ShahedPro")
     set("pkgNameSuffix", "ar.shahedpro")
     set("extClass", ".ShahedProSource")
-    set("extVersionCode", 2)
+    set("extVersionCode", 3)
 }
 
 // The extension API this source is written against, and — read the note on versionName — the only

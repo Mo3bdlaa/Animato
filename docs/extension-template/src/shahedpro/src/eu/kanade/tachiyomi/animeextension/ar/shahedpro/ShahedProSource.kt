@@ -16,7 +16,10 @@ import okhttp3.Response
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.Calendar
+import javax.net.ssl.SSLException
 
 /**
  * shahedpro.com — a WordPress site with a theme of its own, serving films and series.
@@ -312,11 +315,39 @@ class ShahedProSource : AnimeHttpSource() {
         val document = response.asDocument()
         val watchUrl = response.request.url.toString()
 
-        return document.select("button.wSrvBtn[data-enc]")
-            .mapNotNull { it.toServerOrNull() }
-            // One host being down, blocked or rewritten should cost its own entry and no more. The
-            // others are still playable, and letting it throw here would lose all of them.
-            .flatMap { server -> runCatching { server.videos(watchUrl) }.getOrDefault(emptyList()) }
+        val servers = document.select("button.wSrvBtn[data-enc]").mapNotNull { it.toServerOrNull() }
+        if (servers.isEmpty()) {
+            throw Exception("لا يوجد أي سيرفر في صفحة المشاهدة — غالباً تغيّر شكل الموقع")
+        }
+
+        // One host being down, blocked or rewritten costs its own entry and no more: the others
+        // are still playable. But what happened to it is kept, because the alternative — an empty
+        // list — reaches the player as "the source has no video", which blames the wrong thing and
+        // says nothing about which of DNS, a 403 or a changed page is the actual problem.
+        val outcomes = mutableListOf<String>()
+        val videos = servers.flatMap { server ->
+            val attempt = runCatching { server.videos(watchUrl) }
+            val found = attempt.getOrDefault(emptyList())
+            outcomes += when {
+                attempt.isFailure -> "${server.label}: ${attempt.exceptionOrNull()!!.describe()}"
+                found.isEmpty() -> "${server.label}: فتحت الصفحة ولم أجد رابطاً"
+                else -> "${server.label}: ${found.size}"
+            }
+            found
+        }
+
+        if (videos.isEmpty()) {
+            throw Exception("${servers.size} سيرفر ولا رابط صالح — ${outcomes.joinToString("، ")}")
+        }
+        return videos
+    }
+
+    /** Short enough to fit in a player error, specific enough to act on. */
+    private fun Throwable.describe(): String = when (this) {
+        is UnknownHostException -> "اسم الموقع لا يُترجم (حجب DNS غالباً)"
+        is SocketTimeoutException -> "انتهت المهلة"
+        is SSLException -> "فشل الاتصال المشفّر"
+        else -> message?.takeIf { it.isNotBlank() }?.take(80) ?: javaClass.simpleName
     }
 
     /** `label` rather than `name`, which on a source already means the source's own name. */
@@ -360,7 +391,9 @@ class ShahedProSource : AnimeHttpSource() {
             .build()
 
         val body = client.newCall(GET(embedUrl, embedHeaders)).execute().use { response ->
-            if (!response.isSuccessful) return emptyList()
+            // Thrown rather than swallowed so the code reaches the message in videoListParse: a
+            // 403 here is a captcha or a challenge, which is a different problem from a 404.
+            if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
             response.body.string()
         }
         val page = unpackIfPacked(body)
