@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        This declaration is what makes the APK an extension.
+
+        Animato's loader scans installed packages for it and ignores everything else - the package
+        name is only a convention, the feature is the actual filter. See
+        AnimeExtensionLoader.EXTENSION_FEATURE.
+    -->
+    <uses-feature
+        android:name="tachiyomi.animeextension"
+        android:required="true" />
+
+    <application android:allowBackup="false">
+
+        <!--
+            Where the source class is, relative to the package when it starts with a dot.
+
+            Use `tachiyomi.animeextension.factory` instead of `.class` if one APK should provide
+            several sources - it then points at a class implementing AnimeSourceFactory.
+        -->
+        <meta-data
+            android:name="tachiyomi.animeextension.class"
+            android:value=".ExampleSource" />
+
+        <!--
+            Whether this source carries adult content. Animato hides NSFW sources by default and
+            marks them incognito, so answering honestly is what makes those settings work.
+        -->
+        <meta-data
+            android:name="tachiyomi.animeextension.nsfw"
+            android:value="0" />
+
+        <!--
+            The API version this was built against. Animato accepts 14 and 16; the published stubs
+            are 14. A number outside that list means the extension is skipped silently.
+        -->
+        <meta-data
+            android:name="tachiyomi.animeextension.lib"
+            android:value="14" />
+
+    </application>
+</manifest>

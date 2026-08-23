@@ -1,0 +1,71 @@
+name: Build extensions
+
+# Copy this file to .github/workflows/build.yml once this directory is a repository of its own.
+# It lives under workflows/ here because GitHub only reads .github/workflows at a repository root,
+# and this template sits inside Animato.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # The keystore is a repository secret, base64-encoded. It is never committed: a signing key
+      # in a repository is a signing key everybody has, and the store records its fingerprint —
+      # so losing control of it means every future update comes from whoever holds it.
+      - name: Restore the signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE }}
+        run: echo "$KEYSTORE_B64" | base64 -d > signing.jks
+
+      - name: Build every extension
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Collect the APKs
+        run: |
+          mkdir -p repo/apk
+          find src -name "*-release.apk" -exec cp {} repo/apk/ \;
+
+      - name: Build the index
+        run: |
+          echo "$ANDROID_HOME/build-tools/34.0.0" >> "$GITHUB_PATH"
+          export PATH="$ANDROID_HOME/build-tools/34.0.0:$PATH"
+          python3 tools/build-index.py
+
+      # A separate branch, so the repository's history stays source and the served files are one
+      # place that can be replaced wholesale. It is also what makes the raw.githubusercontent URL
+      # in the README stable.
+      - name: Publish to the repo branch
+        run: |
+          git config user.name  'github-actions'
+          git config user.email 'github-actions@users.noreply.github.com'
+          git checkout --orphan repo-tmp
+          git rm -rf --cached . > /dev/null
+          git add -f repo/
+          git mv repo/* . 2>/dev/null || true
+          git commit -m "Extensions built from ${GITHUB_SHA::7}"
+          git branch -M repo-tmp repo
+          git push -f origin repo
