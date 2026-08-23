@@ -1,5 +1,6 @@
 package animato.app.library
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.content.EntryForm
@@ -10,18 +11,24 @@ import animato.domain.content.LibraryEntry
 import animato.domain.content.interactor.GetUnifiedLibrary
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
+import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import logcat.LogPriority
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.interactor.GetVisibleAnimeCategories
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 import tachiyomi.domain.track.repository.TrackRepository
+import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -237,17 +244,43 @@ class UnifiedLibraryScreenModel(
 
     fun markDoneUpToHere(entry: LibraryEntry) {
         closeQuickSheet()
-        viewModelScope.launch { quickActions.markDoneUpToHere(entry) }
+        runQuickAction { quickActions.markDoneUpToHere(entry) }
     }
 
     fun downloadNext(entry: LibraryEntry) {
         closeQuickSheet()
-        viewModelScope.launch { quickActions.downloadNext(entry, LibraryQuickActions.DOWNLOAD_BATCH) }
+        runQuickAction { quickActions.downloadNext(entry, LibraryQuickActions.DOWNLOAD_BATCH) }
     }
 
     fun remove(entry: LibraryEntry, deleteDownloads: Boolean) {
         closeQuickSheet()
-        viewModelScope.launch { quickActions.remove(entry, deleteDownloads) }
+        runQuickAction { quickActions.remove(entry, deleteDownloads) }
+    }
+
+    /**
+     * One of the sheet's actions, with somewhere for a failure to go.
+     *
+     * The sheet closes before any of them is attempted — which is right, they are instant as far as
+     * anybody watching is concerned, and a sheet that lingered while a query ran would be worse.
+     * But it does mean the close is the only feedback there is, so a failure looked exactly like a
+     * success. And none of these was caught: each is a database write, on a scope with no handler,
+     * so the failure was a crash rather than a message.
+     *
+     * A toast rather than a snackbar because this screen has no event channel, and adding one for
+     * three actions that almost never fail would be a lot of plumbing for a rare sentence.
+     */
+    private fun runQuickAction(block: suspend () -> Unit) {
+        viewModelScope.launch {
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                logcat(LogPriority.ERROR, e) { "A library quick action failed" }
+                val context = Injekt.get<Application>()
+                context.toast(context.stringResource(AYMR.strings.library_action_failed))
+            }
+        }
     }
 
     /** Tapping the chip you are already on goes back to All, the way a toggle does. */

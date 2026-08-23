@@ -482,6 +482,16 @@ class PlayerActivity : BaseActivity() {
     }
 
     /**
+     * Whether mpv is still there to be commanded.
+     *
+     * Resolving a stream is several round trips long, and the person can leave at any point in it.
+     * `onDestroy` calls `player.destroy()`, and a command issued into a destroyed handle is a
+     * native abort — the process goes down with no Kotlin stack and nothing to catch. So every
+     * command on a path that can outlive the screen asks first.
+     */
+    private fun playerIsGone(): Boolean = isFinishing || isDestroyed || player.isExiting
+
+    /**
      * Whether leaving this screen right now should shrink it rather than end it.
      *
      * One function rather than the same three-part condition written out at each of the four
@@ -660,8 +670,15 @@ class PlayerActivity : BaseActivity() {
     private fun copyFontsDirectory(mpvDir: UniFile) {
         // TODO: I think this is a bad hack.
         //  We need to find a way to let MPV directly access our fonts directory.
-        CoroutineScope(Dispatchers.IO).launchIO {
-            val fontsDirectory = mpvDir.createDirectory(MPV_FONTS_DIR)!!
+        // The activity's scope, and no assertions. `createDirectory` returns null when the custom
+        // storage location has gone or its permission was revoked — an ordinary thing on an SD card
+        // — and the NPE that produced landed in a coroutine nothing owned or cancelled. Without a
+        // fonts directory the player still plays; it just uses mpv's built-in font.
+        lifecycleScope.launchIO {
+            val fontsDirectory = mpvDir.createDirectory(MPV_FONTS_DIR) ?: run {
+                logcat(LogPriority.WARN) { "No fonts directory; subtitles will use the bundled font" }
+                return@launchIO
+            }
 
             storageManager.getFontsDirectory()?.listFiles()?.forEach { font ->
                 val outFile = fontsDirectory.createFile(font.name)
@@ -670,17 +687,27 @@ class PlayerActivity : BaseActivity() {
                 }
             }
 
-            MPVLib.setPropertyString("sub-fonts-dir", fontsDirectory.filePath!!)
-            MPVLib.setPropertyString("osd-fonts-dir", fontsDirectory.filePath!!)
+            val path = fontsDirectory.filePath ?: return@launchIO
+            if (playerIsGone()) return@launchIO
+            MPVLib.setPropertyString("sub-fonts-dir", path)
+            MPVLib.setPropertyString("osd-fonts-dir", path)
         }
     }
 
     fun setupCustomButtons(buttons: List<CustomButton>) {
-        CoroutineScope(Dispatchers.IO).launchIO {
+        lifecycleScope.launchIO {
             val scriptsDir = {
                 UniFile.fromFile(applicationContext.filesDir)
                     ?.createDirectory(MPV_DIR)
                     ?.createDirectory(MPV_SCRIPTS_DIR)
+            }
+
+            // Asserted below when building the Lua path, on the same null-returning call as the
+            // fonts directory above. Nothing to write the script into means no custom buttons,
+            // which is what somebody with unreadable storage has either way.
+            val scriptsPath = scriptsDir()?.filePath ?: run {
+                logcat(LogPriority.WARN) { "No scripts directory; custom buttons are unavailable" }
+                return@launchIO
             }
 
             val primaryButtonId = viewModel.primaryButton.value?.id ?: 0L
@@ -690,7 +717,7 @@ class PlayerActivity : BaseActivity() {
                     """
                         local lua_modules = mp.find_config_file('scripts')
                         if lua_modules then
-                            package.path = package.path .. ';' .. lua_modules .. '/?.lua;' .. lua_modules .. '/?/init.lua;' .. '${scriptsDir()!!.filePath}' .. '/?.lua'
+                            package.path = package.path .. ';' .. lua_modules .. '/?.lua;' .. lua_modules .. '/?/init.lua;' .. '$scriptsPath' .. '/?.lua'
                         end
                         local aniyomi = require 'aniyomi'
                     """.trimIndent(),
@@ -957,7 +984,19 @@ class PlayerActivity : BaseActivity() {
         if (player.isExiting) return
         when (eventId) {
             MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
-                viewModel.viewModelScope.launchIO { fileLoaded() }
+                /*
+                 * On the main thread, and guarded.
+                 *
+                 * `fileLoaded` sets `requestedOrientation` and resolves string resources, both of
+                 * which are the activity's and neither of which is safe from `Dispatchers.IO` —
+                 * this was assigning an Activity property from a background thread on every file
+                 * load. It has no try of its own either, and it is reached from an mpv callback,
+                 * so anything it threw was uncaught.
+                 */
+                viewModel.viewModelScope.launch {
+                    runCatching { fileLoaded() }
+                        .onFailure { logcat(LogPriority.ERROR, it) { "Failed to finish loading the file" } }
+                }
             }
             MPVLib.mpvEventId.MPV_EVENT_SEEK -> viewModel.isLoading.update { true }
             MPVLib.mpvEventId.MPV_EVENT_PLAYBACK_RESTART -> player.isExiting = false
@@ -1324,7 +1363,16 @@ class PlayerActivity : BaseActivity() {
                     video.videoUrl.endsWith("torrent")
                 )
         ) {
-            launchIO {
+            /*
+             * The activity's scope, not the process's.
+             *
+             * `PlayerActivity` is not a `CoroutineScope`, so a bare `launchIO` here resolved to the
+             * top-level one — which is `GlobalScope`, and nothing cancels it. Backing out while a
+             * stream was still resolving left this running: it went on to hand commands to an mpv
+             * handle `onDestroy` had already destroyed, which is a native abort rather than an
+             * exception anything could catch.
+             */
+            lifecycleScope.launchIO {
                 // Nothing is fetched and nothing is shared until this has been answered.
                 if (!acknowledgeTorrentNotice()) return@launchIO
                 // A native start fails for ordinary reasons — the port is taken, the library will
@@ -1371,11 +1419,16 @@ class PlayerActivity : BaseActivity() {
                 }
             }
         } else {
-            launchIO {
+            lifecycleScope.launchIO {
                 val httpSource = viewModel.currentSource.value as? AnimeHttpSource
                 var videoUrl: String = video.videoUrl
                 if (video.usesHttpServer() && httpSource != null) {
                     val port = try {
+                        // Checked here as well as by the scope: cancellation is delivered at the
+                        // next suspension point, and these two lines are not one. A server started
+                        // after `onDestroy` stopped and nulled the field holds its port for the
+                        // rest of the process.
+                        if (isFinishing || isDestroyed) return@launchIO
                         httpServer = httpSource.createHttpServer()
                         httpServer?.start()
                         httpServer?.listeningPort ?: 0
@@ -1392,6 +1445,7 @@ class PlayerActivity : BaseActivity() {
                     viewModel.updateVideo(newVideo)
                 }
 
+                if (playerIsGone()) return@launchIO
                 MPVLib.command(
                     arrayOf(
                         "loadfile",
@@ -1470,9 +1524,17 @@ class PlayerActivity : BaseActivity() {
         // check if link is from localSource
         if (videoUrl.startsWith("content://")) {
             val videoInputStream = applicationContext.contentResolver.openInputStream(videoUrl.toUri())
-            val torrent = torrentServerApi.uploadTorrent(videoInputStream!!, title, false)
+            // The stream is null for a content URI whose grant has been revoked, which the caller
+            // reports as "the torrent could not be opened" — a wrong sentence for a right refusal,
+            // but a refusal rather than an NPE.
+            val torrent = torrentServerApi.uploadTorrent(
+                videoInputStream ?: error("Could not read $videoUrl"),
+                title,
+                false,
+            )
             val torrentUrl = torrentServerUtils.getTorrentPlayLink(torrent, 0)
 
+            if (playerIsGone()) return
             MPVLib.command(
                 arrayOf(
                     "loadfile",
@@ -1501,6 +1563,7 @@ class PlayerActivity : BaseActivity() {
 
         watchTorrentProgress(currentTorrent.hash.orEmpty())
 
+        if (playerIsGone()) return
         MPVLib.command(
             arrayOf(
                 "loadfile",

@@ -2011,16 +2011,27 @@ class PlayerViewModel @JvmOverloads constructor(
         if (getCurrentEpisodeIndex() == currentPlaylist.value.lastIndex) return
         val currentEpisode = currentEpisode.value ?: return
 
-        val nextEpisode = currentPlaylist.value[getCurrentEpisodeIndex() + 1]
-        val episodesAreDownloaded =
-            EpisodeLoader.isDownload(currentEpisode.toDomainEpisode()!!, anime) &&
-                EpisodeLoader.isDownload(nextEpisode.toDomainEpisode()!!, anime)
+        val nextEpisode = currentPlaylist.value.getOrNull(getCurrentEpisodeIndex() + 1) ?: return
+        val nextEpisodeId = nextEpisode.id ?: return
+        val current = currentEpisode.toDomainEpisode() ?: return
+        val next = nextEpisode.toDomainEpisode() ?: return
 
+        /*
+         * The download check belongs inside the coroutine, and used to sit above it.
+         *
+         * `EpisodeLoader.isDownload` passes `skipCache = true`, so each call is a real filesystem
+         * or SAF lookup — and this method is reached from the `time-pos` observer, which is
+         * delivered on the UI thread. That was two storage lookups per second on the main thread
+         * for the last two thirds of every episode: not a crash, but the stutter and the dropped
+         * gestures people notice late in a long episode.
+         */
         viewModelScope.launchIO {
+            val episodesAreDownloaded =
+                EpisodeLoader.isDownload(current, anime) && EpisodeLoader.isDownload(next, anime)
             if (!episodesAreDownloaded) {
                 return@launchIO
             }
-            val episodesToDownload = getNextEpisodes.await(anime.id, nextEpisode.id!!)
+            val episodesToDownload = getNextEpisodes.await(anime.id, nextEpisodeId)
                 .take(downloadAheadAmount)
             downloadManager.downloadEpisodes(anime, episodesToDownload)
         }

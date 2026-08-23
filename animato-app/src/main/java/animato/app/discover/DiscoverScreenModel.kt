@@ -198,9 +198,18 @@ class DiscoverScreenModel(
      * excluded, since suggesting something already on the shelf is the one way this can be useless.
      */
     private suspend fun suggestionsFor(contentType: ContentType): List<MetadataItem> {
-        val titles = when (contentType) {
-            ContentType.MANGA -> getLibraryManga.await().map { it.manga.title }
-            ContentType.ANIME -> getLibraryAnime.await().map { it.anime.title }
+        // The one unguarded call in a class whose own note says nothing on it may throw — the two
+        // catalogue calls below and the cache read are all internally wrapped, and this was not.
+        // Suggestions are seeded from the library, so a database failure here crashed a screen
+        // that loads on its own without anybody asking for anything.
+        val titles = runCatching {
+            when (contentType) {
+                ContentType.MANGA -> getLibraryManga.await().map { it.manga.title }
+                ContentType.ANIME -> getLibraryAnime.await().map { it.anime.title }
+            }
+        }.getOrElse {
+            logcat(LogPriority.WARN, it) { "Could not read the library to seed suggestions" }
+            return emptyList()
         }
         if (titles.isEmpty()) return emptyList()
         return metadataCatalog.suggestions(

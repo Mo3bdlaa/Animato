@@ -60,8 +60,13 @@ class AniSkipApi {
         } catch (_: Exception) {
             return 0
         }
-        return response.body.string().substringAfter("idMal\":").substringBefore("}")
-            .toLongOrNull() ?: 0
+        // Inside the guard too: the body is read over the network, so a connection reset partway
+        // through it throws here — outside the try that was written for exactly this call, and out
+        // of the coroutine that loads a file. Zero means "no id", which is what a failure is.
+        return runCatching {
+            response.body.string().substringAfter("idMal\":").substringBefore("}")
+                .toLongOrNull() ?: 0
+        }.getOrDefault(0)
     }
 }
 

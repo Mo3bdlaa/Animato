@@ -60,6 +60,7 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.player.components.OutlinedNumericChooser
 import eu.kanade.tachiyomi.ui.player.controls.CARDS_MAX_WIDTH
 import eu.kanade.tachiyomi.ui.player.controls.panelCardsColors
+import eu.kanade.tachiyomi.ui.player.mpvDouble
 import eu.kanade.tachiyomi.ui.player.settings.SubtitlePreferences
 import `is`.xyz.mpv.MPVLib
 import kotlinx.coroutines.delay
@@ -87,11 +88,11 @@ fun SubtitleDelayPanel(
         val delayControlCard = createRef()
 
         var affectedSubtitle by remember { mutableStateOf(SubtitleDelayType.Primary) }
-        var delay by remember { mutableIntStateOf((MPVLib.getPropertyDouble("sub-delay") * 1000).roundToInt()) }
+        var delay by remember { mutableIntStateOf((mpvDouble("sub-delay", 0.0) * 1000).roundToInt()) }
         var secondaryDelay by remember {
-            mutableIntStateOf((MPVLib.getPropertyDouble("secondary-sub-delay") * 1000).roundToInt())
+            mutableIntStateOf((mpvDouble("secondary-sub-delay", 0.0) * 1000).roundToInt())
         }
-        var speed by remember { mutableFloatStateOf(MPVLib.getPropertyDouble("sub-speed").toFloat()) }
+        var speed by remember { mutableFloatStateOf(mpvDouble("sub-speed", 1.0).toFloat()) }
         LaunchedEffect(speed) {
             if (speed in 0.1f..1f) MPVLib.setPropertyDouble("sub-speed", speed.toDouble())
         }
@@ -116,7 +117,7 @@ fun SubtitleDelayPanel(
                     if (affectedSubtitle == SubtitleDelayType.Both) "sub-delay" else "secondary-sub-delay",
                 ) * 1000
                 ).toInt()
-            delay = (MPVLib.getPropertyDouble("sub-delay") * 1000).toInt()
+            delay = (mpvDouble("sub-delay", 0.0) * 1000).toInt()
         }
         SubtitleDelayCard(
             delay = if (affectedSubtitle == SubtitleDelayType.Secondary) secondaryDelay else delay,

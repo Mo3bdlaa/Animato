@@ -164,6 +164,25 @@ class AnimeLibraryUpdateNotifier(
     }
 
     /**
+     * The run itself failed, as opposed to some of the entries in it.
+     *
+     * [showUpdateErrorNotification] only fires when there are per-anime failures to list, so a run
+     * that died before it had any — a bad category preference, storage gone, the database refusing
+     * — produced nothing at all: the progress notification simply disappeared and the library was
+     * silently a day older than it looked.
+     */
+    fun showRunFailedNotification() {
+        context.notify(
+            Notifications.ID_LIBRARY_ERROR,
+            Notifications.CHANNEL_LIBRARY_ERROR,
+        ) {
+            setContentTitle(context.stringResource(AYMR.strings.notification_library_update_failed))
+            setSmallIcon(AnimeR.drawable.ic_animato_notification)
+            setAutoCancel(true)
+        }
+    }
+
+    /**
      * Shows notification containing update entries that failed with action to open full log.
      *
      * @param failed Number of entries that failed to update.

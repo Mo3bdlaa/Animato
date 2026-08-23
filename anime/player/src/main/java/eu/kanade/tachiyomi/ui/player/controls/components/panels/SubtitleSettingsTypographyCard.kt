@@ -67,6 +67,9 @@ import eu.kanade.presentation.player.components.ExposedTextDropDownMenu
 import eu.kanade.presentation.player.components.SliderItem
 import eu.kanade.tachiyomi.ui.player.controls.CARDS_MAX_WIDTH
 import eu.kanade.tachiyomi.ui.player.controls.panelCardsColors
+import eu.kanade.tachiyomi.ui.player.mpvBoolean
+import eu.kanade.tachiyomi.ui.player.mpvInt
+import eu.kanade.tachiyomi.ui.player.mpvString
 import eu.kanade.tachiyomi.ui.player.settings.SubtitleJustification
 import eu.kanade.tachiyomi.ui.player.settings.SubtitlePreferences
 import `is`.xyz.mpv.MPVLib
@@ -132,32 +135,34 @@ fun SubtitleSettingsTypographyCard(
         colors = panelCardsColors(),
     ) {
         Column {
-            var isBold by remember { mutableStateOf(MPVLib.getPropertyBoolean("sub-bold")) }
-            var isItalic by remember { mutableStateOf(MPVLib.getPropertyBoolean("sub-italic")) }
+            var isBold by remember { mutableStateOf(mpvBoolean("sub-bold", false)) }
+            var isItalic by remember { mutableStateOf(mpvBoolean("sub-italic", false)) }
             var justify by remember {
                 mutableStateOf(
-                    SubtitleJustification.entries.first {
-                        it.value == MPVLib.getPropertyString("sub-justify")
-                    },
+                    SubtitleJustification.entries.firstOrNull {
+                        it.value == mpvString("sub-justify", "auto")
+                    } ?: SubtitleJustification.Auto,
                 )
             }
-            var font by remember { mutableStateOf(MPVLib.getPropertyString("sub-font")) }
+            var font by remember { mutableStateOf(mpvString("sub-font", "sans-serif")) }
             var fontSize by remember {
-                mutableStateOf(MPVLib.getPropertyInt("sub-font-size"))
+                mutableStateOf(mpvInt("sub-font-size", 55))
             }
             var borderStyle by remember {
                 mutableStateOf(
-                    SubtitlesBorderStyle.entries.first { it.value == MPVLib.getPropertyString("sub-border-style") },
+                    SubtitlesBorderStyle.entries.firstOrNull {
+                        it.value == mpvString("sub-border-style", "outline-and-shadow")
+                    } ?: SubtitlesBorderStyle.OutlineAndShadow,
                 )
             }
             var borderSize by remember {
                 mutableStateOf(
-                    MPVLib.getPropertyInt("sub-border-size"),
+                    mpvInt("sub-border-size", 3),
                 )
             }
             var shadowOffset by remember {
                 mutableStateOf(
-                    MPVLib.getPropertyInt("sub-shadow-offset"),
+                    mpvInt("sub-shadow-offset", 0),
                 )
             }
             Row(
@@ -216,16 +221,20 @@ fun SubtitleSettingsTypographyCard(
                 Spacer(Modifier.weight(1f))
                 TextButton(onClick = {
                     resetTypography(preferences)
-                    isBold = MPVLib.getPropertyBoolean("sub-bold")
-                    isItalic = MPVLib.getPropertyBoolean("sub-italic")
+                    isBold = mpvBoolean("sub-bold", false)
+                    isItalic = mpvBoolean("sub-italic", false)
                     justify =
-                        SubtitleJustification.entries.first { it.value == MPVLib.getPropertyString("sub-justify") }
-                    font = MPVLib.getPropertyString("sub-font")
-                    fontSize = MPVLib.getPropertyInt("sub-font-size")
+                        SubtitleJustification.entries.firstOrNull {
+                            it.value == mpvString("sub-justify", "auto")
+                        } ?: SubtitleJustification.Auto
+                    font = mpvString("sub-font", "sans-serif")
+                    fontSize = mpvInt("sub-font-size", 55)
                     borderStyle =
-                        SubtitlesBorderStyle.entries.first { it.value == MPVLib.getPropertyString("sub-border-style") }
-                    borderSize = MPVLib.getPropertyInt("sub-border-size")
-                    shadowOffset = MPVLib.getPropertyInt("sub-shadow-offset")
+                        SubtitlesBorderStyle.entries.firstOrNull {
+                            it.value == mpvString("sub-border-style", "outline-and-shadow")
+                        } ?: SubtitlesBorderStyle.OutlineAndShadow
+                    borderSize = mpvInt("sub-border-size", 3)
+                    shadowOffset = mpvInt("sub-shadow-offset", 0)
                 }) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),

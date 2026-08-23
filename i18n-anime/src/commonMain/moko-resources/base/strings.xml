@@ -851,6 +851,8 @@
     <string name="extensions_none_available">No extensions on offer — check your repositories, or turn on more languages</string>
     <string name="action_browse_available">Browse available</string>
     <string name="tracker_delete_failed">Removed here, but %1$s could not be reached — the entry is still on their site</string>
+    <string name="notification_library_update_failed">The library update could not run</string>
+    <string name="library_action_failed">That did not work — nothing was changed</string>
     <string name="recovery_title">Animato did not start</string>
     <string name="recovery_body">The last two attempts to open the app ended in a crash before it finished loading. Checking whether a newer version fixes it.</string>
     <string name="recovery_checking">Checking for a newer version…</string>

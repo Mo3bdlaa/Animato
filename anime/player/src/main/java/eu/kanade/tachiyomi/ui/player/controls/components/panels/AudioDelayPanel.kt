@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import eu.kanade.tachiyomi.ui.player.mpvDouble
 import eu.kanade.tachiyomi.ui.player.settings.AudioPreferences
 import `is`.xyz.mpv.MPVLib
 import tachiyomi.i18n.aniyomi.AYMR
@@ -61,7 +62,7 @@ fun AudioDelayPanel(
     ) {
         val delayControlCard = createRef()
 
-        var delay by remember { mutableIntStateOf((MPVLib.getPropertyDouble("audio-delay") * 1000).toInt()) }
+        var delay by remember { mutableIntStateOf((mpvDouble("audio-delay", 0.0) * 1000).toInt()) }
         LaunchedEffect(delay) {
             MPVLib.setPropertyDouble("audio-delay", delay / 1000.0)
         }

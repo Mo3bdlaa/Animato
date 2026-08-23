@@ -45,6 +45,9 @@ import eu.kanade.presentation.player.components.SwitchPreference
 import eu.kanade.tachiyomi.ui.player.controls.CARDS_MAX_WIDTH
 import eu.kanade.tachiyomi.ui.player.controls.components.sheets.toFixed
 import eu.kanade.tachiyomi.ui.player.controls.panelCardsColors
+import eu.kanade.tachiyomi.ui.player.mpvDouble
+import eu.kanade.tachiyomi.ui.player.mpvInt
+import eu.kanade.tachiyomi.ui.player.mpvString
 import eu.kanade.tachiyomi.ui.player.settings.SubtitlePreferences
 import `is`.xyz.mpv.MPVLib
 import tachiyomi.i18n.MR
@@ -72,7 +75,7 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
     ) {
         Column {
             var overrideAssSubs by remember {
-                mutableStateOf(MPVLib.getPropertyString("sub-ass-override").also { println(it) } == "force")
+                mutableStateOf(mpvString("sub-ass-override", "scale").also { println(it) } == "force")
             }
             SwitchPreference(
                 overrideAssSubs,
@@ -86,10 +89,10 @@ fun SubtitlesMiscellaneousCard(modifier: Modifier = Modifier) {
                     .fillMaxWidth(),
             )
             var subScale by remember {
-                mutableStateOf(MPVLib.getPropertyDouble("sub-scale").toFloat())
+                mutableStateOf(mpvDouble("sub-scale", 1.0).toFloat())
             }
             var subPos by remember {
-                mutableStateOf(MPVLib.getPropertyInt("sub-pos"))
+                mutableStateOf(mpvInt("sub-pos", 100))
             }
             SliderItem(
                 label = stringResource(AYMR.strings.player_sheets_sub_scale),

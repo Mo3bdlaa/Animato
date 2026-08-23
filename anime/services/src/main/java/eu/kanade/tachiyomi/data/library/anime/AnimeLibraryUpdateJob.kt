@@ -115,10 +115,14 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
         val startedAt = Instant.now().toEpochMilli()
 
         val categoryId = inputData.getLong(KEY_CATEGORY, -1L)
-        addAnimeToQueue(categoryId)
 
         return withIOContext {
             try {
+                // Inside the try, where it always belonged. Building the queue reads the category
+                // preferences and turns a persisted string set into longs, so anything malformed
+                // in there threw straight out of doWork — WorkManager recorded a failure, the
+                // progress notification vanished, and that was the whole of what anybody saw.
+                addAnimeToQueue(categoryId)
                 updateEpisodeList()
                 libraryPreferences.lastUpdatedTimestamp.set(startedAt)
                 Result.success()
@@ -128,6 +132,10 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
                     Result.success()
                 } else {
                     logcat(LogPriority.ERROR, e)
+                    // Said out loud. A run that fails before it has any per-anime errors to list
+                    // produced no notification of any kind, so the only sign was the progress
+                    // notification vanishing — indistinguishable from it having finished.
+                    notifier.showRunFailedNotification()
                     Result.failure()
                 }
             } finally {

@@ -170,8 +170,12 @@ class EpisodeOptionsDialogScreenModel(
         val hasFoundPreferredVideo = AtomicBoolean(false)
 
         viewModelScope.launchIO {
-            val episode = Injekt.get<GetEpisode>().await(episodeId)!!
-            val anime = Injekt.get<GetAnime>().await(animeId)!!
+            // Two database rows, asserted — while the source call twenty lines down is carefully
+            // wrapped. Either row can be gone by the time this opens: removed from another screen,
+            // replaced by a migration, cleared by a restore still running. That was an NPE on a
+            // scope with no handler, which is a crash rather than a dialog that declines to open.
+            val episode = Injekt.get<GetEpisode>().await(episodeId) ?: return@launchIO
+            val anime = Injekt.get<GetAnime>().await(animeId) ?: return@launchIO
             val source = sourceManager.getOrStub(sourceId)
 
             _episode.update { _ -> episode }

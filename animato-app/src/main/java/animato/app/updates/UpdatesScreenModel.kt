@@ -13,12 +13,14 @@ import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.chapter.interactor.GetChapter
 import tachiyomi.domain.entries.anime.interactor.GetAnime
@@ -28,6 +30,7 @@ import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.updates.anime.interactor.GetAnimeUpdates
 import tachiyomi.domain.updates.interactor.GetUpdates
+import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
@@ -228,27 +231,41 @@ class UpdatesScreenModel(
     /**
      * Queue this row's chapter or episode.
      *
-     * A source that is not installed is skipped rather than reported: the row is still listed
-     * because the item is in the database, but nothing can fetch it, and a download that silently
-     * never starts is worse than one that never queues.
+     * A source that is not installed is refused *and said so*. The row is still listed because the
+     * item is in the database, but nothing can fetch it — and the previous version of this note
+     * argued that skipping silently was acceptable, which it was not: the button was there, it did
+     * nothing, and it said nothing. A download that never starts is only better than one that
+     * never queues if somebody is told which happened.
      */
     fun download(item: UpdateItem) {
         viewModelScope.launchNonCancellable {
             when (item.contentType) {
+                /*
+                 * Still refuses without a source — unlike deleting, downloading genuinely needs
+                 * something to fetch from and a stub has nothing. What is new is saying so: the
+                 * row stays listed after its extension is uninstalled, so the button was there,
+                 * did nothing, said nothing and logged nothing.
+                 */
                 ContentType.MANGA -> {
                     val manga = getManga.await(item.entryId) ?: return@launchNonCancellable
-                    sourceManager.get(manga.source) ?: return@launchNonCancellable
+                    sourceManager.get(manga.source) ?: return@launchNonCancellable reportSourceMissing()
                     val chapter = getChapter.await(item.itemId) ?: return@launchNonCancellable
                     downloadManager.downloadChapters(manga, listOf(chapter))
                 }
                 ContentType.ANIME -> {
                     val anime = getAnime.await(item.entryId) ?: return@launchNonCancellable
-                    animeSourceManager.get(anime.source) ?: return@launchNonCancellable
+                    animeSourceManager.get(anime.source) ?: return@launchNonCancellable reportSourceMissing()
                     val episode = getEpisode.await(item.itemId) ?: return@launchNonCancellable
                     animeDownloadManager.downloadEpisodes(anime, listOf(episode))
                 }
             }
         }
+    }
+
+    /** Why the button did nothing, which it used to keep to itself. */
+    private fun reportSourceMissing() {
+        val context = Injekt.get<Application>()
+        context.toast(context.stringResource(AYMR.strings.failure_source_missing))
     }
 
     private companion object {
