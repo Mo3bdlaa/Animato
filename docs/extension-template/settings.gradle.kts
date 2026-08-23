@@ -21,3 +21,4 @@ rootProject.name = "animato-extensions"
 
 // One module per source. Add a line for each new one.
 include(":src:example")
+include(":src:shahedpro")

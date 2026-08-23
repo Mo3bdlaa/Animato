@@ -9,6 +9,18 @@ here compiles with the app. Copy it out into a repository of its own.
 
 ---
 
+**Start with [GUIDE.md](GUIDE.md)** — it walks the whole thing through, including doing it from
+a phone with no computer involved. This file is the reference for what is in the directory.
+
+## What's here
+
+| | |
+|---|---|
+| `src/example/` | the skeleton, with a worked-through shape for each method and notes on what belongs in it |
+| `src/shahedpro/` | an empty copy, named and wired up, with every method still a `TODO` |
+| `tools/build-index.py` | builds `index.min.json` from the APKs CI produced |
+| `workflows/build.yml` | build, sign, publish to the `repo` branch |
+
 ## What an extension is
 
 An APK, installed on the device like any other app. Animato scans installed packages, finds the
