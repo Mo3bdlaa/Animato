@@ -28,19 +28,22 @@ import org.jsoup.nodes.Element
  * The player is not on the entry's page. Every film and episode has a `watch/` child page, and that
  * is where the servers are.
  *
- * ## The part that is finished, and the part that is not
+ * ## How far this gets, and what is left
  *
- * Everything down to [videoListParse] is written against the site's real markup and works. What
- * [videoListParse] produces is the *server list* — the embed URLs the site would put in its iframe,
- * base64-encoded in the page.
+ * The listing, details and episode parsing is written against the site's real markup. The video
+ * path goes: episode page -> its `watch/` child -> the servers, base64-encoded in `data-enc` ->
+ * fetch the embed -> unpack -> the HLS playlist.
  *
- * Turning one of those into something the player can open is what is left, and it is not one
- * problem but one per host. The servers seen while writing this were mivalyo, kravaxxa, listeamed,
- * doodstream (d-s.io), morencius and hgcloud; the set differs per entry and changes over time. Each
- * hides the real URL behind its own obfuscated script, so each needs its own extractor, written by
- * opening the embed in a desktop browser with the network tab recording and finding the last
- * request before the video starts. [genericVideos] handles only the case where the link is in the
- * page verbatim, which is the minority of them.
+ * That last stretch was checked end to end against morencius, which turned out to be a VidHide
+ * clone — it says so in its own player config — serving a jwplayer setup inside a Dean Edwards
+ * packed script. The whole family packs the same way, so [unpackIfPacked] is written once and is
+ * not host-specific.
+ *
+ * The servers seen while writing this were mivalyo, kravaxxa, listeamed, doodstream (d-s.io),
+ * morencius and hgcloud; the set differs per entry and changes over time. Only morencius was
+ * confirmed working. The others were not reachable from where this was written, so whether the
+ * unpacker is enough for them is unknown rather than ruled out — d-s.io in particular is
+ * doodstream, which hands its URL out over a separate request and will need a branch in [videos].
  */
 class ShahedProSource : AnimeHttpSource() {
 
@@ -266,25 +269,33 @@ class ShahedProSource : AnimeHttpSource() {
         runCatching { String(Base64.decode(value, Base64.DEFAULT)) }.getOrNull()
 
     private fun Server.videos(watchUrl: String): List<Video> {
-        // Host-specific extractors belong here, dispatched on this server's host. Until one exists
-        // for a host, what runs is the scan below — which finds nothing on a host that obfuscates,
-        // and reporting nothing is better than putting an unplayable entry in the quality list.
+        // Host-specific extractors belong here, dispatched on this server's host, for the ones the
+        // scan below cannot reach. It gets further than it looks — see its note.
         return genericVideos(watchUrl)
     }
 
     /**
-     * The one case that needs no host-specific knowledge: an embed page with the media URL written
-     * into it. Worth trying first on any new host, and the whole answer on a few of them.
+     * Fetch the embed page, undo the packing if it is packed, and take the media URL out of it.
+     *
+     * This is not the fallback it sounds like. The hosts this site uses are mostly VidHide clones —
+     * morencius identifies itself as one in its own player config — and they all ship the same
+     * shape: a jwplayer setup inside a Dean Edwards packed script, holding an HLS master playlist.
+     * Unpacking is what turns "nothing in the page" into that URL, and it is host-agnostic, so one
+     * implementation covers the family rather than one host.
+     *
+     * What it does not cover is a host that encrypts rather than packs, or one that hands the URL
+     * out over a separate request. Those need [videos] to grow a branch.
      */
     private fun Server.genericVideos(watchUrl: String): List<Video> {
         val embedHeaders = headers.newBuilder()
             .set("Referer", watchUrl)
             .build()
 
-        val page = client.newCall(GET(embedUrl, embedHeaders)).execute().use { response ->
+        val body = client.newCall(GET(embedUrl, embedHeaders)).execute().use { response ->
             if (!response.isSuccessful) return emptyList()
             response.body.string()
         }
+        val page = unpackIfPacked(body)
 
         // Playback goes back to the host rather than to shahedpro, and most of them check it.
         val playbackHeaders = embedUrl.toHttpUrlOrNull()?.let { embed ->
@@ -312,6 +323,47 @@ class ShahedProSource : AnimeHttpSource() {
     private fun String.qualityLabel(): String =
         RESOLUTION.find(this)?.groupValues?.get(1)?.let { "${it}p" } ?: "auto"
 
+    /**
+     * Undo `eval(function(p,a,c,k,e,d){...})` — the Dean Edwards packer, which is what these hosts
+     * put their player behind.
+     *
+     * The packed form is a payload with every recurring word replaced by its index written in
+     * base-[radix], plus the dictionary to put back. Rebuilding it is a substitution and nothing
+     * more: no JavaScript is run, which is the point — this has to work in an extension, not a
+     * browser.
+     *
+     * Returns the input untouched when it is not packed, so it is safe to call on any page.
+     */
+    private fun unpackIfPacked(script: String): String {
+        val match = PACKED.find(script) ?: return script
+        val (payload, radixText, countText, dictionary) = match.destructured
+        val radix = radixText.toIntOrNull()?.takeIf { it in 2..BASE_DIGITS.length } ?: return script
+        val count = countText.toIntOrNull() ?: return script
+        val words = dictionary.split("|")
+
+        val lookup = HashMap<String, String>()
+        for (index in 0 until count) {
+            val word = words.getOrNull(index).orEmpty()
+            // An empty slot means the token stands for itself and is left alone.
+            if (word.isNotEmpty()) lookup[encodeBase(index, radix)] = word
+        }
+
+        val body = payload.replace("\\'", "'").replace("\\\\", "\\")
+        return TOKEN.replace(body) { lookup[it.value] ?: it.value }
+    }
+
+    /** The packer's own numbering: base-[radix] over 0-9a-zA-Z, least significant digit last. */
+    private fun encodeBase(value: Int, radix: Int): String {
+        if (value == 0) return BASE_DIGITS.substring(0, 1)
+        val digits = StringBuilder()
+        var remaining = value
+        while (remaining > 0) {
+            digits.append(BASE_DIGITS[remaining % radix])
+            remaining /= radix
+        }
+        return digits.reverse().toString()
+    }
+
     // ---------------------------------------------------------------- shared
 
     private fun Response.asDocument(): Document = Jsoup.parse(body.string(), request.url.toString())
@@ -321,5 +373,12 @@ class ShahedProSource : AnimeHttpSource() {
         private val SEASON_ID = Regex("""ss(\d+)""")
         private val MEDIA_URL = Regex("""(https?://[^"'\s\\<>]+\.(?:m3u8|mp4)[^"'\s\\<>]*)""")
         private val RESOLUTION = Regex("""(\d{3,4})[pP]""")
+
+        private val PACKED = Regex(
+            """\}\('(.*)',(\d+),(\d+),'(.*?)'\.split\('\|'\)""",
+            RegexOption.DOT_MATCHES_ALL,
+        )
+        private val TOKEN = Regex("""\b\w+\b""")
+        private const val BASE_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     }
 }
