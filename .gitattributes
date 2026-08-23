@@ -7,6 +7,12 @@
 # Gradle wrapper
 *.jar binary
 
+# Android packages. Without this the `* text eol=lf` above applies to them and rewrites bytes
+# that happen to look like line endings, which corrupts the archive on checkout.
+*.apk binary
+*.aab binary
+*.aar binary
+
 # Images
 *.webp binary
 *.png binary
