@@ -63,7 +63,14 @@ def entry_for(apk: Path) -> dict:
     package = field(badging, r"package: name='([^']+)'")
     code = int(field(badging, r"versionCode='(\d+)'", "0"))
     version = field(badging, r"versionName='([^']+)'", "1.0")
-    name = field(badging, r"application-label:'([^']+)'") or package
+    # aapt prints `application-label:` for a label it resolved and `application: label='...'` for
+    # what it read; both are checked so a build that changes how the label is declared cannot
+    # quietly start publishing the package name as the extension's name.
+    name = (
+        field(badging, r"application-label:'([^']+)'")
+        or field(badging, r"application: label='([^']+)'")
+        or package
+    )
 
     # Refused here rather than shipped, because the app says nothing when it rejects one: the
     # extension installs, appears in Android's app list, and never shows up in Animato.

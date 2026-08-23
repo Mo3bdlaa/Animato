@@ -43,10 +43,16 @@ android {
          */
         versionName = "$extLibVersion.${property("extVersionCode")}"
 
-        // What Animato and the store listing call this extension. Without it the loader falls back
-        // to the APK's label, which falls back to the package name — so the extension shows up as
-        // "eu.kanade.tachiyomi.animeextension.ar.shahedpro" instead of its name.
-        manifestPlaceholders["extLabel"] = property("extName") as String
+        /*
+         * The name Animato and the store listing show, as a string resource rather than a literal.
+         *
+         * It has to be a resource: `aapt dump badging` only prints an `application-label:` line for
+         * a label it can resolve, and reports `label=''` for an inline string — so the index
+         * generator, which reads the APK back rather than the build files, would fall back to
+         * naming the extension after its package. Without any label at all the loader does the
+         * same, from the other direction.
+         */
+        resValue("string", "app_name", property("extName") as String)
     }
 
     /*
