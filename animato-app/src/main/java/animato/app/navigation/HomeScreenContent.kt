@@ -57,7 +57,9 @@ import animato.app.settings.AnimatoSettingsScreen
 import animato.app.updates.UpdateItem
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
+import animato.ui.components.DownloadedPill
 import animato.ui.components.NewPill
+import animato.ui.components.UnviewedPill
 import animato.ui.entries.ItemCover
 import animato.ui.navigation.AnimatoNavigator
 import animato.ui.navigation.AnimatoTab
@@ -118,6 +120,9 @@ internal fun HomeScreenContent() {
     }
     val airingItems = remember(state.airingItems, lens) {
         if (lens.accepts(ContentType.ANIME)) state.airingItems else emptyList()
+    }
+    val downloadItems = remember(state.downloadItems, lens) {
+        state.downloadItems.filter { lens.accepts(it.contentType) }
     }
 
     Scaffold(
@@ -253,6 +258,35 @@ internal fun HomeScreenContent() {
                 }
 
                 /*
+                 * What is already on the device.
+                 *
+                 * Under Latest updates rather than above it, because it is the rail that does not
+                 * change: updates are the news, and this is the shelf. It appears only once
+                 * something has been downloaded, so a library that streams everything never sees it.
+                 */
+                if (downloadItems.isNotEmpty()) {
+                    item { SectionHeader(text = stringResource(AYMR.strings.home_your_downloads)) }
+                    item {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = MaterialTheme.padding.medium),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                        ) {
+                            items(
+                                items = downloadItems,
+                                key = { "d-${it.contentType}-${it.entryId}" },
+                            ) { item ->
+                                DownloadedCard(
+                                    item = item,
+                                    onClick = {
+                                        navigator.push(EntryScreen(item.entryId, item.contentType))
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+
+                /*
                  * The download queue, as a line at the bottom that only exists when it has something
                  * to say.
                  *
@@ -271,7 +305,7 @@ internal fun HomeScreenContent() {
                     }
                 }
 
-                if (continueItems.isEmpty() && updateItems.isEmpty() && queued == 0) {
+                if (continueItems.isEmpty() && updateItems.isEmpty() && downloadItems.isEmpty() && queued == 0) {
                     item { EmptyShelf(onDiscover = { AnimatoNavigator.openTab(AnimatoTab.DISCOVER) }) }
                 }
             }
@@ -368,6 +402,15 @@ private fun ContinueCard(
             contentDescription = item.title,
         )
 
+        // The same two counts the library grid draws, in the same colours and the same corner.
+        // A number that means "downloaded" in one place and something else in another is worse
+        // than no number at all, which is what both pills draw at zero.
+        CountPills(
+            downloaded = item.downloadedItems,
+            unviewed = item.unviewedItems,
+            modifier = Modifier.align(Alignment.TopEnd),
+        )
+
         // Bottom-anchored ink, so the type has something to sit on whatever the cover happens to
         // be. A fixed scrim over the whole card would dim the artwork for no reason.
         Column(
@@ -417,6 +460,88 @@ private fun ContinueCard(
                     menuOpen = false
                     onHide()
                 },
+            )
+        }
+    }
+}
+
+/**
+ * The downloaded count and the unwatched count, together, over a cover.
+ *
+ * One composable so the pair cannot drift apart between the two rails that draw it — same order,
+ * same gap, same corner. Each pill is nothing at zero, so a card with neither is the plain cover it
+ * was before.
+ */
+@Composable
+private fun CountPills(
+    downloaded: Int,
+    unviewed: Long,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.padding(PillInset),
+        horizontalArrangement = Arrangement.spacedBy(PillGap),
+    ) {
+        DownloadedPill(count = downloaded)
+        UnviewedPill(count = unviewed)
+    }
+}
+
+/**
+ * Something already on the device, and how much of it there is.
+ *
+ * The caption is the download count rather than the next item's number: this rail is answering what
+ * can be watched with no signal, and the useful number is how many there are, not where you got to.
+ * No long-press menu — there is nothing to dismiss, because deleting the files is what removes it.
+ */
+@Composable
+private fun DownloadedCard(
+    item: DownloadedItem,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .width(ContinueCardWidth)
+            .clip(MaterialTheme.shapes.medium)
+            .tvClickable(onClick = onClick),
+    ) {
+        ItemCover.Book(data = item.coverData, contentDescription = item.title)
+
+        CountPills(
+            downloaded = item.downloadedItems,
+            unviewed = item.unviewedItems,
+            modifier = Modifier.align(Alignment.TopEnd),
+        )
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xCC08080C))))
+                .padding(
+                    start = MaterialTheme.padding.small,
+                    end = MaterialTheme.padding.small,
+                    top = MaterialTheme.padding.medium,
+                    bottom = MaterialTheme.padding.small,
+                ),
+        ) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = pluralStringResource(
+                    AYMR.plurals.home_downloads_saved,
+                    item.downloadedItems,
+                    item.downloadedItems,
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White.copy(alpha = 0.75f),
+                maxLines = 1,
             )
         }
     }
@@ -560,3 +685,5 @@ private fun formatItemNumber(number: Double): String =
 
 private val ContinueCardWidth = 148.dp
 private val UpdateThumbSize = 48.dp
+private val PillInset = 6.dp
+private val PillGap = 4.dp

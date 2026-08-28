@@ -132,7 +132,7 @@ class UnifiedLibraryStateTest {
     ) = UnifiedLibraryState(
         isLoading = false,
         entries = entries,
-        downloadedEntryKeys = downloadedKeys,
+        downloadedCounts = downloadedKeys.associateWith { 1 },
         trackedEntryKeys = trackedKeys,
         categories = categories,
         lens = lens,

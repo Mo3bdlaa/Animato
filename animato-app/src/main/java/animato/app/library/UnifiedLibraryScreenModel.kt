@@ -115,13 +115,13 @@ class UnifiedLibraryScreenModel(
             LibrarySnapshot(entries, categories, tracked)
         }
             .onEach { snapshot ->
-                val downloaded = withIOContext { snapshot.entries.filterDownloaded() }
+                val downloaded = withIOContext { snapshot.entries.downloadCounts() }
                 val forms = withIOContext { snapshot.entries.formsByEntry() }
                 state.value = state.value.copy(
                     isLoading = false,
                     entries = snapshot.entries,
                     entryForms = forms,
-                    downloadedEntryKeys = downloaded,
+                    downloadedCounts = downloaded,
                     trackedEntryKeys = snapshot.tracked,
                     categories = snapshot.categories,
                 )
@@ -165,22 +165,27 @@ class UnifiedLibraryScreenModel(
     }
 
     /**
-     * Which entries have at least one item on disk.
+     * How many items each entry has on disk, for the entries that have any.
      *
      * Both caches answer from an index they hold in memory, so this is a lookup per entry rather
      * than a directory walk — but there is one per library entry, which is why it runs off the main
      * thread.
+     *
+     * Entries with nothing downloaded are left out rather than stored as zero: a library where
+     * almost nothing is downloaded should not carry a map the size of itself full of zeroes.
      */
-    private fun List<LibraryEntry>.filterDownloaded(): Set<Pair<ContentType, Long>> =
-        mapNotNullTo(mutableSetOf()) { entry ->
-            val count = when (entry) {
-                is animato.domain.content.MangaLibraryEntry ->
-                    downloadCache.getDownloadCount(entry.libraryManga.manga)
-                is tachiyomi.domain.library.anime.LibraryAnime ->
-                    animeDownloadCache.getDownloadCount(entry.anime)
-                else -> 0
+    private fun List<LibraryEntry>.downloadCounts(): Map<Pair<ContentType, Long>, Int> =
+        buildMap {
+            this@downloadCounts.forEach { entry ->
+                val count = when (entry) {
+                    is animato.domain.content.MangaLibraryEntry ->
+                        downloadCache.getDownloadCount(entry.libraryManga.manga)
+                    is tachiyomi.domain.library.anime.LibraryAnime ->
+                        animeDownloadCache.getDownloadCount(entry.anime)
+                    else -> 0
+                }
+                if (count > 0) put(entry.contentType to entry.entryId, count)
             }
-            (entry.contentType to entry.entryId).takeIf { count > 0 }
         }
 
     /**

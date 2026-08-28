@@ -81,6 +81,25 @@ fun UnviewedPill(count: Long, modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * How many items are on the device.
+ *
+ * Deliberately not the unread colour. The two counts sit side by side on the same cover and answer
+ * different questions — how much is left to watch, and how much of it can be watched on a train —
+ * so telling them apart has to survive a glance at a thumbnail, which is what the colour is for and
+ * the position is not.
+ */
+@Composable
+fun DownloadedPill(count: Int, modifier: Modifier = Modifier) {
+    if (count <= 0) return
+    Pill(
+        text = count.toString(),
+        containerColor = MaterialTheme.colorScheme.tertiary,
+        contentColor = MaterialTheme.colorScheme.onTertiary,
+        modifier = modifier,
+    )
+}
+
 private val PillHeight = 20.dp
 private val PillSidePadding = 7.dp
 private val PillFontSize = 11.sp

@@ -10,21 +10,29 @@ import animato.app.updates.UpdateItem
 import animato.app.updates.toUpdateItem
 import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
+import animato.domain.content.MangaLibraryEntry
+import animato.domain.content.interactor.GetUnifiedLibrary
+import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
+import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
 import tachiyomi.domain.history.interactor.GetHistory
+import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.updates.anime.interactor.GetAnimeUpdates
 import tachiyomi.domain.updates.interactor.GetUpdates
 import uy.kohesive.injekt.Injekt
@@ -49,16 +57,45 @@ data class ContinueItem(
     val itemNumber: Double,
     val lastViewedAt: Long,
     val coverData: Any?,
+    /**
+     * How many items are unwatched and how many are on the device.
+     *
+     * Both come from the library rather than from history, so an entry no longer in the library —
+     * history outlives a removal — carries zeroes and draws neither badge. That is the honest
+     * answer: there is no library row to count.
+     */
+    val unviewedItems: Long = 0,
+    val downloadedItems: Int = 0,
 ) {
     /** The identity a dismissal is keyed on: the entry, within its half. */
     val railKey: String get() = "${contentType.name}:$entryId"
 }
+
+/**
+ * One library entry with something saved on the device.
+ *
+ * Its own type rather than a [ContinueItem] with a count on it: this rail answers "what can I watch
+ * with no signal", which is a different question from "where was I", and an entry can be in one rail
+ * without being in the other.
+ */
+@Immutable
+data class DownloadedItem(
+    val entryId: Long,
+    val contentType: ContentType,
+    val title: String,
+    val downloadedItems: Int,
+    val unviewedItems: Long,
+    val lastViewedAt: Long,
+    val coverData: Any?,
+)
 
 @Immutable
 data class HomeScreenState(
     val isLoading: Boolean = true,
     val continueItems: List<ContinueItem> = emptyList(),
     val updateItems: List<UpdateItem> = emptyList(),
+    /** What is on the device, most recently opened first. Empty until something is downloaded. */
+    val downloadItems: List<DownloadedItem> = emptyList(),
     /**
      * Library anime with an episode still to come this week.
      *
@@ -85,6 +122,9 @@ class HomeScreenModel(
     downloadManager: DownloadManager = Injekt.get(),
     animeDownloadManager: AnimeDownloadManager = Injekt.get(),
     private val getLibraryAnime: GetLibraryAnime = Injekt.get(),
+    private val getUnifiedLibrary: GetUnifiedLibrary = Injekt.get(),
+    private val downloadCache: DownloadCache = Injekt.get(),
+    private val animeDownloadCache: AnimeDownloadCache = Injekt.get(),
     private val metadataCatalog: MetadataCatalog = MetadataCatalog(),
 ) : ViewModel() {
 
@@ -181,6 +221,18 @@ class HomeScreenModel(
                 updateItems = updateItems,
             )
         }
+            .combine(librarySide()) { base, side ->
+                base.copy(
+                    continueItems = base.continueItems.map { item ->
+                        val key = item.contentType to item.entryId
+                        item.copy(
+                            unviewedItems = side.unviewed[key] ?: 0,
+                            downloadedItems = side.downloaded[key] ?: 0,
+                        )
+                    },
+                    downloadItems = side.downloadItems,
+                )
+            }
             // Copied onto the existing state rather than replacing it, so a rail that has already
             // come back from the network is not wiped by the next local emission.
             .onEach { newState -> state.value = newState.copy(airingItems = state.value.airingItems) }
@@ -188,6 +240,66 @@ class HomeScreenModel(
 
         loadAiring()
     }
+
+    /**
+     * The two numbers the library knows and history does not, plus the rail built out of them.
+     *
+     * One flow for both rails rather than one each, so the count under a cover in Continue and the
+     * count under the same cover in Your downloads are the same read of the same cache. Two
+     * independent lookups would be two chances to disagree, and disagreeing about a number the user
+     * can see side by side is worse than not showing it.
+     *
+     * The download caches answer from an index in memory, but it is one lookup per library entry, so
+     * the whole fold runs off the main thread.
+     */
+    private fun librarySide(): Flow<LibrarySide> {
+        // Both replay their latest value, so this does not wait for a download to change.
+        val downloadChanges = combine(downloadCache.changes, animeDownloadCache.changes) { _, _ -> }
+        return combine(getUnifiedLibrary.subscribe(), downloadChanges) { entries, _ -> entries }
+            .map { entries ->
+                withIOContext {
+                    val unviewed = entries.associate { (it.contentType to it.entryId) to it.unviewedItems }
+                    val downloaded = buildMap {
+                        entries.forEach { entry ->
+                            val count = when (entry) {
+                                is MangaLibraryEntry -> downloadCache.getDownloadCount(entry.libraryManga.manga)
+                                is LibraryAnime -> animeDownloadCache.getDownloadCount(entry.anime)
+                                else -> 0
+                            }
+                            if (count > 0) put(entry.contentType to entry.entryId, count)
+                        }
+                    }
+                    LibrarySide(
+                        unviewed = unviewed,
+                        downloaded = downloaded,
+                        downloadItems = entries
+                            .mapNotNull { entry ->
+                                val count = downloaded[entry.contentType to entry.entryId] ?: return@mapNotNull null
+                                DownloadedItem(
+                                    entryId = entry.entryId,
+                                    contentType = entry.contentType,
+                                    title = entry.title,
+                                    downloadedItems = count,
+                                    unviewedItems = entry.unviewedItems,
+                                    lastViewedAt = entry.lastViewed,
+                                    coverData = entry.coverData,
+                                )
+                            }
+                            // Most recently opened first, and never opened last — the rail is for
+                            // picking something up, so what was touched today belongs at the front.
+                            .sortedByDescending { it.lastViewedAt }
+                            .take(DOWNLOAD_LIMIT),
+                    )
+                }
+            }
+    }
+
+    /** What the library contributes to this screen, computed once and read by two rails. */
+    private data class LibrarySide(
+        val unviewed: Map<Pair<ContentType, Long>, Long> = emptyMap(),
+        val downloaded: Map<Pair<ContentType, Long>, Int> = emptyMap(),
+        val downloadItems: List<DownloadedItem> = emptyList(),
+    )
 
     /**
      * The same refresh Updates runs: ask both libraries for anything new, per the lens.
@@ -251,6 +363,9 @@ class HomeScreenModel(
 
         /** Five rows and a way to see the rest. Home is a summary; Updates is the feed. */
         private const val UPDATE_LIMIT = 5
+
+        /** As long as Continue, and for the same reason: it is scrolled, not paged. */
+        private const val DOWNLOAD_LIMIT = 20
 
         private val UPDATE_WINDOW = 30.days
 

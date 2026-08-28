@@ -143,7 +143,14 @@ enum class LibrarySortMode(val labelRes: StringResource) {
 data class UnifiedLibraryState(
     val isLoading: Boolean = true,
     val entries: List<LibraryEntry> = emptyList(),
-    val downloadedEntryKeys: Set<Pair<ContentType, Long>> = emptySet(),
+    /**
+     * How many items each entry has on disk, for the entries that have any.
+     *
+     * A count rather than a flag because the card shows the number, and the download filter is the
+     * same question asked less precisely — [downloadedEntryKeys] derives from this so the badge and
+     * the filter cannot end up disagreeing about what is downloaded.
+     */
+    val downloadedCounts: Map<Pair<ContentType, Long>, Int> = emptyMap(),
     val trackedEntryKeys: Set<Pair<ContentType, Long>> = emptySet(),
     /**
      * The entries that are not ordinary serials, and what they are instead.
@@ -162,6 +169,13 @@ data class UnifiedLibraryState(
     val showUnviewedCount: Boolean = true,
     val searchQuery: String? = null,
 ) {
+
+    /** The entries with anything on disk. Only ever the keys of [downloadedCounts]. */
+    val downloadedEntryKeys: Set<Pair<ContentType, Long>> get() = downloadedCounts.keys
+
+    /** How many items this entry has on disk, and zero rather than nothing when it has none. */
+    fun downloadedCount(entry: LibraryEntry): Int =
+        downloadedCounts[entry.contentType to entry.entryId] ?: 0
 
     /** Categories worth drawing a chip for, in the order the two halves reported them. */
     val visibleCategories: List<LibraryCategory> by lazy {

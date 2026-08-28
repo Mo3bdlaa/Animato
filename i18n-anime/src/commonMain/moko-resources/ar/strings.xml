@@ -525,6 +525,7 @@
     <string name="updates_select">تحديد</string>
     <string name="updates_mark_opened">عليم إنها اتفتحت</string>
     <string name="home_hide_from_continue">شيلها من هنا</string>
+    <string name="home_your_downloads">التحميلات بتاعتك</string>
     <string name="settings_group_content">المحتوى بتاعك</string>
     <string name="settings_group_sources_data">المصادر والبيانات</string>
     <string name="settings_group_app">التطبيق</string>

@@ -64,4 +64,8 @@
         <item quantity="one">%d item waiting</item>
         <item quantity="other">%d items waiting</item>
     </plurals>
+    <plurals name="home_downloads_saved">
+        <item quantity="one">%d downloaded</item>
+        <item quantity="other">%d downloaded</item>
+    </plurals>
 </resources>

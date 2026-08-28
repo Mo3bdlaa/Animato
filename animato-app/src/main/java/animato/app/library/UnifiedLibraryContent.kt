@@ -57,6 +57,7 @@ import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.domain.content.LibraryEntry
 import animato.ui.components.AnimatoEmptyState
+import animato.ui.components.DownloadedPill
 import animato.ui.components.Pill
 import animato.ui.components.UnviewedPill
 import animato.ui.entries.ItemCover
@@ -218,6 +219,7 @@ internal fun UnifiedLibraryContent() {
                             entry = entry,
                             showTypeChip = state.lens == ContentFilter.ALL,
                             showUnviewedCount = state.showUnviewedCount,
+                            downloadedCount = state.downloadedCount(entry),
                             onClick = { openEntry(entry) },
                             onLongClick = { screenModel.openQuickSheet(entry) },
                         )
@@ -392,6 +394,7 @@ private fun LibraryGridItem(
     entry: LibraryEntry,
     showTypeChip: Boolean,
     showUnviewedCount: Boolean,
+    downloadedCount: Int,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -408,13 +411,19 @@ private fun LibraryGridItem(
                 contentDescription = entry.title,
                 shape = RoundedCornerShape(CoverRadius),
             )
-            if (showUnviewedCount) {
-                UnviewedPill(
-                    count = entry.unviewedItems,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(PillInset),
-                )
+            // Both counts in one corner, downloaded first. Each pill draws nothing at zero, so a
+            // cover with neither is as clean as it was before the row existed — and the pair never
+            // straddles two corners, which would make the cover the thing between two badges.
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(PillInset),
+                horizontalArrangement = Arrangement.spacedBy(PillGap),
+            ) {
+                DownloadedPill(count = downloadedCount)
+                if (showUnviewedCount) {
+                    UnviewedPill(count = entry.unviewedItems)
+                }
             }
             if (showTypeChip) {
                 ContentTypePill(
@@ -691,6 +700,7 @@ private fun LibraryEmptyState(
 
 private val CoverRadius = 12.dp
 private val PillInset = 6.dp
+private val PillGap = 4.dp
 private val SheetRadius = 28.dp
 
 /** The shapes, in this screen's words rather than the model's. */
