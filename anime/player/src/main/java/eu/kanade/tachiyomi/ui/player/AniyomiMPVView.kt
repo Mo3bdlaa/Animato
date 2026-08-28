@@ -17,8 +17,8 @@
 
 package eu.kanade.tachiyomi.ui.player
 
+import android.app.ActivityManager
 import android.content.Context
-import android.os.Build
 import android.os.Environment
 import android.util.AttributeSet
 import android.view.KeyCharacterMap
@@ -150,11 +150,8 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet) : BaseMPVView(c
         MPVLib.setOptionString("tls-verify", "yes")
         MPVLib.setOptionString("tls-ca-file", "${context.filesDir.path}/${PlayerActivity.MPV_DIR}/cacert.pem")
 
-        // Limit demuxer cache since the defaults are too high for mobile devices
-        val cacheMegs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) 64 else 32
-        MPVLib.setOptionString("demuxer-max-bytes", "${cacheMegs * 1024 * 1024}")
-        MPVLib.setOptionString("demuxer-max-back-bytes", "${cacheMegs * 1024 * 1024}")
-        //
+        setupNetworkCache()
+
         val screenshotDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         screenshotDir.mkdirs()
         MPVLib.setOptionString("screenshot-directory", screenshotDir.path)
@@ -169,6 +166,56 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet) : BaseMPVView(c
 
         setupSubtitlesOptions()
         setupAudioOptions()
+    }
+
+    /**
+     * How much of a stream is held ahead of the play head, and what happens when it runs out.
+     *
+     * This is the setting a bad connection is spent against. mpv reads as fast as the network allows
+     * and plays out of what it has read, so a drop-out is invisible until the buffer empties — the
+     * buffer is, quite literally, how many seconds of trouble can pass without the picture stopping.
+     *
+     * Three things were wrong with what was here.
+     *
+     * **The budget was split evenly, forwards and backwards.** The back cache only saves
+     * re-downloading when somebody seeks *backwards* — the rarer direction of the rarer action —
+     * and it was given as many bytes as the half that keeps playback alive. Forward now takes
+     * most of it.
+     *
+     * **The byte ceiling was never the binding limit.** Readahead is bounded in seconds as well,
+     * and mpv's default stops far short of filling a cache of any size — so raising the megabytes
+     * alone, which is the obvious fix and the one that had been made, changed nothing. Both bounds
+     * have to move, which is why [CACHE_SECONDS] is here.
+     *
+     * **The size was chosen off the API level.** What a cache costs is native memory, and the thing
+     * that differs between a cheap phone and an expensive one is how much of that there is, not
+     * which Android they run — every device that reaches this code is years past the 8.1 the check
+     * was testing for. It reads the device's actual memory now, and a low-RAM device still gets the
+     * small cache the old check was trying to give it.
+     *
+     * The last two lines are the other half of the same problem: a buffer buys time for a connection
+     * that recovers, and a connection that has dropped has to be picked up again. ffmpeg will
+     * reconnect by itself, but only when asked to, and the timeout is what tells it the connection
+     * is gone rather than slow. Unknown options here are ignored rather than fatal.
+     */
+    private fun setupNetworkCache() {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+        val memory = ActivityManager.MemoryInfo().also { activityManager?.getMemoryInfo(it) }
+        val totalGigs = memory.totalMem / BYTES_PER_GIB
+
+        // A null ActivityManager leaves totalMem at zero and lands in the smallest bucket, which is
+        // the right way round to be wrong: too small is a stall, too large is a kill.
+        val (forwardMegs, backMegs) = when {
+            activityManager?.isLowRamDevice == true -> LOW_RAM_CACHE
+            totalGigs < MODEST_DEVICE_GIB -> MODEST_CACHE
+            else -> ROOMY_CACHE
+        }
+
+        MPVLib.setOptionString("demuxer-max-bytes", "${forwardMegs * BYTES_PER_MIB}")
+        MPVLib.setOptionString("demuxer-max-back-bytes", "${backMegs * BYTES_PER_MIB}")
+        MPVLib.setOptionString("cache-secs", CACHE_SECONDS)
+        MPVLib.setOptionString("network-timeout", NETWORK_TIMEOUT_SECONDS)
+        MPVLib.setOptionString("stream-lavf-o", RECONNECT_OPTIONS)
     }
 
     override fun observeProperties() {
@@ -302,5 +349,54 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet) : BaseMPVView(c
         MPVLib.setOptionString("sub-shadow-offset", subtitlePreferences.shadowOffsetSubtitles().get().toString())
         MPVLib.setOptionString("sub-pos", subtitlePreferences.subtitlePos().get().toString())
         MPVLib.setOptionString("sub-scale", subtitlePreferences.subtitleFontScale().get().toString())
+    }
+
+    companion object {
+
+        /** Forward and back cache in MiB, for a device that says it is short of memory. */
+        private val LOW_RAM_CACHE = 32 to 8
+
+        /** The same, for a phone with enough memory to play video and not much more. */
+        private val MODEST_CACHE = 64 to 16
+
+        /**
+         * The same, for anything current.
+         *
+         * 192 MiB is roughly two minutes of a good 1080p stream — long enough to sit through a lift,
+         * a tunnel or a handover between cells without the picture stopping. It is native memory and
+         * it is only ever as large as what has actually been read, so an episode that plays without
+         * trouble never reaches this number.
+         */
+        private val ROOMY_CACHE = 192 to 32
+
+        /** Under this much RAM in total, take the middle cache. */
+        private const val MODEST_DEVICE_GIB = 4
+
+        /**
+         * The other half of the cache size, and the half that was missing.
+         *
+         * mpv bounds readahead in seconds as well as in bytes and stops at whichever comes first,
+         * with a default low enough that the byte limit never mattered. Two minutes, to match what
+         * [ROOMY_CACHE] can hold — the bytes remain the real ceiling on a smaller device.
+         */
+        private const val CACHE_SECONDS = "120"
+
+        /** How long a silent connection is given before it counts as gone rather than slow. */
+        private const val NETWORK_TIMEOUT_SECONDS = "60"
+
+        /**
+         * Pick the connection back up instead of ending the episode.
+         *
+         * ffmpeg can resume an interrupted HTTP read from where it stopped, which for a stream that
+         * dropped for a few seconds is the difference between a pause and a failure — but it does
+         * not do it unless asked. `reconnect_streamed` covers the non-seekable case, which is most
+         * live sources; the delay is capped so a network that is properly down fails in a bounded
+         * time rather than retrying into the evening.
+         */
+        private const val RECONNECT_OPTIONS =
+            "reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=10"
+
+        private const val BYTES_PER_MIB = 1024 * 1024
+        private const val BYTES_PER_GIB = 1024L * 1024 * 1024
     }
 }
