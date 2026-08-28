@@ -25,13 +25,21 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.DownloadDone
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.FlipToBack
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.SelectAll
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -89,6 +97,7 @@ import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -228,6 +237,30 @@ class EntryScreen(
 
         Scaffold(
             topBar = {
+                /*
+                 * The selection bar replaces the ordinary one rather than sitting under it.
+                 *
+                 * A selection is a mode, and a mode that leaves the way out of the screen where it
+                 * was invites leaving with rows still picked — which then reads as the selection
+                 * having been lost. Back now clears the selection, and only the second press
+                 * leaves.
+                 */
+                if (state.isSelecting) {
+                    SelectionBar(
+                        count = state.selectedItemIds.size,
+                        allSelected = state.selectedItemIds.size == state.items.size,
+                        canDownload = state.selectedItems.any { !it.downloaded },
+                        canDelete = state.selectedItems.any { it.downloaded },
+                        onClear = screenModel::clearSelection,
+                        onToggleAll = screenModel::toggleSelectAll,
+                        onInvert = screenModel::invertSelection,
+                        onDownload = screenModel::downloadSelected,
+                        onDeleteDownloads = screenModel::deleteSelectedDownloads,
+                        onMarkViewed = { screenModel.setSelectedViewed(true) },
+                        onMarkUnviewed = { screenModel.setSelectedViewed(false) },
+                    )
+                    return@Scaffold
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(MaterialTheme.padding.extraSmall),
                     verticalAlignment = Alignment.CenterVertically,
@@ -338,24 +371,38 @@ class EntryScreen(
                 return@Scaffold
             }
 
-            LazyColumn(
-                contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.large),
+            /*
+             * The gesture the other three destinations already have.
+             *
+             * Home, Library and Discover all refresh on a pull; this screen had only the button in
+             * its header, so the habit the rest of the app teaches did nothing here. Driven by the
+             * same state the button uses, so the two cannot disagree about whether a refresh is
+             * running.
+             */
+            PullRefresh(
+                refreshing = state.isRefreshing,
+                enabled = !state.isLoading,
+                onRefresh = { screenModel.refresh() },
+                indicatorPadding = contentPadding,
             ) {
-                item(key = "header") {
-                    EntryHeader(
-                        state = state,
-                        onToggleLibrary = screenModel::toggleInLibrary,
-                        onResume = { state.nextItem?.let(open) },
-                        onRefresh = screenModel::refresh,
-                        onOpenInBrowser = {
-                            state.webViewUrl?.let { url ->
-                                context.startActivity(
-                                    WebViewActivity.newIntent(context, url, sourceId = null, title = state.title),
-                                )
-                            }
-                        },
-                    )
-                }
+                LazyColumn(
+                    contentPadding = contentPadding + PaddingValues(bottom = MaterialTheme.padding.large),
+                ) {
+                    item(key = "header") {
+                        EntryHeader(
+                            state = state,
+                            onToggleLibrary = screenModel::toggleInLibrary,
+                            onResume = { state.nextItem?.let(open) },
+                            onRefresh = screenModel::refresh,
+                            onOpenInBrowser = {
+                                state.webViewUrl?.let { url ->
+                                    context.startActivity(
+                                        WebViewActivity.newIntent(context, url, sourceId = null, title = state.title),
+                                    )
+                                }
+                            },
+                        )
+                    }
 
                 /*
                  * The source is gone, said here rather than at the moment of failure.
@@ -369,29 +416,29 @@ class EntryScreen(
                  * good, and it is otherwise buried in the overflow behind a word nobody reaches for
                  * until they already know what is wrong.
                  */
-                if (state.sourceMissing) {
-                    item(key = "source-missing") {
-                        SourceMissingNotice(
-                            sourceName = state.sourceName,
-                            onMigrate = {
-                                navigator.push(
-                                    when (contentType) {
-                                        ContentType.MANGA -> MigrateSearchScreen(entryId)
-                                        ContentType.ANIME -> MigrateAnimeSearchScreen(entryId)
-                                    },
-                                )
-                            },
+                    if (state.sourceMissing) {
+                        item(key = "source-missing") {
+                            SourceMissingNotice(
+                                sourceName = state.sourceName,
+                                onMigrate = {
+                                    navigator.push(
+                                        when (contentType) {
+                                            ContentType.MANGA -> MigrateSearchScreen(entryId)
+                                            ContentType.ANIME -> MigrateAnimeSearchScreen(entryId)
+                                        },
+                                    )
+                                },
+                            )
+                        }
+                    }
+
+                    item(key = "about") {
+                        AboutSection(
+                            state = state,
+                            expanded = showAbout,
+                            onToggle = { showAbout = !showAbout },
                         )
                     }
-                }
-
-                item(key = "about") {
-                    AboutSection(
-                        state = state,
-                        expanded = showAbout,
-                        onToggle = { showAbout = !showAbout },
-                    )
-                }
 
                 /*
                  * Which season, as a row above the episodes rather than a page to travel to.
@@ -401,15 +448,15 @@ class EntryScreen(
                  * this page, so reaching season three meant back, tap, and a page whose cover,
                  * description and tracking all described a season instead of the series.
                  */
-                if (state.seasons.isNotEmpty()) {
-                    item(key = "seasons") {
-                        SeasonRow(
-                            seasons = state.seasons,
-                            selectedId = state.selectedSeasonId,
-                            onSelect = screenModel::selectSeason,
-                        )
+                    if (state.seasons.isNotEmpty()) {
+                        item(key = "seasons") {
+                            SeasonRow(
+                                seasons = state.seasons,
+                                selectedId = state.selectedSeasonId,
+                                onSelect = screenModel::selectSeason,
+                            )
+                        }
                     }
-                }
 
                 /*
                  * The count, the cadence and the gaps — all three of them questions about a list
@@ -420,25 +467,25 @@ class EntryScreen(
                  * is nothing here a person opening a film wants to be told, and the row underneath
                  * already carries the film's name or the word Live.
                  */
-                if (state.form.canGrow) {
-                    item(key = "items-header") {
-                        Column(
-                            modifier = Modifier.padding(
-                                horizontal = MaterialTheme.padding.medium,
-                                vertical = MaterialTheme.padding.small,
-                            ),
-                        ) {
-                            Text(
-                                text = stringResource(
-                                    when (contentType) {
-                                        ContentType.MANGA -> AYMR.strings.entry_chapters_count
-                                        ContentType.ANIME -> AYMR.strings.entry_episodes_count
-                                    },
-                                    state.items.size.toString(),
+                    if (state.form.canGrow) {
+                        item(key = "items-header") {
+                            Column(
+                                modifier = Modifier.padding(
+                                    horizontal = MaterialTheme.padding.medium,
+                                    vertical = MaterialTheme.padding.small,
                                 ),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
+                            ) {
+                                Text(
+                                    text = stringResource(
+                                        when (contentType) {
+                                            ContentType.MANGA -> AYMR.strings.entry_chapters_count
+                                            ContentType.ANIME -> AYMR.strings.entry_episodes_count
+                                        },
+                                        state.items.size.toString(),
+                                    ),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
                             /*
                              * How often this thing arrives, and when the next one is due.
                              *
@@ -451,87 +498,96 @@ class EntryScreen(
                              * every entry outside the library, since the update job is what computes
                              * it, and every completed work, which has no next one by definition.
                              */
-                            val cadence = state.releaseIntervalDays?.let { days ->
-                                stringResource(
-                                    when (contentType) {
-                                        ContentType.MANGA -> AYMR.strings.entry_release_every_chapters
-                                        ContentType.ANIME -> AYMR.strings.entry_release_every_episodes
-                                    },
-                                    pluralStringResource(MR.plurals.day, days, days),
-                                )
-                            }
-                            val next = state.nextReleaseDays?.let { days ->
-                                if (days == 0) {
-                                    stringResource(AYMR.strings.entry_release_next_soon)
-                                } else {
+                                val cadence = state.releaseIntervalDays?.let { days ->
                                     stringResource(
-                                        AYMR.strings.entry_release_next_in,
+                                        when (contentType) {
+                                            ContentType.MANGA -> AYMR.strings.entry_release_every_chapters
+                                            ContentType.ANIME -> AYMR.strings.entry_release_every_episodes
+                                        },
                                         pluralStringResource(MR.plurals.day, days, days),
                                     )
                                 }
-                            }
-                            listOfNotNull(cadence, next).takeIf { it.isNotEmpty() }?.let { parts ->
-                                Text(
-                                    text = parts.joinToString(" · "),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
+                                val next = state.nextReleaseDays?.let { days ->
+                                    if (days == 0) {
+                                        stringResource(AYMR.strings.entry_release_next_soon)
+                                    } else {
+                                        stringResource(
+                                            AYMR.strings.entry_release_next_in,
+                                            pluralStringResource(MR.plurals.day, days, days),
+                                        )
+                                    }
+                                }
+                                listOfNotNull(cadence, next).takeIf { it.isNotEmpty() }?.let { parts ->
+                                    Text(
+                                        text = parts.joinToString(" · "),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
 
-                            // A gap in the numbering, said out loud. A list that jumps from 40 to 71
-                            // without comment reads as a list somebody has already read the middle of.
-                            if (state.missingCount > 0) {
-                                Text(
-                                    text = pluralStringResource(
-                                        when (contentType) {
-                                            ContentType.MANGA -> MR.plurals.missing_chapters
-                                            ContentType.ANIME -> AYMR.plurals.missing_items
-                                        },
-                                        state.missingCount,
-                                        state.missingCount,
-                                    ),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = LocalAnimatoPalette.current.warning,
-                                )
+                                // A gap in the numbering, said out loud. A list that jumps from 40 to 71
+                                // without comment reads as a list somebody has already read the middle of.
+                                if (state.missingCount > 0) {
+                                    Text(
+                                        text = pluralStringResource(
+                                            when (contentType) {
+                                                ContentType.MANGA -> MR.plurals.missing_chapters
+                                                ContentType.ANIME -> AYMR.plurals.missing_items
+                                            },
+                                            state.missingCount,
+                                            state.missingCount,
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = LocalAnimatoPalette.current.warning,
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                // A source that lists nothing left the page as a header over black. It is a real
-                // state — a title page opened straight from a search, before anything is known
-                // about it — and the refresh in the header is the one thing that could change it.
-                if (state.isLoadingSeason) {
-                    item(key = "season-loading") {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(MaterialTheme.padding.large),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            CircularProgressIndicator()
+                    // A source that lists nothing left the page as a header over black. It is a real
+                    // state — a title page opened straight from a search, before anything is known
+                    // about it — and the refresh in the header is the one thing that could change it.
+                    if (state.isLoadingSeason) {
+                        item(key = "season-loading") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(MaterialTheme.padding.large),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    } else if (state.items.isEmpty()) {
+                        item(key = "no-items") {
+                            AnimatoEmptyState(
+                                message = stringResource(AYMR.strings.entry_no_items),
+                                actionLabel = stringResource(MR.strings.action_webview_refresh),
+                                onAction = screenModel::refresh,
+                            )
                         }
                     }
-                } else if (state.items.isEmpty()) {
-                    item(key = "no-items") {
-                        AnimatoEmptyState(
-                            message = stringResource(AYMR.strings.entry_no_items),
-                            actionLabel = stringResource(MR.strings.action_webview_refresh),
-                            onAction = screenModel::refresh,
+
+                    items(items = state.items, key = { it.id }) { item ->
+                        ItemRow(
+                            item = item,
+                            contentType = contentType,
+                            showNumber = state.form.canGrow,
+                            selected = item.id in state.selectedItemIds,
+                            isSelecting = state.isSelecting,
+                            // While a selection is running the whole row picks rather than opens —
+                            // otherwise the second row somebody taps plays instead of joining the
+                            // selection, which is the standard way this interaction goes wrong.
+                            onClick = {
+                                if (state.isSelecting) screenModel.toggleSelection(item) else open(item)
+                            },
+                            onSelect = { screenModel.toggleSelection(item) },
+                            onToggleViewed = { screenModel.setViewed(item, !item.viewed) },
+                            onToggleBookmark = { screenModel.toggleBookmark(item) },
+                            onToggleDownload = { screenModel.toggleDownload(item) },
                         )
                     }
-                }
-
-                items(items = state.items, key = { it.id }) { item ->
-                    ItemRow(
-                        item = item,
-                        contentType = contentType,
-                        showNumber = state.form.canGrow,
-                        onClick = { open(item) },
-                        onToggleViewed = { screenModel.setViewed(item, !item.viewed) },
-                        onToggleBookmark = { screenModel.toggleBookmark(item) },
-                        onToggleDownload = { screenModel.toggleDownload(item) },
-                    )
                 }
             }
         }
@@ -854,7 +910,10 @@ private fun ItemRow(
      * the film, and "· Episode 1" underneath it adds nothing and claims there is an episode 2.
      */
     showNumber: Boolean,
+    selected: Boolean,
+    isSelecting: Boolean,
     onClick: () -> Unit,
+    onSelect: () -> Unit,
     onToggleViewed: () -> Unit,
     onToggleBookmark: () -> Unit,
     onToggleDownload: () -> Unit,
@@ -866,24 +925,56 @@ private fun ItemRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                // Selected rows are tinted rather than ticked in a checkbox column: the number box
+                // is already the control, and a column that appears and shifts every row sideways
+                // makes the list jump the moment a selection starts.
+                .background(
+                    if (selected) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = SELECTED_ROW_ALPHA)
+                    } else {
+                        Color.Transparent
+                    },
+                )
                 .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true })
                 .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
         ) {
+            /*
+             * The number box picks the row out. It used to mark it viewed.
+             *
+             * That was a destructive single tap with no confirmation, sitting exactly where every
+             * other list in the app puts selection — and easy to hit while scrolling. Marking
+             * viewed is on the long press now, with the rest of the row's actions.
+             */
             Box(
                 modifier = Modifier
                     .size(NumberBoxSize)
                     .clip(RoundedCornerShape(NumberBoxRadius))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                    .clickable(onClick = onToggleViewed),
+                    .background(
+                        if (selected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHighest
+                        },
+                    )
+                    .clickable(onClick = onSelect),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = formatNumber(item.number),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-                )
+                if (selected) {
+                    Icon(
+                        imageVector = Icons.Outlined.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(NumberBoxIconSize),
+                    )
+                } else {
+                    Text(
+                        text = formatNumber(item.number),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                    )
+                }
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -925,9 +1016,60 @@ private fun ItemRow(
                     },
                 )
             }
+            /*
+             * On the row, not only in the long-press menu.
+             *
+             * The note on `toggleDownload` argued a download button on a thousand-row list is a
+             * thousand buttons nobody presses. That is true of a list somebody is reading down; it
+             * is not true of the one row they have decided to take on a flight, and burying the
+             * action behind a long press made the commonest case the slowest one. The menu keeps
+             * it too — this is an addition, not a move.
+             *
+             * Two states, because that is all the row knows. `EntryItem` records whether the file
+             * is here, not whether it is arriving, so a progress spinner would be an animation with
+             * nothing behind it; the queue's own notification is where progress actually lives.
+             */
+            IconButton(onClick = onToggleDownload) {
+                Icon(
+                    imageVector = if (item.downloaded) {
+                        Icons.Outlined.DownloadDone
+                    } else {
+                        Icons.Outlined.Download
+                    },
+                    contentDescription = stringResource(
+                        if (item.downloaded) MR.strings.action_delete else MR.strings.action_download,
+                    ),
+                    tint = if (item.downloaded) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
         }
 
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            // Where marking viewed went when the number box became selection. First, because it is
+            // the one people came here for.
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        stringResource(
+                            if (item.viewed) MR.strings.action_mark_as_unread else MR.strings.action_mark_as_read,
+                        ),
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = if (item.viewed) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
+                        contentDescription = null,
+                    )
+                },
+                onClick = {
+                    menuOpen = false
+                    onToggleViewed()
+                },
+            )
             // Download and delete are the same entry wearing the state it is in, because they are
             // never both available and a greyed-out one of each would be two dead rows.
             DropdownMenuItem(
@@ -957,6 +1099,99 @@ private fun ItemRow(
     }
 }
 
+/**
+ * The bar that stands in for the title bar while rows are picked out.
+ *
+ * ## Why the actions are icons and not a menu
+ *
+ * There are five and they are all one word. A menu would be a tap to open plus a tap to choose for
+ * every one of them, on a screen whose whole purpose at that moment is doing something to twenty
+ * rows quickly — which is the thing the selection was added to make possible.
+ *
+ * ## Why download and delete are both here rather than one toggle
+ *
+ * On a single row they are the same action wearing its state, because a row is either downloaded
+ * or not. A selection can be both at once, so they are two actions, and each is hidden when the
+ * selection holds nothing it would apply to — a greyed one would leave somebody guessing which
+ * half of their selection was the problem.
+ */
+@Composable
+private fun SelectionBar(
+    count: Int,
+    allSelected: Boolean,
+    canDownload: Boolean,
+    canDelete: Boolean,
+    onClear: () -> Unit,
+    onToggleAll: () -> Unit,
+    onInvert: () -> Unit,
+    onDownload: () -> Unit,
+    onDeleteDownloads: () -> Unit,
+    onMarkViewed: () -> Unit,
+    onMarkUnviewed: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .padding(MaterialTheme.padding.extraSmall),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onClear) {
+            Icon(
+                imageVector = Icons.Outlined.Close,
+                contentDescription = stringResource(MR.strings.action_cancel),
+            )
+        }
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = MaterialTheme.padding.small),
+        )
+        Box(modifier = Modifier.weight(1f))
+
+        if (canDownload) {
+            IconButton(onClick = onDownload) {
+                Icon(
+                    imageVector = Icons.Outlined.Download,
+                    contentDescription = stringResource(MR.strings.action_download),
+                )
+            }
+        }
+        if (canDelete) {
+            IconButton(onClick = onDeleteDownloads) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = stringResource(MR.strings.action_delete),
+                )
+            }
+        }
+        IconButton(onClick = onMarkViewed) {
+            Icon(
+                imageVector = Icons.Outlined.Visibility,
+                contentDescription = stringResource(MR.strings.action_mark_as_read),
+            )
+        }
+        IconButton(onClick = onMarkUnviewed) {
+            Icon(
+                imageVector = Icons.Outlined.VisibilityOff,
+                contentDescription = stringResource(MR.strings.action_mark_as_unread),
+            )
+        }
+        IconButton(onClick = onInvert) {
+            Icon(
+                imageVector = Icons.Outlined.FlipToBack,
+                contentDescription = stringResource(MR.strings.action_select_inverse),
+            )
+        }
+        IconButton(onClick = onToggleAll) {
+            Icon(
+                imageVector = if (allSelected) Icons.Outlined.Deselect else Icons.Outlined.SelectAll,
+                contentDescription = stringResource(MR.strings.action_select_all),
+            )
+        }
+    }
+}
+
 /** Chapter and episode numbers are doubles; whole ones should not read as `12.0`. */
 private fun formatNumber(number: Double): String =
     if (number % 1.0 == 0.0) number.toInt().toString() else number.toString()
@@ -972,6 +1207,17 @@ private val BackdropHeight = 260.dp
 private val BackdropBlur = 24.dp
 private val CoverWidth = 112.dp
 private val CoverRadius = 12.dp
+
+/**
+ * What a selection looks like on a row.
+ *
+ * Low, because the tint has to read as "picked" over both a viewed row at half opacity and an
+ * unviewed one at full — a stronger fill wins over the text on one of the two.
+ */
+private const val SELECTED_ROW_ALPHA = 0.12f
+
+private val NumberBoxIconSize = 20.dp
+
 private val NumberBoxSize = 40.dp
 private val NumberBoxRadius = 8.dp
 private val NoticeRadius = 12.dp

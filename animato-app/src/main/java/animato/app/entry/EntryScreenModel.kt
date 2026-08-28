@@ -236,7 +236,22 @@ data class EntryState(
     val isRefreshing: Boolean = false,
     /** What the last refresh found, held until the screen shows it once. */
     val refreshResult: RefreshResult? = null,
+    /**
+     * The rows currently picked out, by id.
+     *
+     * Ids rather than items, because the list is rebuilt from the database on every change — a set
+     * of items would compare unequal to the ones on screen the moment anything is downloaded or
+     * marked viewed, and the selection would clear itself under the person making it.
+     *
+     * Empty means no selection, and that is also the flag: there is no separate "is selecting"
+     * boolean to fall out of step with it.
+     */
+    val selectedItemIds: Set<Long> = emptySet(),
 ) {
+
+    val isSelecting: Boolean get() = selectedItemIds.isNotEmpty()
+
+    val selectedItems: List<EntryItem> get() = items.filter { it.id in selectedItemIds }
 
     /**
      * The one the primary button resumes: the earliest unviewed item, whichever way the list runs.
@@ -629,6 +644,126 @@ class EntryScreenModel(
                             animeSourceManager.getOrStub(anime.source),
                         )
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * Pick a row out, or put it back.
+     *
+     * This is what tapping the number box does now. It used to mark the row viewed, which is a
+     * destructive single tap with no confirmation sitting in the place every other list in this app
+     * puts selection — and one people hit by accident while scrolling. Marking viewed moved to the
+     * long press, where the rest of the row's actions already were.
+     */
+    fun toggleSelection(item: EntryItem) {
+        state.update { current ->
+            val selected = current.selectedItemIds
+            current.copy(
+                selectedItemIds = if (item.id in selected) selected - item.id else selected + item.id,
+            )
+        }
+    }
+
+    fun clearSelection() {
+        state.update { it.copy(selectedItemIds = emptySet()) }
+    }
+
+    /**
+     * Everything, or — when everything is already picked — nothing.
+     *
+     * One control rather than two, because the only thing anybody wants after selecting all is to
+     * unselect all, and a separate button for it is a button that is wrong half the time.
+     */
+    fun toggleSelectAll() {
+        state.update { current ->
+            val all = current.items.map { it.id }.toSet()
+            current.copy(selectedItemIds = if (current.selectedItemIds == all) emptySet() else all)
+        }
+    }
+
+    /** The complement — for "everything except the three I have read". */
+    fun invertSelection() {
+        state.update { current ->
+            current.copy(
+                selectedItemIds = current.items.map { it.id }.toSet() - current.selectedItemIds,
+            )
+        }
+    }
+
+    /**
+     * Download everything picked out that is not already here.
+     *
+     * The whole point of the selection, and the reason it exists: queueing twenty episodes was
+     * twenty long-presses. Already-downloaded rows are skipped rather than re-queued, so a
+     * selection that spans both is not a way to download the same file twice.
+     *
+     * One queue call rather than one per item — the download manager batches, and twenty separate
+     * calls is twenty notifications and twenty database writes for one intention.
+     */
+    fun downloadSelected() {
+        val chosen = state.value.selectedItems.filterNot { it.downloaded }
+        clearSelection()
+        if (chosen.isEmpty()) return
+
+        viewModelScope.launchNonCancellable {
+            when (contentType) {
+                ContentType.MANGA -> {
+                    val manga = getManga.await(entryId) ?: return@launchNonCancellable
+                    val chapters = chosen.mapNotNull { getChapter.await(it.id) }
+                    if (chapters.isNotEmpty()) downloadManager.downloadChapters(manga, chapters)
+                }
+                ContentType.ANIME -> {
+                    // The season when one is showing, for the reason given in `toggleDownload`:
+                    // the downloader names the folder after the anime it is handed.
+                    val anime = getAnime.await(state.value.itemOwnerId) ?: return@launchNonCancellable
+                    val episodes = chosen.mapNotNull { getEpisode.await(it.id) }
+                    if (episodes.isNotEmpty()) animeDownloadManager.downloadEpisodes(anime, episodes)
+                }
+            }
+        }
+    }
+
+    /** The other direction: free the space for everything picked that is on the device. */
+    fun deleteSelectedDownloads() {
+        val chosen = state.value.selectedItems.filter { it.downloaded }
+        clearSelection()
+        if (chosen.isEmpty()) return
+
+        viewModelScope.launchNonCancellable {
+            when (contentType) {
+                ContentType.MANGA -> {
+                    val manga = getManga.await(entryId) ?: return@launchNonCancellable
+                    val chapters = chosen.mapNotNull { getChapter.await(it.id) }
+                    if (chapters.isEmpty()) return@launchNonCancellable
+                    downloadManager.deleteChapters(chapters, manga, sourceManager.getOrStub(manga.source))
+                }
+                ContentType.ANIME -> {
+                    val anime = getAnime.await(state.value.itemOwnerId) ?: return@launchNonCancellable
+                    val episodes = chosen.mapNotNull { getEpisode.await(it.id) }
+                    if (episodes.isEmpty()) return@launchNonCancellable
+                    animeDownloadManager.deleteEpisodes(
+                        episodes,
+                        anime,
+                        animeSourceManager.getOrStub(anime.source),
+                    )
+                }
+            }
+        }
+    }
+
+    /** Mark everything picked as viewed, or as not — the action the number box used to be. */
+    fun setSelectedViewed(viewed: Boolean) {
+        val chosen = state.value.selectedItems
+        clearSelection()
+        viewModelScope.launchNonCancellable {
+            chosen.forEach { item ->
+                when (contentType) {
+                    ContentType.MANGA ->
+                        getChapter.await(item.id)?.let { setReadStatus.await(viewed, it) }
+                    ContentType.ANIME ->
+                        getEpisode.await(item.id)?.let { setSeenStatus.await(viewed, it) }
                 }
             }
         }
