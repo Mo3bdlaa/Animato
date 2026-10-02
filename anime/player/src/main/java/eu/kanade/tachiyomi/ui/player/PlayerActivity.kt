@@ -346,20 +346,26 @@ class PlayerActivity : BaseActivity() {
 
         binding.controls.setContent {
             /*
-             * Without this the controls' television treatment is dead code.
+             * Animato's palette, and the answer to "is this a television", in that order.
              *
-             * `LocalIsTelevision` defaults to false and was provided in exactly one place —
-             * MainActivity. The player is a second activity with a Compose root of its own, and a
-             * composition local does not cross between two of them, so every focus ring and every
-             * D-pad affordance in here resolved to "this is a phone" while running on a television,
-             * silently and with nothing to notice.
+             * The palette because this activity is ours and was still drawing its controls in
+             * Mihon's colours — which nothing surfaced, since a player's controls are white on a
+             * scrim and only the accents differ. The accents are the seek bar and every active
+             * state on this screen.
+             *
+             * Then the television flag, inside the theme, because `ProvideIsTelevision` reads the
+             * accent colour to build the focus ring every clickable draws on a television; the
+             * other way round it would read Material's default and the ring would be a colour from
+             * no palette in particular.
+             *
+             * And it has to be here at all, rather than inherited: `LocalIsTelevision` defaults to
+             * false and was provided in exactly one place, MainActivity. The player is a second
+             * activity with a Compose root of its own, and a composition local does not cross
+             * between two of them — so every focus ring and every D-pad affordance in here resolved
+             * to "this is a phone" while running on a television, silently.
              */
-            ProvideIsTelevision {
-                // Animato's palette, not Mihon's. This activity is ours and was still drawing its
-                // controls in the upstream colours — which nothing surfaced, because a player's
-                // controls are white on a scrim and only the accents differ. The accents are the
-                // seek bar and every active state on this screen.
-                AnimatoTheme {
+            AnimatoTheme {
+                ProvideIsTelevision {
                     PlayerControls(
                         viewModel = viewModel,
                         onBackPress = {

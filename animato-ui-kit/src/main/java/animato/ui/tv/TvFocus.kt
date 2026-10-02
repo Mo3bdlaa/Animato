@@ -45,7 +45,38 @@ val LocalIsTelevision = staticCompositionLocalOf { false }
 fun ProvideIsTelevision(content: @Composable () -> Unit) {
     val context = LocalContext.current
     val isTelevision = remember(context) { context.isTelevision() }
-    CompositionLocalProvider(LocalIsTelevision provides isTelevision, content = content)
+
+    if (!isTelevision) {
+        CompositionLocalProvider(LocalIsTelevision provides false, content = content)
+        return
+    }
+
+    /*
+     * On a television, replace what every clickable in the app draws when it is focused.
+     *
+     * This is the line that reaches the screens [tvClickable] never could. `Modifier.clickable` is
+     * focusable by definition, so a remote could always *reach* a settings row or a source in the
+     * Stremio list — and reaching it looked like nothing whatsoever, because the default indication
+     * is a ripple and a ripple answers a question about a finger. From a television: *"I cannot
+     * scroll down or select anything."* Both halves of that were the same missing ring: nothing
+     * visibly moves, so nothing seems to happen, so the list never appears to scroll.
+     *
+     * Doing it here rather than at each call site is the whole point. There are dozens of screens,
+     * a good many of them inherited from Mihon and not this fork's to annotate, and every screen
+     * added later would have had to remember. One value covers all of them and anything written
+     * next year.
+     *
+     * Read inside the theme — see where this is called — so the ring is the accent colour rather
+     * than a colour chosen twice.
+     */
+    val accent = MaterialTheme.colorScheme.primary
+    val indication = remember(accent) { TvFocusIndication(accent) }
+
+    CompositionLocalProvider(
+        LocalIsTelevision provides true,
+        LocalIndication provides indication,
+        content = content,
+    )
 }
 
 fun Context.isTelevision(): Boolean =
@@ -81,9 +112,13 @@ fun Modifier.tvClickable(
     onClick: () -> Unit,
 ): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }
+    val isTelevision = LocalIsTelevision.current
     tvFocusRing(interactionSource, shape).clickable(
         interactionSource = interactionSource,
-        indication = LocalIndication.current,
+        // Null on a television, where [TvFocusIndication] is already the ambient indication and
+        // would draw a second ring inside the one this modifier draws for itself. Off one, the
+        // ripple, exactly as before.
+        indication = if (isTelevision) null else LocalIndication.current,
         onClick = onClick,
     )
 }

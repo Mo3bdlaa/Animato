@@ -147,7 +147,6 @@ android {
         buildConfig = true
     }
 
-
     /*
      * One APK per architecture, as Aniyomi and Mihon both ship.
      *
