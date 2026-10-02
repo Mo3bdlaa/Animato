@@ -2,6 +2,7 @@ package animato.ui.tv
 
 import android.app.UiModeManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.LocalIndication
@@ -79,8 +80,46 @@ fun ProvideIsTelevision(content: @Composable () -> Unit) {
     )
 }
 
-fun Context.isTelevision(): Boolean =
-    getSystemService<UiModeManager>()?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
+/**
+ * Whether this device is driven with a remote rather than a finger.
+ *
+ * ## Four questions, because one was not enough
+ *
+ * This asked `UiModeManager` alone, which is what Android's own documentation suggests, and on a
+ * real television it was apparently answering no: the focus ring shipped, reached every clickable
+ * in the app, and changed nothing on screen — which is what a correct ring gated behind a false
+ * answer looks like. A gate that silently fails is worse than no gate, because everything behind
+ * it then looks broken for reasons that have nothing to do with it.
+ *
+ * `UI_MODE_TYPE_TELEVISION` is only as good as the manufacturer's own configuration, and television
+ * manufacturers are not famous for getting that right. So this now asks four ways and takes any
+ * yes:
+ *
+ * - the **leanback feature**, which every Android TV device declares by definition — this is the
+ *   one the launcher itself filters on, and the one most likely to be true when the others are not;
+ * - the older **television feature**, deprecated but still set on sets old enough to have shipped
+ *   with it;
+ * - the **UI mode**, which is right when it is set;
+ * - **no touchscreen**, which is not a television in principle and is one in practice.
+ *
+ * Being wrong in the generous direction costs a focus ring on a device nobody is focusing anything
+ * on, where nothing ever has focus and so nothing is ever drawn. Being wrong the other way costs
+ * the whole television treatment, silently, which is what just happened.
+ */
+fun Context.isTelevision(): Boolean {
+    val features = packageManager
+    return features.hasSystemFeature(PackageManager.FEATURE_LEANBACK) ||
+        features.hasSystemFeature(FEATURE_TELEVISION) ||
+        getSystemService<UiModeManager>()?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION ||
+        !features.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)
+}
+
+/**
+ * `PackageManager.FEATURE_TELEVISION`, named here because it is deprecated and referencing it
+ * directly earns a warning this build turns into noise. The string is part of the platform's
+ * contract and cannot change.
+ */
+private const val FEATURE_TELEVISION = "android.hardware.type.television"
 
 /**
  * Clickable, and obviously reached when a D-pad reaches it.
