@@ -68,7 +68,12 @@ class AnimatoAppUpdateChecker(
                 .parseAs<List<GithubReleaseSummary>>()
         }
 
-        newerRelease(releases, installed, Build.SUPPORTED_ABIS.asList())
+        newerRelease(
+            releases = releases,
+            installed = installed,
+            abis = Build.SUPPORTED_ABIS.asList(),
+            variantSuffix = BuildConfig.ANIMATO_UPDATE_ASSET_SUFFIX,
+        )
     }
 
     companion object {
@@ -100,6 +105,7 @@ internal fun newerRelease(
     releases: List<GithubReleaseSummary>,
     installed: SemanticVersion,
     abis: List<String>,
+    variantSuffix: String = ".apk",
 ): Release? {
     return releases
         .asSequence()
@@ -112,7 +118,7 @@ internal fun newerRelease(
         // Not `firstOrNull` on the newest alone: if the newest release has no APK for this device,
         // the one before it may, and that is still an update.
         .firstNotNullOfOrNull { (version, release) ->
-            release.downloadLinkFor(abis)?.let { link ->
+            release.downloadLinkFor(abis, variantSuffix)?.let { link ->
                 Release(
                     version = version.toString(),
                     info = release.info.trim(),
@@ -147,10 +153,24 @@ internal data class GithubReleaseSummary(
 
     /**
      * The APK for the first architecture this device names, which is its preferred one.
+     *
+     * [variantSuffix] is what keeps the television build and the ordinary one apart, and the reason
+     * it is a *suffix* rather than a word somewhere in the middle is a trap worth recording. A
+     * release carries four APKs now, and matching on the architecture alone cannot tell them apart:
+     * an asset called `…-tv-arm64-v8a.apk` ends with `-arm64-v8a.apk` just as the phone's does, so
+     * a phone would have been offered a build with no manga libraries in it — and found out when
+     * somebody opened a chapter.
+     *
+     * So the variant goes last, after the architecture: `…-arm64-v8a.apk` and
+     * `…-arm64-v8a-tv.apk`. The phone's own match then cannot reach the television file, which also
+     * means every build already installed keeps updating correctly without knowing any of this.
      */
-    fun downloadLinkFor(abis: List<String>): String? = abis.firstNotNullOfOrNull { abi ->
-        assets.firstOrNull { it.name.endsWith("-$abi.apk", ignoreCase = true) }?.downloadLink
-    }
+    fun downloadLinkFor(abis: List<String>, variantSuffix: String): String? =
+        abis.firstNotNullOfOrNull { abi ->
+            assets.firstOrNull {
+                it.name.endsWith("-$abi$variantSuffix", ignoreCase = true)
+            }?.downloadLink
+        }
 }
 
 @Serializable

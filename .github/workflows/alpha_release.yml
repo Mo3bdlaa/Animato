@@ -137,13 +137,39 @@ jobs:
           echo "ANIMATO_VERSION_NAME=0.1.0-alpha.${{ github.run_number }}" >> $GITHUB_ENV
           echo "ANIMATO_VERSION_CODE=$(( 1000 + ${{ github.run_number }} ))" >> $GITHUB_ENV
 
+      # Twice: once for phones, once for televisions.
+      #
+      # The television build is the same source with `-Panimato-tv`, which leaves out the manga
+      # reader's 28.6 MB of native libraries and fixes the lens to anime so nothing asks for them.
+      # See the comment on `isTvBuild` in animato-app/build.gradle.kts, including why this is a
+      # property rather than a product flavour — a flavour would have renamed the variant tasks that
+      # quick_check.yml and the five check scripts are keyed to.
+      #
+      # The second pass reuses the first's build cache for everything but packaging, so it is far
+      # cheaper than twice the time. The output directory is the same, so the APKs are moved out
+      # from under it between passes.
       - name: Build release APKs
         run: ./gradlew :animato-app:assembleRelease
 
-      - name: Sign APKs
+      - name: Set the phone APKs aside
+        run: |
+          set -e
+          mkdir -p staged/mobile
+          cp animato-app/build/outputs/apk/release/*.apk staged/mobile/
+
+      - name: Build the television APKs
+        run: ./gradlew :animato-app:assembleRelease -Panimato-tv
+
+      - name: Set the television APKs aside
+        run: |
+          set -e
+          mkdir -p staged/tv
+          cp animato-app/build/outputs/apk/release/*.apk staged/tv/
+
+      - name: Sign the phone APKs
         uses: r0adkll/sign-android-release@f30bdd30588842ac76044ecdbd4b6d0e3e813478
         with:
-          releaseDirectory: animato-app/build/outputs/apk/release
+          releaseDirectory: staged/mobile
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ steps.signing.outputs.resolved-alias }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -151,24 +177,64 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: '35.0.1'
 
-      # Two APKs, and they cover every physical Android device: they are all ARM. The universal
-      # APK and the two x86 builds used to be produced here too — 583 MB between them, signed and
-      # then either deleted or published for an emulator nobody uses. See the splits block in
-      # animato-app/build.gradle.kts.
+      # The same key, deliberately. Both builds are the same app under one package name, so a
+      # television that was sent a phone build once has to be able to take this one as an update.
+      - name: Sign the television APKs
+        uses: r0adkll/sign-android-release@f30bdd30588842ac76044ecdbd4b6d0e3e813478
+        with:
+          releaseDirectory: staged/tv
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ steps.signing.outputs.resolved-alias }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: '35.0.1'
+
+      # Four APKs: two architectures each for phones and televisions, which covers every physical
+      # Android device — they are all ARM. The universal APK and the two x86 builds used to be
+      # produced here too, 583 MB between them, signed and then either deleted or published for an
+      # emulator nobody uses. See the splits block in animato-app/build.gradle.kts.
+      #
+      # The names put the variant AFTER the architecture — `…-arm64-v8a-tv.apk`. That is not a
+      # style choice: the in-app updater matches on the end of the asset name, so a variant in the
+      # middle would leave the television file ending in `-arm64-v8a.apk` exactly as the phone's
+      # does, and phones would be offered a build with no manga reader in it. It also means every
+      # build already installed keeps finding the right file without knowing televisions exist.
+      # AnimatoAppUpdateChecker.downloadLinkFor has the rule, and three tests hold it in place.
       - name: Collect the APKs
         run: |
           set -e
           mkdir -p upload
+          collect() {
+            dir="$1"; suffix="$2"
+            for abi in arm64-v8a armeabi-v7a; do
+              src=$(ls "$dir"/*-"$abi"-release*-signed.apk 2>/dev/null | head -1)
+              if [ -z "$src" ]; then
+                echo "::error::No signed APK for $abi in $dir. It holds:"
+                ls -la "$dir"
+                exit 1
+              fi
+              cp "$src" "upload/animato-${VERSION_TAG}-${abi}${suffix}.apk"
+            done
+          }
+          collect staged/mobile ""
+          collect staged/tv "-tv"
+          ls -la upload/
+
+          # The television build is the whole point of the second pass, so a television APK that
+          # came out the same size as the phone's means the exclusion did not apply and the saving
+          # is imaginary. Cheaper to fail here than to find out from a download page.
           for abi in arm64-v8a armeabi-v7a; do
-            src=$(ls animato-app/build/outputs/apk/release/*-"$abi"-release*-signed.apk 2>/dev/null | head -1)
-            if [ -z "$src" ]; then
-              echo "::error::No signed APK for $abi. Signing produced:"
-              ls -la animato-app/build/outputs/apk/release/
+            phone=$(stat -c%s "upload/animato-${VERSION_TAG}-${abi}.apk")
+            tv=$(stat -c%s "upload/animato-${VERSION_TAG}-${abi}-tv.apk")
+            saved=$(( phone - tv ))
+            echo "$abi: phone ${phone}, tv ${tv}, saved ${saved} bytes"
+            if [ "$saved" -lt 20000000 ]; then
+              echo "::error::The $abi television APK saved only ${saved} bytes; expected 28 MB."
+              echo "::error::The jniLibs exclusion in animato-app/build.gradle.kts did not apply."
               exit 1
             fi
-            cp "$src" "upload/animato-${VERSION_TAG}-$abi.apk"
           done
-          ls -la upload/
 
       # What changed, written from the commits rather than from memory.
       #
@@ -209,14 +275,20 @@ jobs:
             echo
             echo "Built from \`$GITHUB_SHA\`."
             echo
-            echo "**Which file:** \`arm64-v8a\` for any phone from roughly 2017 onward."
+            echo "**On a phone:** \`arm64-v8a\` for anything from roughly 2017 onward, or"
             echo "\`armeabi-v7a\` if that one refuses to install."
             echo
-            echo "**On a television or a TV box, try \`armeabi-v7a\` first.** Plenty of them run a"
-            echo "32-bit system on hardware that is physically 64-bit, and the \`arm64-v8a\` file"
-            echo "then fails with nothing more than \"App not installed\". It also needs Android 8.0"
-            echo "or newer and about 300 MB free — a set on Android 7 cannot run this at all, and"
-            echo "many televisions have less storage free than the install needs."
+            echo "**On a television or a TV box:** take a \`-tv\` file, and try"
+            echo "\`armeabi-v7a-tv\` before \`arm64-v8a-tv\` — plenty of televisions run a 32-bit"
+            echo "system on hardware that is physically 64-bit, and the 64-bit file then fails with"
+            echo "nothing more than \"App not installed\"."
+            echo
+            echo "The \`-tv\` builds leave out the manga reader, which is 28 MB of native libraries"
+            echo "for something nobody does with a remote control, and hide the manga half along"
+            echo "with it. Everything else is identical. They still need Android 8.0 or newer."
+            echo
+            echo "Don't put a \`-tv\` build on a phone: it is the same app under the same name, so"
+            echo "it installs happily and the manga half is simply gone."
             echo
             echo "**Coming from a debug build?** Uninstall it first. Android rejects an update"
             echo "signed by a different certificate, and this one is signed with the release key."

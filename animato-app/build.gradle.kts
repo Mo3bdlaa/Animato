@@ -18,6 +18,14 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+/**
+ * The television build, asked for with `-Panimato-tv`.
+ *
+ * At file scope because two blocks below need it: `defaultConfig`, for the flags the app reads
+ * at runtime, and `packaging`, for the libraries it leaves out.
+ */
+val isTvBuild = project.hasProperty("animato-tv")
+
 android {
     namespace = "io.github.mo3bdlaa.animato"
 
@@ -86,11 +94,59 @@ android {
             "UPDATER_ENABLED",
             "${!project.hasProperty("animato-no-updater")}",
         )
+
+        /*
+         * The television build, asked for with `-Panimato-tv`.
+         *
+         * It exists for a reason with a number on it. The APK is 95 MB on armeabi-v7a and 88 MB of
+         * that is native code — all of it genuinely used, so there was no waste to delete and no
+         * stripping left to do (the libraries ship stripped; measuring it saves 0.5 MB). The only
+         * honest way to make it smaller was to take something out, and on a television the obvious
+         * something is the manga reader: two image decoders and a WebGPU viewer, 28.6 MB between
+         * them, for reading comics with a remote control from three metres away.
+         *
+         * ## Why a property and not a product flavour
+         *
+         * A flavour is the textbook answer and it was the wrong one here. Flavours rename every
+         * variant task — `compileReleaseKotlin` becomes `compileMobileReleaseKotlin`,
+         * `testDebugUnitTest` becomes `testMobileDebugUnitTest` — and this repository's CI runs five
+         * bespoke scripts keyed to those names and to the output paths under them. Worse than the
+         * breakage is the shape of it: `./gradlew testDebugUnitTest` would keep *succeeding*,
+         * because other modules still have that task, while this module's tests quietly stopped
+         * running. A property changes no task name, so every lane and every script keeps working
+         * and the release workflow simply runs `assembleRelease` a second time with it set.
+         *
+         * ## Why excluding the libraries is only half of it
+         *
+         * The Kotlin is identical in both builds, so the reader's code is still here and would load
+         * a library that is not. That is why this also fixes the lens to anime — see
+         * `ContentPreferences.fixedTo`. Not a cosmetic hide: the lens is what the library, the
+         * rails, search and *the extensions list* all filter by, so a manga source cannot be
+         * installed on this build, let alone opened.
+         */
+        buildConfigField("boolean", "ANIMATO_ANIME_ONLY", "$isTvBuild")
+
+        /*
+         * Which release asset this build updates itself from.
+         *
+         * The variant goes *after* the architecture — `…-arm64-v8a-tv.apk`, not `…-tv-arm64-v8a.apk`
+         * — and that ordering is load-bearing. The updater matches on the end of the asset name, so
+         * a variant in the middle would leave the television file ending in `-arm64-v8a.apk` like
+         * the phone's, and a phone would have been offered a build with no manga libraries in it.
+         * It would have found out when somebody opened a chapter. Putting it last also means every
+         * build already installed keeps updating correctly without knowing this flag exists.
+         */
+        buildConfigField(
+            "String",
+            "ANIMATO_UPDATE_ASSET_SUFFIX",
+            if (isTvBuild) "\"-tv.apk\"" else "\".apk\"",
+        )
     }
 
     buildFeatures {
         buildConfig = true
     }
+
 
     /*
      * One APK per architecture, as Aniyomi and Mihon both ship.
@@ -138,6 +194,27 @@ android {
                 "libswscale",
                 "libtorrserver",
             ).map { "**/$it.so" }
+
+            /*
+             * The manga reader's native half, left out of the television build.
+             *
+             * 28.6 MB of the APK, and all three are reached only by opening a chapter: two image
+             * decoders — Mihon ships both, deliberately — and the WebGPU viewer behind one of its
+             * reading modes. The lens being fixed to anime is what makes sure nothing ever asks for
+             * them; this line is only the saving. Taking one without the other is a crash, so they
+             * are both read off the same flag.
+             *
+             * Measured rather than guessed: every other native library in here is either the player
+             * (mpv and FFmpeg, 23 MB) or something the whole app needs, and the libraries already
+             * ship stripped, so there was nothing else to take.
+             */
+            if (isTvBuild) {
+                excludes += listOf(
+                    "libimagedecoder",
+                    "libimagedecoder2",
+                    "libwebgpu_c_bundled",
+                ).map { "**/$it.so" }
+            }
         }
     }
 

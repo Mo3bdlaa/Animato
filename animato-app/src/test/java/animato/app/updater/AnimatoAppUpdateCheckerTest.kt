@@ -119,6 +119,52 @@ class AnimatoAppUpdateCheckerTest {
         result!!.version shouldBe "0.1.0-alpha.8"
     }
 
+    /*
+     * A release now carries four files — two architectures of the ordinary build and two of the
+     * television one — and the three tests below are the ones that would have caught the bug this
+     * nearly shipped with.
+     *
+     * The television file is named with the variant *after* the architecture for exactly this
+     * reason. Matching on the architecture alone cannot tell the two apart, so a phone would have
+     * been handed a build with no manga libraries in it and discovered that when somebody opened a
+     * chapter — an update that installs cleanly and breaks a feature is the worst shape this
+     * mistake could have taken.
+     */
+
+    @Test
+    fun `a phone is never offered the television build`() {
+        val result = newerRelease(
+            releases = listOf(release("v0.1.0-alpha.8", withTvAssets = true)),
+            installed = installed("0.1.0-alpha.7"),
+            abis = arm64,
+        )
+
+        result!!.downloadLink shouldBe "https://example.invalid/animato-v0.1.0-alpha.8-arm64-v8a.apk"
+    }
+
+    @Test
+    fun `a television is offered the television build`() {
+        val result = newerRelease(
+            releases = listOf(release("v0.1.0-alpha.8", withTvAssets = true)),
+            installed = installed("0.1.0-alpha.7"),
+            abis = arm32,
+            variantSuffix = "-tv.apk",
+        )
+
+        result!!.downloadLink shouldBe
+            "https://example.invalid/animato-v0.1.0-alpha.8-armeabi-v7a-tv.apk"
+    }
+
+    @Test
+    fun `a television is not dragged onto the ordinary build`() {
+        newerRelease(
+            releases = listOf(release("v0.1.0-alpha.8", withTvAssets = false)),
+            installed = installed("0.1.0-alpha.7"),
+            abis = arm64,
+            variantSuffix = "-tv.apk",
+        ).shouldBeNull()
+    }
+
     private fun installed(raw: String) = SemanticVersion.parse(raw)!!
 
     private fun release(
@@ -126,17 +172,19 @@ class AnimatoAppUpdateCheckerTest {
         isPrerelease: Boolean = true,
         isDraft: Boolean = false,
         abis: List<String> = listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64"),
+        withTvAssets: Boolean = false,
     ) = GithubReleaseSummary(
         tag = tag,
         info = "Alpha build.",
         releaseLink = "https://example.invalid/releases/tag/$tag",
         isDraft = isDraft,
         isPrerelease = isPrerelease,
-        assets = abis.map { abi ->
-            GithubReleaseAsset(
-                name = "animato-$tag-$abi.apk",
-                downloadLink = "https://example.invalid/animato-$tag-$abi.apk",
-            )
+        assets = abis.flatMap { abi ->
+            val names = buildList {
+                add("animato-$tag-$abi.apk")
+                if (withTvAssets) add("animato-$tag-$abi-tv.apk")
+            }
+            names.map { GithubReleaseAsset(name = it, downloadLink = "https://example.invalid/$it") }
         },
     )
 }

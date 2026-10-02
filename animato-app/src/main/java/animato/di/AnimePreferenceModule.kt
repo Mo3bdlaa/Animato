@@ -6,7 +6,9 @@ import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.entry.EntryOverrides
 import animato.app.library.UnifiedLibraryPreferences
 import animato.app.sync.SyncPreferences
+import animato.domain.content.ContentFilter
 import animato.domain.content.ContentPreferences
+import io.github.mo3bdlaa.animato.BuildConfig
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
@@ -36,7 +38,20 @@ class AnimePreferenceModule(@Suppress("unused") val app: Application) : InjektMo
         addSingletonFactory { AnimeTrackPreferences(get()) }
         addSingletonFactory { TorrentPreferences(get()) }
         addSingletonFactory { ProxyPreferences(get()) }
-        addSingletonFactory { ContentPreferences(get()) }
+        /*
+         * The lens, and whether this build gets to choose it.
+         *
+         * The television build carries no manga native libraries, so manga is not a thing it can
+         * decline to show — it is a thing it cannot show. That has to be decided here, where the
+         * build's own BuildConfig is readable: :anime:domain holds ContentPreferences and has no
+         * BuildConfig of its own to consult.
+         */
+        addSingletonFactory {
+            ContentPreferences(
+                get(),
+                fixedTo = ContentFilter.ANIME.takeIf { BuildConfig.ANIMATO_ANIME_ONLY },
+            )
+        }
         addSingletonFactory { DownloadCleanupPreferences(get()) }
         addSingletonFactory { UnifiedLibraryPreferences(get()) }
         addSingletonFactory { SyncPreferences(get()) }

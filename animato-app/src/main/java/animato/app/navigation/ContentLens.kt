@@ -102,6 +102,19 @@ fun contentTypeOrDefault(fallback: ContentType = ContentType.MANGA): ContentType
  */
 @Composable
 fun LensButton(modifier: Modifier = Modifier) {
+    val preferences = remember { Injekt.get<ContentPreferences>() }
+
+    /*
+     * Nothing at all on a build that has only one half in it.
+     *
+     * The television build carries no manga native libraries, so its lens is fixed and a write to
+     * it does nothing — see FixedPreference. A button that opens a menu of three options, two of
+     * which cannot take effect, is worse than no button: it reads as a broken control rather than
+     * as an absent one. The top bar simply has one fewer action, which is the honest shape for a
+     * build with one kind of content in it.
+     */
+    if (preferences.lensIsFixed) return
+
     val lens = contentLens()
     var expanded by remember { mutableStateOf(false) }
 

@@ -27,7 +27,21 @@ import tachiyomi.core.common.preference.getEnum
  */
 class ContentPreferences(
     private val preferenceStore: PreferenceStore,
+    /**
+     * The one content type this build can actually show, when it is built for only one.
+     *
+     * Null in the ordinary build, where the lens is a choice. The television build sets it to
+     * [ContentFilter.ANIME], because that build does not carry the native libraries the manga
+     * reader loads — see the `tv` flavour in animato-app/build.gradle.kts. The lens is the right
+     * place for it: every screen that can show manga already asks this one value, the extensions
+     * list included, so narrowing it here is what makes a manga source unreachable rather than
+     * merely discouraged.
+     */
+    private val fixedTo: ContentFilter? = null,
 ) {
+
+    /** Whether the lens is this build's to choose. False on a build made for one content type. */
+    val lensIsFixed: Boolean get() = fixedTo != null
 
     /**
      * A new key rather than a migration of the old pair.
@@ -36,7 +50,9 @@ class ContentPreferences(
      * across: every existing install would have to be assigned a third state it never chose. `ALL`
      * is both the honest default and the one people want — one library is the product.
      */
-    val contentFilter = preferenceStore.getEnum("animato_content_lens", ContentFilter.ALL)
+    val contentFilter = fixedTo
+        ?.let { FixedPreference(CONTENT_LENS_KEY, it) }
+        ?: preferenceStore.getEnum(CONTENT_LENS_KEY, ContentFilter.ALL)
 
     /**
      * Entries dismissed from Home's Continue rail, as `TYPE:id` strings.
@@ -56,4 +72,15 @@ class ContentPreferences(
      * launch. See `NsfwDefaults`.
      */
     val nsfwIncognitoSeeded = preferenceStore.getStringSet("animato_nsfw_incognito_seeded", emptySet())
+
+    private companion object {
+        /**
+         * Named rather than written twice.
+         *
+         * The fixed lens reports the same key as the stored one even though it reads nothing from
+         * the store, so that anything keyed on preferences — a backup's allow-list, a log — sees
+         * one name for one setting instead of two that differ by a typo.
+         */
+        const val CONTENT_LENS_KEY = "animato_content_lens"
+    }
 }
