@@ -28,20 +28,24 @@ import tachiyomi.core.common.preference.getEnum
 class ContentPreferences(
     private val preferenceStore: PreferenceStore,
     /**
-     * The one content type this build can actually show, when it is built for only one.
+     * Whether this build can show anything but anime.
      *
-     * Null in the ordinary build, where the lens is a choice. The television build sets it to
-     * [ContentFilter.ANIME], because that build does not carry the native libraries the manga
-     * reader loads — see the `tv` flavour in animato-app/build.gradle.kts. The lens is the right
-     * place for it: every screen that can show manga already asks this one value, the extensions
-     * list included, so narrowing it here is what makes a manga source unreachable rather than
-     * merely discouraged.
+     * False in the ordinary build, where the lens is a choice. The television build sets it,
+     * because that build does not carry the native libraries the manga reader loads — see
+     * `isTvBuild` in animato-app/build.gradle.kts. The lens is the right place for it: every screen
+     * that can show manga already asks this one value, the extensions list included, so narrowing
+     * it here is what makes a manga source unreachable rather than merely discouraged.
+     *
+     * A flag rather than the [ContentFilter] to fix it to, which is what this was first. The check
+     * in `.github/check-injekt-bindings.sh` requires every constructor parameter of a registered
+     * class to be registered itself, and does not know this one is passed explicitly — a flag is
+     * the smaller answer, and it reads better at the call site than the value did.
      */
-    private val fixedTo: ContentFilter? = null,
+    private val animeOnly: Boolean = false,
 ) {
 
     /** Whether the lens is this build's to choose. False on a build made for one content type. */
-    val lensIsFixed: Boolean get() = fixedTo != null
+    val lensIsFixed: Boolean get() = animeOnly
 
     /**
      * A new key rather than a migration of the old pair.
@@ -50,9 +54,11 @@ class ContentPreferences(
      * across: every existing install would have to be assigned a third state it never chose. `ALL`
      * is both the honest default and the one people want — one library is the product.
      */
-    val contentFilter = fixedTo
-        ?.let { FixedPreference(CONTENT_LENS_KEY, it) }
-        ?: preferenceStore.getEnum(CONTENT_LENS_KEY, ContentFilter.ALL)
+    val contentFilter = if (animeOnly) {
+        FixedPreference(CONTENT_LENS_KEY, ContentFilter.ANIME)
+    } else {
+        preferenceStore.getEnum(CONTENT_LENS_KEY, ContentFilter.ALL)
+    }
 
     /**
      * Entries dismissed from Home's Continue rail, as `TYPE:id` strings.

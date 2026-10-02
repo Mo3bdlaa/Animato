@@ -29,7 +29,7 @@ class ContentPreferencesTest {
 
     @Test
     fun `a fixed lens reports the type the build was made for`() {
-        val preferences = ContentPreferences(InMemoryPreferenceStore(), fixedTo = ContentFilter.ANIME)
+        val preferences = ContentPreferences(InMemoryPreferenceStore(), animeOnly = true)
 
         preferences.lensIsFixed shouldBe true
         preferences.contentFilter.get() shouldBe ContentFilter.ANIME
@@ -37,7 +37,7 @@ class ContentPreferencesTest {
 
     @Test
     fun `a fixed lens cannot be written to`() {
-        val preferences = ContentPreferences(InMemoryPreferenceStore(), fixedTo = ContentFilter.ANIME)
+        val preferences = ContentPreferences(InMemoryPreferenceStore(), animeOnly = true)
 
         preferences.contentFilter.set(ContentFilter.MANGA)
         preferences.contentFilter.set(ContentFilter.ALL)
@@ -47,7 +47,7 @@ class ContentPreferencesTest {
 
     @Test
     fun `a fixed lens emits its one value to whoever is watching`() = runTest {
-        val preferences = ContentPreferences(InMemoryPreferenceStore(), fixedTo = ContentFilter.ANIME)
+        val preferences = ContentPreferences(InMemoryPreferenceStore(), animeOnly = true)
 
         preferences.contentFilter.changes().first() shouldBe ContentFilter.ANIME
     }
@@ -61,7 +61,7 @@ class ContentPreferencesTest {
      */
     @Test
     fun `a fixed lens holds nothing a backup could carry`() {
-        val preferences = ContentPreferences(InMemoryPreferenceStore(), fixedTo = ContentFilter.ANIME)
+        val preferences = ContentPreferences(InMemoryPreferenceStore(), animeOnly = true)
 
         preferences.contentFilter.isSet() shouldBe false
 

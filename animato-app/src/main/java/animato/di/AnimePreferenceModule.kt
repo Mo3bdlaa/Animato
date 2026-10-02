@@ -6,7 +6,6 @@ import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.entry.EntryOverrides
 import animato.app.library.UnifiedLibraryPreferences
 import animato.app.sync.SyncPreferences
-import animato.domain.content.ContentFilter
 import animato.domain.content.ContentPreferences
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.domain.download.service.AnimeDownloadPreferences
@@ -46,12 +45,7 @@ class AnimePreferenceModule(@Suppress("unused") val app: Application) : InjektMo
          * build's own BuildConfig is readable: :anime:domain holds ContentPreferences and has no
          * BuildConfig of its own to consult.
          */
-        addSingletonFactory {
-            ContentPreferences(
-                get(),
-                fixedTo = ContentFilter.ANIME.takeIf { BuildConfig.ANIMATO_ANIME_ONLY },
-            )
-        }
+        addSingletonFactory { ContentPreferences(get(), animeOnly = BuildConfig.ANIMATO_ANIME_ONLY) }
         addSingletonFactory { DownloadCleanupPreferences(get()) }
         addSingletonFactory { UnifiedLibraryPreferences(get()) }
         addSingletonFactory { SyncPreferences(get()) }
