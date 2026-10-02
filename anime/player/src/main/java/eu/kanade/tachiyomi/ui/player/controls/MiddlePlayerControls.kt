@@ -23,16 +23,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import animato.anime.player.R
+import animato.ui.tv.LocalIsTelevision
+import animato.ui.tv.tvFocusRing
 import aniyomi.core.common.torrent.TorrentProgress
 import eu.kanade.tachiyomi.ui.player.controls.components.ControlsButton
 import `is`.xyz.mpv.Utils
@@ -123,10 +129,33 @@ fun MiddlePlayerControls(
                     enter = enter,
                     exit = exit,
                 ) {
+                    /*
+                     * Where a remote arrives.
+                     *
+                     * The controls have no focus until something asks for it, and nothing did — so
+                     * the first D-pad press after the overlay appeared went to the activity instead
+                     * and seeked, and the one before it had nothing to move from. Focus starts on
+                     * play/pause because it is the middle of the row and the thing most likely to
+                     * be wanted; everything else is one or two presses from here.
+                     *
+                     * Asked for after a frame has passed: this content is composed when the overlay
+                     * becomes visible, and a focus request on a node that has not been placed yet
+                     * throws. Waiting one frame is what makes the node exist to be focused.
+                     */
+                    val focusRequester = remember { FocusRequester() }
+                    val isTelevision = LocalIsTelevision.current
+                    LaunchedEffect(isTelevision) {
+                        if (!isTelevision) return@LaunchedEffect
+                        withFrameNanos {}
+                        runCatching { focusRequester.requestFocus() }
+                    }
+
                     Image(
                         painter = rememberAnimatedVectorPainter(icon, !paused),
                         modifier = Modifier
                             .size(96.dp)
+                            .focusRequester(focusRequester)
+                            .tvFocusRing(interaction, CircleShape)
                             .clip(CircleShape)
                             .clickable(
                                 interaction,

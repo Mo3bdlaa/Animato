@@ -17,7 +17,9 @@
 
       The declaration half of Android TV support. The other half — focus a remote can see from three
       metres away — is animato.ui.tv.TvFocus, applied to every list and grid item on the five main
-      screens. Still outstanding: the player's own controls, which are a surface of their own.
+      screens and to every button in the player, which is a surface of its own and took a second
+      pass: a player's buttons live under a hide timer and behind an overlay that has to be summoned
+      before there is anything to focus. See ControlsButton and PlayerActivity.onKeyDown.
     -->
     <uses-feature
         android:name="android.software.leanback"

@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -80,6 +81,31 @@ fun Modifier.tvClickable(
     onClick: () -> Unit,
 ): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }
+    tvFocusRing(interactionSource, shape).clickable(
+        interactionSource = interactionSource,
+        indication = LocalIndication.current,
+        onClick = onClick,
+    )
+}
+
+/**
+ * The same ring, for a node that already owns its own click.
+ *
+ * [tvClickable] is the right answer wherever the item's whole job is to be tapped, and it is most of
+ * them. Some nodes cannot hand their click over: the player's buttons need a long press as well, and
+ * they layer their own ripple over a transparent `combinedClickable` so that the ripple lands inside
+ * a circular clip rather than over the video. Giving those a `tvClickable` as well would make two
+ * focus targets out of one button, and a remote would need two presses to cross a row of them.
+ *
+ * So this is the decoration on its own, taking the interaction source the call site already has. It
+ * draws nothing off a television, and it never touches focus or click behaviour — a node that was
+ * not focusable to begin with does not become focusable by being given a ring, which is why this is
+ * only ever added to something already clickable.
+ */
+fun Modifier.tvFocusRing(
+    interactionSource: InteractionSource,
+    shape: Shape = RoundedCornerShape(FocusRadius),
+): Modifier = composed {
     val isTelevision = LocalIsTelevision.current
     val focused by interactionSource.collectIsFocusedAsState()
     val highlighted = isTelevision && focused
@@ -89,7 +115,9 @@ fun Modifier.tvClickable(
         label = "tv-focus-scale",
     )
 
-    val decorated = if (isTelevision) {
+    if (!isTelevision) {
+        this
+    } else {
         this
             .scale(scale)
             .border(
@@ -97,15 +125,7 @@ fun Modifier.tvClickable(
                 color = if (highlighted) MaterialTheme.colorScheme.primary else Color.Transparent,
                 shape = shape,
             )
-    } else {
-        this
     }
-
-    decorated.clickable(
-        interactionSource = interactionSource,
-        indication = LocalIndication.current,
-        onClick = onClick,
-    )
 }
 
 private const val FOCUS_SCALE = 1.06f

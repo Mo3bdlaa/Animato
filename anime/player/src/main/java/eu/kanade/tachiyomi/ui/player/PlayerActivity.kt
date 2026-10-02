@@ -68,6 +68,8 @@ import animato.anime.player.getShadersDirectory
 import animato.anime.services.AnimeNotificationReceiver
 import animato.anime.services.AnimeNotifications
 import animato.ui.theme.AnimatoTheme
+import animato.ui.tv.ProvideIsTelevision
+import animato.ui.tv.isTelevision
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.core.common.torrent.TorrentProgress
 import aniyomi.core.common.torrent.TorrentServerApi
@@ -134,6 +136,14 @@ class PlayerActivity : BaseActivity() {
     val player by lazy { binding.player }
     val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
     val audioManager by lazy { getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+
+    /**
+     * Asked once. The same question `LocalIsTelevision` answers, for the key handler below it.
+     *
+     * Not named `isTelevision`: that is the extension function this calls, and a property shadowing
+     * it reads as though it were calling itself.
+     */
+    private val isOnTelevision by lazy { isTelevision() }
 
     private var mediaSession: MediaSession? = null
     private val gesturePreferences: GesturePreferences by lazy { viewModel.gesturePreferences }
@@ -335,32 +345,43 @@ class PlayerActivity : BaseActivity() {
             .launchIn(lifecycleScope)
 
         binding.controls.setContent {
-            // Animato's palette, not Mihon's. This activity is ours and was still drawing its
-            // controls in the upstream colours — which nothing surfaced, because a player's
-            // controls are white on a scrim and only the accents differ. The accents are the seek
-            // bar and every active state on this screen.
-            AnimatoTheme {
-                PlayerControls(
-                    viewModel = viewModel,
-                    onBackPress = {
-                        if (wantsPipOnExit()) {
-                            enterPictureInPictureMode(createPipParams())
-                        } else {
-                            finish()
-                        }
-                    },
-                    modifier = Modifier.onGloballyPositioned {
-                        pipRect = run {
-                            val boundsInWindow = it.boundsInWindow()
-                            Rect(
-                                boundsInWindow.left.toInt(),
-                                boundsInWindow.top.toInt(),
-                                boundsInWindow.right.toInt(),
-                                boundsInWindow.bottom.toInt(),
-                            )
-                        }
-                    },
-                )
+            /*
+             * Without this the controls' television treatment is dead code.
+             *
+             * `LocalIsTelevision` defaults to false and was provided in exactly one place —
+             * MainActivity. The player is a second activity with a Compose root of its own, and a
+             * composition local does not cross between two of them, so every focus ring and every
+             * D-pad affordance in here resolved to "this is a phone" while running on a television,
+             * silently and with nothing to notice.
+             */
+            ProvideIsTelevision {
+                // Animato's palette, not Mihon's. This activity is ours and was still drawing its
+                // controls in the upstream colours — which nothing surfaced, because a player's
+                // controls are white on a scrim and only the accents differ. The accents are the
+                // seek bar and every active state on this screen.
+                AnimatoTheme {
+                    PlayerControls(
+                        viewModel = viewModel,
+                        onBackPress = {
+                            if (wantsPipOnExit()) {
+                                enterPictureInPictureMode(createPipParams())
+                            } else {
+                                finish()
+                            }
+                        },
+                        modifier = Modifier.onGloballyPositioned {
+                            pipRect = run {
+                                val boundsInWindow = it.boundsInWindow()
+                                Rect(
+                                    boundsInWindow.left.toInt(),
+                                    boundsInWindow.top.toInt(),
+                                    boundsInWindow.right.toInt(),
+                                    boundsInWindow.bottom.toInt(),
+                                )
+                            }
+                        },
+                    )
+                }
             }
         }
 
@@ -1129,8 +1150,52 @@ class PlayerActivity : BaseActivity() {
             KeyEvent.KEYCODE_SPACE -> viewModel.pauseUnpause()
             KeyEvent.KEYCODE_MEDIA_STOP -> finishAndRemoveTask()
 
+            /*
+             * The button in the middle of every remote, which did nothing.
+             *
+             * SPACE above is the same action for a keyboard, and a television has no space bar.
+             * mpv's own default bindings put play/pause on SPACE and leave ENTER unbound, so the
+             * key a television viewer reaches for first fell through to a mapping that ignored it.
+             *
+             * This is only reached when nothing in the controls holds focus: a focused button
+             * consumes the key in the view hierarchy, and the framework calls `onKeyDown` only
+             * after that has declined it. So this case is *OK with nothing selected* — which is the
+             * whole screen, which means play/pause.
+             *
+             * The controls are shown as well as toggled, because a pause with no visible state
+             * change is indistinguishable from a remote that did not register.
+             */
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                viewModel.showControls()
+                viewModel.pauseUnpause()
+            }
+
             KeyEvent.KEYCODE_MEDIA_REWIND -> viewModel.handleLeftDoubleTap()
             KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> viewModel.handleRightDoubleTap()
+
+            /*
+             * On a television, up or down reveals the controls. Everywhere else, mpv keeps them.
+             *
+             * It has to be a key that *reveals*, because the buttons live inside an
+             * `AnimatedVisibility`: while the overlay is hidden there is nothing composed to focus
+             * and so nothing a D-pad can move onto — which left left/right seeking forever and the
+             * rest of the overlay unreachable. Up and down are the two directions with nothing else
+             * to do here; left and right already seek, which is worth keeping as the thing a remote
+             * can do without looking.
+             *
+             * Gated on the device because mpv's defaults bind these to a minute's seek, and taking
+             * that from somebody with a keyboard to solve a television's problem is a trade with
+             * nothing on their side of it. Once the overlay is up, focus is inside it and these
+             * never reach here again.
+             */
+            KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> {
+                if (isOnTelevision) {
+                    viewModel.showControls()
+                } else {
+                    event?.let { player.onKey(it) }
+                    super.onKeyDown(keyCode, event)
+                }
+            }
 
             // other keys should be bound by the user in input.conf ig
             else -> {
