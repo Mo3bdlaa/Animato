@@ -30,6 +30,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -163,6 +164,7 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
         LanguageSheet(
             languages = state.languages,
             onToggle = screenModel::toggleLanguage,
+            onToggleAll = screenModel::toggleAllLanguages,
             onDismiss = { languagesOpen = false },
         )
     }
@@ -697,6 +699,7 @@ private fun ExtensionIcon(icon: Any?) {
 private fun LanguageSheet(
     languages: List<ExtensionLanguage>,
     onToggle: (String) -> Unit,
+    onToggleAll: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -711,6 +714,29 @@ private fun LanguageSheet(
             fontWeight = FontWeight.SemiBold,
         )
         LazyColumn {
+            /*
+             * All of them, first.
+             *
+             * The list arrives with the device's language alone ticked, so "all of them" is the
+             * commonest thing anybody comes here to say — and saying it one language at a time is
+             * twenty taps. It goes above the rest and above the divider because it is not another
+             * language: it is the answer to a different question, asked more often than any single
+             * row below it.
+             */
+            item(key = "all") {
+                ListItem(
+                    modifier = Modifier.clickable { onToggleAll() },
+                    headlineContent = { Text(stringResource(AYMR.strings.label_all)) },
+                    leadingContent = {
+                        Checkbox(
+                            checked = languages.isNotEmpty() && languages.all { it.enabled },
+                            onCheckedChange = null,
+                        )
+                    },
+                )
+                HorizontalDivider()
+            }
+
             items(items = languages, key = { it.code }) { language ->
                 ListItem(
                     modifier = Modifier.clickable { onToggle(language.code) },

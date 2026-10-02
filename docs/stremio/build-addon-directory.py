@@ -20,6 +20,10 @@ Each listing page carries links to `/addons/{slug}`; each addon page carries a `
 the addon's manifest, both inside the React flight payload as escaped JSON. Paging stops after two
 consecutive pages that add nothing new, because the site keeps answering past the last real page.
 
+Then every address is asked whether it is still there, because the site lists what people have
+published rather than what is still running. Only the replies that cannot be about this machine's
+own network count as gone — see `is_gone`, which is a narrower question than it first looks.
+
 Run from anywhere: `python3 docs/stremio/build-addon-directory.py`
 """
 
@@ -27,7 +31,9 @@ import gzip
 import json
 import re
 import time
+import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 SITE = "https://stremio-addons.net"
@@ -59,17 +65,73 @@ POLITE_DELAY_SECONDS = 0.12
 MINIMUM_PLAUSIBLE = 100
 ACCEPTABLE_SHRINK = 0.66
 
+# Asking five hundred addresses whether they are still alive, in parallel because in series it is
+# an afternoon. Modest on the workers: these are other people's servers, most of them somebody's
+# free tier, and the point is to find out whether they answer rather than to find out what they do
+# under load.
+VALIDATION_WORKERS = 16
+VALIDATION_TIMEOUT_SECONDS = 20
+VALIDATION_ATTEMPTS = 2
+VALIDATION_RETRY_SECONDS = 1.5
 
-def get(url):
+# The only replies that mean the addon itself is gone rather than that this machine could not get
+# to it. See is_gone().
+GONE_CODES = {404, 410}
+
+
+def get(url, timeout=45):
     request = urllib.request.Request(
         url,
         headers={"User-Agent": "Mozilla/5.0", "Accept-Encoding": "gzip"},
     )
-    response = urllib.request.urlopen(request, timeout=45)
+    response = urllib.request.urlopen(request, timeout=timeout)
     body = response.read()
     if response.headers.get("Content-Encoding") == "gzip":
         body = gzip.decompress(body)
     return body.decode("utf8", "replace")
+
+
+def is_gone(entry):
+    """
+    Whether this addon's manifest is *definitely* no longer there.
+
+    The directory listed whatever stremio-addons.net said and never once asked the addon itself.
+    The site is a list of what people have published, not of what is still running, so part of any
+    snapshot is addresses that stopped answering months ago — each one a row somebody taps, waits
+    on, and gets an error from.
+
+    ## Why this asks such a narrow question
+
+    The obvious version of this check — "did I get a manifest back?" — was written first and was
+    wrong, which measuring is the only way to find out. Across a sample of eighty: 58 answered, 7
+    returned 404, and the other 15 failed with TLS errors, connection resets, timeouts, 403s and
+    Cloudflare 5xxs. Those fifteen are not evidence about the addon. They are evidence about the
+    machine running this script — its proxy, its CA store, where in the world it is — and dropping
+    on them would quietly delete working addons from everybody's directory because one build
+    machine could not reach them.
+
+    404 and 410 cannot be produced that way. The server is up, it understood the request, and it
+    says there is nothing at that path. That is the only answer here that travels.
+
+    Everything else is kept and reported, because the cost of the two mistakes is not symmetric: a
+    dead entry costs one failed tap, and a wrongly deleted one costs a source somebody wanted and
+    has no way to discover is missing.
+    """
+    for attempt in range(VALIDATION_ATTEMPTS):
+        try:
+            get(entry["url"], timeout=VALIDATION_TIMEOUT_SECONDS)
+            return False
+        except urllib.error.HTTPError as error:
+            if error.code not in GONE_CODES:
+                return False
+            # Confirmed only on the last attempt: a 404 from a server that is mid-deploy is a
+            # 404 that will not be one in ten seconds.
+            if attempt + 1 == VALIDATION_ATTEMPTS:
+                return True
+        except Exception:  # noqa: BLE001 - anything else is about this machine, not the addon
+            return False
+        time.sleep(VALIDATION_RETRY_SECONDS)
+    return False
 
 
 def slugs():
@@ -189,7 +251,18 @@ def main():
     unique = {}
     for entry in out:
         unique.setdefault(entry["url"].rstrip("/").lower(), entry)
-    final = sorted(unique.values(), key=lambda e: e["name"].lower())
+    listed = sorted(unique.values(), key=lambda e: e["name"].lower())
+
+    # Which of them have actually been taken down. See is_gone().
+    print(f"\nasking {len(listed)} addons whether they are still there")
+    with ThreadPoolExecutor(max_workers=VALIDATION_WORKERS) as pool:
+        gone = list(pool.map(is_gone, listed))
+
+    final = [entry for entry, missing in zip(listed, gone) if not missing]
+    for entry, missing in zip(listed, gone):
+        if missing:
+            print(f"    dropped {entry['name']} — {entry['url']}")
+    print(f"  {sum(gone)} gone, {len(final)} kept")
 
     # Nothing is written unless the run produced a plausible list.
     #

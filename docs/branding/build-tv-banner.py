@@ -30,10 +30,22 @@ from PIL import Image
 # rather than picking per density, and xhdpi is where Android expects to find it.
 BANNER_SIZE = (320, 180)
 
-# How much of the tile's height the mark occupies. Leaving room around it matters more here than on
-# a launcher icon: TV home screens draw a focus border tight against the banner, and artwork that
-# reaches the edge collides with it.
-ARTWORK_HEIGHT_FRACTION = 0.72
+# How much of the tile's height the mark occupies.
+#
+# This was 0.72, and on a television that was plainly wrong: the mark came out 130×130 in a 320×180
+# tile, which is 11% of its area with 95 blank pixels down each side. Among the other banners on a
+# home screen, every one of which fills its tile, ours read as a stamp somebody had forgotten to
+# finish.
+#
+# The margin it was buying is real — TV launchers draw a focus border tight against the banner, and
+# artwork that reaches the edge collides with it — but a margin is a dozen pixels, not fifty. At
+# 0.88 the mark is 158 px tall with 11 px above and below, which clears the border and still fills
+# the tile.
+#
+# The width stays what it is. The artwork is square and contains the product's name, so there is
+# nothing to stretch and nothing to put beside it; cream down the sides is the shape of a square
+# mark on a 16:9 tile, and is the right answer rather than a leftover.
+ARTWORK_HEIGHT_FRACTION = 0.88
 
 # Matches @color/animato_paper, the launcher icon's background layer. Written out rather than parsed
 # from the XML so the two can be compared by eye in a review; if the brand colour changes, both move.

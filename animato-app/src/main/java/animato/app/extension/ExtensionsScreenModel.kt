@@ -334,6 +334,25 @@ class ExtensionsScreenModel(
         )
     }
 
+    /**
+     * Every language at once.
+     *
+     * The list defaults to the device's language alone, so the commonest thing anybody wants from
+     * this sheet is *all of them* — and without this that was twenty-odd taps, which is the kind of
+     * thing people conclude the app cannot do rather than sit and do.
+     *
+     * Ticking it on turns on every language the list is offering. Ticking it off clears the set,
+     * which empties the Available list — a real state, and deliberately reachable: starting from
+     * nothing and adding two languages is how somebody with a specific interest wants to work. It
+     * is not a trap either, because the empty list draws an action that opens this sheet again.
+     */
+    fun toggleAllLanguages() {
+        val offered = state.value.languages.map { it.code }.toSet()
+        val enabled = sourcePreferences.enabledLanguages.get()
+        val everythingIsOn = offered.isNotEmpty() && enabled.containsAll(offered)
+        sourcePreferences.enabledLanguages.set(if (everythingIsOn) emptySet() else offered)
+    }
+
     fun search(query: String?) {
         state.update { it.copy(searchQuery = query) }
     }
