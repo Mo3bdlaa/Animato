@@ -8,12 +8,12 @@ import animato.app.library.UnifiedLibraryPreferences
 import animato.app.sync.SyncPreferences
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentPreferences
-import io.github.mo3bdlaa.animato.BuildConfig
 import aniyomi.core.common.torrent.TorrentPreferences
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import aniyomi.domain.source.service.AnimeSourcePreferences
 import aniyomi.domain.track.service.AnimeTrackPreferences
+import io.github.mo3bdlaa.animato.BuildConfig
 import uy.kohesive.injekt.api.InjektModule
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingletonFactory
