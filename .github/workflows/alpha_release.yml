@@ -212,6 +212,12 @@ jobs:
             echo "**Which file:** \`arm64-v8a\` for any phone from roughly 2017 onward."
             echo "\`armeabi-v7a\` if that one refuses to install."
             echo
+            echo "**On a television or a TV box, try \`armeabi-v7a\` first.** Plenty of them run a"
+            echo "32-bit system on hardware that is physically 64-bit, and the \`arm64-v8a\` file"
+            echo "then fails with nothing more than \"App not installed\". It also needs Android 8.0"
+            echo "or newer and about 300 MB free — a set on Android 7 cannot run this at all, and"
+            echo "many televisions have less storage free than the install needs."
+            echo
             echo "**Coming from a debug build?** Uninstall it first. Android rejects an update"
             echo "signed by a different certificate, and this one is signed with the release key."
             echo "Uninstalling loses the app's data."
