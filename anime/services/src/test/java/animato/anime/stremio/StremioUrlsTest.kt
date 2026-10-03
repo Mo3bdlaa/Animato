@@ -111,4 +111,37 @@ class StremioUrlsTest {
         StremioUrls.manifest("https://addon.test/config=1") shouldBe "https://addon.test/config=1/manifest.json"
         StremioUrls.manifest("https://addon.test/manifest.json") shouldBe "https://addon.test/manifest.json"
     }
+
+    @Test
+    fun `the configure page sits beside the manifest, configuration kept`() {
+        StremioUrls.configure("https://torrentio.strem.fun/manifest.json") shouldBe
+            "https://torrentio.strem.fun/configure"
+        StremioUrls.configure("https://torrentio.strem.fun/providers=yts/manifest.json") shouldBe
+            "https://torrentio.strem.fun/providers=yts/configure"
+    }
+
+    @Test
+    fun `an install link in Stremio's scheme is an address`() {
+        StremioUrls.addressIn("stremio://addon.test/abc/manifest.json") shouldBe
+            "stremio://addon.test/abc/manifest.json"
+    }
+
+    @Test
+    fun `a link to Stremio's web app gives up the address it carries`() {
+        val link = "https://web.stremio.com/#/addons?addon=https%3A%2F%2Faddon.test%2Fabc%2Fmanifest.json"
+        StremioUrls.addressIn(link) shouldBe "https://addon.test/abc/manifest.json"
+    }
+
+    @Test
+    fun `a copied manifest address is found inside whatever came with it`() {
+        StremioUrls.addressIn("Your link:\n  \"https://addon.test/x=1/manifest.json\"  ") shouldBe
+            "https://addon.test/x=1/manifest.json"
+    }
+
+    @Test
+    fun `the configure page moving around itself is not an answer`() {
+        StremioUrls.addressIn("https://addon.test/configure") shouldBe null
+        StremioUrls.addressIn("https://addon.test/configure?lang=en#providers") shouldBe null
+        StremioUrls.addressIn("") shouldBe null
+    }
 }

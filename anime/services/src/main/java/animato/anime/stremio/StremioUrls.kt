@@ -1,5 +1,7 @@
 package animato.anime.stremio
 
+import java.net.URLDecoder
+
 /**
  * Where to send each question, and how to spell it.
  *
@@ -49,6 +51,16 @@ object StremioUrls {
 
     fun manifest(base: String): String = normalizeBase(base) + MANIFEST_PATH
 
+    /**
+     * The addon's own settings page.
+     *
+     * Stremio's convention, not this app's: a configurable addon serves its form at `configure`
+     * beside its manifest, and an address that already carries a configuration opens that form
+     * filled in with it — so editing an addon and configuring one for the first time are the same
+     * page.
+     */
+    fun configure(base: String): String = normalizeBase(base) + CONFIGURE_PATH
+
     fun catalog(
         base: String,
         type: String,
@@ -91,8 +103,36 @@ object StremioUrls {
         return "$prefix/$args.json"
     }
 
+    /**
+     * The addon address in something a configure page produced, or null if there is none.
+     *
+     * Configure pages hand the result over in one of three shapes, and the in-app browser sees all
+     * of them: an *Install* link in Stremio's own scheme, a link to Stremio's web app with the
+     * manifest address as its `addon` parameter, or the plain `manifest.json` address — followed as
+     * a link or copied to the clipboard. Anything else, including the configure page navigating
+     * around itself, is not an answer yet.
+     */
+    fun addressIn(text: String): String? {
+        val candidates = text.split(Regex("\\s+")).filter { it.isNotBlank() }
+        for (raw in candidates) {
+            val token = raw.trim().trim('"', '\'', '<', '>')
+            if (token.startsWith(STREMIO_SCHEME, ignoreCase = true)) return token
+            val embedded = Regex("[?&#]addon=([^&#]+)").find(token)?.groupValues?.get(1)
+            if (embedded != null) {
+                val decoded = URLDecoder.decode(embedded, "UTF-8")
+                if (decoded.contains(MANIFEST_PATH, ignoreCase = true)) return decoded
+            }
+            val bare = token.substringBefore('?').substringBefore('#')
+            if (bare.startsWith("http", ignoreCase = true) && bare.endsWith(MANIFEST_PATH, ignoreCase = true)) {
+                return bare
+            }
+        }
+        return null
+    }
+
     private const val STREMIO_SCHEME = "stremio://"
     private const val MANIFEST_PATH = "/manifest.json"
+    private const val CONFIGURE_PATH = "/configure"
 }
 
 /**

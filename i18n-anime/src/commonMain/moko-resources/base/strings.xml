@@ -455,6 +455,11 @@
     <string name="edit_details_source_says">The source calls this %1$s</string>
     <string name="edit_details_edited">Edited by you</string>
     <string name="stremio_error_needs_configuration">Configure this addon on its own page first, then paste the address it gives you</string>
+    <string name="stremio_configure_on_site">Configure on its site</string>
+    <string name="stremio_paste_address">Paste address</string>
+    <string name="stremio_configure_title">Configure addon</string>
+    <string name="stremio_configure_hint">Choose your settings, then tap Install or copy the link. Press Paste address when you are done.</string>
+    <string name="stremio_clipboard_no_address">The clipboard has no addon address yet. Copy the link from the page first.</string>
     <string name="stremio_wrong_screen">That is a Stremio addon, not an extension store. Add it under Sources → Stremio addons.</string>
     <string name="stremio_no_stream_addon">This addon only lists titles. Add a streaming addon to watch them.</string>
     <string name="stremio_torrents_disabled">These streams are torrents. Turn on TorrServer under Settings → Player → Torrent to play them.</string>

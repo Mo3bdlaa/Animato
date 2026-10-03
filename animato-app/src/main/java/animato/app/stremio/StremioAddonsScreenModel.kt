@@ -30,7 +30,11 @@ sealed interface AddonInstallState {
     data object Idle : AddonInstallState
     data object Working : AddonInstallState
     data class Added(val name: String) : AddonInstallState
-    data class Failed(val message: String) : AddonInstallState
+    data class Failed(
+        val message: String,
+        /** Set when the addon has to be configured on its own page first, and this is that page. */
+        val configureUrl: String? = null,
+    ) : AddonInstallState
 }
 
 class StremioAddonsScreenModel(
@@ -115,7 +119,12 @@ class StremioAddonsScreenModel(
                 // The store has already turned every failure into a sentence; anything without
                 // one would be a bug here rather than something the user did, so it is still
                 // shown rather than swallowed.
-                onFailure = { AddonInstallState.Failed(it.message.orEmpty()) },
+                onFailure = {
+                    AddonInstallState.Failed(
+                        message = it.message.orEmpty(),
+                        configureUrl = (it as? StremioAddonStore.NeedsConfiguration)?.configureUrl,
+                    )
+                },
             )
         }
     }

@@ -17,9 +17,12 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -681,6 +685,25 @@ private fun AddAddonDialog(
     var url by remember(initialUrl) { mutableStateOf(initialUrl) }
     val working = state is AddonInstallState.Working
     val submit = { if (url.isNotBlank() && !working) onAdd(url) }
+    val context = LocalContext.current
+    // The addon's own settings page while it is open. Drawn instead of this dialog rather than
+    // over it, so the field and whatever was typed into it are still here when it closes.
+    var browsing by remember { mutableStateOf<String?>(null) }
+
+    browsing?.let { page ->
+        AddonConfigureBrowser(
+            url = page,
+            onAddress = { address ->
+                browsing = null
+                url = address
+                // Straight on to adding it. Choosing Install, or copying the link and pressing
+                // Paste, already was the decision; asking again with one more button is ceremony.
+                if (!working) onAdd(address)
+            },
+            onDismiss = { browsing = null },
+        )
+        return
+    }
 
     AlertDialog(
         onDismissRequest = { if (!working) onDismiss() },
@@ -710,6 +733,23 @@ private fun AddAddonDialog(
                     supportingText = {
                         if (!playlist) Text(stringResource(AYMR.strings.stremio_addon_url_example))
                     },
+                    trailingIcon = {
+                        // Paste, because on a television there is no long-press to paste with and
+                        // these addresses are far too long to type with a remote.
+                        IconButton(
+                            onClick = {
+                                context.clipboardText()?.let { text ->
+                                    url = StremioUrls.addressIn(text) ?: text.trim()
+                                }
+                            },
+                            enabled = !working,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.ContentPaste,
+                                contentDescription = stringResource(AYMR.strings.stremio_paste_address),
+                            )
+                        }
+                    },
                     singleLine = true,
                     enabled = !working,
                     isError = state is AddonInstallState.Failed,
@@ -728,6 +768,23 @@ private fun AddAddonDialog(
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
+                // Offered for any address, not only after the refusal that asks for it: Torrentio
+                // and its kind *work* unconfigured, and the reason to configure them is better
+                // results, which no error message would ever prompt. Prominent once the addon has
+                // said it cannot be added without it.
+                if (!playlist && url.isNotBlank()) {
+                    val page = (state as? AddonInstallState.Failed)?.configureUrl
+                    val open = { browsing = page ?: StremioUrls.configure(url) }
+                    if (page != null) {
+                        FilledTonalButton(onClick = open, enabled = !working) {
+                            ConfigureLabel()
+                        }
+                    } else {
+                        TextButton(onClick = open, enabled = !working) {
+                            ConfigureLabel()
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
@@ -745,6 +802,16 @@ private fun AddAddonDialog(
             }
         },
     )
+}
+
+@Composable
+private fun ConfigureLabel() {
+    Icon(
+        imageVector = Icons.Outlined.OpenInBrowser,
+        contentDescription = null,
+        modifier = Modifier.padding(end = MaterialTheme.padding.extraSmall),
+    )
+    Text(stringResource(AYMR.strings.stremio_configure_on_site))
 }
 
 /**

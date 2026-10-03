@@ -164,7 +164,12 @@ class StremioAddonStore(
             return failure(AYMR.strings.stremio_error_not_an_addon)
         }
         if (manifest.behaviorHints.configurationRequired) {
-            return failure(AYMR.strings.stremio_error_needs_configuration)
+            return Result.failure(
+                NeedsConfiguration(
+                    message = Injekt.get<Application>().stringResource(AYMR.strings.stremio_error_needs_configuration),
+                    configureUrl = StremioUrls.configure(base),
+                ),
+            )
         }
         // Streaming and subtitles count. The first version of this check demanded a catalogue or
         // metadata, and so refused Torrentio — an addon that serves nothing but `stream`, and the
@@ -215,6 +220,15 @@ class StremioAddonStore(
 
     private fun failure(resource: dev.icerock.moko.resources.StringResource): Result<StremioAddon> =
         Result.failure(IllegalArgumentException(Injekt.get<Application>().stringResource(resource)))
+
+    /**
+     * The one refusal that comes with somewhere to go next.
+     *
+     * Every other failure is a sentence and nothing more, because what fixes it is retyping. This
+     * one is fixed on the addon's own page, so it carries that page's address and the screen can
+     * offer to open it instead of telling somebody to go and find it.
+     */
+    class NeedsConfiguration(message: String, val configureUrl: String) : IllegalArgumentException(message)
 
     companion object {
         private const val PREF_KEY = "animato_stremio_addons"
