@@ -155,7 +155,7 @@ fun MiddlePlayerControls(
                         modifier = Modifier
                             .size(96.dp)
                             .focusRequester(focusRequester)
-                            .tvFocusRing(interaction, CircleShape)
+                            .tvFocusRing(interaction)
                             .clip(CircleShape)
                             .clickable(
                                 interaction,

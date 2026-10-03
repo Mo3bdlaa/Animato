@@ -88,7 +88,7 @@ fun ControlsButton(
 
     Box(
         modifier = modifier
-            .tvFocusRing(interactionSource, CircleShape)
+            .tvFocusRing(interactionSource)
             .combinedClickable(
                 enabled = enabled,
                 onClick = {
@@ -134,7 +134,7 @@ fun ControlsButton(
 
     Box(
         modifier = modifier
-            .tvFocusRing(interactionSource, CircleShape)
+            .tvFocusRing(interactionSource)
             .combinedClickable(
                 onClick = {
                     clickEvent()

@@ -5,36 +5,48 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.onFocusedBoundsChanged
+import androidx.compose.material.ripple.RippleAlpha
+import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RippleConfiguration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
+import kotlin.math.abs
 
 /**
  * Whether this is a television.
@@ -62,31 +74,96 @@ fun ProvideIsTelevision(content: @Composable () -> Unit) {
     }
 
     /*
-     * On a television, replace what every clickable in the app draws when it is focused.
-     *
-     * This is the line that reaches the screens [tvClickable] never could. `Modifier.clickable` is
-     * focusable by definition, so a remote could always *reach* a settings row or a source in the
-     * Stremio list — and reaching it looked like nothing whatsoever, because the default indication
-     * is a ripple and a ripple answers a question about a finger. From a television: *"I cannot
-     * scroll down or select anything."* Both halves of that were the same missing ring: nothing
-     * visibly moves, so nothing seems to happen, so the list never appears to scroll.
-     *
-     * Doing it here rather than at each call site is the whole point. There are dozens of screens,
-     * a good many of them inherited from Mihon and not this fork's to annotate, and every screen
-     * added later would have had to remember. One value covers all of them and anything written
-     * next year.
-     *
-     * Read inside the theme — see where this is called — so the ring is the accent colour rather
-     * than a colour chosen twice.
+     * Material's own controls — buttons, chips, icon buttons, the navigation bar — draw a ripple
+     * they choose themselves rather than the ambient indication, so the ring below is what marks
+     * them on the main screen. Inside a dialog, which is its own window and out of the ring's
+     * reach, this is what is left: the ripple's focus layer, three times as strong as Material's
+     * default, so a focused dialog button is obviously lighter than its neighbour from across a
+     * room instead of faintly.
      */
-    val accent = MaterialTheme.colorScheme.primary
-    val indication = remember(accent) { TvFocusIndication(accent) }
+    val ripple = RippleConfiguration(rippleAlpha = TvRippleAlpha)
 
     CompositionLocalProvider(
         LocalIsTelevision provides true,
-        LocalIndication provides indication,
+        LocalRippleConfiguration provides ripple,
     ) {
-        VerticalFocusFallback(content)
+        VerticalFocusFallback {
+            TvFocusRingHost(content)
+        }
+    }
+}
+
+/**
+ * One ring, drawn around whatever has focus, whatever it is.
+ *
+ * ## Why at the root and not on each control
+ *
+ * The first ring was an indication, which reached every `Modifier.clickable` in the app — the
+ * settings rows, the addon list — but not Material's filled buttons, chips or icon buttons: those
+ * pick their ripple themselves and never ask for the ambient indication. On a television that left
+ * *Discover*, *Open the addon store*, the filter chips and the top bar's icons marked by nothing
+ * but a faint lightening, on exactly the screens where they are the thing to press.
+ *
+ * Every one of them is focusable, though, and every focusable reports its bounds to the layouts
+ * around it when it takes focus — it is how a list knows to scroll a focused row into view. So the
+ * root listens for the same report and draws one ring around those bounds, on top of everything.
+ * It does not matter whose control it is, Animato's or Mihon's, or whether it was written next
+ * year: if a remote can reach it, it is ringed.
+ *
+ * ## The shape
+ *
+ * The ring does not know the control's shape, so it guesses from the size: anything up to a
+ * button's height is a pill or a circle — buttons, chips, icon buttons — a square up to the
+ * player's play button is a circle, and anything else is a row or a card, which gets the same
+ * 12dp corners the cards themselves use.
+ *
+ * ## Dialogs
+ *
+ * A dialog is a window of its own, and a ring drawn in the activity's window cannot reach into it.
+ * [ProvideIsTelevision] puts one host at the root; a full-screen dialog that wants the same ring
+ * wraps its content in another. Off a television this is only its content.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun TvFocusRingHost(content: @Composable () -> Unit) {
+    if (!LocalIsTelevision.current) {
+        content()
+        return
+    }
+    val accent = MaterialTheme.colorScheme.primary
+    var focused by remember { mutableStateOf<Rect?>(null) }
+    var origin by remember { mutableStateOf(Offset.Zero) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { origin = it.positionInRoot() }
+            .onFocusedBoundsChanged { coordinates ->
+                focused = coordinates?.takeIf { it.isAttached }?.boundsInRoot()
+            }
+            .drawWithContent {
+                drawContent()
+                val bounds = focused ?: return@drawWithContent
+                val stroke = FocusBorderWidth.toPx()
+                val gap = FocusRingGap.toPx()
+                val rect = bounds.translate(-origin).inflate(gap + stroke / 2)
+                val squarish = abs(bounds.width - bounds.height) <= bounds.height * SQUARISH_TOLERANCE
+                val radius = when {
+                    // Buttons, chips: pills. Icon buttons and the player's round controls: circles.
+                    bounds.height <= PillMaxHeight.toPx() -> rect.height / 2
+                    squarish && bounds.height <= CircleMaxSize.toPx() -> rect.height / 2
+                    else -> FocusRadius.toPx() + gap
+                }
+                drawRoundRect(
+                    color = accent,
+                    topLeft = rect.topLeft,
+                    size = rect.size,
+                    cornerRadius = CornerRadius(radius),
+                    style = Stroke(width = stroke),
+                )
+            },
+    ) {
+        content()
     }
 }
 
@@ -208,17 +285,12 @@ private const val FEATURE_TELEVISION = "android.hardware.type.television"
  * to what a hardware keyboard walks through.
  */
 fun Modifier.tvClickable(
-    shape: Shape = RoundedCornerShape(FocusRadius),
     onClick: () -> Unit,
 ): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }
-    val isTelevision = LocalIsTelevision.current
-    tvFocusRing(interactionSource, shape).clickable(
+    tvFocusRing(interactionSource).clickable(
         interactionSource = interactionSource,
-        // Null on a television, where [TvFocusIndication] is already the ambient indication and
-        // would draw a second ring inside the one this modifier draws for itself. Off one, the
-        // ripple, exactly as before.
-        indication = if (isTelevision) null else LocalIndication.current,
+        indication = LocalIndication.current,
         onClick = onClick,
     )
 }
@@ -239,7 +311,6 @@ fun Modifier.tvClickable(
  */
 fun Modifier.tvFocusRing(
     interactionSource: InteractionSource,
-    shape: Shape = RoundedCornerShape(FocusRadius),
 ): Modifier = composed {
     val isTelevision = LocalIsTelevision.current
     val focused by interactionSource.collectIsFocusedAsState()
@@ -250,19 +321,29 @@ fun Modifier.tvFocusRing(
         label = "tv-focus-scale",
     )
 
-    if (!isTelevision) {
-        this
-    } else {
-        this
-            .scale(scale)
-            .border(
-                width = if (highlighted) FocusBorderWidth else 0.dp,
-                color = if (highlighted) MaterialTheme.colorScheme.primary else Color.Transparent,
-                shape = shape,
-            )
-    }
+    // Scale only. The ring itself is drawn once, at the root, by [TvFocusRingHost] — drawing it here as
+    // well put two rings on these items.
+    if (!isTelevision) this else this.scale(scale)
 }
 
 private const val FOCUS_SCALE = 1.06f
 private val FocusBorderWidth = 3.dp
 private val FocusRadius = 12.dp
+
+/** Air between a control and its ring, so the ring never sits on the control's own edge. */
+private val FocusRingGap = 2.dp
+
+/** Tallest a control can be and still be drawn as a pill or circle — a button, chip or icon. */
+private val PillMaxHeight = 56.dp
+
+/** Largest square control drawn as a circle: the player's play button, not a square cover. */
+private val CircleMaxSize = 96.dp
+private const val SQUARISH_TOLERANCE = 0.1f
+
+/** Material's default ripple alphas, with focus tripled. See [ProvideIsTelevision]. */
+private val TvRippleAlpha = RippleAlpha(
+    draggedAlpha = 0.16f,
+    focusedAlpha = 0.3f,
+    hoveredAlpha = 0.08f,
+    pressedAlpha = 0.1f,
+)

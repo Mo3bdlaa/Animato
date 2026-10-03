@@ -38,6 +38,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.getSystemService
 import animato.anime.stremio.StremioUrls
+import animato.ui.tv.TvFocusRingHost
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
@@ -86,101 +87,104 @@ internal fun AddonConfigureBrowser(
         // the hardware back button closing the whole thing halfway through would lose the form.
         BackHandler(enabled = canGoBack) { webView?.goBack() }
 
-        Surface(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                TopAppBar(
-                    navigationIcon = {
-                        IconButton(onClick = onDismiss) {
-                            Icon(
-                                imageVector = Icons.Outlined.Close,
-                                contentDescription = stringResource(MR.strings.action_close),
-                            )
-                        }
-                    },
-                    title = {
-                        Text(
-                            text = stringResource(AYMR.strings.stremio_configure_title),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
-                    actions = {
-                        // A filled button rather than an icon: it is the way out of this screen
-                        // with the result, and the person has to be able to find it without being
-                        // told where it is.
-                        FilledTonalButton(
-                            onClick = {
-                                val address = context.clipboardText()?.let(StremioUrls::addressIn)
-                                if (address != null) currentOnAddress(address) else clipboardEmpty = true
-                            },
-                            modifier = Modifier.padding(end = MaterialTheme.padding.small),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.ContentPaste,
-                                contentDescription = null,
-                                modifier = Modifier.padding(end = MaterialTheme.padding.extraSmall),
-                            )
-                            Text(stringResource(AYMR.strings.stremio_paste_address))
-                        }
-                    },
-                )
-                Text(
-                    text = stringResource(
-                        if (clipboardEmpty) {
-                            AYMR.strings.stremio_clipboard_no_address
-                        } else {
-                            AYMR.strings.stremio_configure_hint
-                        },
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (clipboardEmpty) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    modifier = Modifier.padding(
-                        horizontal = MaterialTheme.padding.medium,
-                        vertical = MaterialTheme.padding.small,
-                    ),
-                )
-                if (loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                AndroidView(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    factory = { viewContext ->
-                        @SuppressLint("SetJavaScriptEnabled")
-                        val view = WebView(viewContext).apply {
-                            setDefaultSettings()
-                            // One window. With several allowed, a link that opens in a new tab —
-                            // which is how a good many Install buttons are written — asks for a
-                            // window nobody creates, and the press silently does nothing.
-                            settings.setSupportMultipleWindows(false)
-                            webViewClient = object : WebViewClient() {
-                                override fun shouldOverrideUrlLoading(
-                                    view: WebView,
-                                    request: WebResourceRequest,
-                                ): Boolean {
-                                    val address = StremioUrls.addressIn(request.url.toString())
-                                        ?: return false
-                                    currentOnAddress(address)
-                                    return true
-                                }
-
-                                override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
-                                    loading = true
-                                }
-
-                                override fun onPageFinished(view: WebView, url: String?) {
-                                    loading = false
-                                    canGoBack = view.canGoBack()
-                                }
+        // Its own ring: a dialog is a window of its own, and the app's ring cannot reach into it.
+        TvFocusRingHost {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    TopAppBar(
+                        navigationIcon = {
+                            IconButton(onClick = onDismiss) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Close,
+                                    contentDescription = stringResource(MR.strings.action_close),
+                                )
                             }
-                            loadUrl(url)
-                        }
-                        webView = view
-                        view
-                    },
-                    onRelease = { it.destroy() },
-                )
+                        },
+                        title = {
+                            Text(
+                                text = stringResource(AYMR.strings.stremio_configure_title),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        },
+                        actions = {
+                            // A filled button rather than an icon: it is the way out of this screen
+                            // with the result, and the person has to be able to find it without being
+                            // told where it is.
+                            FilledTonalButton(
+                                onClick = {
+                                    val address = context.clipboardText()?.let(StremioUrls::addressIn)
+                                    if (address != null) currentOnAddress(address) else clipboardEmpty = true
+                                },
+                                modifier = Modifier.padding(end = MaterialTheme.padding.small),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.ContentPaste,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = MaterialTheme.padding.extraSmall),
+                                )
+                                Text(stringResource(AYMR.strings.stremio_paste_address))
+                            }
+                        },
+                    )
+                    Text(
+                        text = stringResource(
+                            if (clipboardEmpty) {
+                                AYMR.strings.stremio_clipboard_no_address
+                            } else {
+                                AYMR.strings.stremio_configure_hint
+                            },
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (clipboardEmpty) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.padding(
+                            horizontal = MaterialTheme.padding.medium,
+                            vertical = MaterialTheme.padding.small,
+                        ),
+                    )
+                    if (loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    AndroidView(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        factory = { viewContext ->
+                            @SuppressLint("SetJavaScriptEnabled")
+                            val view = WebView(viewContext).apply {
+                                setDefaultSettings()
+                                // One window. With several allowed, a link that opens in a new tab —
+                                // which is how a good many Install buttons are written — asks for a
+                                // window nobody creates, and the press silently does nothing.
+                                settings.setSupportMultipleWindows(false)
+                                webViewClient = object : WebViewClient() {
+                                    override fun shouldOverrideUrlLoading(
+                                        view: WebView,
+                                        request: WebResourceRequest,
+                                    ): Boolean {
+                                        val address = StremioUrls.addressIn(request.url.toString())
+                                            ?: return false
+                                        currentOnAddress(address)
+                                        return true
+                                    }
+
+                                    override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
+                                        loading = true
+                                    }
+
+                                    override fun onPageFinished(view: WebView, url: String?) {
+                                        loading = false
+                                        canGoBack = view.canGoBack()
+                                    }
+                                }
+                                loadUrl(url)
+                            }
+                            webView = view
+                            view
+                        },
+                        onRelease = { it.destroy() },
+                    )
+                }
             }
         }
     }
