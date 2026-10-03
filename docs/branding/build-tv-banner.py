@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Builds the Android TV banner from docs/branding/tv-banner.png.
+Builds the Android TV banner from docs/branding/tv-banner-light.png, the banner on white.
+
+The dark banner, docs/branding/tv-banner.png, is kept for promotion; the light one is the default,
+to match the launcher icon.
 
 A television launcher does not draw an app icon. It draws a **banner** — a fixed 320×180
 landscape tile, named by `android:banner`, with no adaptive layers, no mask and no monochrome
@@ -29,7 +32,7 @@ from PIL import Image
 BANNER_SIZE = (320, 180)
 
 BRANDING = Path(__file__).parent
-SOURCE = BRANDING / "tv-banner.png"
+SOURCE = BRANDING / "tv-banner-light.png"
 RES = BRANDING.parent.parent / "animato-app" / "src" / "main" / "res"
 
 

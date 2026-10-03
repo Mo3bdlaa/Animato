@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Builds the launcher icon's foreground and monochrome layers from docs/branding/logo.png.
+Builds the launcher icon's foreground and monochrome layers.
 
-The source is the dragon mark on a transparent background, drawn large. Run from anywhere:
+The foreground comes from docs/branding/logo-on-light.png, the mark drawn for white; the monochrome
+layer from docs/branding/logo.png, the mark drawn for black. Run from anywhere:
 `python3 docs/branding/build-icon.py`
 
 ## The foreground
@@ -14,8 +15,11 @@ opaque pixels rather than on the file's edges, which have a margin of their own.
 the circular mask a good half of launchers apply takes the dragon's head off, and the head is the
 part of the mark people recognise it by.
 
-The background layer is @color/animato_ink_black and is not built here. The mark is drawn for black
-and its edges are soft, so the transparent source composites onto it without a halo.
+The background layer is @color/animato_icon_background, white, and is not built here. The light
+mark comes on an opaque white ground, so the white is taken out of it — colour to alpha: every
+pixel becomes the least-transparent colour that, laid over white, gives back exactly the pixel it
+was. Over the white background layer that is lossless, edges and highlights included, and it is
+what lets the launcher slide the layers for parallax without showing a square.
 
 ## The monochrome layer
 
@@ -33,7 +37,8 @@ import numpy as np
 from PIL import Image
 
 BRANDING = Path(__file__).parent
-SOURCE = BRANDING / "logo.png"
+SOURCE = BRANDING / "logo-on-light.png"
+MONOCHROME_SOURCE = BRANDING / "logo.png"
 RES = BRANDING.parent.parent / "animato-app" / "src" / "main" / "res"
 
 # Density bucket -> canvas size in pixels. 108dp at 1x, 1.5x, 2x, 3x and 4x.
@@ -72,6 +77,18 @@ def on_canvas(mark, canvas_size, fraction):
     return canvas
 
 
+def white_to_alpha(image):
+    """The light mark with its white ground taken out. See the module docstring."""
+    rgb = np.asarray(image.convert("RGB")).astype(float)
+    alpha = (255.0 - rgb.min(axis=2)) / 255.0
+    safe = np.where(alpha > 0, alpha, 1.0)[..., None]
+    colour = (rgb - (1.0 - alpha[..., None]) * 255.0) / safe
+    out = np.zeros(rgb.shape[:2] + (4,))
+    out[..., :3] = np.clip(colour, 0, 255)
+    out[..., 3] = alpha * 255.0
+    return Image.fromarray(out.round().astype(np.uint8), "RGBA")
+
+
 def monochrome(mark):
     pixels = np.asarray(mark).astype(float)
     brightness = pixels[:, :, :3].max(axis=2)
@@ -84,8 +101,10 @@ def monochrome(mark):
 
 
 def main():
-    mark = cropped(Image.open(SOURCE).convert("RGBA"))
-    silhouette = monochrome(mark)
+    mark = cropped(white_to_alpha(Image.open(SOURCE)))
+    # From the dark mark: the light one's figure is pale, so a brightness mask of it would keep the
+    # figure and lose the ring — the opposite of the silhouette wanted.
+    silhouette = monochrome(cropped(Image.open(MONOCHROME_SOURCE).convert("RGBA")))
     for density, canvas_size in DENSITIES.items():
         folder = RES / f"drawable-{density}"
         folder.mkdir(parents=True, exist_ok=True)

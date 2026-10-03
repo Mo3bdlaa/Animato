@@ -10,6 +10,8 @@
 
     <color name="animato_accent">#0066F0</color>
     <color name="animato_ink_black">#08080C</color>
+    <!-- The launcher icon's background layer: the light mark is the default icon. -->
+    <color name="animato_icon_background">#FFFFFF</color>
     <color name="animato_surface">#151516</color>
     <color name="animato_paper">#F7F9FF</color>
     <color name="animato_muted">#94A3B8</color>

@@ -30,10 +30,9 @@ still reads as a ring at 48 pixels, where the detail inside it does not have to.
 appears, is `ANIMATO` in wide geometric capitals with the **M** in the brand blue — on the TV
 banner and in Home's header.
 
-The mark comes on ink black and on white. The app ships the black one: it is drawn for a dark
-ground, the app's default is dark, and the launcher icon supplies that ground as its own background
-layer, so Android never needs the light one. The light versions are kept for documents, store
-listings and anywhere the page is white. `アニマト` was part of the previous mark and is not part of
+The mark comes on ink black and on white, and the **light version is the default icon**: the
+launcher icon and the TV banner are the mark on white. The dark versions draw the launch screen,
+which stays ink black, and are kept for documents and promotion on a dark page. `アニマト` was part of the previous mark and is not part of
 this one.
 
 ---
@@ -283,11 +282,11 @@ Sources, kept full size under `docs/branding/`:
 
 | File | What |
 | --- | --- |
-| `logo.png` | 1254×1254, the mark on transparency — **the source of the launcher icon and the launch screen** |
+| `logo.png` | 1254×1254, the mark on transparency — **the source of the launch screen and the icon's monochrome layer** |
 | `logo-on-dark.png` | the same mark on black, for documents and anywhere a flat image is wanted |
-| `logo-on-light.png` | the mark on white, for documents and listings with a light page |
-| `tv-banner.png` | 1672×941, 16:9, the mark with the name on dark — the source of the TV banner |
-| `tv-banner-light.png` | the same banner on white, for promotion; the app does not use it |
+| `logo-on-light.png` | the mark on white — **the source of the launcher icon** |
+| `tv-banner.png` | 1672×941, 16:9, the mark with the name on dark, for promotion |
+| `tv-banner-light.png` | the same banner on white — **the source of the TV banner** |
 | `wordmark-on-light.png`, `wordmark-on-dark.png` | the name alone on transparency — ink letters and white letters, blue M in both |
 | `brand-sheet.png` | the brand on one page: mark, palette, type, components |
 | `splash-pulse-reference.gif` | the launch-screen animation as designed; the app rebuilds it rather than playing it |
@@ -311,12 +310,14 @@ In the app, under `animato-app/src/main/res/`:
 | `drawable-nodpi/animato_splash_mark.png`, `animato_splash_pulse_*.png` | its frames |
 | `values/animato_brand.xml` | palette, and the `splash` colour override |
 
-### One launcher icon, on black
+### One launcher icon, on white
 
 Android does not theme launcher icons: an app ships one and the launcher masks it to whatever shape
-the device uses. The mark is drawn for black, so the adaptive icon's background layer is flat
-`Ink Black` and the foreground is the transparent mark over it. A launcher may slide the two layers
-against each other for parallax, which is why the foreground carries no background of its own.
+the device uses. The icon is the light mark, so the adaptive icon's background layer is flat white
+(`@color/animato_icon_background`) and the foreground is the mark with its white ground taken out —
+colour to alpha, which over a white background gives back every pixel exactly. A launcher may slide
+the two layers against each other for parallax, which is why the foreground carries no background
+of its own.
 
 The one place the system recolours the icon is the **monochrome** layer, for themed icons on
 Android 13+.
@@ -365,8 +366,9 @@ output lands without a second round.
 
 | Give us | Size | Notes |
 | --- | --- | --- |
-| `docs/branding/logo.png` | **square, 1024px or more**, transparent | The mark alone. The icon, monochrome layer and launch screen are all built from it |
-| `docs/branding/tv-banner.png` | **16:9, 1280×720 or more**, opaque | Must carry the name — a TV launcher does not label banners. Keep the edges quiet: TV home screens draw a focus border tight against them |
+| `docs/branding/logo-on-light.png` | **square, 1024px or more**, on white | The mark alone, drawn for white. The launcher icon is built from it |
+| `docs/branding/logo.png` | **square, 1024px or more**, transparent | The mark alone, drawn for black. The launch screen and the icon's monochrome layer are built from it |
+| `docs/branding/tv-banner-light.png` | **16:9, 1280×720 or more**, opaque | Must carry the name — a TV launcher does not label banners. Keep the edges quiet: TV home screens draw a focus border tight against them |
 | `docs/branding/wordmark-on-light.png`, `wordmark-on-dark.png` | **wide, 200px tall letters or more**, transparent | The name alone, once in ink and once in white. Two files, not one tinted: the M is blue in both, and a tint would paint it over |
 
 ### What gets generated

@@ -5,13 +5,14 @@
   without a tools:replace on the manifest — Mihon's manifest still points at @mipmap/ic_launcher,
   which now resolves here.
 
-  The foreground is the dragon mark on transparency, scaled so its ring sits inside the 66dp circle
-  every launcher shows; any larger and a circular mask takes the dragon's head off. The background is
-  flat ink black, which is what the mark is drawn for. Both layers and the monochrome one are built
-  by docs/branding/build-icon.py from docs/branding/logo.png.
+  The foreground is the dragon mark drawn for white, with its white ground taken out, scaled so its
+  ring sits inside the 66dp circle every launcher shows; any larger and a circular mask takes the
+  dragon's head off. The background is flat white, which is what this version of the mark is drawn
+  for. The layers are built by docs/branding/build-icon.py — the foreground from logo-on-light.png,
+  the monochrome layer from logo.png.
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/animato_ink_black" />
+    <background android:drawable="@color/animato_icon_background" />
     <foreground android:drawable="@drawable/animato_icon_foreground" />
     <monochrome android:drawable="@drawable/animato_icon_monochrome" />
 </adaptive-icon>
