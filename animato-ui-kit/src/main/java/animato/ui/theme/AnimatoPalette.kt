@@ -33,7 +33,7 @@ data class AnimatoPalette(
     /** Dark-mode background. Also the typography colour in light mode. */
     val ink: Color,
 
-    /** Light-mode background. Warm manga paper, deliberately not pure white. */
+    /** Light-mode background. A cool off-white, deliberately not pure white. */
     val paper: Color,
 
     /** Secondary text, in both modes. */
@@ -83,7 +83,11 @@ data class AnimatoPalette(
 
 object AnimatoPalettes {
     /**
-     * Animato's own. Blue on ink black, warm paper in the light.
+     * Animato's own. Blue on ink black, cool paper in the light.
+     *
+     * Paper and muted are the brand sheet's (docs/branding/brand-sheet.png): a blue-white and a
+     * slate grey, replacing a warm cream and a warm grey that belonged to the previous, red mark —
+     * cream beside electric blue read as an old photograph of the app.
      *
      * The blue is the dragon's, measured off docs/branding/logo.png: the commonest saturated blue
      * in the mark. It replaced a muted steel blue, `#4169A1`, once the mark changed — an icon in
@@ -100,8 +104,8 @@ object AnimatoPalettes {
         accent = Color(0xFF0066F0),
         onAccent = Color(0xFFFFFFFF),
         ink = Color(0xFF08080C),
-        paper = Color(0xFFF2EEE5),
-        muted = Color(0xFF9A9690),
+        paper = Color(0xFFF7F9FF),
+        muted = Color(0xFF94A3B8),
         error = Color(0xFFEF4444),
         success = Color(0xFF22C55E),
         warning = Color(0xFFF59E0B),

@@ -37,8 +37,8 @@ Tagline: *Your anime & manga universe, unified. Read. Watch. Track.*
 | Animato Blue | `#0066F0` | Primary actions, active states, progress. **Never decoration** |
 | Ink Black | `#08080C` | Dark background |
 | Surface | `#151516` | Cards, sheets, bars on dark |
-| Paper | `#F2EEE5` | Light background |
-| Muted | `#9A9690` | Secondary text, inactive icons |
+| Paper | `#F7F9FF` | Light background |
+| Muted | `#94A3B8` | Secondary text, inactive icons |
 | White | `#FFFFFF` | Primary text on dark |
 | Success | `#22C55E` | Done / synced / downloaded |
 | Warning | `#F59E0B` | Attention, pending |

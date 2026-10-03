@@ -28,9 +28,9 @@ Track.*
 | Animato Blue | `#0066F0` | Active states, primary action, progress — **nothing else** |
 | Ink Black | `#08080C` | Dark background |
 | Surface | `#151516` | Cards, sheets, bars on dark |
-| Paper | `#F2EEE5` | Light background |
+| Paper | `#F7F9FF` | Light background |
 | **Surface Light** **[v1.1]** | `#FFFFFF` | Cards, sheets, bars **on Paper** |
-| Muted | `#9A9690` | Secondary text, inactive icons |
+| Muted | `#94A3B8` | Secondary text, inactive icons |
 | White | `#FFFFFF` | Primary text on dark |
 | **Ink Text** **[v1.1]** | `#08080C` | Primary text on Paper |
 | Success | `#22C55E` | Done, synced, downloaded |

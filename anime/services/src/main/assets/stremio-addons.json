@@ -66,7 +66,7 @@
  },
  {
   "name": "AddTORR",
-  "description": "Smart filtering and stream customization for Stremio\\nFiltragem inteligente e personalização de streams para Stremio.",
+  "description": "Smart filtering and stream customization for Stremio Filtragem inteligente e personalização de streams para Stremio.",
   "url": "https://add-torr-main.vercel.app/manifest.json",
   "resources": [
    "stream"
@@ -1115,7 +1115,7 @@
  },
  {
   "name": "CIN",
-  "description": "CIN enhances your Stremio experience with fast loading, high-quality playback options, and a clean modern interface — built for speed, simplicity, and convenience.\\n🚀 Fast source loading ✨ High-quality options 🌍 Multi-language support 🎧 Advanced audio & video support ⚡ Lightweight and optimized",
+  "description": "CIN enhances your Stremio experience with fast loading, high-quality playback options, and a clean modern interface — built for speed, simplicity, and convenience. 🚀 Fast source loading ✨ High-quality options 🌍 Multi-language support 🎧 Advanced audio & video support ⚡ Lightweight and optimized",
   "url": "https://cinnn.vercel.app/manifest.json",
   "resources": [
    "stream"
@@ -1524,7 +1524,7 @@
  },
  {
   "name": "Dizipal",
-  "description": "Dizipal'den dizi ve filmleri stremionuza getirir.  Proxy Kullandığımız için eklenti yavaş çalışabilir.",
+  "description": "Dizipal'den dizi ve filmleri stremionuza getirir. Proxy Kullandığımız için eklenti yavaş çalışabilir.",
   "url": "https://dizipal-stremio-addon.mycodelab.live/manifest.json",
   "resources": [
    "meta",
@@ -1658,7 +1658,7 @@
  },
  {
   "name": "DZ-Arabic",
-  "description": "Arabic Subtitles By Superadlen - Dz Devloper  ترجمة عربية للكل",
+  "description": "Arabic Subtitles By Superadlen - Dz Devloper ترجمة عربية للكل",
   "url": "https://superadlen-dz-arabic.hf.space/manifest.json",
   "resources": [
    "subtitles"
@@ -1747,7 +1747,7 @@
  },
  {
   "name": "Eh! Iptv",
-  "description": "*Addon for brazilian people, content are only pt-BR.*\\n Canais ao vivo, Filmes e Séries via IPTV.\\n Acesse o painel de configuração para seu teste grátis: https://stremio-addon.ehtudo.app/configure",
+  "description": "*Addon for brazilian people, content are only pt-BR.* Canais ao vivo, Filmes e Séries via IPTV. Acesse o painel de configuração para seu teste grátis: https://stremio-addon.ehtudo.app/configure",
   "url": "https://stremio-addon.ehtudo.app/manifest.json",
   "resources": [
    "catalog",
@@ -2479,7 +2479,7 @@
  },
  {
   "name": "Indian FM Radio HD",
-  "description": "Indian FM Radio Stations HD Streams. Stream FM in various languages -  Hindi, Tamil, Telugu, Malayalam, Bengali, Odia. All are free streams available on the internet. No copyright infringement intended.",
+  "description": "Indian FM Radio Stations HD Streams. Stream FM in various languages - Hindi, Tamil, Telugu, Malayalam, Bengali, Odia. All are free streams available on the internet. No copyright infringement intended.",
   "url": "https://india-fm-radio-hd.vercel.app/manifest.json",
   "resources": [
    "catalog",
@@ -2872,7 +2872,7 @@
  },
  {
   "name": "KONTYX Subtitles",
-  "description": "KONTYX Subtitles – Hybrid Subtitle Intelligence System\\nPress Play and simply enjoy.\\n\\nAvailable subtitles appear almost instantly, while new AI translations are ready within seconds.\\n\\nNo refresh needed.\\n\\nTranslations are natural, context-aware, and designed to approach human quality.\\n\\n🇬🇷 🇬🇧 🇪🇸 80 languages",
+  "description": "KONTYX Subtitles – Hybrid Subtitle Intelligence System Press Play and simply enjoy. Available subtitles appear almost instantly, while new AI translations are ready within seconds. No refresh needed. Translations are natural, context-aware, and designed to approach human quality. 🇬🇷 🇬🇧 🇪🇸 80 languages",
   "url": "https://subs.kontyx.gr/stremio/v2/manifest.json",
   "resources": [
    "subtitles"
@@ -3040,7 +3040,7 @@
  },
  {
   "name": "Lumio Stream",
-  "description": "Votre cinéma privé par Lumio.  ⚙️ Besoin de modifier votre profil ? Cliquez sur le bouton configuration (l'engrenage).",
+  "description": "Votre cinéma privé par Lumio. ⚙️ Besoin de modifier votre profil ? Cliquez sur le bouton configuration (l'engrenage).",
   "url": "https://mylumio.tv/lol/manifest.json",
   "resources": [
    "stream"
@@ -3867,7 +3867,7 @@
  },
  {
   "name": "OmniCatalogs",
-  "description": "Every streaming platform's catalog in one addon. Discover what's popular, trending, and new on Netflix, Disney+, HBO Max, Prime Video, and many more — organized by country and language, with translated cover art so everything feels native.\\n    \\nPick your platforms and country, and you're set: up-to-date catalogs, filterable by genre, no hassle.",
+  "description": "Every streaming platform's catalog in one addon. Discover what's popular, trending, and new on Netflix, Disney+, HBO Max, Prime Video, and many more — organized by country and language, with translated cover art so everything feels native. Pick your platforms and country, and you're set: up-to-date catalogs, filterable by genre, no hassle.",
   "url": "https://5cfe2edf73d5-omnicatalogs.baby-beamup.club/manifest.json",
   "resources": [
    "catalog"
@@ -4115,7 +4115,7 @@
  },
  {
   "name": "Persian Streams",
-  "description": "Fast streaming links from Iranian media providers with Persian subtitles and audio.\\n\\nAuthor: Ali Rostami  \\nWebsite: alirostami.com/support \\nGitHub: https://github.com/alirostami01/Persian-Streams/",
+  "description": "Fast streaming links from Iranian media providers with Persian subtitles and audio. Author: Ali Rostami Website: alirostami.com/support GitHub: https://github.com/alirostami01/Persian-Streams/",
   "url": "https://stremio.alirostami.com/streams/manifest.json",
   "resources": [
    "stream"
@@ -4127,7 +4127,7 @@
  },
  {
   "name": "Persian Subtitles",
-  "description": "Provides Persian subtitles from the SubSource API.\\n\\nAuthor: Ali Rostami  \\nWebsite: alirostami.com/support \\nGitHub: https://github.com/alirostami01/Persian-Subtitles/",
+  "description": "Provides Persian subtitles from the SubSource API. Author: Ali Rostami Website: alirostami.com/support GitHub: https://github.com/alirostami01/Persian-Subtitles/",
   "url": "https://stremio.alirostami.com/subtitles/manifest.json",
   "resources": [
    "subtitles"
@@ -5736,7 +5736,7 @@
  },
  {
   "name": "TorrentFreaks Top-10 by KrazyKayaker",
-  "description": "The current and historic top 10 movies chosen by TorrentFreak.com.  Visit https://stremio-torrentfreak.krazykayaker.com/ for details.",
+  "description": "The current and historic top 10 movies chosen by TorrentFreak.com. Visit https://stremio-torrentfreak.krazykayaker.com/ for details.",
   "url": "https://stremio-torrentfreak.krazykayaker.com/manifest.json",
   "resources": [
    "catalog"
@@ -6228,7 +6228,7 @@
  },
  {
   "name": "WatchNow",
-  "description": "WatchNow — stream Movies & Series in 4K, 1080p and more. Powered by DevStreams.\\n\\nSupported languages: Gujarati, Hindi, Malayalam, Punjabi, Tamil, Telugu\\n\\nSupported sources: 4KHDHub, HDHub4u, Showbox\\n\\nSupported extractors: HubCloud, HubDrive, Direct, DoodStream, Dropload, Fastream, FileLions, FileMoon, Fsst, KinoGer, LuluStream, Mixdrop, RgShows, SaveFiles, StreamEmbed, Streamtape, SuperVideo, Uqload, Vidora, VidSrc, VixSrc, VOE, YouTube, External",
+  "description": "WatchNow — stream Movies & Series in 4K, 1080p and more. Powered by DevStreams. Supported languages: Gujarati, Hindi, Malayalam, Punjabi, Tamil, Telugu Supported sources: 4KHDHub, HDHub4u, Showbox Supported extractors: HubCloud, HubDrive, Direct, DoodStream, Dropload, Fastream, FileLions, FileMoon, Fsst, KinoGer, LuluStream, Mixdrop, RgShows, SaveFiles, StreamEmbed, Streamtape, SuperVideo, Uqload, Vidora, VidSrc, VixSrc, VOE, YouTube, External",
   "url": "https://sword-watch.vercel.app/manifest.json",
   "resources": [
    "stream"
@@ -6296,7 +6296,7 @@
  },
  {
   "name": "WebStreamrMBG",
-  "description": "Provides HTTP URLs from streaming websites. Configure add-on for additional languages. Add MediaFlow proxy for more URLs.\\n\\nSupported languages: Albanian, German, Castilian Spanish, French, Gujarati, Hindi, Italian, Malayalam, Latin American Spanish, Punjabi, Tamil, Telugu\\n\\nSupported sources: 4KHDHub, CineHDPlus, Cuevana, Einschalten, Eurostreaming, Filmpalast, Frembed, FrenchCloud, HDHub4u, HomeCine, KinoGer, Kokoshka, MegaKino, MeineCloud, MostraGuarda, MovieBox, Movix, VerHdLink, VidSrc, VidZee, VixSrc\\n\\nSupported extractors: DoodStream, Dropload, Fastream, FileLions, FileMoon, Fsst, HUBLinks, HDStream4U, HubCloud, KinoGer, LuluStream, Mixdrop, MovieBox, SaveFiles, StreamEmbed, Streamtape, SuperVideo, Uqload, Vidara, Vidsonic, VidZee, VidSrc, VixSrc, VOE, YouTube, External",
+  "description": "Provides HTTP URLs from streaming websites. Configure add-on for additional languages. Add MediaFlow proxy for more URLs. Supported languages: Albanian, German, Castilian Spanish, French, Gujarati, Hindi, Italian, Malayalam, Latin American Spanish, Punjabi, Tamil, Telugu Supported sources: 4KHDHub, CineHDPlus, Cuevana, Einschalten, Eurostreaming, Filmpalast, Frembed, FrenchCloud, HDHub4u, HomeCine, KinoGer, Kokoshka, MegaKino, MeineCloud, MostraGuarda, MovieBox, Movix, VerHdLink, VidSrc, VidZee, VixSrc Supported extractors: DoodStream, Dropload, Fastream, FileLions, FileMoon, Fsst, HUBLinks, HDStream4U, HubCloud, KinoGer, LuluStream, Mixdrop, MovieBox, SaveFiles, StreamEmbed, Streamtape, SuperVideo, Uqload, Vidara, Vidsonic, VidZee, VidSrc, VixSrc, VOE, YouTube, External",
   "url": "https://87d6a6ef6b58-webstreamrmbg.baby-beamup.club/manifest.json",
   "resources": [
    "stream"
@@ -6720,7 +6720,7 @@
  },
  {
   "name": "📡 RDNutz TV",
-  "description": "📺 400+ live channels & live sports — reliable backups for every game.\\n\\nWhat you get:\\n• 🔴 Live sports with multi-source fallback (WeStream, EmbedSportex, ESPN, WatchFooty, CdnLive, Streamic)\\n• ⚽ Football, 🏀 Basketball, 🏈 NFL/NCAA, 🥊 MMA/Boxing, 🏎️ F1, 🏏 Cricket, 🎾 Tennis & more\\n• 📺 24/7 sports channels — Sky Sports, ESPN, beIN, DAZN, Fox Sports, TNT Sports\\n• 📰 YouTube news for MMA, NBA, NFL, F1, boxing, and every major league\\n• 🆓 Free part is actually free — every install also gets 8 hours of Premium (3,500+ channels)\\n• 🩸 Nett Smutt, Movies, and more in the full catalog\\n\\nWorks best with Debrify — the best sit-back-and-watch TV experience, hands down.\\nJust install the addon, open it in Debrify, and enjoy.",
+  "description": "📺 400+ live channels & live sports — reliable backups for every game. What you get: • 🔴 Live sports with multi-source fallback (WeStream, EmbedSportex, ESPN, WatchFooty, CdnLive, Streamic) • ⚽ Football, 🏀 Basketball, 🏈 NFL/NCAA, 🥊 MMA/Boxing, 🏎️ F1, 🏏 Cricket, 🎾 Tennis & more • 📺 24/7 sports channels — Sky Sports, ESPN, beIN, DAZN, Fox Sports, TNT Sports • 📰 YouTube news for MMA, NBA, NFL, F1, boxing, and every major league • 🆓 Free part is actually free — every install also gets 8 hours of Premium (3,500+ channels) • 🩸 Nett Smutt, Movies, and more in the full catalog Works best with Debrify — the best sit-back-and-watch TV experience, hands down. Just install the addon, open it in Debrify, and enjoy.",
   "url": "https://tv.rdnutz.us/manifest.json",
   "resources": [
    "catalog",

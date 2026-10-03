@@ -2,10 +2,10 @@ package animato.app.navigation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
@@ -18,35 +18,34 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * The brand's own letters where Home used to print its name.
  *
- * Home's top bar said "Animato" in the interface font — a label, not a mark. The actual logo could
- * not be put there: it is a picture, with a cream ground and a black panel, and on an ink bar that
- * panel reads as a grey slab. So the brush letters were cut out of the artwork and left white on
- * transparency, which is what makes this a *tinted* image rather than a picture: the mark takes the
- * bar's own content colour, so it is white in the dark theme and ink in the light one without a
- * second asset existing.
+ * ANIMATO in the brand's geometric capitals, the M in the accent blue. Two colours, so it cannot be
+ * a single white mark tinted to the bar the way the previous wordmark was — a tint would paint the M
+ * the same as the rest. Two files ship instead, ink letters and white letters, and this picks by the
+ * surface rather than by the system's night flag, because the app's own theme setting can disagree
+ * with the system and the bar is what the letters have to read against.
  *
- * Sized by height, never by width. The letters are 2.6 times wider than they are tall, and pinning
- * the height is what keeps the bar's rhythm the same as every other screen's title.
+ * Sized by height, never by width. The letters are nearly eight times wider than they are tall, and
+ * pinning the height is what keeps the bar's rhythm the same as every other screen's title.
  */
 @Composable
 fun AnimatoWordmark(modifier: Modifier = Modifier) {
     val label = stringResource(MR.strings.app_name)
+    val onDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     Image(
-        painter = painterResource(R.drawable.animato_wordmark),
+        painter = painterResource(
+            if (onDark) R.drawable.animato_wordmark_on_dark else R.drawable.animato_wordmark_on_light,
+        ),
         contentDescription = null,
         modifier = modifier
             .height(WordmarkHeight)
             // The mark *is* the title, so it has to be read out as the name rather than skipped.
             .semantics { contentDescription = label },
         contentScale = ContentScale.FillHeight,
-        colorFilter = ColorFilter.tint(LocalContentColor.current),
     )
 }
 
 /**
- * Slightly under the cap height of the title it replaces.
- *
- * The brush strokes have ragged tops and tails, so matching the type's height exactly makes the
- * mark look bigger than the text ever did and crowds the bar.
+ * Under the cap height of the title it replaces. Geometric capitals with no descenders fill their
+ * whole box, so matching the type's line height would make the mark shout over the bar's icons.
  */
-private val WordmarkHeight = 22.dp
+private val WordmarkHeight = 18.dp

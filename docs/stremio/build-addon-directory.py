@@ -177,6 +177,19 @@ def brace_match(text, start):
     return None
 
 
+def clean_description(text):
+    """
+    One line of prose, whatever the manifest sent.
+
+    A handful of authors escape their newlines twice, so the manifest carries a literal backslash
+    and an n, and the app printed "streams\\nFiltragem" in the middle of a sentence. Those, and real
+    line breaks and runs of spaces, all become a single space: the list shows a description as a
+    subtitle under the name, where a line break is never what the author meant.
+    """
+    text = re.sub(r"\\[nrt]", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def addon(slug):
     """One addon, or None if its page does not carry what we need."""
     page = get(f"{SITE}/addons/{slug}").replace('\\"', '"')
@@ -214,7 +227,7 @@ def addon(slug):
         return None
 
     name = manifest.get("name") or slug
-    description = (manifest.get("description") or "").strip()
+    description = clean_description(manifest.get("description") or "")
     entry = {
         "name": name,
         "description": description,

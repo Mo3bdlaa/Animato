@@ -6,8 +6,9 @@ work in phase 6 builds against.
 
 <img src="branding/logo-on-dark.png" alt="The Animato mark" width="220"/> <img src="branding/tv-banner.png" alt="The Animato banner" width="390"/>
 
-`branding/brand-sheet.png` is the **previous** brand — the comic panel on cream — and is being
-redrawn for this one. Where it and this document disagree, this document is right.
+`branding/brand-sheet.png` is the brand on one page — mark, palette, type and components. This
+document is the measured version of it: where the sheet's swatch and a value here differ, the value
+here is what ships, and the section that holds it says why.
 
 ---
 
@@ -26,12 +27,14 @@ Mihon/Aniyomi and turns it into a unified, polished, source-agnostic media exper
 
 The mark is a **blue dragon coiled around a figure looking up**, on black: one ring of colour that
 still reads as a ring at 48 pixels, where the detail inside it does not have to. The name, where it
-appears, is `ANIMATO` in wide white capitals with the **M** in the brand blue — on the TV banner,
-and on the redrawn header wordmark.
+appears, is `ANIMATO` in wide geometric capitals with the **M** in the brand blue — on the TV
+banner and in Home's header.
 
-There is one variant, the mark on ink black. It is drawn for a dark ground, the app's default is
-dark, and the launcher icon supplies that ground as its own background layer — so there is no light
-version to keep in step. `アニマト` was part of the previous mark and is not part of this one.
+The mark comes on ink black and on white. The app ships the black one: it is drawn for a dark
+ground, the app's default is dark, and the launcher icon supplies that ground as its own background
+layer, so Android never needs the light one. The light versions are kept for documents, store
+listings and anywhere the page is white. `アニマト` was part of the previous mark and is not part of
+this one.
 
 ---
 
@@ -42,8 +45,8 @@ version to keep in step. `アニマト` was part of the previous mark and is not
 | Animato Blue | `#0066F0` | Primary actions, progress, active states |
 | Ink Black | `#08080C` | Dark background, light-mode typography |
 | Surface | `#151516` | Cards and elevated surfaces |
-| Paper | `#F2EEE5` | Light background — warm manga paper, never pure white |
-| Muted | `#9A9690` | Secondary text |
+| Paper | `#F7F9FF` | Light background — a cool off-white, never pure white |
+| Muted | `#94A3B8` | Secondary text |
 | White | `#FFFFFF` | Light surfaces |
 
 Two more live in the mark and nowhere in the interface — listed so that artwork made for the brand
@@ -102,7 +105,13 @@ scheme is derived from, and in `animato-app/src/main/res/values/animato_brand.xm
 icon and splash window, which the platform draws before any Compose code runs. Changing the brand
 means editing those values in both.
 
-Light mode uses warm paper rather than white — the manga-paper reference is the point.
+Light mode uses a cool off-white rather than white, and the muted grey is a slate to match it. Both
+come from the brand sheet; the warm cream they replaced belonged to the previous, red mark, and beside
+electric blue it looked aged rather than deliberate.
+
+The sheet's blue swatch samples a shade lighter than `#0066F0`. The darker value stays: white on the
+sheet's swatch falls just under the 4.5:1 a button label needs, and every filled button is white on
+blue.
 
 ---
 
@@ -276,13 +285,17 @@ Sources, kept full size under `docs/branding/`:
 | --- | --- |
 | `logo.png` | 1254×1254, the mark on transparency — **the source of the launcher icon and the launch screen** |
 | `logo-on-dark.png` | the same mark on black, for documents and anywhere a flat image is wanted |
-| `tv-banner.png` | 1672×941, 16:9, the mark with the name — the source of the TV banner |
+| `logo-on-light.png` | the mark on white, for documents and listings with a light page |
+| `tv-banner.png` | 1672×941, 16:9, the mark with the name on dark — the source of the TV banner |
+| `tv-banner-light.png` | the same banner on white, for promotion; the app does not use it |
+| `wordmark-on-light.png`, `wordmark-on-dark.png` | the name alone on transparency — ink letters and white letters, blue M in both |
+| `brand-sheet.png` | the brand on one page: mark, palette, type, components |
 | `splash-pulse-reference.gif` | the launch-screen animation as designed; the app rebuilds it rather than playing it |
 | `build-icon.py` | launcher foreground and monochrome layers, five densities each |
 | `build-splash.py` | the launch-screen mark and its breathing frames |
 | `build-tv-banner.py` | the 320×180 banner |
-| `build-wordmark.py` | the header wordmark — still cut from the **previous** mark, until the new one lands |
-| `brand-sheet.png`, `icon-light.png`, `icon-dark.png` | the previous brand, kept for reference |
+| `build-wordmark.py` | the header wordmark, both colourways, five densities each |
+| `icon-light.png`, `icon-dark.png` | the previous brand, kept for reference |
 
 In the app, under `animato-app/src/main/res/`:
 
@@ -291,15 +304,12 @@ In the app, under `animato-app/src/main/res/`:
 | `mipmap/ic_launcher.xml` | adaptive icon — **overrides Mihon's by name** |
 | `drawable-*/animato_icon_foreground.png` | the mark, five densities |
 | `drawable-*/animato_icon_monochrome.png` | themed-icon silhouette for Android 13+ |
-| `drawable-*/animato_wordmark.png` | the header wordmark, white, tinted at the point of use |
+| `drawable-*/animato_wordmark_on_light.png`, `animato_wordmark_on_dark.png` | the header wordmark; `AnimatoWordmark` picks by the bar's surface, not the system night flag |
 | `drawable-xhdpi/animato_tv_banner.png` | the TV home-screen banner |
 | `drawable/ic_mihon_splash.xml` | launch icon below Android 12, static — **overrides Mihon's by name** |
 | `drawable-v31/ic_mihon_splash.xml` | launch icon from Android 12, the breathing `animation-list` |
 | `drawable-nodpi/animato_splash_mark.png`, `animato_splash_pulse_*.png` | its frames |
 | `values/animato_brand.xml` | palette, and the `splash` colour override |
-
-`drawable-nodpi/animato_logo.png` and its `night` twin are the previous mark and nothing references
-them; they go when the brand sheet is redrawn.
 
 ### One launcher icon, on black
 
@@ -348,7 +358,7 @@ application module wins resource merging over its library dependencies. See `ARC
 ## 10. Asset sizes, for when the artwork changes
 
 Everything below is measured from the files in the tree, not from what a script intends. A rebrand
-replaces the source artwork and re-runs two scripts; this table is what to hand a designer so the
+replaces the source artwork and re-runs the scripts; this table is what to hand a designer so the
 output lands without a second round.
 
 ### What to supply
@@ -357,7 +367,7 @@ output lands without a second round.
 | --- | --- | --- |
 | `docs/branding/logo.png` | **square, 1024px or more**, transparent | The mark alone. The icon, monochrome layer and launch screen are all built from it |
 | `docs/branding/tv-banner.png` | **16:9, 1280×720 or more**, opaque | Must carry the name — a TV launcher does not label banners. Keep the edges quiet: TV home screens draw a focus border tight against them |
-| Header wordmark | **448px tall or more**, transparent | The name alone, light on transparency; it sits on the dark top bar |
+| `docs/branding/wordmark-on-light.png`, `wordmark-on-dark.png` | **wide, 200px tall letters or more**, transparent | The name alone, once in ink and once in white. Two files, not one tinted: the M is blue in both, and a tint would paint it over |
 
 ### What gets generated
 
@@ -367,11 +377,13 @@ output lands without a second round.
 | Launcher monochrome | the same five sizes | `…/animato_icon_monochrome.png` | `build-icon.py` |
 | Launch mark and frames | 640px square | `drawable-nodpi/animato_splash_*.png`, `drawable-v31/ic_mihon_splash.xml` | `build-splash.py` |
 | TV banner | **320×180**, RGB, opaque | `drawable-xhdpi/animato_tv_banner.png` | `build-tv-banner.py` |
+| Header wordmark | 24dp tall at five densities, both colourways | `drawable-*/animato_wordmark_on_{light,dark}.png` | `build-wordmark.py` |
 
 ```
 python3 docs/branding/build-icon.py
 python3 docs/branding/build-splash.py
 python3 docs/branding/build-tv-banner.py
+python3 docs/branding/build-wordmark.py
 ```
 
 ### The rules the numbers come from

@@ -11,8 +11,8 @@
     <color name="animato_accent">#0066F0</color>
     <color name="animato_ink_black">#08080C</color>
     <color name="animato_surface">#151516</color>
-    <color name="animato_paper">#F2EEE5</color>
-    <color name="animato_muted">#9A9690</color>
+    <color name="animato_paper">#F7F9FF</color>
+    <color name="animato_muted">#94A3B8</color>
 
     <!--
       Mihon's splash window is blue. Overriding the colour it points at re-skins the launch screen
