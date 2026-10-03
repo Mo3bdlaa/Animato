@@ -1,101 +1,60 @@
 #!/usr/bin/env python3
 """
-Builds the Android TV banner from the same artwork the launcher icon uses.
+Builds the Android TV banner from docs/branding/tv-banner.png.
 
-A television launcher does not draw an app icon. It draws a **banner** — a fixed 320×180 landscape
-tile, named by `android:banner`, with no adaptive layers, no mask and no monochrome variant. An app
-with no banner still installs on a TV and simply cannot be found on the home screen, which is a
-worse failure than looking wrong.
+A television launcher does not draw an app icon. It draws a **banner** — a fixed 320×180
+landscape tile, named by `android:banner`, with no adaptive layers, no mask and no monochrome
+variant. An app with no banner still installs on a TV and simply cannot be found on the home
+screen, which is a worse failure than looking wrong.
 
-## Why this is not build-icon.py with different numbers
+## Why the source is its own artwork now
 
-The launcher icon is artwork keyed onto transparency, so the launcher can supply the background and
-slide the layers for parallax. A banner is the opposite: one flat opaque image, and everything it
-needs to say has to be inside it. So this composites rather than keys — the artwork goes onto the
-brand's paper colour, at the size the tile wants, centred.
+This used to composite the square launcher artwork onto a cream tile. However large it was drawn,
+a square mark in a 16:9 tile left cream down both sides, and next to other apps' banners — every
+one of which fills its tile — it read as a stamp. The banner is drawn for the shape now, at full
+resolution, and this only scales it down.
 
-The keying is still borrowed, and for the same reason build-icon.py gives: both source variants are
-edged in black and rounded with transparency, so pasting one straight in would carry its own
-background as a visible rectangle inside ours.
+The source has to be 16:9 and opaque. It is checked rather than cropped: a source in the wrong
+shape is a mistake to fix in the artwork, not something to quietly cut a strip off.
 
 Run from anywhere: `python3 docs/branding/build-tv-banner.py`
 """
 
 from pathlib import Path
 
-import numpy as np
 from PIL import Image
 
 # The banner is a single fixed size. Television densities vary, but the launcher scales one tile
 # rather than picking per density, and xhdpi is where Android expects to find it.
 BANNER_SIZE = (320, 180)
 
-# How much of the tile's height the mark occupies.
-#
-# This was 0.72, and on a television that was plainly wrong: the mark came out 130×130 in a 320×180
-# tile, which is 11% of its area with 95 blank pixels down each side. Among the other banners on a
-# home screen, every one of which fills its tile, ours read as a stamp somebody had forgotten to
-# finish.
-#
-# The margin it was buying is real — TV launchers draw a focus border tight against the banner, and
-# artwork that reaches the edge collides with it — but a margin is a dozen pixels, not fifty. At
-# 0.88 the mark is 158 px tall with 11 px above and below, which clears the border and still fills
-# the tile.
-#
-# The width stays what it is. The artwork is square and contains the product's name, so there is
-# nothing to stretch and nothing to put beside it; cream down the sides is the shape of a square
-# mark on a 16:9 tile, and is the right answer rather than a leftover.
-ARTWORK_HEIGHT_FRACTION = 0.88
-
-# Matches @color/animato_paper, the launcher icon's background layer. Written out rather than parsed
-# from the XML so the two can be compared by eye in a review; if the brand colour changes, both move.
-PAPER = (0xF2, 0xEE, 0xE5)
-
-KEY_SOFT_START = 24
-KEY_SOFT_END = 90
-
 BRANDING = Path(__file__).parent
+SOURCE = BRANDING / "tv-banner.png"
 RES = BRANDING.parent.parent / "animato-app" / "src" / "main" / "res"
 
 
-def background_colour(image):
-    """The artwork's own background: the colour most of it is. See build-icon.py."""
-    opaque = image[image[:, :, 3] > 250][:, :3]
-    quantised = opaque // 8
-    packed = (quantised[:, 0].astype(int) << 12) | (quantised[:, 1].astype(int) << 6) | quantised[:, 2]
-    commonest = np.bincount(packed).argmax()
-    return opaque[packed == commonest].mean(axis=0)
-
-
-def keyed(source):
-    """The artwork with its background removed and its edges left soft."""
-    pixels = np.asarray(source, dtype=float)
-    distance = np.abs(pixels[:, :, :3] - background_colour(np.asarray(source))).sum(axis=2)
-
-    ramp = (distance - KEY_SOFT_START) / (KEY_SOFT_END - KEY_SOFT_START)
-    alpha = np.clip(ramp, 0.0, 1.0) * pixels[:, :, 3]
-
-    pixels[:, :, 3] = alpha
-    return Image.fromarray(pixels.round().astype(np.uint8), "RGBA")
-
-
 def main():
-    source = Image.open(BRANDING / "icon-light.png").convert("RGBA")
+    source = Image.open(SOURCE)
+    width, height = source.size
+    wanted = BANNER_SIZE[0] / BANNER_SIZE[1]
+    if abs(width / height - wanted) > 0.01:
+        raise SystemExit(f"{SOURCE.name} is {width}×{height}; a banner has to be 16:9.")
 
-    # Resize before keying, for the reason build-icon.py records: keying first and resizing after
-    # blends keyed-out pixels back in and washes the artwork out.
-    side = round(BANNER_SIZE[1] * ARTWORK_HEIGHT_FRACTION)
-    artwork = keyed(source.resize((side, side), Image.LANCZOS))
+    # Flattened rather than converted: a banner with an alpha channel draws however the launcher
+    # decides to, and transparent pixels over a TV's background are not a decision we get to make.
+    if source.mode in ("RGBA", "LA", "P"):
+        source = source.convert("RGBA")
+        flat = Image.new("RGB", source.size, (255, 255, 255))
+        flat.paste(source, mask=source.getchannel("A"))
+        source = flat
+    else:
+        source = source.convert("RGB")
 
-    banner = Image.new("RGBA", BANNER_SIZE, (*PAPER, 255))
-    banner.alpha_composite(
-        artwork,
-        ((BANNER_SIZE[0] - side) // 2, (BANNER_SIZE[1] - side) // 2),
-    )
+    banner = source.resize(BANNER_SIZE, Image.LANCZOS)
 
     target = RES / "drawable-xhdpi" / "animato_tv_banner.png"
     target.parent.mkdir(parents=True, exist_ok=True)
-    banner.convert("RGB").save(target)
+    banner.save(target, optimize=True)
     print(f"wrote {target.relative_to(RES.parent.parent.parent)} at {BANNER_SIZE[0]}×{BANNER_SIZE[1]}")
 
 
