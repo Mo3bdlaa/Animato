@@ -11,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -21,9 +23,16 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 
@@ -76,8 +85,60 @@ fun ProvideIsTelevision(content: @Composable () -> Unit) {
     CompositionLocalProvider(
         LocalIsTelevision provides true,
         LocalIndication provides indication,
-        content = content,
-    )
+    ) {
+        VerticalFocusFallback(content)
+    }
+}
+
+/**
+ * Up and down that always go somewhere.
+ *
+ * ## What a television showed
+ *
+ * With the focus ring finally drawing, a remote could be seen moving left and right along a screen's
+ * top bar — and *down* did nothing, in settings and in the Stremio addon list alike: the rows below
+ * were never reached and nothing in them could be chosen. Both screens are a top bar over a lazy list
+ * of ordinary clickable rows, every one of them focusable. Nothing in the app consumes the key; the
+ * framework's geometric search for "the nearest focusable below this one" was simply coming back
+ * empty from the bar.
+ *
+ * ## What this does about it
+ *
+ * Asks the same question first, so wherever the geometric search works nothing changes. Only when it
+ * answers *nowhere* does this fall back to the framework's other notion of order — *next* and
+ * *previous*, the sequence a keyboard's Tab key walks — which visits every focusable on the screen
+ * and so cannot strand a remote in a bar. From a top bar that means a press or two along the bar
+ * before entering the list, rather than never entering it.
+ *
+ * Left and right are left alone. They already worked, and on a television they also carry meaning a
+ * fallback would get wrong — leaving a row for the next one is not what *right* means on a carousel.
+ *
+ * Applied at the root because the failure is not one screen's: settings come from Mihon, the addon
+ * list is this fork's, and both stranded the remote the same way. A key that a focused element
+ * handles itself — a text field, a slider — never reaches here, because this only sees what bubbles
+ * up unconsumed.
+ */
+@Composable
+private fun VerticalFocusFallback(content: @Composable () -> Unit) {
+    val focusManager = LocalFocusManager.current
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
+                when (event.key) {
+                    Key.DirectionDown ->
+                        focusManager.moveFocus(FocusDirection.Down) ||
+                            focusManager.moveFocus(FocusDirection.Next)
+                    Key.DirectionUp ->
+                        focusManager.moveFocus(FocusDirection.Up) ||
+                            focusManager.moveFocus(FocusDirection.Previous)
+                    else -> false
+                }
+            },
+    ) {
+        content()
+    }
 }
 
 /**
