@@ -5,16 +5,13 @@
   without a tools:replace on the manifest — Mihon's manifest still points at @mipmap/ic_launcher,
   which now resolves here.
 
-  The foreground square spans the inner 72dp of the 108dp canvas. A 72dp square fully contains the
-  72dp mask circle, so the whole visible area is artwork whatever shape the launcher applies, and
-  the rounding comes from the launcher rather than from a radius baked into the PNG.
-
-  The background is flat and the artwork's own background is keyed out of the foreground, so this
-  layer is what supplies it — which is what lets a launcher slide the two against each other for
-  parallax without the foreground showing an edge. Both are built by docs/branding/build-icon.py.
+  The foreground is the dragon mark on transparency, scaled so its ring sits inside the 66dp circle
+  every launcher shows; any larger and a circular mask takes the dragon's head off. The background is
+  flat ink black, which is what the mark is drawn for. Both layers and the monochrome one are built
+  by docs/branding/build-icon.py from docs/branding/logo.png.
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/animato_paper" />
+    <background android:drawable="@color/animato_ink_black" />
     <foreground android:drawable="@drawable/animato_icon_foreground" />
     <monochrome android:drawable="@drawable/animato_icon_monochrome" />
 </adaptive-icon>

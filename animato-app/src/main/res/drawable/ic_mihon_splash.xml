@@ -6,17 +6,10 @@
   The name is theirs, which is why this file is worth a comment: it is an override, not a new
   resource, and it disappears the moment we own the splash theme.
 
-  It points at the unframed lockup rather than the launcher foreground, and the difference is the
-  whole fix. The launcher artwork carries the brand's panel frame — a dark rectangle edged in white
-  sketch lines — which works on a launcher because a paper-coloured background layer sits behind it.
-  A splash has no background layer, so on ink black that frame's interior merges with the screen and
-  the frame itself reads as a grey slab floating in the void.
-
-  Built by docs/branding/build-wordmark.py, and a single file now rather than three. The mark used
-  to be blue letters over a Japanese line, and that line had to be recoloured between the light and
-  dark configurations or it vanished into whichever background it was not drawn for. It is now the
-  white brush letters alone, and @color/splash is ink black in *both* configurations — so there is
-  nothing left to vary, and drawable-nodpi answers every case.
+  The dragon mark, undimmed — the static icon below Android 12. From 12 onwards
+  drawable-v31/ic_mihon_splash.xml takes over and the same mark breathes. Both are built by
+  docs/branding/build-splash.py from docs/branding/logo.png, and @color/splash is ink black in
+  both configurations, which is what the mark is drawn for.
 -->
 <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
     android:gravity="fill"

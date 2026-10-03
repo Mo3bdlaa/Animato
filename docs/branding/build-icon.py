@@ -1,45 +1,40 @@
 #!/usr/bin/env python3
 """
-Builds the launcher icon's foreground layers from one 512px source.
+Builds the launcher icon's foreground and monochrome layers from docs/branding/logo.png.
 
-Run from the repository root:
+The source is the dragon mark on a transparent background, drawn large. Run from anywhere:
+`python3 docs/branding/build-icon.py`
 
-    python3 docs/branding/build-icon.py light
+## The foreground
 
-`light` or `dark` picks which of the two variants in this directory becomes the launcher icon. It
-rewrites `animato_icon_foreground.png` at all five densities; it does not touch the monochrome
-layer, which is a silhouette and the same either way.
+An adaptive icon is a 108dp canvas of which the launcher may show as little as a 66dp circle in the
+middle, and it is free to shift the foreground against the background for parallax. The mark is a
+ring, so it is scaled until the ring sits inside that circle — measured on the artwork's own
+opaque pixels rather than on the file's edges, which have a margin of their own. Drawn any larger,
+the circular mask a good half of launchers apply takes the dragon's head off, and the head is the
+part of the mark people recognise it by.
 
-## The geometry
+The background layer is @color/animato_ink_black and is not built here. The mark is drawn for black
+and its edges are soft, so the transparent source composites onto it without a halo.
 
-An adaptive icon is a 108dp canvas of which the launcher may show as little as the central 72dp
-circle, and it is free to shift the foreground against the background for parallax. So the artwork
-is drawn at 72dp, centred: a 72dp square fully contains the 72dp mask circle, which means the whole
-visible area is artwork whatever shape the device masks to, and the rounding comes from the launcher
-rather than being baked into the PNG.
+## The monochrome layer
 
-## The keying
-
-The artwork's own background is removed rather than kept, and the flat `<background>` layer supplies
-it instead. That is what makes the parallax work: a foreground carrying its own opaque background
-would show its edges the moment the launcher shifted it.
-
-Removal is by distance from the background colour, with a soft band rather than a threshold, so
-antialiased edges keep their partial alpha instead of turning into a staircase. The colour is read
-from the source itself rather than written down here, so the two variants need no separate
-configuration and a re-exported source cannot silently drift away from a constant.
-
-The order matters: **resize first, then key.** Keying first and resizing after washes the artwork
-out, because Pillow interpolates RGB and alpha separately — a black frame line one pixel wide gets
-averaged with the paper-coloured RGB still sitting under its transparent neighbours, and comes out
-grey. Scaling while the source is still opaque has no such neighbours to average with.
+Android 13's themed icons tint this layer one colour and throw everything else away, so what goes
+in it is a *shape*, and the shape has to still be the mark. The source's alpha alone is the wrong
+shape: the figure in the middle is opaque, so the ring and the figure fill in to a disc and the
+dragon disappears. The mask is therefore the source's brightness as well as its opacity — the
+dragon is drawn in light blue and the figure in near-black, so keeping only what is both opaque and
+bright keeps the ring and the head and lets the figure go dark, which is the right silhouette.
 """
 
-import sys
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
+
+BRANDING = Path(__file__).parent
+SOURCE = BRANDING / "logo.png"
+RES = BRANDING.parent.parent / "animato-app" / "src" / "main" / "res"
 
 # Density bucket -> canvas size in pixels. 108dp at 1x, 1.5x, 2x, 3x and 4x.
 DENSITIES = {
@@ -50,72 +45,54 @@ DENSITIES = {
     "xxxhdpi": 432,
 }
 
-# The artwork occupies the inner 72dp of the 108dp canvas.
-ARTWORK_FRACTION = 72 / 108
+# How much of the 108dp canvas the mark's opaque pixels span: the 66dp circle every launcher shows.
+ARTWORK_FRACTION = 66 / 108
 
-# Distances from the background colour, summed across RGB, between which alpha ramps from 0 to 1.
-# Below the first the pixel is background; above the second it is artwork; between, it is an edge.
-KEY_SOFT_START = 24
-KEY_SOFT_END = 90
-
-BRANDING = Path(__file__).parent
-RES = BRANDING.parent.parent / "animato-app" / "src" / "main" / "res"
+# What counts as part of the silhouette in the monochrome layer. Brightness on 0-255, before alpha.
+MONOCHROME_BRIGHTNESS_FLOOR = 70
+MONOCHROME_BRIGHTNESS_FULL = 150
 
 
-def background_colour(image):
-    """
-    The artwork's own background: the colour most of it is.
-
-    Not a sampled point. Both variants round their corners with transparency and both are edged in
-    black, so every obvious place to sample — a corner, the middle of an edge — lands on something
-    that is not the background, and reading one silently poisons the distances below: sampling the
-    black edge of the light variant made the black panel frame *nearly* background, and it came out
-    at two-thirds alpha, grey. The background is the one colour a flat-coloured icon is mostly made
-    of, and that is what this measures.
-    """
-    opaque = image[image[:, :, 3] > 250][:, :3]
-    quantised = opaque // 8
-    packed = (quantised[:, 0].astype(int) << 12) | (quantised[:, 1].astype(int) << 6) | quantised[:, 2]
-    commonest = np.bincount(packed).argmax()
-    return opaque[packed == commonest].mean(axis=0)
+def cropped(source):
+    """The source cut to its opaque pixels, so scaling measures the mark rather than the file."""
+    alpha = np.asarray(source)[:, :, 3]
+    rows = np.where((alpha > 20).any(axis=1))[0]
+    cols = np.where((alpha > 20).any(axis=0))[0]
+    box = (cols.min(), rows.min(), cols.max() + 1, rows.max() + 1)
+    return source.crop(box)
 
 
-def keyed(source):
-    """The artwork with its background removed and its edges left soft."""
-    pixels = np.asarray(source, dtype=float)
-    distance = np.abs(pixels[:, :, :3] - background_colour(np.asarray(source))).sum(axis=2)
+def on_canvas(mark, canvas_size, fraction):
+    """The mark scaled to `fraction` of a square canvas, keeping its aspect, centred."""
+    longest = round(canvas_size * fraction)
+    scale = longest / max(mark.size)
+    sized = mark.resize((round(mark.width * scale), round(mark.height * scale)), Image.LANCZOS)
+    canvas = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+    canvas.alpha_composite(sized, ((canvas_size - sized.width) // 2, (canvas_size - sized.height) // 2))
+    return canvas
 
-    ramp = (distance - KEY_SOFT_START) / (KEY_SOFT_END - KEY_SOFT_START)
+
+def monochrome(mark):
+    pixels = np.asarray(mark).astype(float)
+    brightness = pixels[:, :, :3].max(axis=2)
+    ramp = (brightness - MONOCHROME_BRIGHTNESS_FLOOR) / (MONOCHROME_BRIGHTNESS_FULL - MONOCHROME_BRIGHTNESS_FLOOR)
     alpha = np.clip(ramp, 0.0, 1.0) * pixels[:, :, 3]
-
-    pixels[:, :, 3] = alpha
-    return Image.fromarray(pixels.round().astype(np.uint8), "RGBA")
+    out = np.zeros_like(pixels)
+    out[:, :, :3] = 255
+    out[:, :, 3] = alpha
+    return Image.fromarray(out.round().astype(np.uint8), "RGBA")
 
 
 def main():
-    variant = sys.argv[1] if len(sys.argv) > 1 else "light"
-    if variant not in ("light", "dark"):
-        print(f"Unknown variant {variant!r}; expected 'light' or 'dark'.")
-        return 1
-
-    source = Image.open(BRANDING / f"icon-{variant}.png").convert("RGBA")
-
+    mark = cropped(Image.open(SOURCE).convert("RGBA"))
+    silhouette = monochrome(mark)
     for density, canvas_size in DENSITIES.items():
-        artwork_size = round(canvas_size * ARTWORK_FRACTION)
-        offset = (canvas_size - artwork_size) // 2
-
-        artwork = keyed(source.resize((artwork_size, artwork_size), Image.LANCZOS))
-
-        canvas = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
-        canvas.paste(artwork, (offset, offset))
-
-        target = RES / f"drawable-{density}" / "animato_icon_foreground.png"
-        canvas.save(target, optimize=True)
-        print(f"{target}  {canvas_size}px canvas, {artwork_size}px artwork")
-
-    print(f"\nSet <background> in mipmap/ic_launcher.xml to the {variant} variant's colour.")
-    return 0
+        folder = RES / f"drawable-{density}"
+        folder.mkdir(parents=True, exist_ok=True)
+        on_canvas(mark, canvas_size, ARTWORK_FRACTION).save(folder / "animato_icon_foreground.png", optimize=True)
+        on_canvas(silhouette, canvas_size, ARTWORK_FRACTION).save(folder / "animato_icon_monochrome.png", optimize=True)
+        print(f"wrote drawable-{density} foreground and monochrome at {canvas_size}px")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
