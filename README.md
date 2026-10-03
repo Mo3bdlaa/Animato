@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./docs/branding/icon-light.png" alt="Animato" width="120"/>
+<img src="./docs/branding/tv-banner.png" alt="Animato" width="560"/>
 
 # Animato
 
@@ -15,10 +15,28 @@ One app, one library, both kinds of story.
 
 ---
 
-> **Not released yet.** There is no stable build, and the database schema is not frozen.
-> Animato does **not** upgrade in place over an existing Aniyomi install — bring your library
-> across with a backup import. See
+> **Pre-release.** There is no stable build yet, only alphas, and the database schema is not
+> frozen. Animato does **not** upgrade in place over an existing Aniyomi install — bring your
+> library across with a backup import. See
 > [ARCHITECTURE.md](ARCHITECTURE.md#why-users-must-not-upgrade-in-place-from-aniyomi).
+
+## Download
+
+Alphas are published on the [Releases](https://github.com/Mo3bdlaa/Animato/releases) page, four files each. Once installed, the
+app checks for the next one itself.
+
+| You have | Take |
+| --- | --- |
+| A phone or tablet | `…-arm64-v8a.apk`, or `…-armeabi-v7a.apk` if that one will not install |
+| A television or TV box | `…-armeabi-v7a-tv.apk`, or `…-arm64-v8a-tv.apk` if your set is 64-bit |
+
+Start with `armeabi-v7a-tv` on a television even if the hardware is 64-bit: plenty of sets run a
+32-bit system, and the 64-bit file then fails with nothing more than *App not installed*. Needs
+Android 8.0 or newer.
+
+The `-tv` builds are the same app without the manga reader — about 22–29 MB smaller — and with the
+manga half hidden to match. Do not put one on a phone: it installs happily, under the same name,
+and the manga is simply gone.
 
 ## What it is
 
@@ -43,12 +61,33 @@ Content comes from extensions you install and configure yourself. Animato ships 
   halves; Simkl and Jellyfin for anime. Where you are already looking, not on another screen.
 - **A reader and a player built for the content.** Chrome that disappears when it is not wanted;
   gestures, playback speed, subtitles and external-player handoff on the anime side.
+- **Counts where you decide.** Every cover in the library and on Home says how many items are
+  downloaded and how many are unwatched, and Home has a *Your downloads* row for what plays with no
+  signal.
+- **Select, then act.** Tap an episode's number to select it, select a run of them, and download or
+  mark the lot at once. Pull down on any title to refresh it.
+- **Playback that survives a bad connection.** The buffer is sized to the device's memory rather
+  than fixed, and a dropped stream reconnects instead of ending the episode.
+- **A way back from a broken build.** If the app crashes twice on launch, it opens a recovery
+  screen that checks for a newer release first — so a crash fixed upstream is a download, not a
+  reinstall.
 - **Backups that other apps can read.** One file holds both libraries, written in Aniyomi's format —
   so Aniyomi can open it in full and Mihon can open the manga in it. Aniyomi and Mihon backups import
   the same way, and a restore names anything whose extension is missing before it starts.
 
 Not all of that is wired up yet — this is a pre-release, and
 [ARCHITECTURE.md](ARCHITECTURE.md) tracks what is built and what is not.
+
+## Android TV
+
+Animato installs on a television, appears on its home screen with its own banner, and is driven
+entirely with the remote. Every row and button shows a ring when the remote reaches it.
+
+In the player, **up** or **down** brings up the controls with play/pause already selected, and the
+controls stay up while you move between buttons. **OK** pauses when nothing is selected, and
+**left** and **right** seek while the controls are hidden.
+
+Take a `-tv` file from [Download](#download).
 
 ## Sources
 
@@ -61,7 +100,7 @@ where the manga comes from.
 **Stremio addons** are the other shape: a web address that answers JSON. Nothing is installed and
 nothing runs inside the app, so an addon cannot crash it or read its storage — the app only ever
 talks to it. Sources → **Extension stores** → **Stremio** is where they are added: the screen
-suggests four worth starting with, lists several hundred the community has published, and takes any
+suggests four worth starting with, lists around five hundred the community has published, and takes any
 other addon's `manifest.json` link the same way. The **Stremio** segment beside *Installed* and
 *Available* is what is already added — open one to browse it, or remove it.
 
@@ -69,7 +108,9 @@ That long list is two lists merged. Stremio publishes its own collection as JSON
 it at launch, which keeps the popular half current. The rest is a snapshot of
 [stremio-addons.net](https://stremio-addons.net), which has no API, scraped by
 `docs/stremio/build-addon-directory.py` and shipped with the app — so it is as fresh as the release
-you are running. Addons that describe themselves as adult are marked in that snapshot and hidden
+you are running. A workflow refreshes it monthly, and asks every address whether it is still there:
+an addon that answers *404* or *410* is dropped, and one that merely fails to answer is kept, since
+that says more about the machine asking than about the addon. Addons that describe themselves as adult are marked in that snapshot and hidden
 unless *Show NSFW sources* is on.
 
 The store groups them by what they actually do, read off each manifest rather than off its
@@ -132,9 +173,20 @@ and shows a one-time notice before the first torrent explaining that peer-to-pee
 well as downloads; it can be turned off under Settings → Player → Torrent, and it shuts down when
 the player closes.
 
+## Writing an extension
+
+[docs/extension-template](docs/extension-template) is a working skeleton for a new source — the
+build, the manifest, the class, and the workflow that publishes it as a repository you can add in
+the app. Start with its [GUIDE.md](docs/extension-template/GUIDE.md), which walks the whole thing
+through, including doing it from a phone.
+
 ## Design
 
-![Animato brand sheet](docs/branding/brand-sheet.png)
+<img src="./docs/branding/logo-on-dark.png" alt="The Animato mark" width="200"/>
+
+The mark is the blue dragon. Its sources are kept full size in [docs/branding](docs/branding), and
+`build-icon.py`, `build-splash.py` and `build-tv-banner.py` there regenerate the launcher icon, the
+themed icon, the launch screen and the TV banner from them.
 
 Palette, typography, component rules and a screen-by-screen specification live in
 [docs/BRANDING.md](docs/BRANDING.md).
@@ -148,6 +200,9 @@ Palette, typography, component rules and a screen-by-screen specification live i
 Requires the Android SDK with API 37 and NDK `29.0.14206865`. Minimum supported device is
 Android 8.0 (API 26).
 
+Add `-Panimato-tv` for the television build, which leaves out the manga reader's native libraries
+and fixes the app to anime.
+
 ## Documentation
 
 | | |
@@ -156,6 +211,8 @@ Android 8.0 (API 26).
 | [ROADMAP.md](ROADMAP.md) | what is worth building next, and why — with the evidence |
 | [docs/BRANDING.md](docs/BRANDING.md) | brand and interface specification |
 | [UPSTREAM_DIVERGENCE.md](UPSTREAM_DIVERGENCE.md) | where Animato differs from the code it builds on |
+| [docs/APK_SIZE.md](docs/APK_SIZE.md) | what the APK is made of, and why it is the size it is |
+| [docs/extension-template](docs/extension-template) | how to write and publish an extension |
 
 ## Credit
 
