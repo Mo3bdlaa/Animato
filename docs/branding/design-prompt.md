@@ -17,7 +17,7 @@ Ground rules:
 
 - Android phone, portrait, **393 × 852**. Dark theme (`#08080C`) is the default identity.
 - Material 3 foundations; the brand layered on top. No hover states, no JS, nothing web-shaped.
-- Blue `#4169A1` marks active/progress/primary **only**. If you used it three times on one screen,
+- Blue `#0066F0` marks active/progress/primary **only**. If you used it three times on one screen,
   stop and reconsider.
 - Manga DNA (speed lines, halftone, ink) appears only in splash, onboarding, empty states.
 - Real content: Solo Leveling, One Piece, Jujutsu Kaisen, Kingdom, Frieren, Chainsaw Man.

@@ -85,19 +85,19 @@ object AnimatoPalettes {
     /**
      * Animato's own. Blue on ink black, warm paper in the light.
      *
-     * The accent was red until the brand moved to blue: calmer to read for long sessions, and it
-     * keeps a thread back to Tachiyomi and Mihon without looking like a clone of either. It also
-     * measures better where it matters most — white on the accent, which is every filled button —
-     * going from 4.24:1 to 5.59:1, clearing AA for button labels where the red did not.
+     * The blue is the dragon's, measured off docs/branding/logo.png: the commonest saturated blue
+     * in the mark. It replaced a muted steel blue, `#4169A1`, once the mark changed — an icon in
+     * electric blue opening onto an app in grey-blue reads as two different products.
      *
-     * The trade is the other direction: accent drawn *as text* on the ink background is 3.58:1
-     * against the red's 4.72:1. That passes AA for large text and UI components, which is what the
-     * accent is used for — tab labels, icons, progress — and no single colour clears 4.5:1 in both
-     * directions at once, so this is the side worth being good at.
+     * It measures better than the colour it replaced where the accent is most often *read*: as
+     * text and icons on the ink background it is 3.96:1, up from 3.58:1. White on the accent —
+     * every filled button — is 5.05:1, down from 5.59:1 but still clear of the 4.5:1 a button label
+     * needs. Nothing brighter from the mark keeps that: its lighter blues fall under 4.5:1 for
+     * white text, which is the side worth being good at.
      */
     val Default = AnimatoPalette(
         name = "Animato",
-        accent = Color(0xFF4169A1),
+        accent = Color(0xFF0066F0),
         onAccent = Color(0xFFFFFFFF),
         ink = Color(0xFF08080C),
         paper = Color(0xFFF2EEE5),

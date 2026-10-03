@@ -9,7 +9,7 @@
 One app, one library, both kinds of story.
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue?labelColor=27303D)](/LICENSE)
-![Status: pre-release](https://img.shields.io/badge/status-pre--release-4169A1?labelColor=27303D)
+![Status: pre-release](https://img.shields.io/badge/status-pre--release-0066F0?labelColor=27303D)
 
 </div>
 

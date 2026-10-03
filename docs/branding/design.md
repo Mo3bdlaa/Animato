@@ -25,7 +25,7 @@ Track.*
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| Animato Blue | `#4169A1` | Active states, primary action, progress — **nothing else** |
+| Animato Blue | `#0066F0` | Active states, primary action, progress — **nothing else** |
 | Ink Black | `#08080C` | Dark background |
 | Surface | `#151516` | Cards, sheets, bars on dark |
 | Paper | `#F2EEE5` | Light background |

@@ -1,10 +1,13 @@
 # Animato — brand and interface specification
 
-The reference for anything visual. The palette, type and component rules come from the brand sheet;
-the screen-by-screen section is read off the nine mockups in `branding/screens.jpg` and is what the
-UI work in phase 6 builds against.
+The reference for anything visual. The palette and the mark are the dragon's, described here; the
+screen-by-screen section is read off the nine mockups in `branding/screens.jpg` and is what the UI
+work in phase 6 builds against.
 
-![Animato brand sheet](branding/brand-sheet.png)
+<img src="branding/logo-on-dark.png" alt="The Animato mark" width="220"/> <img src="branding/tv-banner.png" alt="The Animato banner" width="390"/>
+
+`branding/brand-sheet.png` is the **previous** brand — the comic panel on cream — and is being
+redrawn for this one. Where it and this document disagree, this document is right.
 
 ---
 
@@ -21,12 +24,14 @@ UI work in phase 6 builds against.
 **One line:** Animato is a modern anime and manga platform that takes the power and flexibility of
 Mihon/Aniyomi and turns it into a unified, polished, source-agnostic media experience.
 
-The visual metaphor is a **manga panel with motion lines** — not anime characters. The logo is
-`ANIMATO` in brush/ink lettering with `アニマト` set beneath it in clean Japanese type, inside an
-asymmetric, skewed panel frame with selective speed lines.
+The mark is a **blue dragon coiled around a figure looking up**, on black: one ring of colour that
+still reads as a ring at 48 pixels, where the detail inside it does not have to. The name, where it
+appears, is `ANIMATO` in wide white capitals with the **M** in the brand blue — on the TV banner,
+and on the redrawn header wordmark.
 
-Two variants: red wordmark on ink black (default) and red wordmark with a black frame on warm
-ivory (light).
+There is one variant, the mark on ink black. It is drawn for a dark ground, the app's default is
+dark, and the launcher icon supplies that ground as its own background layer — so there is no light
+version to keep in step. `アニマト` was part of the previous mark and is not part of this one.
 
 ---
 
@@ -34,12 +39,20 @@ ivory (light).
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| Animato Blue | `#4169A1` | Primary actions, progress, active states |
+| Animato Blue | `#0066F0` | Primary actions, progress, active states |
 | Ink Black | `#08080C` | Dark background, light-mode typography |
 | Surface | `#151516` | Cards and elevated surfaces |
 | Paper | `#F2EEE5` | Light background — warm manga paper, never pure white |
 | Muted | `#9A9690` | Secondary text |
 | White | `#FFFFFF` | Light surfaces |
+
+Two more live in the mark and nowhere in the interface — listed so that artwork made for the brand
+matches it, not so that a screen uses them:
+
+| Token | Hex | Where |
+| --- | --- | --- |
+| Dragon Glow | `#0078FC` | The lit edge of the scales. Too light for white text (4.12:1) |
+| Abyss | `#011135` | The deepest shadow in the mark, between scale and black |
 
 Semantic colours, which say what happened rather than what to do:
 
@@ -55,35 +68,39 @@ Semantic colours, which say what happened rather than what to do:
 meaning: it marks the primary action, the active tab, and progress. A screen with blue in four
 places has diluted all four.
 
-### Why blue, and what it cost
+### Where the blue comes from, and what it measures
 
-The accent was `#E5392F` red until the brand moved to blue. Red reads as energetic and aggressive,
-which suits action manga and does not suit an app someone reads in for two hours; blue is calmer to
-sit with, and it keeps a thread back to Tachiyomi and Mihon without looking like a clone of either.
+**Measured, not picked.** `#0066F0` is the commonest saturated blue in `branding/logo.png` — the
+dragon's own colour. It replaced `#4169A1`, a muted steel blue chosen for the previous mark, because
+an icon in electric blue opening onto an app in grey-blue reads as two different products.
 
-It also measures better where it matters most. White on the accent — every filled button, every
-primary action — goes from **4.24:1 to 5.59:1**, clearing the 4.5:1 that button labels need, which
-the red did not.
+Against the colour it replaced:
 
-The trade runs the other way: the accent drawn *as text* on the ink background is **3.58:1**, where
-the red was 4.72:1. That clears AA for large text and UI components, which is what the accent is
-used for — tab labels, icons, progress bars — and no single colour clears 4.5:1 in both directions
-at once. Given the choice, be good at the button.
+| | `#4169A1` | `#0066F0` | Needs |
+| --- | --- | --- | --- |
+| White on the accent — every filled button | 5.59:1 | **5.05:1** | 4.5:1 |
+| Accent as text or icon on ink | 3.58:1 | **3.96:1** | 3:1 for UI and large text |
+| Accent as text on paper | — | **4.36:1** | 3:1 for UI and large text |
 
-One knock-on: the error colour was orange while the accent was red, to keep "do this" and "something
-is wrong" from looking alike. With a blue accent there is no clash, so errors are a conventional red
-again — which users read without being taught. `#EF4444` is 5.31:1 on ink but only 3.25:1 on paper,
-so in light mode the theme darkens it toward the text colour rather than drawing the brand value at
-body-text size.
+It is better where the accent is most often *read* — tab labels, icons, progress on the dark ground
+— and slightly worse on buttons, where it still clears the line. Nothing brighter from the mark
+keeps the button: Dragon Glow is 4.12:1 for white text. No single colour clears 4.5:1 in both
+directions; be good at the button.
 
-**In the logo, blue is a signature, not a wash.** The wordmark is blue; the Japanese type, the panel
-frame and the speed lines stay ink or ivory. Blue on everything would make it loud, which is the
-opposite of the point.
+The red that preceded both (`#E5392F`) is why errors were orange for a while. With a blue accent
+there is no clash, so errors are a conventional red — which users read without being taught.
+`#EF4444` is 5.31:1 on ink but only 3.25:1 on paper, so in light mode the theme darkens it toward the
+text colour rather than drawing the brand value at body-text size.
+
+**In the mark, blue is the whole colour; in the interface, it is a signature.** The dragon is blue
+on black and nothing else, which is what makes it readable at icon size. The app does the opposite —
+mostly monochrome, with blue where it means something — and the wordmark sits between the two: white,
+with one blue letter.
 
 These values live in `animato-ui-kit/.../AnimatoPalette.kt` as the six inputs a whole Material
 scheme is derived from, and in `animato-app/src/main/res/values/animato_brand.xml` for the launcher
 icon and splash window, which the platform draws before any Compose code runs. Changing the brand
-means editing those six values.
+means editing those values in both.
 
 Light mode uses warm paper rather than white — the manga-paper reference is the point.
 
@@ -253,63 +270,75 @@ These are the claims the interface has to earn:
 
 ## 9. Assets
 
+Sources, kept full size under `docs/branding/`:
+
 | File | What |
 | --- | --- |
-| `docs/branding/brand-sheet.png` | the sheet above, the source of this document |
-| `docs/branding/screens.jpg` | the nine screen mockups section 7 is read off |
-| `docs/branding/icon-light.png` | 512px icon, light variant, transparent corners — **the launcher icon** |
-| `docs/branding/icon-dark.png` | 512px icon, dark variant, transparent corners |
-| `docs/branding/build-icon.py` | turns either of those into the five foreground densities |
+| `logo.png` | 1254×1254, the mark on transparency — **the source of the launcher icon and the launch screen** |
+| `logo-on-dark.png` | the same mark on black, for documents and anywhere a flat image is wanted |
+| `tv-banner.png` | 1672×941, 16:9, the mark with the name — the source of the TV banner |
+| `splash-pulse-reference.gif` | the launch-screen animation as designed; the app rebuilds it rather than playing it |
+| `build-icon.py` | launcher foreground and monochrome layers, five densities each |
+| `build-splash.py` | the launch-screen mark and its breathing frames |
+| `build-tv-banner.py` | the 320×180 banner |
+| `build-wordmark.py` | the header wordmark — still cut from the **previous** mark, until the new one lands |
+| `brand-sheet.png`, `icon-light.png`, `icon-dark.png` | the previous brand, kept for reference |
 
 In the app, under `animato-app/src/main/res/`:
 
 | Resource | Role |
 | --- | --- |
 | `mipmap/ic_launcher.xml` | adaptive icon — **overrides Mihon's by name** |
-| `drawable-*/animato_icon_foreground.png` | icon artwork, five densities |
+| `drawable-*/animato_icon_foreground.png` | the mark, five densities |
 | `drawable-*/animato_icon_monochrome.png` | themed-icon silhouette for Android 13+ |
-| `drawable-nodpi/animato_logo.png` | in-app logo, light variant |
-| `drawable-night-nodpi/animato_logo.png` | in-app logo, dark variant |
+| `drawable-*/animato_wordmark.png` | the header wordmark, white, tinted at the point of use |
+| `drawable-xhdpi/animato_tv_banner.png` | the TV home-screen banner |
+| `drawable/ic_mihon_splash.xml` | launch icon below Android 12, static — **overrides Mihon's by name** |
+| `drawable-v31/ic_mihon_splash.xml` | launch icon from Android 12, the breathing `animation-list` |
+| `drawable-nodpi/animato_splash_mark.png`, `animato_splash_pulse_*.png` | its frames |
 | `values/animato_brand.xml` | palette, and the `splash` colour override |
-| `drawable/ic_mihon_splash.xml` | splash icon — **overrides Mihon's by name** |
 
-### Why the launcher icon has no light variant
+`drawable-nodpi/animato_logo.png` and its `night` twin are the previous mark and nothing references
+them; they go when the brand sheet is redrawn.
 
-Android does not theme launcher icons: an app ships one icon and the launcher masks it to whatever
-shape the device uses. **The light variant is the launcher icon** — paper ground, black panel frame
-and speed lines, blue wordmark — and the dark variant is used where the platform does honour the
-theme, in-app via `drawable-night`.
+### One launcher icon, on black
 
-The one place the system does recolour the icon is the **monochrome** layer, for themed icons on
-Android 13+. That is generated from the light artwork, because a black-on-paper silhouette
-converts to an alpha mask cleanly.
+Android does not theme launcher icons: an app ships one and the launcher masks it to whatever shape
+the device uses. The mark is drawn for black, so the adaptive icon's background layer is flat
+`Ink Black` and the foreground is the transparent mark over it. A launcher may slide the two layers
+against each other for parallax, which is why the foreground carries no background of its own.
+
+The one place the system recolours the icon is the **monochrome** layer, for themed icons on
+Android 13+.
 
 ### How the icon is built
 
-`docs/branding/build-icon.py` builds the five foreground densities from one 512px source:
-
 ```
-python3 docs/branding/build-icon.py light
+python3 docs/branding/build-icon.py
 ```
 
-The foreground square spans the inner 72dp of the 108dp canvas. A 72dp square fully contains the
-72dp mask circle, so the entire visible area is artwork under any mask, and the rounding comes from
-the launcher rather than being baked into the PNG.
+**The mark is scaled until its ring fits the 66dp circle**, measured on the artwork's own opaque
+pixels rather than on the file's edges. 66dp of the 108dp canvas is what every launcher is
+guaranteed to show; draw it any larger and the circular mask half of all launchers apply takes the
+dragon's head off — the part the mark is recognised by.
 
-The artwork's own background is **keyed out**, and the flat `<background>` layer supplies it —
-`Paper` for the light variant, `Ink Black` for the dark. That is not tidiness: a launcher may slide
-the two layers against each other for parallax, and a foreground carrying its own opaque background
-would show its edges the moment it did. Keying leaves only the mark.
+**The monochrome layer is a brightness mask, not an alpha mask.** The figure in the middle is
+opaque, so the source's alpha alone fills the ring and the figure in to one disc and the dragon
+disappears. The dragon is light blue and the figure near black, so keeping only what is both opaque
+and bright keeps the ring and the head — the right silhouette, generated rather than drawn by hand.
 
-Two things about the keying are easy to get wrong, and both were, on the way to this:
+### The launch screen
 
-- **Resize before keying, not after.** Pillow interpolates colour and alpha separately, so a black
-  frame line one pixel wide is averaged with the paper-coloured pixels still sitting under its
-  transparent neighbours, and comes out grey.
-- **Find the background colour by frequency, not by sampling a point.** Both variants round their
-  corners with transparency and both are edged in black, so every obvious place to sample lands on
-  something that is not the background. Reading the light variant's black edge made its black panel
-  frame *nearly* background, and it came out at two-thirds alpha.
+```
+python3 docs/branding/build-splash.py
+```
+
+The mark breathes — it dims to 46% and comes back on a 1.92 s loop, both numbers measured off the
+reference GIF. Android's launch screen cannot play a GIF, so from Android 12 it is an
+`animation-list` rebuilt from `logo.png`, which also avoids the GIF's 256-colour banding in the
+scales. Seven brightness levels at 640px, walked down and back up: every frame is decoded up front at
+the moment an app has the least memory to spare, and a frame named twice is decoded once. Below
+Android 12 the launch screen is static.
 
 All of this is done by **overriding resource names**, never by editing a Mihon file — the
 application module wins resource merging over its library dependencies. See `ARCHITECTURE.md`.
@@ -326,53 +355,49 @@ output lands without a second round.
 
 | Give us | Size | Notes |
 | --- | --- | --- |
-| `docs/branding/icon-light.png` | **512×512**, RGB | The mark on its own background. Everything below is generated from it |
-| `docs/branding/icon-dark.png` | **512×512**, RGB | The dark-mode variant of the same mark |
-
-Both are **flat-coloured artwork with their own background**, not transparent cut-outs. The scripts
-remove the background themselves, by frequency rather than by sampling a corner — section 9 says why
-that distinction cost a wasted attempt.
+| `docs/branding/logo.png` | **square, 1024px or more**, transparent | The mark alone. The icon, monochrome layer and launch screen are all built from it |
+| `docs/branding/tv-banner.png` | **16:9, 1280×720 or more**, opaque | Must carry the name — a TV launcher does not label banners. Keep the edges quiet: TV home screens draw a focus border tight against them |
+| Header wordmark | **448px tall or more**, transparent | The name alone, light on transparency; it sits on the dark top bar |
 
 ### What gets generated
 
 | Asset | Size | Where | Built by |
 | --- | --- | --- | --- |
 | Launcher foreground | 108 / 162 / 216 / 324 / 432 px square | `drawable-{m,h,xh,xxh,xxx}dpi/animato_icon_foreground.png` | `build-icon.py` |
-| Launcher monochrome | the same five sizes | `…/animato_icon_monochrome.png` | by hand — the script does **not** touch these |
+| Launcher monochrome | the same five sizes | `…/animato_icon_monochrome.png` | `build-icon.py` |
+| Launch mark and frames | 640px square | `drawable-nodpi/animato_splash_*.png`, `drawable-v31/ic_mihon_splash.xml` | `build-splash.py` |
 | TV banner | **320×180**, RGB, opaque | `drawable-xhdpi/animato_tv_banner.png` | `build-tv-banner.py` |
 
 ```
 python3 docs/branding/build-icon.py
+python3 docs/branding/build-splash.py
 python3 docs/branding/build-tv-banner.py
 ```
 
 ### The rules the numbers come from
 
-- **The launcher canvas is 108dp and the artwork occupies its inner 72dp.** A 72dp square fully
-  contains the 72dp mask circle, so the whole visible area is artwork whatever shape a launcher
-  applies, and the rounding comes from the launcher rather than from a radius baked into the PNG.
+- **The launcher canvas is 108dp and the mark spans its inner 66dp.** That is the circle every
+  launcher shows whatever mask it applies.
 - **The five densities are 1×, 1.5×, 2×, 3× and 4× of 108.** Nothing chooses them; they are what
   Android asks for.
-- **The banner is one fixed 320×180 tile, opaque, with no density variants.** A TV launcher scales a
-  single image rather than picking per density. It is composited onto the paper colour rather than
-  keyed onto transparency, because unlike the launcher icon there is no second layer behind it to
-  supply a background.
-- **The banner's artwork covers 72% of the tile height**, centred. TV home screens draw a focus
-  border tight against the banner, and artwork reaching the edge collides with it.
+- **A launch icon with no background is a 288dp canvas masked to a 192dp circle**, so the launch
+  mark spans two thirds of its frame — the same rule, for the same reason.
+- **The banner is one fixed 320×180 tile, opaque, with no density variants.** A TV launcher scales
+  a single image rather than picking per density. The script scales the supplied artwork and
+  refuses anything that is not 16:9, rather than cropping it quietly.
 
 ### Assets a rebrand also touches, and no script builds
 
-| Asset | Size | Where |
-| --- | --- | --- |
-| Splash logo | **512×512**, RGB, one per theme | `drawable-nodpi/animato_logo.png`, `drawable-night-nodpi/animato_logo.png` |
-| Splash mark | vector | `drawable/ic_mihon_splash.xml` — overrides Mihon's by name |
-| Launch window colour | — | `@color/splash`, and **its `night` variant too**; overriding one configuration leaves the other on Mihon's grey |
+| Asset | Where |
+| --- | --- |
+| Launch window colour | `@color/splash`, and **its `night` variant too**; overriding one configuration leaves the other on Mihon's |
+| The accent | `AnimatoPalette.kt` **and** `animato_brand.xml` — the second is what the platform draws before Compose runs |
 
 ### Two failure modes worth remembering
 
 - **A monochrome layer is not a greyscale copy.** Android draws it as a single-colour mask, so
-  anything relying on a colour difference to be legible disappears. It is drawn by hand and is the
-  one asset the icon script deliberately leaves alone.
+  anything relying on a colour difference to be legible disappears. Built from opacity alone, this
+  mark's layer was a disc; it is built from brightness for that reason.
 - **A resource override replaces one configuration at a time.** Check the built APK with
   `aapt2 dump resources` rather than assuming: it lists every configuration of a name and shows
   which one won.

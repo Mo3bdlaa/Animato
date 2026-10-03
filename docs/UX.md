@@ -276,7 +276,7 @@ Every entry's subtitle says what is inside it. Settings search spans all of it.
 - **Cover card**: 12 dp radius; unread badge top-right (blue pill, white count); type chip
   top-left under the All lens only; on Continue cards, the 3 dp progress bar flush at the bottom.
 - **Chips**: lens and category chips are the same component; blue fill = active, outline = not.
-- **Blue** (`#4169A1`) means *active or progress* — never decoration.
+- **Blue** (`#0066F0`) means *active or progress* — never decoration.
 - **Empty states**: three reusable brand illustrations — halftone burst, speed-line sweep, ink
   splash — one sentence, one action button. The kaomoji faces retire. No empty screen without a
   verb.

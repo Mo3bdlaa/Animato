@@ -34,7 +34,7 @@ Tagline: *Your anime & manga universe, unified. Read. Watch. Track.*
 
 | Token | Hex | Use |
 | --- | --- | --- |
-| Animato Blue | `#4169A1` | Primary actions, active states, progress. **Never decoration** |
+| Animato Blue | `#0066F0` | Primary actions, active states, progress. **Never decoration** |
 | Ink Black | `#08080C` | Dark background |
 | Surface | `#151516` | Cards, sheets, bars on dark |
 | Paper | `#F2EEE5` | Light background |
