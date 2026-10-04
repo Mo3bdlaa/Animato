@@ -1458,6 +1458,8 @@ class PlayerActivity : BaseActivity() {
                     return@launchIO
                 }
                 startedTorrentServer = true
+                // The server holds the buffer for a torrent; mpv holding a second copy is waste.
+                player.useCacheFor(torrent = true)
                 /*
                  * Caught, because everything inside it can throw and nothing above it was
                  * catching.
@@ -1490,6 +1492,7 @@ class PlayerActivity : BaseActivity() {
                 }
             }
         } else {
+            player.useCacheFor(torrent = false)
             lifecycleScope.launchIO {
                 val httpSource = viewModel.currentSource.value as? AnimeHttpSource
                 var videoUrl: String = video.videoUrl

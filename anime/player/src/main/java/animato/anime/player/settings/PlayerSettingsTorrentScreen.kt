@@ -14,8 +14,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.net.toUri
+import animato.anime.device.DeviceMemory
 import animato.ui.settings.editTextInfoPreference
 import animato.ui.settings.multiLineEditTextPreference
 import aniyomi.core.common.torrent.ProxyMode
@@ -46,6 +48,7 @@ object PlayerSettingsTorrentScreen : SearchableSettings {
 
         val torrentPreferences = remember { Injekt.get<TorrentPreferences>() }
         val torrentApi = remember { Injekt.get<TorrentServerApi>() }
+        val context = LocalContext.current
 
         val torrentEnablePref = torrentPreferences.torrServerEnable()
         val torrentEnable by torrentEnablePref.collectAsState()
@@ -120,7 +123,7 @@ object PlayerSettingsTorrentScreen : SearchableSettings {
                     // the preference and the caller writes it only after this returns.
                     torrentPreferences.torrServerUpload().set(wantsUpload)
                     if (torrentApi.getPort() != 0) {
-                        withIOContext { torrentApi.tuneForStreaming() }
+                        withIOContext { torrentApi.tuneForStreaming(DeviceMemory.of(context)) }
                     }
                     true
                 },

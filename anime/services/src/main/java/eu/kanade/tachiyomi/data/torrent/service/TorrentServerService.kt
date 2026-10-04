@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import animato.anime.device.DeviceMemory
 import animato.anime.services.AnimeNotifications
 import aniyomi.core.common.torrent.ProxyMode
 import aniyomi.core.common.torrent.TorrentPreferences
@@ -81,7 +82,7 @@ class TorrentServerService : Service() {
                     wait(10)
                     // Before the trackers, because the tracker list is only consulted in
                     // RetrackersMode 1 and this is what guarantees that mode.
-                    api.tuneForStreaming()
+                    api.tuneForStreaming(DeviceMemory.of(this@TorrentServerService))
                     torrentServerUtils.setTrackersList()
                 }
             }

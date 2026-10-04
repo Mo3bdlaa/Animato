@@ -1,5 +1,6 @@
 package aniyomi.core.common.torrent
 
+import animato.anime.device.DeviceMemory
 import aniyomi.core.common.torrent.model.Torrent
 import aniyomi.core.common.torrent.model.TorrentRequest
 import eu.kanade.tachiyomi.network.GET
@@ -69,8 +70,18 @@ class TorrentServerApi(
      *
      * Failure is logged and nothing else. The server then plays on its own defaults: worse, but a
      * dialog about cache percentages is not what somebody who pressed play is owed.
+     *
+     * ## Sized to the device
+     *
+     * The numbers above were chosen on a phone. On a television with 2 GB the same 192 MB cache,
+     * beside mpv's own buffer and the app, was enough for Android to start killing the launcher and
+     * the system UI to make room — reported as the whole set freezing whenever something played.
+     * And 120 peer connections plus 500 DHT lookups are as much work for a television's processor
+     * and Wi-Fi as for its memory. So all three scale with [memory]; a phone with room to spare
+     * keeps exactly what it had.
      */
-    suspend fun tuneForStreaming() {
+    suspend fun tuneForStreaming(memory: DeviceMemory) {
+        val budget = StreamingBudget.of(memory)
         try {
             val current = network.client
                 .newCall(POST("$hostUrl/settings", body = GET_SETTINGS.toRequestBody(jsonMime)))
@@ -81,10 +92,10 @@ class TorrentServerApi(
                 put("action", "set")
                 putJsonObject("sets") {
                     current.forEach { (key, value) -> if (key !in TUNED_KEYS) put(key, value) }
-                    put("CacheSize", CACHE_BYTES)
+                    put("CacheSize", budget.cacheBytes)
                     put("PreloadCache", PRELOAD_PERCENT)
                     put("ReaderReadAHead", READ_AHEAD_PERCENT)
-                    put("ConnectionsLimit", CONNECTIONS)
+                    put("ConnectionsLimit", budget.connections)
                     /*
                      * Two settings this server may or may not have, depending on its version.
                      *
@@ -98,7 +109,7 @@ class TorrentServerApi(
                         put(DISABLE_UPLOAD, !preferences.torrServerUpload().get())
                     }
                     if (DHT_LIMIT in current) {
-                        put(DHT_LIMIT, DHT_CONNECTIONS)
+                        put(DHT_LIMIT, budget.dhtConnections)
                     }
                     // The tracker list this app installs is only consulted in mode 1. A server that
                     // came up in mode 0 — an older install, a settings file somebody edited — would
@@ -191,12 +202,37 @@ class TorrentServerApi(
         return resp.use { json.decodeFromStream<Torrent>(it.body.byteStream()) }
     }
 
+    /**
+     * What one device can afford: the piece cache, and how many peers to talk to at once.
+     *
+     * [Roomy][DeviceMemory.Roomy] is what this server was tuned to before it knew what it ran on —
+     * 192 MB, three minutes of a 1080p release, and enough connections to reach a watchable rate
+     * on a public swarm in seconds. The smaller sizes give up minutes of buffer, which a television
+     * on a home network rarely needs, rather than the memory the rest of the set runs in.
+     *
+     * The DHT limit is how many peers are looked for in parallel, separately from how many are
+     * downloaded from. On a thin torrent it is the one that is short, which is why even the
+     * smallest size keeps it well above the server's default.
+     */
+    internal data class StreamingBudget(
+        val cacheBytes: Long,
+        val connections: Int,
+        val dhtConnections: Int,
+    ) {
+        companion object {
+            fun of(memory: DeviceMemory) = when (memory) {
+                DeviceMemory.Low -> StreamingBudget(cacheBytes = 48 * MIB, connections = 40, dhtConnections = 150)
+                DeviceMemory.Modest -> StreamingBudget(cacheBytes = 96 * MIB, connections = 60, dhtConnections = 250)
+                DeviceMemory.Roomy -> StreamingBudget(cacheBytes = 192 * MIB, connections = 120, dhtConnections = 500)
+            }
+
+            private const val MIB = 1024L * 1024
+        }
+    }
+
     private companion object {
         val jsonMime = "application/json".toMediaTypeOrNull()
         const val GET_SETTINGS = """{"action":"get"}"""
-
-        /** 192 MB, three times the default: three minutes of a 1080p release instead of one. */
-        const val CACHE_BYTES = 192L * 1024 * 1024
 
         /**
          * How much of the cache to fill before the first frame, as a percent.
@@ -218,18 +254,7 @@ class TorrentServerApi(
         /** The server's own default, restated because everything around it is being changed. */
         const val READ_AHEAD_PERCENT = 95
 
-        const val CONNECTIONS = 120
         const val RETRACKERS_ADD = 1
-
-        /**
-         * How many peers to look for through the DHT at once.
-         *
-         * Finding peers and downloading from them are separate budgets, and on a thin torrent the
-         * first is the one that is short. Raising it is the closest thing there is to "look harder
-         * while you wait" — the swarm is searched more widely in parallel with whatever is already
-         * arriving, rather than the app sitting on the few peers it found first.
-         */
-        const val DHT_CONNECTIONS = 500
 
         const val DISABLE_UPLOAD = "DisableUpload"
         const val DHT_LIMIT = "DhtConnectionLimit"

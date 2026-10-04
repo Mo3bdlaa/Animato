@@ -17,13 +17,14 @@
 
 package eu.kanade.tachiyomi.ui.player
 
-import android.app.ActivityManager
 import android.content.Context
 import android.os.Environment
 import android.util.AttributeSet
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
+import animato.anime.device.DeviceMemory
 import animato.anime.net.ProxyPreferences
+import animato.ui.tv.isTelevision
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.player.controls.components.panels.toColorHexString
 import eu.kanade.tachiyomi.ui.player.settings.AdvancedPlayerPreferences
@@ -124,7 +125,7 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet) : BaseMPVView(c
             Debanding.GPU -> MPVLib.setOptionString("deband", "yes")
         }
 
-        if (decoderPreferences.useYUV420P().get()) {
+        if (convertsToYuv420p()) {
             MPVLib.setOptionString("vf", "format=yuv420p")
         }
         MPVLib.setOptionString("msg-level", "all=" + if (networkPreferences.verboseLogging.get()) "v" else "warn")
@@ -199,23 +200,61 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet) : BaseMPVView(c
      * is gone rather than slow. Unknown options here are ignored rather than fatal.
      */
     private fun setupNetworkCache() {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
-        val memory = ActivityManager.MemoryInfo().also { activityManager?.getMemoryInfo(it) }
-        val totalGigs = memory.totalMem / BYTES_PER_GIB
-
-        // A null ActivityManager leaves totalMem at zero and lands in the smallest bucket, which is
-        // the right way round to be wrong: too small is a stall, too large is a kill.
-        val (forwardMegs, backMegs) = when {
-            activityManager?.isLowRamDevice == true -> LOW_RAM_CACHE
-            totalGigs < MODEST_DEVICE_GIB -> MODEST_CACHE
-            else -> ROOMY_CACHE
-        }
+        val (forwardMegs, backMegs) = networkCache
 
         MPVLib.setOptionString("demuxer-max-bytes", "${forwardMegs * BYTES_PER_MIB}")
         MPVLib.setOptionString("demuxer-max-back-bytes", "${backMegs * BYTES_PER_MIB}")
         MPVLib.setOptionString("cache-secs", CACHE_SECONDS)
         MPVLib.setOptionString("network-timeout", NETWORK_TIMEOUT_SECONDS)
         MPVLib.setOptionString("stream-lavf-o", RECONNECT_OPTIONS)
+    }
+
+    /** The demuxer cache this device can afford for a stream from the network. */
+    private val networkCache: Pair<Int, Int> by lazy {
+        // The same three sizes the torrent server is tuned to, so the two buffers in the playback
+        // path agree about what this device can afford. See DeviceMemory.
+        when (DeviceMemory.of(context)) {
+            DeviceMemory.Low -> LOW_RAM_CACHE
+            DeviceMemory.Modest -> MODEST_CACHE
+            DeviceMemory.Roomy -> ROOMY_CACHE
+        }
+    }
+
+    /**
+     * Size the demuxer cache for what is about to play: almost nothing for a stream the torrent
+     * server is buffering, the device's network cache for anything else.
+     *
+     * A torrent reaches mpv from the server on this device, which already holds the pieces ahead of
+     * the play head in its own cache. mpv's cache on top of that is the same video held twice — up
+     * to another 224 MB of it on a roomy device — and buys nothing: a read from localhost does not
+     * drop out. Set as properties rather than options because the player is already running by the
+     * time it is known that this is a torrent; mpv applies them to the file loaded next. Set back
+     * for anything that is not a torrent, so one torrent episode does not leave the next, ordinary
+     * stream with a cache too small to ride out a bad connection.
+     */
+    fun useCacheFor(torrent: Boolean) {
+        val (forwardMegs, backMegs) = if (torrent) LOCAL_SERVER_CACHE else networkCache
+        MPVLib.setPropertyString("demuxer-max-bytes", "${forwardMegs * BYTES_PER_MIB}")
+        MPVLib.setPropertyString("demuxer-max-back-bytes", "${backMegs * BYTES_PER_MIB}")
+    }
+
+    /**
+     * Whether to convert every frame to 8-bit 4:2:0 before it is drawn.
+     *
+     * The setting exists for the devices that draw 10-bit video green or black, and it is on by
+     * default. The price of it is that a video filter takes the decoder off the direct hardware
+     * path: frames are copied back out of the hardware decoder, converted on the processor and
+     * uploaded again — or, where copying back is not possible, decoded in software outright. A
+     * phone pays that without noticing. A television's processor, handed a 1080p or 4K HEVC
+     * release from a torrent, does not keep up, and the set stops responding.
+     *
+     * So on a television it is off unless somebody has turned it on themselves: the setting is
+     * still there, and still wins, for a set that does need it.
+     */
+    private fun convertsToYuv420p(): Boolean {
+        val preference = decoderPreferences.useYUV420P()
+        if (context.isTelevision() && !preference.isSet()) return false
+        return preference.get()
     }
 
     override fun observeProperties() {
@@ -369,8 +408,11 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet) : BaseMPVView(c
          */
         private val ROOMY_CACHE = 192 to 32
 
-        /** Under this much RAM in total, take the middle cache. */
-        private const val MODEST_DEVICE_GIB = 4
+        /**
+         * For a torrent, which the torrent server on this device is already buffering. Enough to
+         * smooth over the server's own hiccups, and no more. See [useCacheFor].
+         */
+        private val LOCAL_SERVER_CACHE = 16 to 4
 
         /**
          * The other half of the cache size, and the half that was missing.
@@ -397,6 +439,5 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet) : BaseMPVView(c
             "reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=10"
 
         private const val BYTES_PER_MIB = 1024 * 1024
-        private const val BYTES_PER_GIB = 1024L * 1024 * 1024
     }
 }
