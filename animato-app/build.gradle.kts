@@ -242,7 +242,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                rootProject.file("app/proguard-rules.pro"),
+                layout.settingsDirectory.file("app/proguard-rules.pro").asFile,
                 "proguard-rules.pro",
             )
         }
@@ -323,7 +323,7 @@ dependencies {
     // Material icon set the two new destinations use, and view models for the home screen.
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animationGraphics)
-    implementation(libs.androidx.compose.materialIcons)
+    implementation(animato.compose.material.icons)
     implementation(libs.composeMaterialMotion)
     implementation(libs.androidx.lifecycle.viewmodelCompose)
     implementation(projects.i18nAnime)

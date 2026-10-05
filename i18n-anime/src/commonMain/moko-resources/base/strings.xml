@@ -455,6 +455,9 @@
     <string name="edit_details_source_says">The source calls this %1$s</string>
     <string name="edit_details_edited">Edited by you</string>
     <string name="stremio_error_needs_configuration">Configure this addon on its own page first, then paste the address it gives you</string>
+    <!-- Mihon dropped these two from its own strings; the anime extension list and the addon list still say them. -->
+    <string name="ext_nsfw_short">18+</string>
+    <string name="ext_nsfw_warning">Sources from this extension may contain NSFW (18+) content</string>
     <string name="stremio_configure_on_site">Configure on its site</string>
     <string name="stremio_paste_address">Paste address</string>
     <string name="stremio_configure_title">Configure addon</string>

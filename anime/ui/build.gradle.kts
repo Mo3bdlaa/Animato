@@ -46,6 +46,7 @@ dependencies {
     implementation(projects.coreMetadata)
     implementation(projects.sourceApi)
     implementation(projects.i18n)
+    implementation(projects.icons.simpleIcons)
 
     // Compose artifacts arrive transitively from Mihon's app without versions; the BOM supplies them.
     implementation(platform(libs.androidx.compose.bom))
@@ -61,7 +62,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.materialIcons)
+    implementation(animato.compose.material.icons)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animationGraphics)
     implementation(libs.androidx.compose.uiToolingPreview)

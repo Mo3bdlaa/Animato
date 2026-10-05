@@ -35,7 +35,7 @@ value class MangaLibraryEntry(val libraryManga: LibraryManga) : LibraryEntry {
 
     override val favorite: Boolean get() = libraryManga.manga.favorite
 
-    override val dateAdded: Long get() = libraryManga.manga.dateAdded
+    override val dateAdded: Long get() = libraryManga.manga.favoriteAt ?: 0L
 
     override val genre: List<String>? get() = libraryManga.manga.genre
 

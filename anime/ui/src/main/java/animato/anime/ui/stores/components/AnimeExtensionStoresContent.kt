@@ -24,7 +24,8 @@ import mihon.domain.extension.anime.model.AnimeExtensionStore
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.icons.CustomIcons
+import mihon.icons.simpleicons.Discord
+import mihon.icons.simpleicons.SimpleIcons
 import tachiyomi.presentation.core.icons.Discord
 
 @Composable
@@ -103,7 +104,7 @@ private fun ExtensionStoresListItem(
             if (store.contact.discord != null) {
                 IconButton(onClick = onOpenDiscord) {
                     Icon(
-                        imageVector = CustomIcons.Discord,
+                        imageVector = SimpleIcons.Discord,
                         contentDescription = null,
                     )
                 }

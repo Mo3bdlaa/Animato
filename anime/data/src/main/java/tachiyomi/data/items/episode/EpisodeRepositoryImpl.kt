@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonObject
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.model.EpisodeUpdate
@@ -78,7 +77,7 @@ class EpisodeRepositoryImpl(
                     summary = episodeUpdate.summary,
                     previewUrl = episodeUpdate.previewUrl,
                     fillermark = episodeUpdate.fillermark,
-                    memo = episodeUpdate.memo?.let(MemoColumnAdapter::encode),
+                    memo = episodeUpdate.memo,
                 )
             }
         }

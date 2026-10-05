@@ -35,4 +35,7 @@ constraintlayout = { module = "androidx.constraintlayout:constraintlayout", vers
 mediasession = { module = "androidx.media:media", version.ref = "media" }
 seeker = { module = "io.github.2307vivek:seeker", version.ref = "seeker" }
 truetypeparser = { module = "io.github.yubyf:truetypeparser-light", version.ref = "truetypeparser" }
+# Mihon moved to its own icon modules and dropped this from its catalog; our screens still draw
+# Material's icons. Versioned by the Compose BOM, as it was in Mihon's catalog.
+compose-material-icons = { module = "androidx.compose.material:material-icons-extended" }
 localbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "localBroadcastManager" }

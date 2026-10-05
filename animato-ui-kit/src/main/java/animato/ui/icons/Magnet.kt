@@ -5,18 +5,20 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
-import tachiyomi.presentation.core.icons.CustomIcons
 
 /**
  * The magnet-link icon, for the torrent extensions.
  *
- * Mihon's icon set has no magnet because Mihon has nothing to point it at. This is an
- * extension on Mihon's [CustomIcons] rather than a member of it, so the set gains the icon
- * without Mihon's file gaining a line.
+ * Mihon's icon set has no magnet because Mihon has nothing to point it at. It lived as an
+ * extension on Mihon's `CustomIcons` until Mihon replaced that object with generated icon
+ * modules; it is on Animato's own holder now.
  *
  * License: MIT. Made by Neuicons: https://github.com/neuicons/neu
  */
-val CustomIcons.Magnet: ImageVector
+/** Icons Animato draws that no icon set it depends on has. */
+object AnimatoIcons
+
+val AnimatoIcons.Magnet: ImageVector
     get() {
         if (_magnet != null) return _magnet!!
 

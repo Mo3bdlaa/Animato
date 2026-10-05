@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.secondaryItemAlpha
@@ -98,7 +99,7 @@ fun NsfwWarningDialog(
     AlertDialog(
         text = {
             Text(
-                text = stringResource(MR.strings.ext_nsfw_warning),
+                text = stringResource(AYMR.strings.ext_nsfw_warning),
                 modifier = Modifier.secondaryItemAlpha(),
             )
         },

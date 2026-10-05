@@ -58,6 +58,7 @@ import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
@@ -316,7 +317,7 @@ private fun DetailsHeader(
 
                 InfoText(
                     modifier = Modifier.weight(1f),
-                    primaryText = stringResource(MR.strings.ext_nsfw_short),
+                    primaryText = stringResource(AYMR.strings.ext_nsfw_short),
                     primaryTextStyle = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Medium,

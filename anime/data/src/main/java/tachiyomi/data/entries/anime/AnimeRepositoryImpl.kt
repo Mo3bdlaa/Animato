@@ -1,13 +1,9 @@
 package tachiyomi.data.entries.anime
 
-import animato.data.AnimeUpdateStrategyColumnAdapter
-import animato.data.FetchTypeColumnAdapter
 import aniyomi.domain.anime.SeasonAnime
 import kotlinx.coroutines.flow.Flow
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.MemoColumnAdapter
-import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.entries.anime.model.AnimeUpdate
@@ -194,7 +190,7 @@ class AnimeRepositoryImpl(
                     artist = value.artist,
                     author = value.author,
                     description = value.description,
-                    genre = value.genre?.let(StringListColumnAdapter::encode),
+                    genre = value.genre,
                     title = value.title,
                     status = value.status,
                     thumbnailUrl = value.thumbnailUrl,
@@ -210,15 +206,15 @@ class AnimeRepositoryImpl(
                     backgroundLastModified = value.backgroundLastModified,
                     dateAdded = value.dateAdded,
                     animeId = value.id,
-                    updateStrategy = value.updateStrategy?.let(AnimeUpdateStrategyColumnAdapter::encode),
+                    updateStrategy = value.updateStrategy,
                     version = value.version,
                     isSyncing = 0,
-                    fetchType = value.fetchType?.let(FetchTypeColumnAdapter::encode),
+                    fetchType = value.fetchType,
                     parentId = value.parentId,
                     seasonFlags = value.seasonFlags,
                     seasonNumber = value.seasonNumber,
                     seasonSourceOrder = value.seasonSourceOrder,
-                    memo = value.memo?.let(MemoColumnAdapter::encode),
+                    memo = value.memo,
                 )
             }
         }

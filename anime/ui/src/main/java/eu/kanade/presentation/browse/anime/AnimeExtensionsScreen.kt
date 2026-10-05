@@ -48,6 +48,7 @@ import animato.ui.browse.BaseBrowseItem
 import animato.ui.browse.ExtensionHeader
 import animato.ui.browse.ExtensionTrustDialog
 import animato.ui.components.animateItemFastScroll
+import animato.ui.icons.AnimatoIcons
 import animato.ui.icons.Magnet
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -63,12 +64,12 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.icons.CustomIcons
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -365,7 +366,7 @@ private fun AnimeExtensionItemContent(
                         placeholderVerticalAlign = PlaceholderVerticalAlign.Center,
                     ),
                 ) {
-                    Icon(CustomIcons.Magnet, "")
+                    Icon(AnimatoIcons.Magnet, "")
                 },
             ),
         )
@@ -401,7 +402,7 @@ private fun AnimeExtensionItemContent(
                 val warning = when {
                     extension is AnimeExtension.Untrusted -> MR.strings.ext_untrusted
                     extension is AnimeExtension.Installed && extension.isObsolete -> MR.strings.ext_obsolete
-                    extension.isNsfw -> MR.strings.ext_nsfw_short
+                    extension.isNsfw -> AYMR.strings.ext_nsfw_short
                     else -> null
                 }
                 if (warning != null) {

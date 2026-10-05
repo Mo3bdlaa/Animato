@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.InteractionSource
@@ -13,7 +12,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.onFocusedBoundsChanged
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.MaterialTheme
@@ -21,32 +19,38 @@ import androidx.compose.material3.RippleConfiguration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusTargetModifierNode
+import androidx.compose.ui.focus.Focusability
+import androidx.compose.ui.focus.getFocusedRect
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.DrawModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import kotlin.math.abs
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * Whether this is a television.
@@ -123,7 +127,6 @@ fun ProvideIsTelevision(content: @Composable () -> Unit) {
  * [ProvideIsTelevision] puts one host at the root; a full-screen dialog that wants the same ring
  * wraps its content in another. Off a television this is only its content.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TvFocusRingHost(content: @Composable () -> Unit) {
     if (!LocalIsTelevision.current) {
@@ -131,39 +134,84 @@ fun TvFocusRingHost(content: @Composable () -> Unit) {
         return
     }
     val accent = MaterialTheme.colorScheme.primary
-    var focused by remember { mutableStateOf<Rect?>(null) }
-    var origin by remember { mutableStateOf(Offset.Zero) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .onGloballyPositioned { origin = it.positionInRoot() }
-            .onFocusedBoundsChanged { coordinates ->
-                focused = coordinates?.takeIf { it.isAttached }?.boundsInRoot()
-            }
-            .drawWithContent {
-                drawContent()
-                val bounds = focused ?: return@drawWithContent
-                val stroke = FocusBorderWidth.toPx()
-                val gap = FocusRingGap.toPx()
-                val rect = bounds.translate(-origin).inflate(gap + stroke / 2)
-                val squarish = abs(bounds.width - bounds.height) <= bounds.height * SQUARISH_TOLERANCE
-                val radius = when {
-                    // Buttons, chips: pills. Icon buttons and the player's round controls: circles.
-                    bounds.height <= PillMaxHeight.toPx() -> rect.height / 2
-                    squarish && bounds.height <= CircleMaxSize.toPx() -> rect.height / 2
-                    else -> FocusRadius.toPx() + gap
-                }
-                drawRoundRect(
-                    color = accent,
-                    topLeft = rect.topLeft,
-                    size = rect.size,
-                    cornerRadius = CornerRadius(radius),
-                    style = Stroke(width = stroke),
-                )
-            },
-    ) {
+    Box(modifier = Modifier.fillMaxSize().then(FocusRingElement(accent))) {
         content()
+    }
+}
+
+/*
+ * How the ring finds what has focus.
+ *
+ * It used to listen with `onFocusedBoundsChanged`, which Compose has since turned into a no-op —
+ * the observer never fires — on the grounds that it never reliably saw bounds change. Compose's
+ * replacement is to ask instead: a focus target can say where, inside it, the focused element is.
+ * So the host is a focus target of its own — one that can never take focus itself, so it changes
+ * nothing about where a remote goes — and it asks on every frame while something inside it has
+ * focus, redrawing only when the answer moves. Every frame, because a focused row moves without
+ * focus changing whenever the list under it scrolls, and the ring has to move with it.
+ */
+private data class FocusRingElement(val color: Color) : ModifierNodeElement<FocusRingNode>() {
+    override fun create() = FocusRingNode(color)
+
+    override fun update(node: FocusRingNode) {
+        node.color = color
+        node.invalidateDraw()
+    }
+}
+
+private class FocusRingNode(var color: Color) : DelegatingNode(), DrawModifierNode {
+    private var focused: Rect? = null
+    private var tracking: Job? = null
+
+    private val target = delegate(
+        FocusTargetModifierNode(focusability = Focusability.Never) { _, state ->
+            if (state.hasFocus) track() else stopTracking()
+        },
+    )
+
+    private fun track() {
+        if (tracking?.isActive == true) return
+        tracking = coroutineScope.launch {
+            while (isActive) {
+                withFrameNanos { }
+                val rect = target.getFocusedRect()
+                if (rect != focused) {
+                    focused = rect
+                    invalidateDraw()
+                }
+            }
+        }
+    }
+
+    private fun stopTracking() {
+        tracking?.cancel()
+        tracking = null
+        if (focused != null) {
+            focused = null
+            invalidateDraw()
+        }
+    }
+
+    override fun ContentDrawScope.draw() {
+        drawContent()
+        val bounds = focused ?: return
+        val stroke = FocusBorderWidth.toPx()
+        val gap = FocusRingGap.toPx()
+        val rect = bounds.inflate(gap + stroke / 2)
+        val squarish = abs(bounds.width - bounds.height) <= bounds.height * SQUARISH_TOLERANCE
+        val radius = when {
+            // Buttons, chips: pills. Icon buttons and the player's round controls: circles.
+            bounds.height <= PillMaxHeight.toPx() -> rect.height / 2
+            squarish && bounds.height <= CircleMaxSize.toPx() -> rect.height / 2
+            else -> FocusRadius.toPx() + gap
+        }
+        drawRoundRect(
+            color = color,
+            topLeft = rect.topLeft,
+            size = rect.size,
+            cornerRadius = CornerRadius(radius),
+            style = Stroke(width = stroke),
+        )
     }
 }
 

@@ -569,7 +569,7 @@ private fun DirectoryAddonItem(entry: DirectoryAddon, onPick: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = stringResource(MR.strings.ext_nsfw_short),
+                        text = stringResource(AYMR.strings.ext_nsfw_short),
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
@@ -622,7 +622,7 @@ private fun AddonListItem(
                 )
                 if (isAdult) {
                     Text(
-                        text = stringResource(MR.strings.ext_nsfw_short),
+                        text = stringResource(AYMR.strings.ext_nsfw_short),
                         color = MaterialTheme.colorScheme.error,
                     )
                 }

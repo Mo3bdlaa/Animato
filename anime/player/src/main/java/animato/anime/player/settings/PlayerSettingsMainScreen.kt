@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
 import animato.anime.player.settings.custombutton.PlayerSettingsCustomButtonScreen
 import animato.anime.player.settings.editor.PlayerSettingsEditorScreen
+import animato.ui.icons.AnimatoIcons
 import animato.ui.icons.Magnet
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -50,7 +51,6 @@ import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.icons.CustomIcons
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class PlayerSettingsMainScreen(private val mainSettings: Boolean) : Screen() {
@@ -227,7 +227,7 @@ class PlayerSettingsMainScreen(private val mainSettings: Boolean) : Screen() {
         Item(
             titleRes = AYMR.strings.pref_player_torrents,
             subtitleRes = AYMR.strings.pref_player_torrents_summary,
-            icon = CustomIcons.Magnet,
+            icon = AnimatoIcons.Magnet,
             screen = PlayerSettingsTorrentScreen,
         ),
         Item(
