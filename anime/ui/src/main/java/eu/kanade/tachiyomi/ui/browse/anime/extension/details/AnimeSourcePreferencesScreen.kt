@@ -153,7 +153,7 @@ class SourcePreferencesFragment : PreferenceFragmentCompat() {
                     val setListener = pref.getOnBindEditTextListener()
                     pref.setOnBindEditTextListener {
                         setListener?.onBindEditText(it)
-                        it.setIncognito(lifecycleScope)
+                        it.setIncognito(Injekt.get(), lifecycleScope)
                     }
                 }
             }

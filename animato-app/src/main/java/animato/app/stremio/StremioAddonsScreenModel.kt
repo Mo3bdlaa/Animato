@@ -3,6 +3,7 @@ package animato.app.stremio
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.content.allowsNsfw
 import animato.anime.iptv.M3uPlaylist
 import animato.anime.iptv.M3uPlaylistStore
 import animato.anime.stremio.DirectoryAddon
@@ -68,7 +69,7 @@ class StremioAddonsScreenModel(
      * one when the setting is turned off. Filtering here would have unmarked exactly the row that
      * most needs marking.
      */
-    val showAdult: Boolean = sourcePreferences.showNsfwSource.get()
+    val showAdult: Boolean = sourcePreferences.allowsNsfw()
 
     init {
         viewModelScope.launchIO { _directoryAddons.value = directory.listed() }

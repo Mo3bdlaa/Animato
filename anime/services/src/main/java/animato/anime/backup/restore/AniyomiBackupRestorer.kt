@@ -56,10 +56,10 @@ class AniyomiBackupRestorer(
     private val animeExtensionStoreRestorer: AnimeExtensionStoreRestorer = AnimeExtensionStoreRestorer(),
     private val customButtonRestorer: CustomButtonRestorer = CustomButtonRestorer(),
 
-    private val mangaRestorer: MangaRestorer = MangaRestorer(),
-    private val mangaCategoriesRestorer: CategoriesRestorer = CategoriesRestorer(),
-    private val mangaExtensionStoreRestorer: ExtensionStoreRestorer = ExtensionStoreRestorer(),
-    private val preferenceRestorer: PreferenceRestorer = PreferenceRestorer(context),
+    private val mangaRestorer: MangaRestorer = Injekt.get(),
+    private val mangaCategoriesRestorer: CategoriesRestorer = Injekt.get(),
+    private val mangaExtensionStoreRestorer: ExtensionStoreRestorer = Injekt.get(),
+    private val preferenceRestorer: PreferenceRestorer = Injekt.get(),
 ) {
 
     private var restoreAmount = 0
@@ -209,7 +209,7 @@ class AniyomiBackupRestorer(
             ensureActive()
 
             try {
-                mangaRestorer.restore(manga, categories)
+                mangaRestorer.restore(listOf(manga), categories)
             } catch (e: Exception) {
                 ensureActive()
                 val sourceName = mangaSourceNames[manga.source] ?: manga.source.toString()

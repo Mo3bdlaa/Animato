@@ -270,6 +270,8 @@ kotlin {
 dependencies {
     // Mihon, consumed as a library. Nothing in this module edits it.
     implementation(projects.app)
+    implementation(projects.core.metro)
+    implementation(libs.metro.runtime)
 
     // Our theme and generalised components. MainActivity applies AnimatoTheme from here.
     implementation(projects.animatoUiKit)

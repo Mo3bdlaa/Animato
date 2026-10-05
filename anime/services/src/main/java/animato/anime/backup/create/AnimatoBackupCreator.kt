@@ -64,11 +64,11 @@ class AnimatoBackupCreator(
 
     private val getMangaFavorites: GetFavorites = Injekt.get(),
     private val mangaRepository: MangaRepository = Injekt.get(),
-    private val mangaBackupCreator: MangaBackupCreator = MangaBackupCreator(),
-    private val mangaCategoriesBackupCreator: CategoriesBackupCreator = CategoriesBackupCreator(),
-    private val mangaSourcesBackupCreator: SourcesBackupCreator = SourcesBackupCreator(),
-    private val mangaExtensionStoresBackupCreator: ExtensionStoresBackupCreator = ExtensionStoresBackupCreator(),
-    private val preferenceBackupCreator: PreferenceBackupCreator = PreferenceBackupCreator(),
+    private val mangaBackupCreator: MangaBackupCreator = Injekt.get(),
+    private val mangaCategoriesBackupCreator: CategoriesBackupCreator = Injekt.get(),
+    private val mangaSourcesBackupCreator: SourcesBackupCreator = Injekt.get(),
+    private val mangaExtensionStoresBackupCreator: ExtensionStoresBackupCreator = Injekt.get(),
+    private val preferenceBackupCreator: PreferenceBackupCreator = Injekt.get(),
 ) {
 
     /**

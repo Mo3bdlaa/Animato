@@ -112,7 +112,7 @@ object PlayerSettingsTorrentScreen : SearchableSettings {
                 preference = torrentPreferences.torrServerUpload(),
                 title = stringResource(AYMR.strings.pref_player_torrents_upload),
                 subtitle = stringResource(AYMR.strings.pref_player_torrents_upload_summary),
-                enabled = torrentEnable,
+                visible = torrentEnable,
                 // Pushed to a running server rather than left for the next start, which is what
                 // every other setting on this screen does. Somebody who has just switched
                 // uploading off means *now* — a switch that reads off while the thing it names
@@ -166,7 +166,7 @@ object PlayerSettingsTorrentScreen : SearchableSettings {
             ),
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(AYMR.strings.pref_player_torrents_trackers_reset),
-                enabled = remember(torrentEnable, trackersPref) {
+                visible = remember(torrentEnable, trackersPref) {
                     torrentEnable && trackersPref.get() != trackersPref.defaultValue()
                 },
                 onClick = {
@@ -185,7 +185,7 @@ object PlayerSettingsTorrentScreen : SearchableSettings {
                     stringResource(titleRes)
                 }.toPersistentMap(),
                 title = stringResource(AYMR.strings.pref_player_torrents_proxy_mode),
-                enabled = torrentEnable,
+                visible = torrentEnable,
             ),
             editTextInfoPreference(
                 preference = proxyUrlPref,

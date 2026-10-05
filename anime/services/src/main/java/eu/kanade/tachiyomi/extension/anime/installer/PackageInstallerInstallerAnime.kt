@@ -27,7 +27,7 @@ class PackageInstallerInstallerAnime(private val service: Service) : InstallerAn
                     val userAction = intent.getParcelableExtraCompat<Intent>(Intent.EXTRA_INTENT)
                     if (userAction == null) {
                         logcat(LogPriority.ERROR) { "Fatal error for $intent" }
-                        continueQueue(InstallStep.Error)
+                        continueQueue(InstallStep.Error("The system installer asked for an action it didn't provide"))
                         return
                     }
                     userAction.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -37,7 +37,7 @@ class PackageInstallerInstallerAnime(private val service: Service) : InstallerAn
                     continueQueue(InstallStep.Idle)
                 }
                 PackageInstaller.STATUS_SUCCESS -> continueQueue(InstallStep.Installed)
-                else -> continueQueue(InstallStep.Error)
+                else -> continueQueue(InstallStep.Error("The system installer reported a failure"))
             }
         }
     }
@@ -85,7 +85,7 @@ class PackageInstallerInstallerAnime(private val service: Service) : InstallerAn
             activeSession?.let { (_, sessionId) ->
                 packageInstaller.abandonSession(sessionId)
             }
-            continueQueue(InstallStep.Error)
+            continueQueue(InstallStep.Error.from(e))
         }
     }
 

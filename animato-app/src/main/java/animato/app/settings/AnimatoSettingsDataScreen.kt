@@ -187,7 +187,7 @@ object AnimatoSettingsDataScreen : SearchableSettings {
                     } else {
                         stringResource(AYMR.strings.pref_sync_never)
                     },
-                    enabled = enabled && folder.isNotBlank(),
+                    visible = enabled && folder.isNotBlank(),
                     onClick = { LibrarySyncJob.startNow(context) },
                 ),
             ),

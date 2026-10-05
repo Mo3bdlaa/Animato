@@ -4,11 +4,8 @@ import animato.anime.backup.models.BackupAnime
 import animato.anime.backup.models.BackupAnimeHistory
 import animato.anime.backup.models.BackupAnimeTracking
 import animato.anime.backup.models.BackupEpisode
-import animato.data.AnimeUpdateStrategyColumnAdapter
-import animato.data.FetchTypeColumnAdapter
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
-import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
@@ -180,7 +177,7 @@ class AnimeRestorer(
                 artist = anime.artist,
                 author = anime.author,
                 description = anime.description,
-                genre = anime.genre?.joinToString(separator = ", "),
+                genre = anime.genre,
                 title = anime.title,
                 status = anime.status,
                 thumbnailUrl = anime.thumbnailUrl,
@@ -194,19 +191,19 @@ class AnimeRestorer(
                 coverLastModified = anime.coverLastModified,
                 dateAdded = anime.dateAdded,
                 animeId = anime.id,
-                updateStrategy = AnimeUpdateStrategyColumnAdapter.encode(anime.updateStrategy),
+                updateStrategy = anime.updateStrategy,
                 version = anime.version,
                 // The restore is the writer here, so the row is not a source sync and must not be
                 // counted as one by whatever watches this column.
                 isSyncing = 1,
-                fetchType = FetchTypeColumnAdapter.encode(anime.fetchType),
+                fetchType = anime.fetchType,
                 parentId = anime.parentId,
                 seasonFlags = anime.seasonFlags,
                 seasonNumber = anime.seasonNumber,
                 seasonSourceOrder = anime.seasonSourceOrder,
                 backgroundUrl = anime.backgroundUrl,
                 backgroundLastModified = anime.backgroundLastModified,
-                memo = MemoColumnAdapter.encode(anime.memo),
+                memo = anime.memo,
             )
         }
         return anime
@@ -298,7 +295,7 @@ class AnimeRestorer(
                     episodeId = episode.id,
                     version = episode.version,
                     isSyncing = 0,
-                    memo = MemoColumnAdapter.encode(episode.memo),
+                    memo = episode.memo,
                 )
             }
         }

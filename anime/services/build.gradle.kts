@@ -62,6 +62,7 @@ dependencies {
     implementation(animato.ffmpeg.kit)
     implementation(animato.arthenica.smartexceptions)
     implementation(animato.torrserver)
+    implementation(animato.localbroadcastmanager)
 
     // The backup format is the one thing here that has to be exactly right and can be checked
     // without a device: a field number read wrong loses somebody's library.

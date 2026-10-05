@@ -93,7 +93,7 @@ internal class AnimeExtensionInstaller(private val context: Context) {
         val id = downloadManager.enqueue(request)
         activeDownloads[pkgName] = id
 
-        val downloadStateFlow = MutableStateFlow(InstallStep.Pending)
+        val downloadStateFlow = MutableStateFlow<InstallStep>(InstallStep.Pending)
         downloadsStateFlows[id] = downloadStateFlow
 
         // Poll download status
@@ -173,7 +173,7 @@ internal class AnimeExtensionInstaller(private val context: Context) {
 
                 if (tempFile.exists() && !tempFile.delete()) {
                     // Unlikely but just in case
-                    extensionManager.updateInstallStep(downloadId, InstallStep.Error)
+                    extensionManager.updateInstallStep(downloadId, InstallStep.Error("Could not clear the previous download"))
                     return
                 }
 
@@ -187,11 +187,11 @@ internal class AnimeExtensionInstaller(private val context: Context) {
                     if (AnimeExtensionLoader.installPrivateExtensionFile(context, tempFile)) {
                         extensionManager.updateInstallStep(downloadId, InstallStep.Installed)
                     } else {
-                        extensionManager.updateInstallStep(downloadId, InstallStep.Error)
+                        extensionManager.updateInstallStep(downloadId, InstallStep.Error("Not a valid extension, or an older version or different signature than the installed one"))
                     }
                 } catch (e: Exception) {
                     logcat(LogPriority.ERROR, e) { "Failed to read downloaded extension file." }
-                    extensionManager.updateInstallStep(downloadId, InstallStep.Error)
+                    extensionManager.updateInstallStep(downloadId, InstallStep.Error.from(e))
                 }
 
                 tempFile.delete()
@@ -302,7 +302,7 @@ internal class AnimeExtensionInstaller(private val context: Context) {
             // Set next installation step
             if (uri == null) {
                 logcat(LogPriority.ERROR) { "Couldn't locate downloaded APK" }
-                updateInstallStep(id, InstallStep.Error)
+                updateInstallStep(id, InstallStep.Error("The downloaded file could not be found"))
                 return
             }
 

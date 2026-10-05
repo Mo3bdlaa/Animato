@@ -26,7 +26,6 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import mihon.icons.simpleicons.Discord
 import mihon.icons.simpleicons.SimpleIcons
-import tachiyomi.presentation.core.icons.Discord
 
 @Composable
 fun AnimeExtensionStoresContent(

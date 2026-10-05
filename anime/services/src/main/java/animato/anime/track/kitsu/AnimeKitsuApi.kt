@@ -5,9 +5,8 @@ import animato.anime.track.kitsu.dto.KitsuAddAnimeResult
 import animato.anime.track.kitsu.dto.KitsuAnimeListResult
 import animato.anime.track.kitsu.dto.KitsuAnimeSearchResult
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
-import eu.kanade.tachiyomi.data.track.kitsu.KitsuDateHelper
 import eu.kanade.tachiyomi.data.track.kitsu.KitsuInterceptor
-import eu.kanade.tachiyomi.data.track.kitsu.dto.KitsuSearchResult
+import animato.anime.track.kitsu.dto.KitsuSearchResult
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.network.DELETE
 import eu.kanade.tachiyomi.network.GET

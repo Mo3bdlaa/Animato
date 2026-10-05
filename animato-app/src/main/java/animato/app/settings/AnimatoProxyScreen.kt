@@ -62,7 +62,7 @@ object AnimatoProxyScreen : SearchableSettings {
                 // Greyed rather than hidden while the switch is off: a form that vanishes takes the
                 // settings with it as far as anyone can tell, and these are values people keep and
                 // toggle rather than retype.
-                enabled = enabled,
+                visible = enabled,
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.ListPreference(
                         preference = preferences.kind,
@@ -91,7 +91,7 @@ object AnimatoProxyScreen : SearchableSettings {
             ),
             Preference.PreferenceGroup(
                 title = stringResource(AYMR.strings.pref_proxy_username),
-                enabled = enabled,
+                visible = enabled,
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.EditTextPreference(
                         preference = preferences.username,

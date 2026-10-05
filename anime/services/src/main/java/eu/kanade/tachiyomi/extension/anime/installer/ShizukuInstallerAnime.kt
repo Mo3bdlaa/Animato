@@ -83,7 +83,7 @@ class ShizukuInstallerAnime(private val service: Service) : InstallerAnime(servi
                 continueQueue(InstallStep.Installed)
             } else {
                 logcat(LogPriority.ERROR) { "Failed to install extension $packageName: $message" }
-                continueQueue(InstallStep.Error)
+                continueQueue(InstallStep.Error(message ?: "Shizuku failed to install it ($status)"))
             }
         }
     }
@@ -135,7 +135,7 @@ class ShizukuInstallerAnime(private val service: Service) : InstallerAnime(servi
             service.contentResolver.delete(entry.uri, null, null)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to install extension ${entry.downloadId} ${entry.uri}" }
-            continueQueue(InstallStep.Error)
+            continueQueue(InstallStep.Error.from(e))
         }
     }
 

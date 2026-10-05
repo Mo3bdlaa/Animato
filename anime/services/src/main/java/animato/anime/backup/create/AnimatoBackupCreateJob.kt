@@ -19,7 +19,7 @@ import animato.anime.backup.restore.AniyomiBackupRestoreJob
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
-import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
+import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.isRunning
@@ -48,14 +48,14 @@ import java.util.concurrent.TimeUnit
 class AnimatoBackupCreateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
-    private val notifier = BackupNotifier(context)
+    private val notifier = BackupNotifier(context, Injekt.get())
 
     override suspend fun doWork(): Result {
         val isAutoBackup = inputData.getBoolean(IS_AUTO_BACKUP_KEY, true)
 
         // Backing up halfway through a restore would capture a library that is half one thing and
         // half another.
-        if (isAutoBackup && (AniyomiBackupRestoreJob.isRunning(context) || BackupRestoreJob.isRunning(context))) {
+        if (isAutoBackup && (AniyomiBackupRestoreJob.isRunning(context) || BackupRestoreWorker.isRunning(context.workManager))) {
             return Result.retry()
         }
 

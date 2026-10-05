@@ -155,7 +155,6 @@ object PlayerSettingsPlayerScreen : SearchableSettings {
         val hideTime = playerPreferences.playerTimeToDisappear()
 
         val panelOpacityPref = playerPreferences.panelOpacity()
-        val panelOpacity by panelOpacityPref.collectAsState()
         val numberFormat = remember { NumberFormat.getPercentInstance() }
 
         return Preference.PreferenceGroup(
@@ -164,7 +163,7 @@ object PlayerSettingsPlayerScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = fullScreen,
                     title = stringResource(AYMR.strings.pref_player_fullscreen),
-                    enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P,
+                    visible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = hideControls,
@@ -190,14 +189,10 @@ object PlayerSettingsPlayerScreen : SearchableSettings {
                     title = stringResource(AYMR.strings.pref_player_time_to_disappear),
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = panelOpacity,
+                    preference = panelOpacityPref,
                     valueRange = 0..100,
                     title = stringResource(AYMR.strings.pref_panel_opacity),
-                    subtitle = numberFormat.format(panelOpacity / 100f),
-                    onValueChanged = {
-                        panelOpacityPref.set(it)
-                        true
-                    },
+                    valueText = { numberFormat.format(it / 100f) },
                 ),
             ),
         )
@@ -227,12 +222,12 @@ object PlayerSettingsPlayerScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = enableAutoAniSkip,
                     title = stringResource(AYMR.strings.pref_enable_auto_skip_ani_skip),
-                    enabled = isIntroSkipEnabled,
+                    visible = isIntroSkipEnabled,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = enableNetflixAniSkip,
                     title = stringResource(AYMR.strings.pref_enable_netflix_style_aniskip),
-                    enabled = isIntroSkipEnabled,
+                    visible = isIntroSkipEnabled,
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = waitingTimeAniSkip,
@@ -245,17 +240,17 @@ object PlayerSettingsPlayerScreen : SearchableSettings {
                         10 to stringResource(AYMR.strings.pref_waiting_time_aniskip_10),
                     ),
                     title = stringResource(AYMR.strings.pref_waiting_time_aniskip),
-                    enabled = isIntroSkipEnabled,
+                    visible = isIntroSkipEnabled,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = enableAniSkip,
                     title = stringResource(AYMR.strings.pref_enable_aniskip),
-                    enabled = isIntroSkipEnabled,
+                    visible = isIntroSkipEnabled,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = disableAniSkipChapters,
                     title = stringResource(AYMR.strings.pref_disable_aniskip_chapter),
-                    enabled = isIntroSkipEnabled && isAniSkipEnabled,
+                    visible = isIntroSkipEnabled && isAniSkipEnabled,
                 ),
                 // Mihon's InfoPreference has no enabled flag; leaving the item out is the same
                 // thing, since disabled means hidden in its framework.
@@ -285,17 +280,17 @@ object PlayerSettingsPlayerScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = pipEpisodeToasts,
                     title = stringResource(AYMR.strings.pref_pip_episode_toasts),
-                    enabled = isPipEnabled,
+                    visible = isPipEnabled,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = pipOnExit,
                     title = stringResource(AYMR.strings.pref_pip_on_exit),
-                    enabled = isPipEnabled,
+                    visible = isPipEnabled,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = pipReplaceWithPrevious,
                     title = stringResource(AYMR.strings.pref_pip_replace_with_previous),
-                    enabled = isPipEnabled,
+                    visible = isPipEnabled,
                 ),
             ),
         )

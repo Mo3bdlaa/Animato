@@ -83,7 +83,7 @@ object PlayerSettingsGesturesScreen : SearchableSettings {
                     // No subtitle override: the default one shows the chosen speed, which is more
                     // use here than a sentence explaining what "speed while held" means.
                     // Nothing to configure when holding does something else, or nothing at all.
-                    enabled = selectedGesture == LongPressGesture.SpeedBoost,
+                    visible = selectedGesture == LongPressGesture.SpeedBoost,
                 ),
             ),
         )

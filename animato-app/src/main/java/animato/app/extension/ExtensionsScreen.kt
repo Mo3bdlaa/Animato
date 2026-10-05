@@ -894,7 +894,7 @@ private fun ExtensionListItem(
                  * instead. Everything else keeps the plain wording rather than inventing a
                  * diagnosis nobody checked.
                  */
-                    if (row.installStep == InstallStep.Error) {
+                    if (row.installStep is InstallStep.Error) {
                         Text(
                             text = stringResource(
                                 when (row.failure) {
@@ -924,7 +924,7 @@ private fun ExtensionListItem(
                      * Before the trust and update cases, so a failure is not hidden behind the very
                      * button that just failed.
                      */
-                        row.installStep == InstallStep.Error -> OutlinedButton(
+                        row.installStep is InstallStep.Error -> OutlinedButton(
                             onClick = if (row.isInstalled) onUpdate else onInstall,
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = LocalAnimatoPalette.current.error,

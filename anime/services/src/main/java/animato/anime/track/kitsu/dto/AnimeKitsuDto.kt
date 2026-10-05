@@ -1,9 +1,8 @@
 package animato.anime.track.kitsu.dto
 
 import animato.anime.track.kitsu.AnimeKitsu
-import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.data.track.kitsu.KitsuDateHelper
-import eu.kanade.tachiyomi.data.track.kitsu.dto.KitsuSearchItemCover
+import animato.anime.track.AnimeTrackerIds
+import animato.anime.track.kitsu.KitsuDateHelper
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
@@ -35,7 +34,7 @@ data class KitsuAnimeSearchItem(
     val endDate: Long? = null,
 ) {
 
-    fun toTrackSearch() = AnimeTrackSearch.create(TrackerManager.KITSU).also {
+    fun toTrackSearch() = AnimeTrackSearch.create(AnimeTrackerIds.KITSU).also {
         it.remote_id = id
         it.title = canonicalTitle
         it.total_episodes = episodeCount ?: 0
@@ -73,7 +72,7 @@ data class KitsuAnimeListResult(
         val progress = entry.attributes
         val anime = included[0].attributes
 
-        return AnimeTrackSearch.create(TrackerManager.KITSU).also {
+        return AnimeTrackSearch.create(AnimeTrackerIds.KITSU).also {
             it.remote_id = included[0].id
             it.library_id = entry.id
             it.title = anime.canonicalTitle

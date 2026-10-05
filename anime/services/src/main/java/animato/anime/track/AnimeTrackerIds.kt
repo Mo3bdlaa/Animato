@@ -13,6 +13,14 @@ package animato.anime.track
  * numbering without ever reaching these.
  */
 object AnimeTrackerIds {
+    /*
+     * Two of the wrapped trackers' ids, written out because Mihon stopped exposing them as
+     * constants. They are Mihon's numbers, not ours — `TrackerManager` builds AniList and Kitsu
+     * with exactly these — and must stay in step with it for the shared credentials to line up.
+     */
+    const val ANILIST = 2L
+    const val KITSU = 3L
+
     const val SIMKL = 101L
     const val JELLYFIN = 102L
 }

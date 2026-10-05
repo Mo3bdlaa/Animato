@@ -67,12 +67,12 @@ object SettingsAnimeDownloadScreen : SearchableSettings {
                     entries = allCategories.associate { it.id.toString() to it.visualName }.toImmutableMap(),
                     title = stringResource(MR.strings.categories),
                     subtitle = categoriesLabel(allCategories, included, excluded),
-                    enabled = downloadNewEpisodes,
+                    visible = downloadNewEpisodes,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = downloadPreferences.downloadNewUnseenEpisodesOnly(),
                     title = stringResource(AYMR.strings.pref_download_new_unseen_episodes_only),
-                    enabled = downloadNewEpisodes,
+                    visible = downloadNewEpisodes,
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = downloadPreferences.autoDownloadWhileWatching(),
@@ -125,7 +125,7 @@ object SettingsAnimeDownloadScreen : SearchableSettings {
                 Preference.PreferenceItem.EditTextPreference(
                     preference = downloadPreferences.externalDownloaderSelection(),
                     title = stringResource(AYMR.strings.pref_external_downloader_selection),
-                    enabled = useExternal,
+                    visible = useExternal,
                 ),
             ),
         )

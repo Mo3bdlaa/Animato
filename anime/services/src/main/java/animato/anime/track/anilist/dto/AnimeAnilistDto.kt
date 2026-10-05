@@ -2,8 +2,7 @@ package animato.anime.track.anilist.dto
 
 import animato.anime.track.anilist.AnimeAnilist
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
-import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.data.track.anilist.dto.ALFuzzyDate
+import animato.anime.track.AnimeTrackerIds
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.util.lang.htmlDecode
 import kotlinx.serialization.SerialName
@@ -51,7 +50,7 @@ data class ALAnimeSearchItem(
     val studios: ALStudios = ALStudios(),
 ) {
 
-    fun toTrackSearch() = AnimeTrackSearch.create(TrackerManager.ANILIST).also {
+    fun toTrackSearch() = AnimeTrackSearch.create(AnimeTrackerIds.ANILIST).also {
         it.remote_id = id
         it.title = title.userPreferred
         it.total_episodes = episodes ?: 0
@@ -126,7 +125,7 @@ data class ALAnimeListItem(
     val media: ALAnimeSearchItem,
 ) {
 
-    fun toTrack() = AnimeTrack.create(TrackerManager.ANILIST).also {
+    fun toTrack() = AnimeTrack.create(AnimeTrackerIds.ANILIST).also {
         it.remote_id = media.id
         it.title = media.title.userPreferred
         it.status = toTrackStatus()

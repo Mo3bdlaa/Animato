@@ -16,7 +16,9 @@ import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.extension.anime.model.AnimeLoadResult
 import eu.kanade.tachiyomi.util.lang.Hash
 import eu.kanade.tachiyomi.util.storage.copyAndSetReadOnlyTo
-import eu.kanade.tachiyomi.util.system.ChildFirstPathClassLoader
+import animato.anime.content.animeContentWarning
+import mihon.data.dalvik.DelegateLastClassLoaderCompat
+import mihon.domain.extension.model.ContentWarning
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
@@ -33,8 +35,8 @@ object AnimeExtensionLoader {
 
     private val preferences: SourcePreferences by injectLazy()
     private val trustExtension: TrustAnimeExtension by injectLazy()
-    private val loadNsfwSource by lazy {
-        preferences.showNsfwSource.get()
+    private val enabledContentWarnings by lazy {
+        preferences.enabledContentWarnings.get()
     }
 
     private const val EXTENSION_FEATURE = "tachiyomi.animeextension"
@@ -283,17 +285,21 @@ object AnimeExtensionLoader {
             return AnimeLoadResult.Untrusted(extension)
         }
 
-        val isNsfw = appInfo.metaData.getInt(METADATA_CONTENT_WARNING) > 0 ||
-            appInfo.metaData.getInt(METADATA_NSFW) == 1
-        if (!loadNsfwSource && isNsfw) {
-            logcat(LogPriority.WARN) { "NSFW extension $pkgName not allowed" }
+        val contentWarning = animeContentWarning(
+            declared = appInfo.metaData.takeIf { it.containsKey(METADATA_CONTENT_WARNING) }
+                ?.getInt(METADATA_CONTENT_WARNING),
+            legacyNsfw = appInfo.metaData.getInt(METADATA_NSFW) == 1,
+        )
+        val isNsfw = contentWarning != ContentWarning.SAFE
+        if (contentWarning !in enabledContentWarnings) {
+            logcat(LogPriority.WARN) { "Extension $pkgName with $contentWarning not allowed" }
             return AnimeLoadResult.Error
         }
 
         val isTorrent = appInfo.metaData.getBoolean(METADATA_IS_TORRENT) ||
             appInfo.metaData.getInt(METADATA_TORRENT) == 1
         val classLoader = try {
-            ChildFirstPathClassLoader(appInfo.sourceDir, null, context.classLoader)
+            DelegateLastClassLoaderCompat(appInfo.sourceDir, null, context.classLoader)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Extension load error: $extName ($pkgName)" }
             return AnimeLoadResult.Error

@@ -52,4 +52,11 @@ abstract class AnimeOnlyTracker(id: Long, name: String) : BaseTracker(id, name),
     final override suspend fun search(query: String): List<TrackSearch> = notAMangaTracker()
 
     final override suspend fun refresh(track: Track): Track = notAMangaTracker()
+
+    /**
+     * Mihon's refresh-the-account hook, abstract upstream since its trackers learned to re-read the
+     * user's profile on demand. The anime-only trackers keep everything they need in their own
+     * login, so by default there is nothing to re-read; one that has something can override it.
+     */
+    override suspend fun updateUserConfig() = Unit
 }

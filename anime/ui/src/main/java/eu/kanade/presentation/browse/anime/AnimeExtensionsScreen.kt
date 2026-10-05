@@ -454,7 +454,7 @@ private fun AnimeExtensionItemActions(
                     )
                 }
             }
-            installStep == InstallStep.Error -> {
+            installStep is InstallStep.Error -> {
                 IconButton(onClick = { onClickItemAction(extension) }) {
                     Icon(
                         imageVector = Icons.Outlined.Refresh,

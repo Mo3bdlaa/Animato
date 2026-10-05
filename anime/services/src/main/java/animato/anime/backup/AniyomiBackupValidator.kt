@@ -23,7 +23,7 @@ class AniyomiBackupValidator(
     private val trackerManager: TrackerManager = Injekt.get(),
 ) {
 
-    fun validate(uri: Uri): Results {
+    suspend fun validate(uri: Uri): Results {
         val backup = AniyomiBackupDecoder(context).decode(uri)
 
         val missingAnimeSources = backup.animeSources

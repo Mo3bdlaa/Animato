@@ -9,6 +9,8 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import kotlinx.coroutines.flow.combine
+import mihon.domain.extension.model.ContentWarning
+import tachiyomi.core.common.preference.PreferenceStore
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -18,11 +20,13 @@ import uy.kohesive.injekt.api.get
  *
  * ## Hidden by default
  *
- * Mihon ships `showNsfwSource` defaulting to on, and the class that owns it is Mihon's, so the
- * default itself cannot be edited. What can be done is answering before the question is asked:
- * on a launch where nobody has ever touched the preference, it is set to off. `isSet` is the
- * difference between a default and a choice — someone who turned it on in settings has made a
- * choice, and this never runs again over it.
+ * Mihon ships every content warning enabled — safe, mixed and adult — and the class that owns
+ * that default is Mihon's, so the default itself cannot be edited. What can be done is answering
+ * before the question is asked: on a launch where nobody has ever touched the setting, only
+ * *safe* is left in it — the same thing the old switch meant when it was off, and what Mihon's own
+ * migration turns an "off" into. `isSet` is the difference between a default and a choice —
+ * someone who turned the others back on in settings has made a choice, and this never runs again
+ * over it.
  *
  * ## Incognito by default
  *
@@ -42,11 +46,16 @@ import uy.kohesive.injekt.api.get
 object NsfwDefaults {
 
     fun seedHiddenByDefault() {
-        val showNsfw = Injekt.get<SourcePreferences>().showNsfwSource
-        if (!showNsfw.isSet()) {
-            showNsfw.set(false)
+        val warnings = Injekt.get<SourcePreferences>().enabledContentWarnings
+        // The switch Mihon replaced, read only to stay out of its migration's way: an install
+        // that ever set it is converted by Mihon's ContentWarningMigration, choice intact.
+        val legacy = Injekt.get<PreferenceStore>().getBoolean(LEGACY_SHOW_NSFW, true)
+        if (!warnings.isSet() && !legacy.isSet()) {
+            warnings.set(setOf(ContentWarning.SAFE))
         }
     }
+
+    private const val LEGACY_SHOW_NSFW = "show_nsfw_source"
 
     /** Never completes; collect it from a scope that lives as long as the UI does. */
     suspend fun seedIncognitoForNsfw() {
@@ -59,7 +68,7 @@ object NsfwDefaults {
             Injekt.get<AnimeExtensionManager>().installedExtensionsFlow,
         ) { manga, anime ->
             Pair(
-                manga.filter { it.isNsfw }.map { it.pkgName },
+                manga.filter { it.contentWarning != ContentWarning.SAFE }.map { it.pkgName },
                 anime.filter { it.isNsfw }.map { it.pkgName },
             )
         }.collect { (mangaNsfw, animeNsfw) ->

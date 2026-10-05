@@ -2,9 +2,6 @@ package animato.anime.track.shikimori.dto
 
 import animato.anime.track.shikimori.AnimeShikimori
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
-import eu.kanade.tachiyomi.data.track.shikimori.dto.SMAiredDate
-import eu.kanade.tachiyomi.data.track.shikimori.dto.SMPersonRole
-import eu.kanade.tachiyomi.data.track.shikimori.dto.SMPoster
 import kotlinx.serialization.Serializable
 
 /**

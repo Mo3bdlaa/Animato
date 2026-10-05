@@ -1,5 +1,6 @@
 package eu.kanade.domain.extension.anime.interactor
 
+import animato.anime.content.allowsNsfw
 import eu.kanade.domain.extension.anime.model.AnimeExtensions
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
@@ -14,7 +15,7 @@ class GetAnimeExtensionsByType(
 ) {
 
     fun subscribe(): Flow<AnimeExtensions> {
-        val showNsfwSources = sharedPreferences.showNsfwSource.get()
+        val showNsfwSources = sharedPreferences.allowsNsfw()
 
         return combine(
             sharedPreferences.enabledLanguages.changes(),

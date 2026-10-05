@@ -444,14 +444,14 @@ class ExtensionsScreenModel(
             !step.isCompleted()
         }
             .onEach { step ->
-                val failure = if (step == InstallStep.Error) diagnose(pkgName, contentType) else null
+                val failure = if (step is InstallStep.Error) diagnose(pkgName, contentType) else null
                 currentSteps.update { it + (pkgName to InstallActivity(step, failure)) }
             }
             .onCompletion {
                 currentSteps.update { steps ->
                     // A failure stays. Anything else has nothing left to say, and the row goes back
                     // to being described by the extension itself.
-                    if (steps[pkgName]?.step == InstallStep.Error) steps else steps - pkgName
+                    if (steps[pkgName]?.step is InstallStep.Error) steps else steps - pkgName
                 }
             }
             .collect()

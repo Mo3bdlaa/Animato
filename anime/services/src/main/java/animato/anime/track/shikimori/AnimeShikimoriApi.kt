@@ -5,7 +5,7 @@ import animato.anime.track.shikimori.dto.SMAnimeSearchResult
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriInterceptor
-import eu.kanade.tachiyomi.data.track.shikimori.dto.SMAddMangaResponse
+import animato.anime.track.shikimori.dto.SMAddMangaResponse
 import eu.kanade.tachiyomi.network.DELETE
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess

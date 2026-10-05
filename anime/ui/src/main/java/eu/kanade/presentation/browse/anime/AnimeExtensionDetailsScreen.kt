@@ -100,7 +100,7 @@ fun AnimeExtensionDetailsScreen(
                                 if (url != null) {
                                     add(
                                         AppBar.Action(
-                                            title = stringResource(MR.strings.action_open_repo),
+                                            title = stringResource(AYMR.strings.action_open_repo),
                                             icon = Icons.AutoMirrored.Outlined.Launch,
                                             onClick = {
                                                 uriHandler.openUri(url)
@@ -322,7 +322,7 @@ private fun DetailsHeader(
                         color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Medium,
                     ),
-                    secondaryText = stringResource(MR.strings.ext_info_age_rating),
+                    secondaryText = stringResource(AYMR.strings.ext_info_age_rating),
                     onClick = onClickAgeRating,
                 )
             }

@@ -33,7 +33,6 @@ object PlayerSettingsAudioScreen : SearchableSettings {
         val pitchCorrection = audioPreferences.enablePitchCorrection()
         val audioChannels = audioPreferences.audioChannels()
         val boostCapPref = audioPreferences.volumeBoostCap()
-        val boostCap by boostCapPref.collectAsState()
 
         return listOf(
             editTextInfoPreference(
@@ -90,14 +89,9 @@ object PlayerSettingsAudioScreen : SearchableSettings {
                 title = stringResource(AYMR.strings.pref_player_audio_channels),
             ),
             Preference.PreferenceItem.SliderPreference(
-                value = boostCap,
+                preference = boostCapPref,
                 valueRange = 0..200,
                 title = stringResource(AYMR.strings.pref_player_audio_boost_cap),
-                subtitle = boostCap.toString(),
-                onValueChanged = {
-                    boostCapPref.set(it)
-                    true
-                },
             ),
         )
     }
