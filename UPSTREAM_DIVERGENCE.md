@@ -205,6 +205,48 @@ in the launcher.
 
 ---
 
+### Injekt → Metro — bridged
+
+Mihon replaced Injekt with Metro, a compile-time graph, and left Injekt as a read-only shim for
+extensions. The anime half asks Injekt for its own types and for over a hundred of Mihon's, and a
+Metro graph cannot be extended from a module that depends on it. So Animato installs its own Injekt
+registry that answers Mihon's types out of Mihon's graph (`animato.di.MihonGraphBridge`; see
+ARCHITECTURE.md). Porting the anime half to Metro is the long-term answer and is not blocked by
+anything but size.
+
+### NSFW switch → content warnings — adopted
+
+`showNsfwSource` became `enabledContentWarnings`, a set of safe / mixed / NSFW. The anime
+extensions declare the same metadata and are read the same way (`animato.anime.content`); the
+"hidden by default" seed now leaves only *safe* enabled on a fresh install, which is what Mihon's
+own migration makes of an "off".
+
+### `Extension.Installed` split into `Loaded` and `NotLoaded` — adopted
+
+`Untrusted` is now a `NotLoaded` reason, beside filtered, unsigned, failed and others. The unified
+extension list shows every not-loaded extension, and only the untrusted ones offer *Trust*.
+
+### `MangaUpdate` built with a lambda, `favorite` → `favoriteAt`, details via `updateRemote` — adopted
+
+Edited titles and descriptions are written with `MangaRepository.updateRemote`, the same door a
+source refresh uses, carrying every column the edit does not name.
+
+### `android.nonTransitiveRClass` — carried as `false`
+
+Mihon turned transitive R classes off. Several anime modules reach resources through a dependency's
+R class; moving each reference is its own job, so the flag stays off in `gradle.properties`.
+
+### `onFocusedBoundsChanged` — a no-op upstream, replaced
+
+Compose turned it into a modifier that never fires. The television focus ring now asks a focus
+target of its own for the focused rect (`FocusTargetModifierNode.getFocusedRect`) each frame while
+something inside it has focus.
+
+### libvips (`image.decoder2`) — removed by Mihon
+
+Followed. Every build is about 12 MB smaller, and the television build's saving over the phone's
+drops from 28 MB to about 16, since it no longer has libvips to leave out.
+
 ## Open
 
 ### Mihon's `HomeScreen` channels are private, so its screens cannot reach our tab bar

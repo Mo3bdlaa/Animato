@@ -64,17 +64,27 @@ bar for the overflow menu.
 Mihon's `App` is `final` and its `onCreate` offers no extension point, so the anime Injekt modules
 cannot be imported the way Aniyomi did it — by adding a line to that method.
 
-Worse, `App.onCreate` opens with `patchInjekt()`, which does not merge into the existing Injekt
-scope but **replaces the global one**. Anything registered before that call is discarded silently.
+Worse, `App.onCreate` sets the global Injekt scope to Mihon's own, which **replaces** whatever was
+there — and since Mihon moved to Metro, that scope is read-only: a seven-type shim for extensions
+that refuses every registration. Anything registered before that call is discarded silently, and
+nothing can be registered into it after.
 
 `AnimeInjektInitializer` is a content provider used purely as a hook: Android creates providers
 during application bind, immediately before `Application.onCreate`, and a runnable posted to the
 main looper from there cannot run until the whole bind — `onCreate` included — has returned. So the
 registration lands just after `patchInjekt()`, and ahead of whatever component started the process.
 
-`AnimeInjekt` records *which scope instance* it registered into and re-registers if the global one
-has since been replaced. That is the safety net: if the ordering above ever stops holding, the
-result is a redundant re-registration rather than a missing binding.
+What lands there is not a registration into Mihon's scope but a scope of our own,
+`AnimatoInjektRegistrar`: a writable registry holding the anime modules, which falls back to Mihon's
+shim and then to `MihonGraphBridge` — Mihon's Metro graph, read by type: its accessors, then its
+providers indexed under every supertype, then construction for the unscoped interactors it never
+needed a provider for. Code calling `Injekt.get()` sees one registry, as it always did. A scoped
+type the graph holds is never built a second time; `.github/check-injekt-bindings.sh` counts a
+Mihon type as registered when the graph can make it.
+
+`AnimeInjekt` records *which scope instance* it installed and reinstalls if the global one has
+since been replaced. That is the safety net: if the ordering above ever stops holding, the result
+is a redundant reinstall rather than a missing binding.
 
 ## The donor branch
 
@@ -160,6 +170,8 @@ a deliberate decision, not a convenience. Keep it under ten.
 | `.github/workflows/*` | Mihon's target their repository, releases and website |
 | `.gitignore` | Mihon's does not exclude keystores; a leaked signing key is unrecoverable |
 | `README.md` | the repository's front page cannot be another project's |
+| `gradle.properties` | our application id and release repo, the configuration cache, and transitive R classes |
+| `source-api/consumer-proguard.pro` | the manga extension API kept whole, as the anime one is, plus Mihon's own keeps |
 
 ## Branding without editing anything
 
