@@ -59,6 +59,7 @@ import animato.app.crash.StartupGuard
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.downloads.OrphanedDownloadSweeper
 import animato.app.entry.EntryScreen
+import animato.app.extension.ExtensionInstallerDefaults
 import animato.app.extension.ExtensionUpdateCheck
 import animato.app.navigation.AnimatoHomeScreen
 import animato.app.navigation.setContentLens
@@ -292,6 +293,7 @@ class MainActivity : BaseActivity() {
         }
 
         seedQuietly("NSFW hidden by default") { NsfwDefaults.seedHiddenByDefault() }
+        seedQuietly("private extension installer") { ExtensionInstallerDefaults.seedPrivateByDefault() }
         /*
          * One coroutine for both, and on IO.
          *
