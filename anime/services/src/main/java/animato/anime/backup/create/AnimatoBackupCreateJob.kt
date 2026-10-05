@@ -55,7 +55,9 @@ class AnimatoBackupCreateJob(private val context: Context, workerParams: WorkerP
 
         // Backing up halfway through a restore would capture a library that is half one thing and
         // half another.
-        if (isAutoBackup && (AniyomiBackupRestoreJob.isRunning(context) || BackupRestoreWorker.isRunning(context.workManager))) {
+        if (isAutoBackup &&
+            (AniyomiBackupRestoreJob.isRunning(context) || BackupRestoreWorker.isRunning(context.workManager))
+        ) {
             return Result.retry()
         }
 

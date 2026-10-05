@@ -131,6 +131,12 @@ class SourceBrowseScreenModel(
     private var page = 1
 
     init {
+        // On the model's scope, because Mihon's source manager answers only from a coroutine now.
+        // The first page waits for the source, as it always had to.
+        viewModelScope.launch { start() }
+    }
+
+    private suspend fun start() {
         val mangaSource = sourceManager.get(sourceId) as? CatalogueSource
         val animeSource = animeSourceManager.get(sourceId) as? AnimeCatalogueSource
         state.update {
@@ -234,13 +240,15 @@ class SourceBrowseScreenModel(
     }
 
     fun resetFilters() {
-        val mangaSource = sourceManager.get(sourceId) as? CatalogueSource
-        val animeSource = animeSourceManager.get(sourceId) as? AnimeCatalogueSource
-        state.update {
-            it.copy(
-                mangaFilters = runCatching { mangaSource?.getFilterList() }.getOrNull(),
-                animeFilters = runCatching { animeSource?.getFilterList() }.getOrNull(),
-            )
+        viewModelScope.launch {
+            val mangaSource = sourceManager.get(sourceId) as? CatalogueSource
+            val animeSource = animeSourceManager.get(sourceId) as? AnimeCatalogueSource
+            state.update {
+                it.copy(
+                    mangaFilters = runCatching { mangaSource?.getFilterList() }.getOrNull(),
+                    animeFilters = runCatching { animeSource?.getFilterList() }.getOrNull(),
+                )
+            }
         }
     }
 
@@ -381,7 +389,7 @@ class SourceBrowseScreenModel(
         }
         viewModelScope.launchNonCancellable {
             when (contentType) {
-                ContentType.MANGA -> updateManga.await(MangaUpdate(id = item.entryId, favorite = nowFavorite))
+                ContentType.MANGA -> updateManga.awaitUpdateFavorite(item.entryId, nowFavorite)
                 ContentType.ANIME -> updateAnime.await(AnimeUpdate(id = item.entryId, favorite = nowFavorite))
             }
         }

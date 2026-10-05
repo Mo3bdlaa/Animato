@@ -295,19 +295,18 @@ class SearchScreenModel(
     fun search(query: String) {
         if (query.isBlank()) return
         searchJob?.cancel()
-
-        val targets = searchTargets()
-
-        state.update {
-            it.copy(
-                query = query,
-                hasSearchableSources = targets.isNotEmpty(),
-                sourceGroups = targets.map { target -> target.emptyGroup() },
-            )
-        }
         remember(query)
 
         searchJob = viewModelScope.launch(SEARCH_DISPATCHER) {
+            // Inside the job, because Mihon's source manager answers only from a coroutine now.
+            val targets = searchTargets()
+            state.update {
+                it.copy(
+                    query = query,
+                    hasSearchableSources = targets.isNotEmpty(),
+                    sourceGroups = targets.map { target -> target.emptyGroup() },
+                )
+            }
             coroutineScope {
                 targets.forEach { target ->
                     async { runSearch(target, query) }
@@ -335,7 +334,7 @@ class SearchScreenModel(
      * this is the only place in the app where twenty answers arrive in an order somebody has to sit
      * and watch.
      */
-    private fun searchTargets(): List<SearchTarget> {
+    private suspend fun searchTargets(): List<SearchTarget> {
         val languages = sourcePreferences.enabledLanguages.get()
         val disabledManga = sourcePreferences.disabledSources.get()
         val disabledAnime = animeSourcePreferences.disabledAnimeSources.get()

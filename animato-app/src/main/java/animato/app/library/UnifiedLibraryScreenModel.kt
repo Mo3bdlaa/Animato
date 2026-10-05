@@ -12,6 +12,7 @@ import animato.domain.content.interactor.GetUnifiedLibrary
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.util.system.toast
+import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -221,7 +222,8 @@ class UnifiedLibraryScreenModel(
     fun refresh(): Boolean {
         val context = Injekt.get<android.app.Application>()
         val lens = contentPreferences.contentFilter.get()
-        val manga = lens.includesManga && eu.kanade.tachiyomi.data.library.LibraryUpdateJob.startNow(context)
+        val manga =
+            lens.includesManga && eu.kanade.tachiyomi.data.library.LibraryUpdateWorker.startNow(context.workManager)
         val anime = lens.includesAnime && eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob.startNow(context)
         return manga || anime
     }

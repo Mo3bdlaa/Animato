@@ -140,7 +140,8 @@ jobs:
       # Twice: once for phones, once for televisions.
       #
       # The television build is the same source with `-Panimato-tv`, which leaves out the manga
-      # reader's 28.6 MB of native libraries and fixes the lens to anime so nothing asks for them.
+      # reader's native libraries (about 16 MB on arm64 since Mihon dropped libvips, which was the
+      # largest of them) and fixes the lens to anime so nothing asks for them.
       # See the comment on `isTvBuild` in animato-app/build.gradle.kts, including why this is a
       # property rather than a product flavour — a flavour would have renamed the variant tasks that
       # quick_check.yml and the five check scripts are keyed to.
@@ -229,8 +230,10 @@ jobs:
             tv=$(stat -c%s "upload/animato-${VERSION_TAG}-${abi}-tv.apk")
             saved=$(( phone - tv ))
             echo "$abi: phone ${phone}, tv ${tv}, saved ${saved} bytes"
-            if [ "$saved" -lt 20000000 ]; then
-              echo "::error::The $abi television APK saved only ${saved} bytes; expected 28 MB."
+            # About 16 MB on arm64 and 12 on armeabi-v7a: the image decoder and the WebGPU viewer.
+            # It was 28 MB until Mihon removed libvips, so the floor sits below the smaller ABI.
+            if [ "$saved" -lt 8000000 ]; then
+              echo "::error::The $abi television APK saved only ${saved} bytes; expected 12-16 MB."
               echo "::error::The jniLibs exclusion in animato-app/build.gradle.kts did not apply."
               exit 1
             fi
@@ -283,7 +286,7 @@ jobs:
             echo "system on hardware that is physically 64-bit, and the 64-bit file then fails with"
             echo "nothing more than \"App not installed\"."
             echo
-            echo "The \`-tv\` builds leave out the manga reader, which is 28 MB of native libraries"
+            echo "The \`-tv\` builds leave out the manga reader, which is 16 MB of native libraries"
             echo "for something nobody does with a remote control, and hide the manga half along"
             echo "with it. Everything else is identical. They still need Android 8.0 or newer."
             echo

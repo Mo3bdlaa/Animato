@@ -20,6 +20,11 @@ class's constructor parameters, and every parameter type has to be registered in
 Scope: requests are read from the modules this fork owns. Registrations are read from everywhere,
 Mihon's modules included, because ours are meant to resolve against theirs.
 
+**Mihon's types come from its Metro graph now**, not from Injekt modules: animato.di.MihonGraphBridge
+answers Injekt with them at run time. So a Mihon type counts as registered when the graph can make
+it — a class marked `@Inject`, an interface a `@ContributesBinding` class implements, anything a
+`@Provides` function returns, and everything `AppGraph` exposes.
+
 Prints one line per gap and exits 1 when there are any.
 """
 
@@ -63,6 +68,12 @@ REQUESTS = (
     re.compile(r":\s*([A-Z][\w.]*)\s*(?:<[^\n]*>)?\s*by\s+injectLazy\(\)"),
     re.compile(r":\s*([A-Z][\w.]*)\s*(?:<[^\n]*>)?\s*by\s+lazy\s*\{\s*Injekt\.get\(\)"),
 )
+
+ANNOTATED_CLASS = re.compile(
+    r"((?:@[\w.]+(?:\([^)]*\))?\s*)+)(?:public\s+|internal\s+|open\s+|abstract\s+|data\s+)*class\s+(\w+)([^{=]*)"
+)
+PROVIDES = re.compile(r"@Provides[\s\S]{0,300}?fun\s+[\w.]*\s*\([^)]*\)\s*:\s*([\w.]+)")
+GRAPH_ACCESSOR = re.compile(r"^\s*val\s+\w+\s*:\s*([\w.]+)", re.M)
 
 CLASS_HEAD = re.compile(r"^(?:internal\s+|private\s+|abstract\s+|open\s+)*class\s+(\w+)\s*(?:<[^>]*>)?\s*\(", re.M)
 
@@ -142,10 +153,35 @@ def constructor_parameters(files):
     return parameters
 
 
+def metro_provided(files):
+    """What Mihon's Metro graph can make, by simple name. See the module docstring."""
+    provided = set()
+    for path in files:
+        if path.startswith(OWNED_PREFIXES):
+            continue
+        text = read(path)
+        if "@Inject" in text or "@ContributesBinding" in text:
+            for match in ANNOTATED_CLASS.finditer(text):
+                annotations, name, header = match.groups()
+                if "@Inject" in annotations:
+                    provided.add(name)
+                if "@ContributesBinding" in annotations and ":" in header:
+                    supertypes = header.split(":", 1)[1]
+                    for supertype in re.findall(r"([A-Z][\w.]*)\s*(?:<[^>]*>)?\s*(?:\([^)]*\))?", supertypes):
+                        provided.add(simple(supertype))
+        if "@Provides" in text:
+            for match in PROVIDES.finditer(text):
+                provided.add(simple(match.group(1)))
+        if path.endswith("mihon/app/di/AppGraph.kt"):
+            for match in GRAPH_ACCESSOR.finditer(text):
+                provided.add(simple(match.group(1)))
+    return provided
+
+
 def main():
     files = sources()
 
-    registered = set(BOUND_ELSEWHERE)
+    registered = set(BOUND_ELSEWHERE) | metro_provided(files)
     registrations = []  # (class name, file) for the constructor check
     for path in files:
         text = read(path)

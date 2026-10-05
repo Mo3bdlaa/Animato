@@ -10,6 +10,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,7 +53,7 @@ object AnimatoCloudflareScreen : Screen() {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val sites = remember { installedSites() }
+        val sites by produceState(initialValue = emptyList<Site>()) { value = installedSites() }
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -130,7 +132,7 @@ object AnimatoCloudflareScreen : Screen() {
      * Local sources and stubs are excluded by asking each manager for its *online* sources: a check
      * cannot be passed for a folder on the phone.
      */
-    private fun installedSites(): List<Site> {
+    private suspend fun installedSites(): List<Site> {
         val manga = Injekt.get<SourceManager>().getOnlineSources().map {
             Site(it.id, it.name, it.getHomeUrl(), ContentType.MANGA)
         }

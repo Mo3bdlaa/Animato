@@ -165,7 +165,7 @@ class LibraryQuickActions(
     suspend fun remove(entry: LibraryEntry, deleteDownloads: Boolean) = withIOContext {
         when (entry.contentType) {
             ContentType.MANGA -> {
-                updateManga.await(MangaUpdate(id = entry.entryId, favorite = false))
+                updateManga.awaitUpdateFavorite(entry.entryId, false)
                 if (deleteDownloads) {
                     val manga = getManga.await(entry.entryId) ?: return@withIOContext
                     val chapters = getChapters.await(entry.entryId)
@@ -196,7 +196,7 @@ class LibraryQuickActions(
      * is exactly backwards: an entry whose extension is gone is the most likely one to be removed,
      * and the one whose files are least likely ever to be wanted again.
      */
-    private fun sourceOf(sourceId: Long) =
+    private suspend fun sourceOf(sourceId: Long) =
         Injekt.get<tachiyomi.domain.source.service.SourceManager>().getOrStub(sourceId)
 
     private fun animeSourceOf(sourceId: Long) =

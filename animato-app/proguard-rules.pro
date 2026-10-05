@@ -37,3 +37,15 @@
 -keep class is.xyz.mpv.** { *; }
 -keep class com.arthenica.ffmpegkit.** { *; }
 -keep class xyz.secozzi.torrserver.** { *; }
+
+# What animato.di.MihonGraphBridge reads by reflection to answer Injekt out of Mihon's Metro graph:
+# the generated graph's provider fields, with the generic signature that says what each provides,
+# and the public constructors of Mihon's classes, for the ones it builds itself. Nothing else calls
+# those constructors where R8 can see it — the anime side asks Injekt for a type, not a constructor.
+-keepattributes Signature,RuntimeVisibleAnnotations
+-keepclassmembers class mihon.app.di.AppGraph$Impl {
+    dev.zacsweers.metro.Provider *;
+}
+-keepclassmembers class eu.kanade.**, tachiyomi.**, mihon.** {
+    public <init>(...);
+}

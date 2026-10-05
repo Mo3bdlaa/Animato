@@ -1,8 +1,8 @@
 package animato.anime.track.anilist.dto
 
+import animato.anime.track.AnimeTrackerIds
 import animato.anime.track.anilist.AnimeAnilist
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
-import animato.anime.track.AnimeTrackerIds
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import eu.kanade.tachiyomi.util.lang.htmlDecode
 import kotlinx.serialization.SerialName

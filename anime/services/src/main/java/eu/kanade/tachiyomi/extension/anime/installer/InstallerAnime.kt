@@ -113,7 +113,12 @@ abstract class InstallerAnime(private val service: Service) {
     @CallSuper
     open fun onDestroy() {
         LocalBroadcastManager.getInstance(service).unregisterReceiver(cancelReceiver)
-        queue.forEach { extensionManager.updateInstallStep(it.downloadId, InstallStep.Error("The installer stopped before it got to this one")) }
+        queue.forEach {
+            extensionManager.updateInstallStep(
+                it.downloadId,
+                InstallStep.Error("The installer stopped before it got to this one"),
+            )
+        }
         queue.clear()
         waitingInstall.set(null)
     }

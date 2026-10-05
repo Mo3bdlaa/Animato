@@ -1,7 +1,7 @@
 package animato.anime.track.kitsu.dto
 
-import animato.anime.track.kitsu.AnimeKitsu
 import animato.anime.track.AnimeTrackerIds
+import animato.anime.track.kitsu.AnimeKitsu
 import animato.anime.track.kitsu.KitsuDateHelper
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.serialization.Serializable

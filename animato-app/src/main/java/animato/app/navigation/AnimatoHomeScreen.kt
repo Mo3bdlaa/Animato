@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -15,7 +16,9 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,8 +51,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.NavigationBar
-import tachiyomi.presentation.core.components.material.NavigationRail
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import uy.kohesive.injekt.Injekt
@@ -93,33 +94,34 @@ object AnimatoHomeScreen : Screen(), AnimatoRoot {
             }
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
-                Scaffold(
-                    startBar = {
-                        if (isTabletUi()) {
-                            NavigationRail {
-                                TABS.fastForEach {
-                                    NavigationRailItem(it)
-                                }
+                // The rail beside the scaffold rather than inside it: Mihon's scaffold lost its
+                // start-bar slot when Mihon moved to Material's navigation suite.
+                Row {
+                    if (isTabletUi()) {
+                        NavigationRail {
+                            TABS.fastForEach {
+                                NavigationRailItem(it)
                             }
                         }
-                    },
-                    bottomBar = {
-                        if (!isTabletUi()) {
-                            AnimatedVisibility(
-                                visible = bottomNavVisible,
-                                enter = expandVertically(),
-                                exit = shrinkVertically(),
-                            ) {
-                                NavigationBar {
-                                    TABS.fastForEach {
-                                        NavigationBarItem(it)
+                    }
+                    Scaffold(
+                        bottomBar = {
+                            if (!isTabletUi()) {
+                                AnimatedVisibility(
+                                    visible = bottomNavVisible,
+                                    enter = expandVertically(),
+                                    exit = shrinkVertically(),
+                                ) {
+                                    NavigationBar {
+                                        TABS.fastForEach {
+                                            NavigationBarItem(it)
+                                        }
                                     }
                                 }
                             }
-                        }
-                    },
-                    contentWindowInsets = WindowInsets(0),
-                ) { contentPadding ->
+                        },
+                        contentWindowInsets = WindowInsets(0),
+                    ) { contentPadding ->
                     /*
                      * A real pager, because a device asked for the real thing twice: first "swipe
                      * to move between tabs", then "make it move WITH my finger instead of after
@@ -137,39 +139,40 @@ object AnimatoHomeScreen : Screen(), AnimatoRoot {
                      * a tabRequest — animates the pager. The guard on each side is what stops the
                      * two effects feeding each other forever.
                      */
-                    val pagerState = rememberPagerState(
-                        initialPage = TABS.indexOfFirst { it::class == tabNavigator.current::class }
-                            .coerceAtLeast(0),
-                    ) { TABS.size }
+                        val pagerState = rememberPagerState(
+                            initialPage = TABS.indexOfFirst { it::class == tabNavigator.current::class }
+                                .coerceAtLeast(0),
+                        ) { TABS.size }
 
-                    LaunchedEffect(tabNavigator.current) {
-                        val index = TABS.indexOfFirst { it::class == tabNavigator.current::class }
-                        if (index != -1 && index != pagerState.currentPage) {
-                            pagerState.animateScrollToPage(index)
+                        LaunchedEffect(tabNavigator.current) {
+                            val index = TABS.indexOfFirst { it::class == tabNavigator.current::class }
+                            if (index != -1 && index != pagerState.currentPage) {
+                                pagerState.animateScrollToPage(index)
+                            }
                         }
-                    }
-                    LaunchedEffect(pagerState.settledPage) {
-                        val tab = TABS[pagerState.settledPage]
-                        if (tabNavigator.current::class != tab::class) {
-                            tabNavigator.current = tab
+                        LaunchedEffect(pagerState.settledPage) {
+                            val tab = TABS[pagerState.settledPage]
+                            if (tabNavigator.current::class != tab::class) {
+                                tabNavigator.current = tab
+                            }
                         }
-                    }
 
-                    Box(
-                        modifier = Modifier
-                            .padding(contentPadding)
-                            .consumeWindowInsets(contentPadding),
-                    ) {
-                        HorizontalPager(
-                            state = pagerState,
-                            // The bar disappears exactly when a screen is in selection mode,
-                            // where silently switching destinations would discard what the user
-                            // is doing — so the swipe disarms with it.
-                            userScrollEnabled = bottomNavVisible,
-                        ) { page ->
-                            val tab = TABS[page]
-                            tabNavigator.saveableState(key = "currentTab", tab) {
-                                tab.Content()
+                        Box(
+                            modifier = Modifier
+                                .padding(contentPadding)
+                                .consumeWindowInsets(contentPadding),
+                        ) {
+                            HorizontalPager(
+                                state = pagerState,
+                                // The bar disappears exactly when a screen is in selection mode,
+                                // where silently switching destinations would discard what the user
+                                // is doing — so the swipe disarms with it.
+                                userScrollEnabled = bottomNavVisible,
+                            ) { page ->
+                                val tab = TABS[page]
+                                tabNavigator.saveableState(key = "currentTab", tab) {
+                                    tab.Content()
+                                }
                             }
                         }
                     }

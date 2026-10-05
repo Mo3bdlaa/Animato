@@ -381,7 +381,7 @@ class MainActivity : BaseActivity() {
                     // has a reason to care that a report exists.
                     CrashReportPrompt()
 
-                    var incognito by remember { mutableStateOf(getIncognitoState.await(null)) }
+                    var incognito by remember { mutableStateOf(false) }
                     val downloadOnly by preferences.downloadedOnly.collectAsState()
                     val indexing by downloadCache.isInitializing.collectAsState()
 

@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.manga.model.toDomainManga
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
@@ -381,9 +382,9 @@ class DiscoverScreenModel(
     }
 
     /** Source ids belonging to an installed extension the repository marks NSFW. */
-    private fun nsfwMangaSources(): Set<Long> =
-        extensionManager.installedExtensionsFlow.value
-            .filter { it.isNsfw }
+    private suspend fun nsfwMangaSources(): Set<Long> =
+        extensionManager.getLoadedExtensions()
+            .filter { it.contentWarning != ContentWarning.SAFE }
             .flatMap { extension -> extension.sources.map { it.id } }
             .toSet()
 
@@ -457,7 +458,7 @@ class DiscoverScreenModel(
         }.recoverCatching { throw SourceFailure(sourceName, it) }
     }
 
-    private fun sourceNameOf(contentType: ContentType, sourceId: Long): String = when (contentType) {
+    private suspend fun sourceNameOf(contentType: ContentType, sourceId: Long): String = when (contentType) {
         ContentType.MANGA -> sourceManager.getOrStub(sourceId).name
         ContentType.ANIME -> animeSourceManager.getOrStub(sourceId).name
     }

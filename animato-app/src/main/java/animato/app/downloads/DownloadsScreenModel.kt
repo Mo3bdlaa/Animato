@@ -170,7 +170,7 @@ class DownloadsScreenModel(
         }
     }
 
-    private fun mangaDownloadBytes(): Long = sourceManager.getAll().sumOf { source ->
+    private suspend fun mangaDownloadBytes(): Long = sourceManager.getAll().sumOf { source ->
         downloadProvider.findSourceDir(source)?.recursiveSize() ?: 0L
     }
 

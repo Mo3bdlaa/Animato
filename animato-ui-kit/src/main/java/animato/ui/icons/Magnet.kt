@@ -6,6 +6,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+/** Icons Animato draws that no icon set it depends on has. */
+object AnimatoIcons
+
 /**
  * The magnet-link icon, for the torrent extensions.
  *
@@ -15,9 +18,6 @@ import androidx.compose.ui.unit.dp
  *
  * License: MIT. Made by Neuicons: https://github.com/neuicons/neu
  */
-/** Icons Animato draws that no icon set it depends on has. */
-object AnimatoIcons
-
 val AnimatoIcons.Magnet: ImageVector
     get() {
         if (_magnet != null) return _magnet!!

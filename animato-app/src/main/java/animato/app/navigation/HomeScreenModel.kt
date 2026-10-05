@@ -16,8 +16,9 @@ import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateWorker
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
+import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -310,7 +311,7 @@ class HomeScreenModel(
     fun refresh(): Boolean {
         val context = Injekt.get<Application>()
         val lens = contentPreferences.contentFilter.get()
-        val manga = lens.includesManga && LibraryUpdateJob.startNow(context)
+        val manga = lens.includesManga && LibraryUpdateWorker.startNow(context.workManager)
         val anime = lens.includesAnime && AnimeLibraryUpdateJob.startNow(context)
         return manga || anime
     }

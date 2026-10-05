@@ -11,9 +11,10 @@ import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateWorker
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.util.system.toast
+import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -168,7 +169,7 @@ class UpdatesScreenModel(
      */
     fun refresh(): Boolean {
         val context = Injekt.get<Application>()
-        val manga = state.value.lens.includesManga && LibraryUpdateJob.startNow(context)
+        val manga = state.value.lens.includesManga && LibraryUpdateWorker.startNow(context.workManager)
         val anime = state.value.lens.includesAnime && AnimeLibraryUpdateJob.startNow(context)
         return manga || anime
     }

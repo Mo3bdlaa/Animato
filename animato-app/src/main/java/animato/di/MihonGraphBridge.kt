@@ -1,6 +1,7 @@
 package animato.di
 
 import dev.zacsweers.metro.Provider
+import dev.zacsweers.metro.SingleIn
 import mihon.app.di.AppGraph
 import mihon.core.metro.GraphProvider
 import java.lang.reflect.Modifier
@@ -30,10 +31,11 @@ import java.util.concurrent.ConcurrentHashMap
  *    every interface and superclass of it, so a request for `MangaRepository` finds the provider of
  *    `MangaRepositoryImpl`. A type two providers could both answer is left out rather than
  *    guessed.
- * 3. **Construction.** An unscoped interactor Mihon never needed a provider for — `GetChapter`, say
- *    — is built from its constructor, every parameter resolved through Injekt again. Only for
- *    Mihon's own packages, and never for a type a provider exists for, so a singleton is never
- *    built twice: building one twice would mean two database connections, two download queues.
+ * 3. **Construction.** An interactor Mihon never needed a provider for — `GetChapter`, say — is
+ *    built from its constructor, every parameter resolved through Injekt again. Only for Mihon's
+ *    own packages, and never for a type a provider exists for, so a singleton the graph holds is
+ *    never built a second time: two of those would mean two database connections, two download
+ *    queues. A class marked `@SingleIn` that the graph does *not* hold is built once and kept.
  *
  * The graph is read lazily. Mihon builds it in `App.onCreate` after a step that must come first
  * (WebView's data directory), so touching it earlier would be a crash in a secondary process.
@@ -48,6 +50,9 @@ internal class MihonGraphBridge(
 
     /** Types nothing in the graph builds, remembered so construction is not retried per call. */
     private val unbuildable = ConcurrentHashMap.newKeySet<Class<*>>()
+
+    /** Scoped types built here because the graph held none — one each, for the life of the app. */
+    private val scoped = ConcurrentHashMap<Class<*>, Any>()
 
     fun lookup(type: Type): Any? {
         val raw = type.rawClass() ?: return null
@@ -86,6 +91,17 @@ internal class MihonGraphBridge(
         if (type in unbuildable || !type.isMihons() || type.isInterface || Modifier.isAbstract(type.modifiers)) {
             return null
         }
+        if (type.isAnnotationPresent(SingleIn::class.java)) {
+            scoped[type]?.let { return it }
+            synchronized(scoped) {
+                scoped[type]?.let { return it }
+                return build(type)?.also { scoped[type] = it }
+            }
+        }
+        return build(type)
+    }
+
+    private fun build(type: Class<*>): Any? {
         val constructor = type.constructors
             .filterNot { it.isSynthetic }
             .maxByOrNull { it.parameterCount }

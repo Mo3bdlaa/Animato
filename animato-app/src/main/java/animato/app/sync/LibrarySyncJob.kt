@@ -104,7 +104,7 @@ class LibrarySyncJob(
         // The same notifier a manual restore uses. A merge that pulls two hundred titles across
         // is worth a progress notification even when nobody asked for it — a phone that is busy for
         // a minute with no explanation is a phone somebody force-quits.
-        AniyomiBackupRestorer(context, BackupNotifier(context)).restore(
+        AniyomiBackupRestorer(context, BackupNotifier(context, Injekt.get())).restore(
             uri = file.uri,
             options = MERGE_OPTIONS,
         )

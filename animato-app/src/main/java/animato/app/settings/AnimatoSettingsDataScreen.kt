@@ -35,9 +35,10 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
 import eu.kanade.presentation.util.relativeTimeSpanString
-import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
+import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
+import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
 import tachiyomi.core.common.i18n.stringResource
@@ -294,7 +295,7 @@ object AnimatoSettingsDataScreen : SearchableSettings {
                                 checked = false,
                                 onCheckedChange = {
                                     val busy = AniyomiBackupRestoreJob.isRunning(context) ||
-                                        BackupRestoreJob.isRunning(context)
+                                        BackupRestoreWorker.isRunning(context.workManager)
                                     if (busy) {
                                         context.toast(MR.strings.restore_in_progress)
                                         return@SegmentedButton
@@ -367,7 +368,7 @@ object AnimatoSettingsDataScreen : SearchableSettings {
                     subtitle = stringResource(AYMR.strings.aniyomi_import_summary),
                     onClick = {
                         val busy = AniyomiBackupRestoreJob.isRunning(context) ||
-                            BackupRestoreJob.isRunning(context)
+                            BackupRestoreWorker.isRunning(context.workManager)
                         if (busy) {
                             context.toast(AYMR.strings.aniyomi_import_in_progress)
                         } else {

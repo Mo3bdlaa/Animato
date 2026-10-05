@@ -59,8 +59,10 @@ import tachiyomi.domain.items.episode.model.EpisodeUpdate
 import tachiyomi.domain.items.episode.service.missingEntriesCount
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.interactor.GetMangaWithChapters
+import tachiyomi.domain.manga.model.MangaRemoteUpdate
 import tachiyomi.domain.manga.model.MangaUpdate
 import tachiyomi.domain.manga.model.asMangaCover
+import tachiyomi.domain.manga.repository.MangaRepository
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
@@ -629,7 +631,7 @@ class EntryScreenModel(
         viewModelScope.launchNonCancellable {
             when (contentType) {
                 ContentType.MANGA -> {
-                    updateManga.await(MangaUpdate(id = entryId, favorite = !current))
+                    updateManga.awaitUpdateFavorite(entryId, !current)
                     if (!current) {
                         val manga = getManga.await(entryId) ?: return@launchNonCancellable
                         addTracks.bindEnhancedTrackers(manga, sourceManager.getOrStub(manga.source))
@@ -822,16 +824,29 @@ class EntryScreenModel(
     private suspend fun applyOverride() {
         val override = entryOverrides.get(state.value.contentType, entryId) ?: return
         when (state.value.contentType) {
-            ContentType.MANGA -> updateManga.await(
-                MangaUpdate(
-                    id = entryId,
-                    title = override.title,
-                    author = override.author,
-                    artist = override.artist,
-                    description = override.description,
-                    genre = override.genres,
-                ),
-            )
+            ContentType.MANGA -> {
+                // Mihon only lets a source's own refresh write a manga's title and details now, so
+                // the edit goes through the same door, with every column the override does not
+                // name carried over unchanged.
+                val repository = Injekt.get<MangaRepository>()
+                val current = repository.getMangaById(entryId)
+                repository.updateRemote(
+                    MangaRemoteUpdate(
+                        id = entryId,
+                        title = override.title,
+                        author = override.author,
+                        artist = override.artist,
+                        description = override.description,
+                        genre = override.genres,
+                        status = current.status,
+                        thumbnailUrl = current.thumbnailUrl,
+                        updateStrategy = current.updateStrategy,
+                        memo = current.memo,
+                        initialized = current.initialized,
+                        coverLastModified = current.coverLastModified,
+                    ),
+                )
+            }
             ContentType.ANIME -> updateAnime.await(
                 AnimeUpdate(
                     id = entryId,
@@ -948,7 +963,7 @@ class EntryScreenModel(
         viewModelScope.launchNonCancellable {
             when (contentType) {
                 ContentType.MANGA ->
-                    updateChapter.await(ChapterUpdate(id = item.id, bookmark = !item.bookmarked))
+                    updateChapter.await(ChapterUpdate(item.id) { bookmark = !item.bookmarked })
                 ContentType.ANIME ->
                     updateEpisode.await(EpisodeUpdate(id = item.id, bookmark = !item.bookmarked))
             }

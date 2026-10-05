@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
+import kotlinx.coroutines.flow.first
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
@@ -85,7 +86,7 @@ class OrphanedDownloadSweeper(
     }
 
     suspend fun sweep(): Result = withIOContext {
-        if (mangaDownloadManager.isRunning || animeDownloadManager.isRunning) {
+        if (mangaDownloadManager.isDownloaderRunning.first() || animeDownloadManager.isRunning) {
             logcat(LogPriority.DEBUG) { "Skipping orphaned download sweep: a downloader is running" }
             return@withIOContext Result(manga = 0, anime = 0)
         }

@@ -173,7 +173,10 @@ internal class AnimeExtensionInstaller(private val context: Context) {
 
                 if (tempFile.exists() && !tempFile.delete()) {
                     // Unlikely but just in case
-                    extensionManager.updateInstallStep(downloadId, InstallStep.Error("Could not clear the previous download"))
+                    extensionManager.updateInstallStep(
+                        downloadId,
+                        InstallStep.Error("Could not clear the previous download"),
+                    )
                     return
                 }
 
@@ -187,7 +190,12 @@ internal class AnimeExtensionInstaller(private val context: Context) {
                     if (AnimeExtensionLoader.installPrivateExtensionFile(context, tempFile)) {
                         extensionManager.updateInstallStep(downloadId, InstallStep.Installed)
                     } else {
-                        extensionManager.updateInstallStep(downloadId, InstallStep.Error("Not a valid extension, or an older version or different signature than the installed one"))
+                        extensionManager.updateInstallStep(
+                            downloadId,
+                            InstallStep.Error(
+                                "Not a valid extension, or an older version or different signature than the installed one",
+                            ),
+                        )
                     }
                 } catch (e: Exception) {
                     logcat(LogPriority.ERROR, e) { "Failed to read downloaded extension file." }

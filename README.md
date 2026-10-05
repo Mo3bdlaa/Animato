@@ -34,7 +34,7 @@ Start with `armeabi-v7a-tv` on a television even if the hardware is 64-bit: plen
 32-bit system, and the 64-bit file then fails with nothing more than *App not installed*. Needs
 Android 8.0 or newer.
 
-The `-tv` builds are the same app without the manga reader — about 22–29 MB smaller — and with the
+The `-tv` builds are the same app without the manga reader — about 12–16 MB smaller — and with the
 manga half hidden to match. Do not put one on a phone: it installs happily, under the same name,
 and the manga is simply gone.
 

@@ -71,12 +71,12 @@ class ExtensionUpdateCheck(
     private suspend fun checkManga(context: Context) {
         try {
             extensionManager.findAvailableExtensions()
-            val names = extensionManager.installedExtensionsFlow.first()
+            val names = (extensionManager.getLoadedExtensions() + extensionManager.getNotLoadedExtensions())
                 .filter { it.hasUpdate }
                 .map { it.name }
 
             if (names.isNotEmpty()) {
-                ExtensionUpdateNotifier(context).promptUpdates(names)
+                ExtensionUpdateNotifier(context, Injekt.get()).promptUpdates(names)
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Could not check for manga extension updates" }

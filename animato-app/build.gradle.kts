@@ -102,7 +102,7 @@ android {
          * that is native code — all of it genuinely used, so there was no waste to delete and no
          * stripping left to do (the libraries ship stripped; measuring it saves 0.5 MB). The only
          * honest way to make it smaller was to take something out, and on a television the obvious
-         * something is the manga reader: two image decoders and a WebGPU viewer, 28.6 MB between
+         * something is the manga reader: an image decoder and a WebGPU viewer, about 16 MB between
          * them, for reading comics with a remote control from three metres away.
          *
          * ## Why a property and not a product flavour
@@ -197,9 +197,10 @@ android {
             /*
              * The manga reader's native half, left out of the television build.
              *
-             * 28.6 MB of the APK, and all three are reached only by opening a chapter: two image
-             * decoders — Mihon ships both, deliberately — and the WebGPU viewer behind one of its
-             * reading modes. The lens being fixed to anime is what makes sure nothing ever asks for
+             * About 16 MB of the APK, and both are reached only by opening a chapter: the image
+             * decoder and the WebGPU viewer behind one of the reading modes. (It was 28.6 MB with a
+             * second decoder, libvips, until Mihon removed it; the name stays in the list below so
+             * that an older Mihon brought back by a revert is still left out.) The lens being fixed to anime is what makes sure nothing ever asks for
              * them; this line is only the saving. Taking one without the other is a crash, so they
              * are both read off the same flag.
              *

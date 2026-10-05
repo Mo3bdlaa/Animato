@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.flow.update
 import mihon.domain.extension.anime.interactor.GetAnimeExtensionStoreCountAsFlow
 import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow
+import mihon.domain.extension.model.ContentWarning
 import tachiyomi.core.common.util.lang.launchIO
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -239,8 +240,12 @@ class ExtensionsScreenModel(
                         // Updates are listed among the rest rather than in a pending section of
                         // their own. The Update pill on the row already says which ones, and a
                         // section that empties itself moves every row below it on each install.
-                        addAll((manga.updates + manga.installed).map { it.toRow(steps, onDevice) })
-                        addAll(manga.untrusted.map { it.toRow(steps, onDevice) })
+                        addAll(
+                            (manga.updates + manga.loaded).distinctBy {
+                                it.pkgName
+                            }.map { it.toRow(steps, onDevice) },
+                        )
+                        addAll(manga.notLoaded.map { it.toRow(steps, onDevice) })
                     }
                     if (lens.includesAnime) {
                         addAll((anime.updates + anime.installed).map { it.toRow(steps, onDevice) })
@@ -399,7 +404,8 @@ class ExtensionsScreenModel(
 
     fun uninstall(row: ExtensionRow) {
         when (val handle = row.handle) {
-            is ExtensionHandle.Manga -> extensionManager.uninstallExtension(handle.extension)
+            is ExtensionHandle.Manga ->
+                (handle.extension as? Extension.Installed)?.let(extensionManager::uninstallExtension)
             is ExtensionHandle.Anime -> animeExtensionManager.uninstallExtension(handle.extension)
         }
     }
@@ -408,7 +414,9 @@ class ExtensionsScreenModel(
         viewModelScope.launchIO {
             when (val handle = row.handle) {
                 is ExtensionHandle.Manga ->
-                    (handle.extension as? Extension.Untrusted)?.let { extensionManager.trust(it) }
+                    (handle.extension as? Extension.NotLoaded)
+                        ?.takeIf { it.reason is Extension.NotLoaded.Reason.Untrusted }
+                        ?.let { extensionManager.trust(it) }
                 is ExtensionHandle.Anime ->
                     (handle.extension as? AnimeExtension.Untrusted)?.let { animeExtensionManager.trust(it) }
             }
@@ -469,10 +477,10 @@ class ExtensionsScreenModel(
      * `internal` to Mihon and does not pass it out, and a guess dressed as a diagnosis is worse
      * than saying so.
      */
-    private fun diagnose(pkgName: String, contentType: ContentType): InstallFailure {
+    private suspend fun diagnose(pkgName: String, contentType: ContentType): InstallFailure {
         val differentKey = when (contentType) {
             ContentType.MANGA -> {
-                val installed = extensionManager.installedExtensionsFlow.value
+                val installed = (extensionManager.getLoadedExtensions() + extensionManager.getNotLoadedExtensions())
                     .firstOrNull { it.pkgName == pkgName }?.store?.signingKey
                 val available = extensionManager.availableExtensionsFlow.value
                     .firstOrNull { it.pkgName == pkgName }?.store?.signingKey
@@ -585,16 +593,16 @@ private fun Extension.toRow(steps: Map<String, InstallActivity>, onDevice: Insta
     name = name,
     lang = lang.orEmpty(),
     versionName = if (this is Extension.Installed) onDevice.versionNameOf(pkgName, versionName) else versionName,
-    isNsfw = isNsfw,
+    isNsfw = contentWarning != ContentWarning.SAFE,
     hasUpdate = (this as? Extension.Installed)?.hasUpdate == true && onDevice.stillOlderThan(this),
-    isObsolete = (this as? Extension.Installed)?.isObsolete == true,
-    isUntrusted = this is Extension.Untrusted,
+    isObsolete = (this as? Extension.Loaded)?.isObsolete == true,
+    isUntrusted = (this as? Extension.NotLoaded)?.reason is Extension.NotLoaded.Reason.Untrusted,
     isInstalled = this !is Extension.Available,
     installStep = steps[pkgName]?.step ?: InstallStep.Idle,
     failure = steps[pkgName]?.failure,
     icon = extensionIcon(),
     handle = ExtensionHandle.Manga(this),
-    sources = (this as? Extension.Installed)?.sources
+    sources = (this as? Extension.Loaded)?.sources
         ?.map { RowSource(id = it.id, name = it.name, lang = it.lang) }
         .orEmpty(),
 )
@@ -608,9 +616,9 @@ private fun Extension.toRow(steps: Map<String, InstallActivity>, onDevice: Insta
  * being untrusted is supposed to prevent.
  */
 private fun Extension.extensionIcon(): Any? = when (this) {
-    is Extension.Installed -> icon
+    is Extension.Loaded -> icon
     is Extension.Available -> iconUrl
-    is Extension.Untrusted -> null
+    is Extension.NotLoaded -> null
 }
 
 private fun AnimeExtension.extensionIcon(): Any? = when (this) {

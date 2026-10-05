@@ -64,7 +64,7 @@ object NsfwDefaults {
         val contentPreferences = Injekt.get<ContentPreferences>()
 
         combine(
-            Injekt.get<ExtensionManager>().installedExtensionsFlow,
+            Injekt.get<ExtensionManager>().loadedExtensionsFlow,
             Injekt.get<AnimeExtensionManager>().installedExtensionsFlow,
         ) { manga, anime ->
             Pair(
