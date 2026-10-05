@@ -16,6 +16,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import animato.anime.backup.restore.AniyomiBackupRestoreJob
+import animato.anime.services.AnimeInjektHook
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
@@ -47,6 +48,10 @@ import java.util.concurrent.TimeUnit
  */
 class AnimatoBackupCreateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
+    init {
+        // Before any property below asks Injekt for something. See AnimeInjektHook.
+        AnimeInjektHook.ensure()
+    }
 
     private val notifier = BackupNotifier(context, Injekt.get())
 

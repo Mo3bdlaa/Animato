@@ -723,7 +723,9 @@ private fun LanguageSheet(
              * language: it is the answer to a different question, asked more often than any single
              * row below it.
              */
-            item(key = "all") {
+            // Not "all": that is a language code too — the one multi-language extensions use —
+            // and a list holding both crashed the sheet the moment it opened.
+            item(key = "toggle-all-languages") {
                 ListItem(
                     modifier = Modifier.clickable { onToggleAll() },
                     headlineContent = { Text(stringResource(AYMR.strings.label_all)) },

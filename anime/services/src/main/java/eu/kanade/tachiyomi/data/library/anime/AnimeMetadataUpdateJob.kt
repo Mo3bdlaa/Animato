@@ -10,6 +10,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
+import animato.anime.services.AnimeInjektHook
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.workManager
@@ -35,6 +36,10 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class AnimeMetadataUpdateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
+    init {
+        // Before any property below asks Injekt for something. See AnimeInjektHook.
+        AnimeInjektHook.ensure()
+    }
 
     private val sourceManager: AnimeSourceManager = Injekt.get()
     private val getLibraryAnime: GetLibraryAnime = Injekt.get()

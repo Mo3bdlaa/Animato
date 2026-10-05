@@ -11,6 +11,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import animato.anime.services.AnimeInjektHook
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -35,6 +36,10 @@ import uy.kohesive.injekt.api.get
  */
 class AniyomiBackupRestoreJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
+    init {
+        // Before any property below asks Injekt for something. See AnimeInjektHook.
+        AnimeInjektHook.ensure()
+    }
 
     private val notifier = BackupNotifier(context, Injekt.get())
 

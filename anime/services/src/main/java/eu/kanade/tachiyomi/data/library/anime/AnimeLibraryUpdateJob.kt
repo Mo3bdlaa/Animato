@@ -18,6 +18,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import animato.anime.services.AnimeInjektHook
 import animato.domain.category.AnimeCategory
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences.Companion.ANIME_HAS_UNSEEN
@@ -76,6 +77,10 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
+    init {
+        // Before any property below asks Injekt for something. See AnimeInjektHook.
+        AnimeInjektHook.ensure()
+    }
 
     private val sourceManager: AnimeSourceManager = Injekt.get()
     private val libraryPreferences: LibraryPreferences = Injekt.get()

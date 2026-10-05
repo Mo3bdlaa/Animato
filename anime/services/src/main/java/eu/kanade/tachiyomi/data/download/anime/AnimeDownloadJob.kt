@@ -11,6 +11,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import animato.anime.services.AnimeInjektHook
 import animato.anime.services.AnimeNotifications
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -34,6 +35,10 @@ import uy.kohesive.injekt.api.get
  * which case the downloader is also stopped. It's also stopped while there's no network available.
  */
 class AnimeDownloadJob(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
+    init {
+        // Before any property below asks Injekt for something. See AnimeInjektHook.
+        AnimeInjektHook.ensure()
+    }
 
     private val downloadManager: AnimeDownloadManager = Injekt.get()
     private val downloadPreferences: DownloadPreferences = Injekt.get()

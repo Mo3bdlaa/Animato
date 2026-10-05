@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import animato.anime.net.AnimatoProxySelector
+import animato.anime.services.AnimeInjektHook
 import animato.anime.services.AnimeNotifications
 
 /**
@@ -66,6 +67,9 @@ class AnimeInjektInitializer : ContentProvider() {
          * Safe this early because it reads nothing: see AnimatoProxySelector.install.
          */
         AnimatoProxySelector.install()
+        // Handed over now, before WorkManager can build a worker on another thread. See
+        // AnimeInjektHook for why the post below is not early enough for workers.
+        AnimeInjektHook.install = { AnimeInjekt.ensureRegistered(app) }
         Handler(Looper.getMainLooper()).postAtFrontOfQueue {
             AnimeInjekt.ensureRegistered(app)
             AnimeNotifications.createChannels(app)

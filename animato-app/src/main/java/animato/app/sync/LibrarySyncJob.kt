@@ -12,6 +12,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkerParameters
 import animato.anime.backup.create.AnimatoBackupCreator
 import animato.anime.backup.restore.AniyomiBackupRestorer
+import animato.anime.services.AnimeInjektHook
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
@@ -56,6 +57,10 @@ class LibrarySyncJob(
     private val context: Context,
     workerParams: WorkerParameters,
 ) : CoroutineWorker(context, workerParams) {
+    init {
+        // Before any property below asks Injekt for something. See AnimeInjektHook.
+        AnimeInjektHook.ensure()
+    }
 
     private val preferences: SyncPreferences = Injekt.get()
 
