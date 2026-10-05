@@ -2,20 +2,27 @@ package animato.app.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import animato.app.extension.ExtensionsScreen
 import animato.app.tracking.TrackingHubScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.base.BasePreferences.ExtensionInstaller
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.screen.SettingsBrowseScreen
 import eu.kanade.presentation.more.settings.screen.SettingsDownloadScreen
 import eu.kanade.presentation.more.settings.screen.SettingsLibraryScreen
 import eu.kanade.presentation.more.settings.screen.SettingsTrackingScreen
+import eu.kanade.tachiyomi.util.system.isShizukuInstalled
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 // The settings sections that answer for both halves.
 //
@@ -134,6 +141,8 @@ object AnimatoSettingsSourcesScreen : SearchableSettings {
     @Composable
     override fun getPreferences(): List<Preference> {
         val navigator = LocalNavigator.currentOrThrow
+        val context = LocalContext.current
+        val installer = remember { Injekt.get<BasePreferences>().extensionInstaller }
         return listOf(
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.label_extensions),
@@ -141,6 +150,21 @@ object AnimatoSettingsSourcesScreen : SearchableSettings {
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(AYMR.strings.label_sources_extensions),
                         onClick = { navigator.push(ExtensionsScreen()) },
+                    ),
+                    /*
+                     * How extensions are installed — the same preference Mihon's advanced screen
+                     * shows, offered here with every choice. Mihon's own list leaves out *private*
+                     * in release builds, which is the one this app installs with by default (see
+                     * ExtensionInstallerDefaults); without this, anybody who switched away from it
+                     * there had no way back. Shizuku is listed only where it is installed, since
+                     * choosing it anywhere else just bounces back to the default.
+                     */
+                    Preference.PreferenceItem.ListPreference(
+                        preference = installer,
+                        entries = installer.entries
+                            .filter { it != ExtensionInstaller.SHIZUKU || context.isShizukuInstalled }
+                            .associateWith { stringResource(it.titleRes) },
+                        title = stringResource(MR.strings.ext_installer_pref),
                     ),
                 ),
             ),
