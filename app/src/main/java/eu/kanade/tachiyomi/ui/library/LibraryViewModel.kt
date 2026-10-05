@@ -6,6 +6,11 @@ import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.binding
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.fastFilterNot
@@ -65,28 +70,29 @@ import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.interactor.GetTracksPerManga
 import tachiyomi.domain.track.model.Track
 import tachiyomi.source.local.isLocal
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
 class LibraryViewModel(
-    private val getLibraryManga: GetLibraryManga = Injekt.get(),
-    private val getCategories: GetCategories = Injekt.get(),
-    private val getTracksPerManga: GetTracksPerManga = Injekt.get(),
-    private val getNextChapters: GetNextChapters = Injekt.get(),
-    private val getChaptersByMangaId: GetChaptersByMangaId = Injekt.get(),
-    private val getBookmarkedChaptersByMangaId: GetBookmarkedChaptersByMangaId = Injekt.get(),
-    private val setReadStatus: SetReadStatus = Injekt.get(),
-    private val updateManga: UpdateManga = Injekt.get(),
-    private val setMangaCategories: SetMangaCategories = Injekt.get(),
-    private val preferences: BasePreferences = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val coverCache: CoverCache = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val downloadManager: DownloadManager = Injekt.get(),
-    private val downloadCache: DownloadCache = Injekt.get(),
-    private val trackerManager: TrackerManager = Injekt.get(),
+    private val getLibraryManga: GetLibraryManga,
+    private val getCategories: GetCategories,
+    private val getTracksPerManga: GetTracksPerManga,
+    private val getNextChapters: GetNextChapters,
+    private val getChaptersByMangaId: GetChaptersByMangaId,
+    private val getBookmarkedChaptersByMangaId: GetBookmarkedChaptersByMangaId,
+    private val setReadStatus: SetReadStatus,
+    private val updateManga: UpdateManga,
+    private val setMangaCategories: SetMangaCategories,
+    private val preferences: BasePreferences,
+    private val libraryPreferences: LibraryPreferences,
+    private val coverCache: CoverCache,
+    private val sourceManager: SourceManager,
+    private val downloadManager: DownloadManager,
+    private val downloadCache: DownloadCache,
+    private val trackerManager: TrackerManager,
 ) : ViewModel() {
 
     private val searchQuery = MutableStateFlow<String?>(null)
@@ -332,7 +338,7 @@ class LibraryViewModel(
                     manga1.libraryManga.chapterFetchedAt.compareTo(manga2.libraryManga.chapterFetchedAt)
                 }
                 LibrarySort.Type.DateAdded -> {
-                    manga1.libraryManga.manga.dateAdded.compareTo(manga2.libraryManga.manga.dateAdded)
+                    compareValues(manga1.libraryManga.manga.favoriteAt, manga2.libraryManga.manga.favoriteAt)
                 }
                 LibrarySort.Type.TrackerMean -> {
                     val item1Score = trackerScores[manga1.id] ?: defaultTrackerScoreSortValue
@@ -452,32 +458,17 @@ class LibraryViewModel(
         }
     }
 
-    /**
-     * Returns the common categories for the given list of manga.
-     *
-     * @param mangas the list of manga.
-     */
-    private suspend fun getCommonCategories(mangas: List<Manga>): Collection<Category> {
-        if (mangas.isEmpty()) return emptyList()
-        return mangas
-            .map { getCategories.await(it.id).toSet() }
-            .reduce { set1, set2 -> set1.intersect(set2) }
+    private suspend fun getCategoryIds(manga: Manga): Set<Long> {
+        return state.value.libraryData.favoritesById[manga.id]
+            ?.libraryManga
+            ?.categories
+            // The library reports no category as 0
+            ?.filterTo(mutableSetOf()) { it != 0L }
+            ?: getCategories.await(manga.id).mapTo(mutableSetOf()) { it.id }
     }
 
     suspend fun getNextUnreadChapter(manga: Manga): Chapter? {
         return getChaptersByMangaId.await(manga.id, applyScanlatorFilter = true).getNextUnread(manga, downloadManager)
-    }
-
-    /**
-     * Returns the mix (non-common) categories for the given list of manga.
-     *
-     * @param mangas the list of manga.
-     */
-    private suspend fun getMixCategories(mangas: List<Manga>): Collection<Category> {
-        if (mangas.isEmpty()) return emptyList()
-        val mangaCategories = mangas.map { getCategories.await(it.id).toSet() }
-        val common = mangaCategories.reduce { set1, set2 -> set1.intersect(set2) }
-        return mangaCategories.flatten().distinct().subtract(common)
     }
 
     /**
@@ -565,10 +556,9 @@ class LibraryViewModel(
             if (deleteFromLibrary) {
                 val toDelete = mangas.map {
                     it.removeCovers(coverCache)
-                    MangaUpdate(
-                        favorite = false,
-                        id = it.id,
-                    )
+                    MangaUpdate(it.id) {
+                        favoriteAt = null
+                    }
                 }
                 updateManga.awaitAll(toDelete)
             }
@@ -594,8 +584,7 @@ class LibraryViewModel(
     fun setMangaCategories(mangaList: List<Manga>, addCategories: List<Long>, removeCategories: List<Long>) {
         viewModelScope.launchNonCancellable {
             mangaList.forEach { manga ->
-                val categoryIds = getCategories.await(manga.id)
-                    .map { it.id }
+                val categoryIds = getCategoryIds(manga)
                     .subtract(removeCategories.toSet())
                     .plus(addCategories)
                     .toList()
@@ -724,13 +713,12 @@ class LibraryViewModel(
             // Hide the default category because it has a different behavior than the ones from db.
             val categories = state.value.displayedCategories.filter { it.id != 0L }
 
-            // Get indexes of the common categories to preselect.
-            val common = getCommonCategories(mangaList)
-            // Get indexes of the mix categories to preselect.
-            val mix = getMixCategories(mangaList)
+            val mangaCategoryIds = mangaList.map { getCategoryIds(it) }
+            val common = mangaCategoryIds.reduceOrNull { set1, set2 -> set1 intersect set2 }.orEmpty()
+            val mix = mangaCategoryIds.flatten().toSet() - common
             val preselected = categories
                 .map {
-                    when (it) {
+                    when (it.id) {
                         in common -> CheckboxState.State.Checked(it)
                         in mix -> CheckboxState.TriState.Exclude(it)
                         else -> CheckboxState.State.None(it)

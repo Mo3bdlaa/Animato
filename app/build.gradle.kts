@@ -1,20 +1,23 @@
+import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.Variant
+import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 import mihon.gradle.Config
-import mihon.gradle.getBuildTime
+import mihon.gradle.getCurrentTime
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
+import mihon.gradle.getLatestCommitTime
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
-import java.io.FileInputStream
-import java.util.Properties
-import kotlin.io.encoding.Base64
 
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
 
+    alias(libs.plugins.metro)
     alias(libs.plugins.aboutLibraries)
     alias(libs.plugins.androidx.baselineProfile)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.apollo)
 }
 
 if (Config.includeTelemetry) {
@@ -23,8 +26,6 @@ if (Config.includeTelemetry) {
         apply(libs.plugins.firebase.crashlytics.get().pluginId)
     }
 }
-
-val keystorePropertiesFile = rootProject.file("keystore.properties")
 
 android {
     namespace = "eu.kanade.tachiyomi"
@@ -49,12 +50,9 @@ android {
             "APPLICATION_ID",
             "\"${providers.gradleProperty("animato.applicationId").get()}\"",
         )
-        buildConfigField("int", "VERSION_CODE", "29")
+        buildConfigField("int", "VERSION_CODE", "34")
         buildConfigField("String", "VERSION_NAME", "\"0.20.4\"")
 
-        buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
-        buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
-        buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
 
@@ -91,8 +89,6 @@ android {
              * a global option is legal. Nothing here needs to change for that to work.
              */
             isMinifyEnabled = false
-
-            buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = true)}\"")
         }
 
         val commonMatchingFallbacks = listOf(release.name)
@@ -106,13 +102,19 @@ android {
             initWith(release)
 
             matchingFallbacks.addAll(commonMatchingFallbacks)
-
-            buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         }
         create("benchmark") {
             initWith(release)
 
             matchingFallbacks.addAll(commonMatchingFallbacks)
+        }
+
+        if (Config.includeTelemetry) {
+            configureEach {
+                configure<CrashlyticsExtension> {
+                    mappingFileUploadEnabled = Config.uploadCrashlyticsMapping
+                }
+            }
         }
     }
 
@@ -182,8 +184,11 @@ kotlin {
 
 dependencies {
     implementation(projects.i18n)
+    implementation(projects.icons.materialSymbols)
+    implementation(projects.icons.simpleIcons)
     implementation(projects.core.archive)
     implementation(projects.core.common)
+    implementation(projects.core.metro)
     implementation(projects.coreMetadata)
     implementation(projects.sourceApi)
     implementation(projects.sourceLocal)
@@ -197,7 +202,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animationGraphics)
     debugImplementation(libs.androidx.compose.uiTooling)
@@ -209,13 +213,9 @@ dependencies {
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
 
-    implementation(libs.androidx.sqlite.bundled)
-
     implementation(libs.kotlin.reflect)
 
     implementation(libs.bundles.kotlinx.coroutines)
-
-    implementation(libs.sqldelight.async)
 
     implementation(libs.kotlinx.datetime)
 
@@ -258,6 +258,9 @@ dependencies {
 
     // Dependency injection
     implementation(libs.injekt)
+    implementation(libs.metro.runtime)
+    implementation(libs.metrox.viewmodel)
+    implementation(libs.metrox.viewmodel.compose)
 
     // Image loading
     implementation(libs.bundles.coil)
@@ -266,9 +269,7 @@ dependencies {
     }
     implementation(libs.image.decoder)
 
-    implementation(libs.image.decoder2)
     implementation(libs.webgpuviewer)
-    implementation(libs.kim)
 
     // UI libraries
     implementation(libs.material)
@@ -297,6 +298,10 @@ dependencies {
     // String similarity
     implementation(libs.stringSimilarity)
 
+    // GraphQL generation
+    implementation(libs.apollo)
+    implementation(libs.apollo.adapters)
+
     // Tests
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
@@ -308,7 +313,98 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
+apollo {
+    val schemaBasePath = "src/main/graphql/mihon/graphql"
+    service("anilist") {
+        packageName.set("mihon.graphql.anilist")
+        val srcDir = "$schemaBasePath/anilist"
+        srcDir(file(srcDir))
+
+        introspection {
+            endpointUrl.set("https://graphql.anilist.co")
+            schemaFile.set(file("$srcDir/anilist.graphqls"))
+        }
+
+        // ISO 3166-1 alpha-2 country code
+        mapScalarToKotlinString("CountryCode")
+    }
+
+    service("kitsu") {
+        packageName.set("mihon.graphql.kitsu")
+        val srcDir = "$schemaBasePath/kitsu"
+        srcDir(file(srcDir))
+
+        introspection {
+            // Kitsu doesn't like requests without a UA
+            headers.put(
+                "User-Agent",
+                // A library has no applicationId or versionName of its own; this is only the
+                // User-Agent of a schema download a developer runs by hand.
+                "Mihon v0.20.4 (${providers.gradleProperty("animato.applicationId").get()})",
+            )
+            endpointUrl.set("https://kitsu.app/api/graphql")
+            schemaFile.set(file("$srcDir/kitsu.graphqls"))
+        }
+
+        // A date, expressed as an ISO8601 string
+        mapScalarToKotlinString("Date")
+        // An ISO 8601-encoded datetime
+        mapScalar("ISO8601DateTime", "kotlin.time.Instant", "com.apollographql.adapter.core.KotlinInstantAdapter")
+        // A loose key-value map in GraphQL
+        mapScalar(
+            "Map",
+            "kotlin.collections.Map<String, Any?>",
+            "mihon.graphql.kitsu.adapter.KitsuMapAdapter",
+        )
+    }
+
+    service("shikimori") {
+        packageName.set("mihon.graphql.shikimori")
+        val srcDir = "$schemaBasePath/shikimori"
+        srcDir(file(srcDir))
+
+        introspection {
+            endpointUrl.set("https://shikimori.io/api/graphql")
+            schemaFile.set(file("$srcDir/shikimori.graphqls"))
+        }
+
+        // An ISO 8601-encoded date
+        mapScalarToKotlinString("ISO8601Date")
+    }
+
+    service("suwayomi") {
+        packageName.set("mihon.graphql.suwayomi")
+        val srcDir = "$schemaBasePath/suwayomi"
+        srcDir(file(srcDir))
+
+        introspection {
+            endpointUrl.set("http://localhost:4567/api/graphql")
+            schemaFile.set(file("$srcDir/suwayomi.graphqls"))
+        }
+    }
+}
+
+val latestCommitCount = getLatestCommitCount()
+val latestCommitSha = getLatestCommitSha()
+val latestCommitTime = getLatestCommitTime()
+val currentTime = getCurrentTime()
+
+fun Variant.buildConfigField(type: String, name: String, value: Provider<String>) {
+    buildConfigFields?.put(name, value.map { BuildConfigField(type, it, null) })
+}
+
 androidComponents {
+    onVariants { variant ->
+        val isUnstableBuild = variant.buildType == "debug" || variant.buildType == "nightly"
+        val buildTime = if (isUnstableBuild) currentTime else latestCommitTime
+
+        variant.buildConfigField("String", "COMMIT_COUNT", latestCommitCount.map { "\"$it\"" })
+        variant.buildConfigField("String", "COMMIT_SHA", latestCommitSha.map { "\"$it\"" })
+        variant.buildConfigField("String", "BUILD_TIME", buildTime.map { "\"$it\"" })
+        // Upstream also suffixes an unstable build's versionName here. A library variant has no
+        // versionName of its own — :animato-app sets the app's — so that half has nowhere to go.
+    }
+
     onVariants { variant ->
         val resSource = variant.sources.res ?: return@onVariants
 
