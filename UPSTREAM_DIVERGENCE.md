@@ -205,14 +205,15 @@ in the launcher.
 
 ---
 
-### Injekt → Metro — bridged
+### Injekt → Metro — adopted, in a graph of our own
 
 Mihon replaced Injekt with Metro, a compile-time graph, and left Injekt as a read-only shim for
-extensions. The anime half asks Injekt for its own types and for over a hundred of Mihon's, and a
-Metro graph cannot be extended from a module that depends on it. So Animato installs its own Injekt
-registry that answers Mihon's types out of Mihon's graph (`animato.di.MihonGraphBridge`; see
-ARCHITECTURE.md). Porting the anime half to Metro is the long-term answer and is not blocked by
-anything but size.
+extensions. A Metro graph cannot be extended from a module that depends on it, so the anime half
+has its own: `animato.di.AnimatoGraph`, in `AnimatoScope`, which `@Includes` Mihon's `AppGraph` for
+everything Mihon exposes and builds the rest from `@Inject` classes (see ARCHITECTURE.md). Injekt
+remains as the way older call sites and extensions *ask*; every answer comes from one of the two
+graphs. What Mihon would have to change for the last reflective read to go away: expose its
+`Database` (or its repositories) on `AppGraph`.
 
 ### NSFW switch → content warnings — adopted
 

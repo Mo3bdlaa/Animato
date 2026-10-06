@@ -273,17 +273,17 @@ fi
 echo "OK: the extension API survived with every public and protected member."
 
 # ---------------------------------------------------------------------------------------------
-# Mihon's graph must still say what each of its providers builds.
+# Mihon's graph must still say which provider holds its database.
 #
-# animato.di.MihonGraphBridge answers the anime side's Injekt calls out of Mihon's Metro graph, and
-# it learns what each provider field builds from the field's generic signature —
-# `Provider<AndroidPreferenceStore>`. R8 in full mode drops a signature's type arguments when their
-# classes are not kept, and did: every field reached the APK as a bare `Provider`, the bridge found
-# nothing, and the release build died on launch looking for PreferenceStore. Debug builds are not
-# minified, so the emulator never saw it. The keep rule is in animato-app/proguard-rules.pro; this
-# is the proof it still works.
+# Animato's Metro graph builds the manga repositories it needs on Mihon's own database instance,
+# which Mihon's AppGraph does not expose; animato.di.MihonDatabase finds it as the generated
+# graph's `Provider<Database>` field. R8 in full mode drops a signature's type arguments unless both
+# Metro's Provider and the argument's class are kept, and did once: every provider field reached
+# the APK as a bare `Provider` and the release build died on launch. Debug builds are not
+# minified, so the emulator never saw it. The keep rules are in animato-app/proguard-rules.pro;
+# this is the proof they still work.
 echo
-echo "Checking Mihon's graph kept its provider types…"
+echo "Checking Mihon's graph kept the type of its database provider…"
 
 dexdump="$(ls -d "${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/opt/android-sdk}}"/build-tools/*/dexdump 2>/dev/null | sort -V | tail -1)"
 if [ -z "$dexdump" ]; then
@@ -295,26 +295,20 @@ dexdir="$(mktemp -d)"
 trap 'rm -rf "$present" "$expected" "$referenced" "$dangling" "$dexdir"' EXIT
 unzip -q -o "$APK" 'classes*.dex' -d "$dexdir"
 
-signatures="$(
+typed="$(
     for dex in "$dexdir"/classes*.dex; do
         "$dexdump" -a "$dex" 2>/dev/null
-    done | awk '
-        /^Annotations on field #[0-9]+ / { field = $0; next }
-        field != "" && /Ldalvik\/annotation\/Signature;/ { print field " " $0; field = "" }
-    ' | grep "Provider" || true
+    done | grep -c '"Ldev/zacsweers/metro/Provider<" "Ltachiyomi/data/Database;" ">;"' || true
 )"
-typed="$(grep -c 'Provider<' <<< "$signatures" || true)"
-bare="$(grep -v 'Provider<' <<< "$signatures" | grep -c 'metro/Provider;" }' || true)"
 
-if [ "${typed:-0}" -eq 0 ] || [ "${bare:-0}" -gt 0 ]; then
+if [ "${typed:-0}" -eq 0 ]; then
     echo
-    echo "R8 erased the type arguments of Mihon's graph providers: ${typed:-0} typed, ${bare:-0} bare."
-    grep -v 'Provider<' <<< "$signatures" | head -5 | sed 's/^/  /'
+    echo "No field in the APK is typed Provider<tachiyomi.data.Database> any more."
     echo
-    echo "Without them animato.di.MihonGraphBridge cannot tell what a provider builds, and every"
-    echo "Injekt call for a Mihon type fails at launch. See the Metro rules in"
-    echo "animato-app/proguard-rules.pro."
+    echo "animato.di.MihonDatabase finds Mihon's database by that type, so the app cannot start."
+    echo "Either R8 erased the signature — see the Metro rules in animato-app/proguard-rules.pro —"
+    echo "or Mihon changed how it provides the database."
     exit 1
 fi
 
-echo "OK: all ${typed} provider fields in the graph still name what they build."
+echo "OK: Mihon's graph still holds a Provider<Database> the app can find."

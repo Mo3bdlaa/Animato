@@ -1,6 +1,9 @@
 package animato.anime.iptv
 
+import animato.anime.di.AnimatoScope
 import animato.anime.util.salvageKeyFor
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -50,6 +53,8 @@ data class M3uPlaylist(
  * get today's list, which is the behaviour people already expect of a playlist. Persisting it
  * would be a second copy of somebody else's file, going stale on its own schedule.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class M3uPlaylistStore(
     private val preferenceStore: PreferenceStore = Injekt.get(),
     private val network: NetworkHelper = Injekt.get(),

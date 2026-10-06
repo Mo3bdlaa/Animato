@@ -1,11 +1,13 @@
 package eu.kanade.domain.extension.anime.interactor
 
 import aniyomi.domain.source.service.AnimeSourcePreferences
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+@Inject
 class GetAnimeExtensionSources(
     private val preferences: AnimeSourcePreferences,
 ) {

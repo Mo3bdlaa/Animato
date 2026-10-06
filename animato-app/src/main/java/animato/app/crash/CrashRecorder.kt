@@ -82,7 +82,7 @@ class CrashRecorder private constructor(
             if (installed) return
             installed = true
             Thread.setDefaultUncaughtExceptionHandler(
-                CrashRecorder(context, Thread.getDefaultUncaughtExceptionHandler(), Injekt.get()),
+                CrashRecorder(context, Thread.getDefaultUncaughtExceptionHandler(), Injekt.get<PreferenceStore>()),
             )
         }
 

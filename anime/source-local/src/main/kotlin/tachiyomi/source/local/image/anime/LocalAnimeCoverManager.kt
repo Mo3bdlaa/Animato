@@ -1,7 +1,10 @@
 package tachiyomi.source.local.image.anime
 
 import android.content.Context
+import animato.anime.di.AnimatoScope
 import com.hippo.unifile.UniFile
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import tachiyomi.core.common.storage.nameWithoutExtension
@@ -11,6 +14,8 @@ import java.io.InputStream
 
 private const val DEFAULT_COVER_NAME = "cover.jpg"
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class LocalAnimeCoverManager(
     private val context: Context,
     private val fileSystem: LocalAnimeSourceFileSystem,

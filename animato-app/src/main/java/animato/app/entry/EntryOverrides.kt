@@ -1,6 +1,9 @@
 package animato.app.entry
 
+import animato.anime.di.AnimatoScope
 import animato.domain.content.ContentType
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,6 +59,8 @@ data class EntryOverride(
         get() = title == null && author == null && artist == null && description == null && genres == null
 }
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class EntryOverrides(
     preferenceStore: PreferenceStore = Injekt.get(),
 ) {

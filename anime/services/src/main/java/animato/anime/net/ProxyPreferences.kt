@@ -1,6 +1,9 @@
 package animato.anime.net
 
+import animato.anime.di.AnimatoScope
 import animato.anime.util.credentialString
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
 import java.net.InetSocketAddress
@@ -42,6 +45,8 @@ enum class ProxyKind {
  * and so went into every backup in plain text. Being no more sensitive than the token is a reason
  * to treat it the same way, not a reason to treat it as public — see [credentialString].
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class ProxyPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

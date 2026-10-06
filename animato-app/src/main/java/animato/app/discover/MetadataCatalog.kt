@@ -1,7 +1,10 @@
 package animato.app.discover
 
 import androidx.compose.runtime.Immutable
+import animato.anime.di.AnimatoScope
 import animato.domain.content.ContentType
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -94,6 +97,8 @@ enum class MetadataRail(val media: Set<ContentType>) {
  * worse than a fresh one that took a second. If that turns out to be wrong on a slow connection the
  * answer is a cache, not a longer file.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class MetadataCatalog(
     private val network: NetworkHelper = Injekt.get(),
 ) {

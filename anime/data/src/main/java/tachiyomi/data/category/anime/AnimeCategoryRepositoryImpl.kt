@@ -1,12 +1,19 @@
 package tachiyomi.data.category.anime
 
+import animato.anime.di.AnimatoScope
 import animato.domain.category.AnimeCategory
 import animato.domain.category.AnimeCategoryUpdate
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 import tachiyomi.mi.data.AnimeDatabase
 
+@SingleIn(AnimatoScope::class)
+@ContributesBinding(AnimatoScope::class)
+@Inject
 class AnimeCategoryRepositoryImpl(
     private val handler: AnimeDatabaseHandler,
 ) : AnimeCategoryRepository {

@@ -14,6 +14,7 @@ import animato.anime.backup.create.AnimatoBackupCreator
 import animato.anime.backup.restore.AniyomiBackupRestorer
 import animato.anime.services.AnimeInjektHook
 import com.hippo.unifile.UniFile
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
@@ -109,7 +110,7 @@ class LibrarySyncJob(
         // The same notifier a manual restore uses. A merge that pulls two hundred titles across
         // is worth a progress notification even when nobody asked for it — a phone that is busy for
         // a minute with no explanation is a phone somebody force-quits.
-        AniyomiBackupRestorer(context, BackupNotifier(context, Injekt.get())).restore(
+        AniyomiBackupRestorer(context, BackupNotifier(context, Injekt.get<SecurityPreferences>())).restore(
             uri = file.uri,
             options = MERGE_OPTIONS,
         )

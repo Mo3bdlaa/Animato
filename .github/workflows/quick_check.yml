@@ -60,11 +60,10 @@ jobs:
       - name: Check @Serializable modules apply the plugin
         run: ./.github/check-serialization-plugin.sh
 
-      # Injekt resolves by type at runtime, so a dependency nobody registers compiles perfectly and
-      # throws when the screen that needs it opens. Eleven of them were found in the anime side at
-      # once, having been written, compiled and merged without ever running. The script has the
-      # details.
-      - name: Check every Injekt dependency is registered
+      # Bindings are checked by Metro at compile time. What it cannot see is a new `Injekt.get<Foo>()`,
+      # so the graph carries a generated accessor per requested type; this fails while that file is
+      # stale. The script has the details.
+      - name: Check every Injekt request has a graph accessor
         run: ./.github/check-injekt-bindings.sh
 
       # Everything that fails on a device rather than here, asked of the built APK: classes R8

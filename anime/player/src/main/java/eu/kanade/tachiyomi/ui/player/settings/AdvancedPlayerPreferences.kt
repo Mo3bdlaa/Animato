@@ -1,7 +1,12 @@
 package eu.kanade.tachiyomi.ui.player.settings
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.PreferenceStore
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class AdvancedPlayerPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

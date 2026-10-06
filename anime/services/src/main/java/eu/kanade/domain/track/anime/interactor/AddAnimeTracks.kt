@@ -1,6 +1,7 @@
 package eu.kanade.domain.track.anime.interactor
 
 import animato.anime.track.AnimeTrackerManager
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.track.anime.model.toDomainTrack
 import eu.kanade.tachiyomi.animesource.AnimeSource
@@ -22,6 +23,7 @@ import tachiyomi.domain.track.anime.interactor.InsertAnimeTrack
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
+@Inject
 class AddAnimeTracks(
     private val insertTrack: InsertAnimeTrack,
     private val syncChapterProgressWithTrack: SyncEpisodeProgressWithTrack,

@@ -1,10 +1,15 @@
 package eu.kanade.tachiyomi.ui.player.settings
 
+import animato.anime.di.AnimatoScope
 import dev.icerock.moko.resources.StringResource
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
 import tachiyomi.i18n.aniyomi.AYMR
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class AudioPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

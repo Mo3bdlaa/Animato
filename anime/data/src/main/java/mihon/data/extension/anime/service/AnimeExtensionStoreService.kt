@@ -1,5 +1,8 @@
 package mihon.data.extension.anime.service
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -20,6 +23,8 @@ import okio.gzip
 import tachiyomi.core.common.util.system.logcat
 import kotlin.coroutines.cancellation.CancellationException
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class AnimeExtensionStoreService(
     private val network: NetworkHelper,
     private val json: Json,

@@ -1,5 +1,8 @@
 package animato.app.downloads
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.PreferenceStore
 
 /**
@@ -9,6 +12,8 @@ import tachiyomi.core.common.preference.PreferenceStore
  * and rather than a line in the anime download preferences, which this is not — the sweep covers
  * both halves and belongs to neither.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class DownloadCleanupPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

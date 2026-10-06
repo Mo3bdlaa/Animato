@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.data.cache
 
 import android.content.Context
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import tachiyomi.domain.entries.anime.model.Anime
 import java.io.File
@@ -15,6 +18,8 @@ import java.io.InputStream
  * @param context the application context.
  * @constructor creates an instance of the background cache.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class AnimeBackgroundCache(private val context: Context) {
 
     companion object {

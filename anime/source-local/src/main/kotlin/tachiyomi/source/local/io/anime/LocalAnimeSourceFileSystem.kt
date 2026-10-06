@@ -1,9 +1,14 @@
 package tachiyomi.source.local.io.anime
 
+import animato.anime.di.AnimatoScope
 import animato.source.local.io.getLocalAnimeSourceDirectory
 import com.hippo.unifile.UniFile
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.domain.storage.service.StorageManager
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class LocalAnimeSourceFileSystem(
     private val storageManager: StorageManager,
 ) {

@@ -75,12 +75,28 @@ main looper from there cannot run until the whole bind — `onCreate` included �
 registration lands just after `patchInjekt()`, and ahead of whatever component started the process.
 
 What lands there is not a registration into Mihon's scope but a scope of our own,
-`AnimatoInjektRegistrar`: a writable registry holding the anime modules, which falls back to Mihon's
-shim and then to `MihonGraphBridge` — Mihon's Metro graph, read by type: its accessors, then its
-providers indexed under every supertype, then construction for the unscoped interactors it never
-needed a provider for. Code calling `Injekt.get()` sees one registry, as it always did. A scoped
-type the graph holds is never built a second time; `.github/check-injekt-bindings.sh` counts a
-Mihon type as registered when the graph can make it.
+`AnimatoInjektRegistrar`, answered from **`AnimatoGraph`**, Animato's own Metro graph:
+
+- The anime side's classes are `@Inject` where they are declared — `@SingleIn(AnimatoScope)` for
+  singletons, `@ContributesBinding(AnimatoScope)` where they are asked for by interface. A missing
+  binding is a build error, not a crash. Constructor defaults do not count as bindings: the anime
+  modules compile with `REQUIRE_OPTIONAL_BINDING`, so a default of `Injekt.get()` cannot quietly
+  stand in for one.
+- Mihon's `AppGraph` is `@Includes`d whole, so everything it exposes — preferences, managers,
+  caches, network — is Mihon's own instance. Mihon's unscoped interactors are built from the
+  factories Metro generated in Mihon's modules.
+- `MihonBindings` builds the few Mihon types `AppGraph` does not expose: the manga repositories, the
+  preference store, `StorageManager`, `DownloadProvider`, `ImageSaver` — all stateless wrappers, and
+  the repositories wrap Mihon's own database instance, which `MihonDatabase` reads from Mihon's
+  graph by its `Provider<Database>` field. That is the only reflection left, and
+  `check-dex-keeps.sh` verifies the release APK still carries what it reads.
+- Code that still calls `Injekt.get()` is answered through `InjektAccessors`, one graph accessor per
+  requested type, generated from the call sites by `.github/generate-injekt-accessors.py`. Metro has
+  to be able to build every one of them; CI fails while the file is stale.
+
+`AnimatoScope` is not Mihon's `AppScope` on purpose: a graph aggregates every contribution to its
+scope on its classpath, and in `AppScope` Animato's graph would gather Mihon's bindings too and
+build a second copy of everything Mihon holds.
 
 `AnimeInjekt` records *which scope instance* it installed and reinstalls if the global one has
 since been replaced. That is the safety net: if the ordering above ever stops holding, the result

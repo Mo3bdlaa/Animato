@@ -1,9 +1,11 @@
 package tachiyomi.domain.category.anime.interactor
 
 import animato.domain.category.AnimeCategoryUpdate
+import dev.zacsweers.metro.Inject
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 
+@Inject
 class UpdateAnimeCategory(
     private val categoryRepository: AnimeCategoryRepository,
 ) {

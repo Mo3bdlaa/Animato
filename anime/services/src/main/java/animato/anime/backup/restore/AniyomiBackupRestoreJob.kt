@@ -12,6 +12,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import animato.anime.services.AnimeInjektHook
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -41,7 +42,7 @@ class AniyomiBackupRestoreJob(private val context: Context, workerParams: Worker
         AnimeInjektHook.ensure()
     }
 
-    private val notifier = BackupNotifier(context, Injekt.get())
+    private val notifier = BackupNotifier(context, Injekt.get<SecurityPreferences>())
 
     override suspend fun doWork(): Result {
         val uri = inputData.getString(LOCATION_URI_KEY)?.toUri()

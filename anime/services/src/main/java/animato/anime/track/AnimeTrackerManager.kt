@@ -1,5 +1,6 @@
 package animato.anime.track
 
+import animato.anime.di.AnimatoScope
 import animato.anime.track.anilist.AnimeAnilist
 import animato.anime.track.bangumi.AnimeBangumi
 import animato.anime.track.jellyfin.AnimeJellyfin
@@ -7,6 +8,8 @@ import animato.anime.track.kitsu.AnimeKitsu
 import animato.anime.track.myanimelist.AnimeMyAnimeList
 import animato.anime.track.shikimori.AnimeShikimori
 import animato.anime.track.simkl.AnimeSimkl
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +34,8 @@ import uy.kohesive.injekt.api.get
  * they are trackers in their own right rather than wrappers. [AnimeOnlyTracker] sets out what that
  * costs.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class AnimeTrackerManager(
     trackerManager: TrackerManager = Injekt.get(),
 ) {

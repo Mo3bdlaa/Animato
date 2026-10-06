@@ -1,6 +1,10 @@
 package tachiyomi.data.custombutton
 
 import android.database.sqlite.SQLiteException
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.custombuttons.exception.SaveCustomButtonException
@@ -9,6 +13,9 @@ import tachiyomi.domain.custombuttons.model.CustomButtonUpdate
 import tachiyomi.domain.custombuttons.repository.CustomButtonRepository
 import tachiyomi.mi.data.AnimeDatabase
 
+@SingleIn(AnimatoScope::class)
+@ContributesBinding(AnimatoScope::class)
+@Inject
 class CustomButtonRepositoryImpl(
     private val handler: AnimeDatabaseHandler,
 ) : CustomButtonRepository {

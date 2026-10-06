@@ -1,11 +1,13 @@
 package eu.kanade.domain.extension.anime.interactor
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
+@Inject
 class GetAnimeExtensionLanguages(
     // The language filter is not per content type: hiding French hides it for both.
     private val sharedPreferences: SourcePreferences,

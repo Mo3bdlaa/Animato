@@ -2,6 +2,7 @@ package animato.app.extension
 
 import android.content.Context
 import animato.anime.services.AnimeExtensionUpdateNotifier
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.api.ExtensionUpdateNotifier
@@ -76,7 +77,7 @@ class ExtensionUpdateCheck(
                 .map { it.name }
 
             if (names.isNotEmpty()) {
-                ExtensionUpdateNotifier(context, Injekt.get()).promptUpdates(names)
+                ExtensionUpdateNotifier(context, Injekt.get<SecurityPreferences>()).promptUpdates(names)
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Could not check for manga extension updates" }

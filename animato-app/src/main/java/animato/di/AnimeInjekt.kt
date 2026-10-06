@@ -15,7 +15,7 @@ import uy.kohesive.injekt.api.InjektScope
  * and replaces whatever was there. Anything installed before that is silently discarded.
  * [AnimeInjektInitializer] is what arranges for this to run afterwards. What is installed is not
  * Mihon's scope with modules added — Mihon's refuses additions — but [AnimatoInjektRegistrar],
- * which holds the anime modules and answers for Mihon's types out of Mihon's graph.
+ * which answers from [AnimatoGraph] and, through it, from Mihon's graph.
  *
  * The hazard: if that ever fails to hold — a future upstream change, an entry point we did not
  * anticipate — the failure would be an `Injekt.get()` throwing deep inside a background service.
@@ -32,13 +32,19 @@ object AnimeInjekt {
     fun ensureRegistered(app: Application) {
         if (installed != null && installed === Injekt) return
 
-        val scope = InjektScope(AnimatoInjektRegistrar(app))
-        scope.importModule(AnimePreferenceModule(app))
-        scope.importModule(AnimeAppModule(app))
-        scope.importModule(AnimeDomainModule())
-        scope.importModule(AnimePlayerModule(app))
+        val registrar = AnimatoInjektRegistrar(app)
+        val scope = InjektScope(registrar)
 
         Injekt = scope
         installed = scope
+        graph = registrar
+    }
+
+    private var graph: AnimatoInjektRegistrar? = null
+
+    /** Animato's Metro graph, for code that takes its dependencies from it directly. */
+    fun graph(app: Application): AnimatoGraph {
+        ensureRegistered(app)
+        return graph!!.graph
     }
 }

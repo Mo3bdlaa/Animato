@@ -1,5 +1,6 @@
 package eu.kanade.domain.entries.anime.interactor
 
+import dev.zacsweers.metro.Inject
 import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.entries.anime.model.AnimeUpdate
@@ -7,6 +8,7 @@ import tachiyomi.domain.entries.anime.repository.AnimeRepository
 import java.time.Instant
 import java.time.ZonedDateTime
 
+@Inject
 class UpdateAnime(
     private val animeRepository: AnimeRepository,
     private val animeFetchInterval: AnimeFetchInterval,

@@ -1,5 +1,8 @@
 package animato.anime.player
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.animesource.model.Video
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -28,6 +31,8 @@ import tachiyomi.core.common.preference.PreferenceStore
  * user data nor worth restoring onto another device: it describes how one source behaved on one
  * phone. A bounded map in a preference is the right size for that, and losing it costs one tap.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class RememberedQuality(preferenceStore: PreferenceStore) {
 
     private val stored: Preference<Map<Long, Int>> = preferenceStore.getObjectFromString(

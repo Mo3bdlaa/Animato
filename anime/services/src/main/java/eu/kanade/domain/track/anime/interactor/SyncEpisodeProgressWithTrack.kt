@@ -1,6 +1,7 @@
 package eu.kanade.domain.track.anime.interactor
 
 import aniyomi.domain.track.service.AnimeTrackPreferences
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
@@ -34,6 +35,7 @@ import kotlin.math.max
  * 40 has not watched 1 to 39, and taking the highest number would both mark all of them and push
  * that back out to the tracker.
  */
+@Inject
 class SyncEpisodeProgressWithTrack(
     private val updateEpisode: UpdateEpisode,
     private val insertTrack: InsertAnimeTrack,

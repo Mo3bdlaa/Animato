@@ -1,6 +1,10 @@
 package aniyomi.core.common.torrent
 
+import animato.anime.di.AnimatoScope
 import aniyomi.core.common.torrent.model.Torrent
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -14,6 +18,9 @@ import java.net.SocketTimeoutException
  * The app-side half of `TorrentUtils` — the donor's implementation, behind the seam that
  * `TorrentInfoProvider` documents. Registered in Injekt at startup; called only from extensions.
  */
+@SingleIn(AnimatoScope::class)
+@ContributesBinding(AnimatoScope::class)
+@Inject
 class AppTorrentInfoProvider(
     private val torrentServerApi: TorrentServerApi,
     private val network: NetworkHelper,

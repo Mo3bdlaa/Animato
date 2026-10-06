@@ -1,7 +1,10 @@
 package eu.kanade.tachiyomi.data.download.anime
 
 import android.content.Context
+import animato.anime.di.AnimatoScope
 import com.hippo.unifile.UniFile
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import logcat.LogPriority
@@ -21,6 +24,8 @@ import uy.kohesive.injekt.api.get
  *
  * @param context the application context.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class AnimeDownloadProvider(
     private val context: Context,
     private val storageManager: StorageManager = Injekt.get(),

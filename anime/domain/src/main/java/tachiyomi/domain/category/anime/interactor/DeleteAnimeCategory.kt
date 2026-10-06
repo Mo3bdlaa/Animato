@@ -3,11 +3,13 @@ package tachiyomi.domain.category.anime.interactor
 import animato.domain.category.AnimeCategoryUpdate
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
+import dev.zacsweers.metro.Inject
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 
+@Inject
 class DeleteAnimeCategory(
     private val categoryRepository: AnimeCategoryRepository,
     private val libraryPreferences: AnimeLibraryPreferences,

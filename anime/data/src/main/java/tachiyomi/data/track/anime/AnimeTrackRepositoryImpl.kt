@@ -1,10 +1,17 @@
 package tachiyomi.data.track.anime
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.track.anime.model.AnimeTrack
 import tachiyomi.domain.track.anime.repository.AnimeTrackRepository
 
+@SingleIn(AnimatoScope::class)
+@ContributesBinding(AnimatoScope::class)
+@Inject
 class AnimeTrackRepositoryImpl(
     private val handler: AnimeDatabaseHandler,
 ) : AnimeTrackRepository {

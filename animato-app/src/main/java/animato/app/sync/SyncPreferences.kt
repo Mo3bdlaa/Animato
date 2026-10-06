@@ -1,5 +1,8 @@
 package animato.app.sync
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import java.util.UUID
@@ -27,6 +30,8 @@ import java.util.UUID
  * deletion comes back. The id goes in the filename because the folder listing is all a device gets
  * to look at before deciding whether to download something.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class SyncPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

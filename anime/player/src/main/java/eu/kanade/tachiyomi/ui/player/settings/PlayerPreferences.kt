@@ -1,10 +1,15 @@
 package eu.kanade.tachiyomi.ui.player.settings
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.ui.player.PlayerOrientation
 import eu.kanade.tachiyomi.ui.player.VideoAspect
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class PlayerPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

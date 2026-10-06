@@ -1,6 +1,7 @@
 package eu.kanade.domain.track.anime.interactor
 
 import animato.anime.track.AnimeTrackerManager
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.track.anime.model.toDomainTrack
 import eu.kanade.tachiyomi.data.track.Tracker
@@ -11,6 +12,7 @@ import kotlinx.coroutines.supervisorScope
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.domain.track.anime.interactor.InsertAnimeTrack
 
+@Inject
 class RefreshAnimeTracks(
     private val getTracks: GetAnimeTracks,
     private val trackerManager: AnimeTrackerManager,

@@ -2,6 +2,7 @@ package eu.kanade.domain.source.anime.interactor
 
 import aniyomi.domain.source.interactor.SetAnimeMigrateSorting
 import aniyomi.domain.source.service.AnimeSourcePreferences
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import tachiyomi.core.common.util.lang.compareToWithCollator
@@ -10,6 +11,7 @@ import tachiyomi.domain.source.anime.repository.AnimeSourceRepository
 import tachiyomi.source.local.entries.anime.LocalAnimeSource
 import java.util.Collections
 
+@Inject
 class GetAnimeSourcesWithFavoriteCount(
     private val repository: AnimeSourceRepository,
     private val preferences: AnimeSourcePreferences,

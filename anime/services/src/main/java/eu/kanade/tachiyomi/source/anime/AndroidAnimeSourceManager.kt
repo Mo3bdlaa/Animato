@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.source.anime
 
 import android.content.Context
+import animato.anime.di.AnimatoScope
 import animato.anime.iptv.M3uPlaylistStore
 import animato.anime.iptv.M3uSource
 import animato.anime.jellyfin.JellyfinServerStore
@@ -9,6 +10,10 @@ import animato.anime.stremio.StremioAddonStore
 import animato.anime.stremio.StremioSource
 import animato.anime.torznab.TorznabIndexerStore
 import animato.anime.torznab.TorznabSource
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Provider
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
@@ -38,6 +43,9 @@ import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import java.util.concurrent.ConcurrentHashMap
 
+@SingleIn(AnimatoScope::class)
+@ContributesBinding(AnimatoScope::class)
+@Inject
 class AndroidAnimeSourceManager(
     private val context: Context,
     private val extensionManager: AnimeExtensionManager,
@@ -46,6 +54,8 @@ class AndroidAnimeSourceManager(
     private val m3uPlaylistStore: M3uPlaylistStore,
     private val jellyfinServerStore: JellyfinServerStore,
     private val torznabIndexerStore: TorznabIndexerStore,
+    // A provider, so each rebuild of the source map gets a fresh one as it always did.
+    private val localAnimeSource: Provider<LocalAnimeSource>,
 ) : AnimeSourceManager {
 
     /**
@@ -108,14 +118,7 @@ class AndroidAnimeSourceManager(
                 .collectLatest { (extensions, addons, playlists, servers, indexers) ->
                     val mutableMap = ConcurrentHashMap<Long, AnimeSource>(
                         mapOf(
-                            LocalAnimeSource.ID to LocalAnimeSource(
-                                context,
-                                Injekt.get(),
-                                Injekt.get(),
-                                Injekt.get(),
-                                Injekt.get(),
-                                Injekt.get(),
-                            ),
+                            LocalAnimeSource.ID to localAnimeSource(),
                         ),
                     )
                     extensions.forEach { extension ->

@@ -1,8 +1,13 @@
 package aniyomi.core.common.torrent
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class TorrentPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

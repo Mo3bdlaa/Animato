@@ -1,5 +1,8 @@
 package animato.anime.player.cast
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -40,6 +43,8 @@ data class CastRequest(
  * fail. That is not a limitation being hidden — it is the limitation being stated at the only moment
  * anybody can act on it, which is before the television goes black.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class CastController {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)

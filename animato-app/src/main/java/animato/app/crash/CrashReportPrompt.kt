@@ -1,5 +1,6 @@
 package animato.app.crash
 
+import android.app.Application
 import android.content.Intent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +45,7 @@ fun CrashReportPrompt() {
     var pending by remember { mutableStateOf(CrashRecorder.pending() != null) }
     if (!pending) return
 
-    val report = remember { CrashRecorder.report(Injekt.get()) }
+    val report = remember { CrashRecorder.report(Injekt.get<Application>()) }
     if (report.isNullOrBlank()) {
         CrashRecorder.acknowledge()
         return

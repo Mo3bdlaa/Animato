@@ -1,6 +1,7 @@
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
+    alias(libs.plugins.metro)
 
     // `AnimeDetails` and `EpisodeDetails` are @Serializable and `LocalAnimeSource` decodes both with
     // `decodeFromStream`. Without this the annotation generates nothing and the decode throws, so a
@@ -12,7 +13,19 @@ android {
     namespace = "animato.source.local"
 }
 
+/*
+ * A constructor parameter with a default value is a dependency like any other. Metro's default is to
+ * treat it as optional — inject it if the graph has it, use the default if not — and in code that
+ * came from Injekt the default is almost always `Injekt.get()`, so a binding the graph lacks would
+ * compile and then be looked up at run time anyway. Requiring `@OptionalBinding` for that makes a
+ * missing binding a build error, which is the whole point of having moved off Injekt.
+ */
+metro {
+    optionalBindingBehavior.set(dev.zacsweers.metro.gradle.OptionalBindingBehavior.REQUIRE_OPTIONAL_BINDING)
+}
+
 dependencies {
+    implementation(libs.metro.runtime)
     // Mihon's app is a library here; its file and storage helpers are consumed as they are.
     implementation(projects.app)
 

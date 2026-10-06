@@ -2,9 +2,14 @@ package eu.kanade.domain.track.anime.store
 
 import android.content.Context
 import androidx.core.content.edit
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class DelayedAnimeTrackingStore(context: Context) {
 
     /**

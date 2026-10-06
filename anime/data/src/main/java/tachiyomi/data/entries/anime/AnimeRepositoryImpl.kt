@@ -1,6 +1,10 @@
 package tachiyomi.data.entries.anime
 
+import animato.anime.di.AnimatoScope
 import aniyomi.domain.anime.SeasonAnime
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -13,6 +17,9 @@ import tachiyomi.domain.source.anime.model.DeletableAnime
 import java.time.LocalDate
 import java.time.ZoneId
 
+@SingleIn(AnimatoScope::class)
+@ContributesBinding(AnimatoScope::class)
+@Inject
 class AnimeRepositoryImpl(
     private val handler: AnimeDatabaseHandler,
 ) : AnimeRepository {

@@ -2,9 +2,13 @@ package eu.kanade.tachiyomi.extension.anime
 
 import android.content.Context
 import android.graphics.drawable.Drawable
+import animato.anime.di.AnimatoScope
 import aniyomi.domain.source.service.AnimeSourcePreferences
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.extension.anime.interactor.TrustAnimeExtension
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.extension.anime.api.AnimeExtensionApi
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.extension.anime.model.AnimeLoadResult
@@ -43,6 +47,8 @@ import java.util.Locale
  * @param context The application context.
  * @param preferences The application preferences.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class AnimeExtensionManager(
     private val context: Context,
     private val preferences: SourcePreferences = Injekt.get(),
@@ -385,7 +391,7 @@ class AnimeExtensionManager(
         val pendingUpdateCount = installedExtensionsMapFlow.value.values.count { it.hasUpdate }
         animePreferences.animeExtensionUpdatesCount.set(pendingUpdateCount)
         if (pendingUpdateCount == 0) {
-            ExtensionUpdateNotifier(context, Injekt.get()).dismiss()
+            ExtensionUpdateNotifier(context, Injekt.get<SecurityPreferences>()).dismiss()
         }
     }
 

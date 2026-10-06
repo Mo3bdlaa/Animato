@@ -1,6 +1,9 @@
 package aniyomi.domain.library.service
 
+import animato.anime.di.AnimatoScope
 import aniyomi.domain.anime.SeasonDisplayMode
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.TriState
@@ -18,6 +21,8 @@ import tachiyomi.domain.library.service.LibraryPreferences
  *
  * Preference keys are unchanged, so existing installs and backups keep their settings.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class AnimeLibraryPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

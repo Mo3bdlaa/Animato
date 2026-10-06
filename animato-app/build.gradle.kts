@@ -4,6 +4,7 @@ plugins {
     // The other modules we own are format-checked; this one held only DI wiring and was missed.
     // It has source worth checking now, and `spotlessCheck` at the root gates every release.
     alias(mihonx.plugins.spotless)
+    alias(libs.plugins.metro)
 
     /*
      * The updater's DTOs are @Serializable and this module had no serialization plugin, so nothing
@@ -266,6 +267,17 @@ kotlin {
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
         )
     }
+}
+
+/*
+ * A constructor parameter with a default value is a dependency like any other. Metro's default is to
+ * treat it as optional — inject it if the graph has it, use the default if not — and in code that
+ * came from Injekt the default is almost always `Injekt.get()`, so a binding the graph lacks would
+ * compile and then be looked up at run time anyway. Requiring `@OptionalBinding` for that makes a
+ * missing binding a build error, which is the whole point of having moved off Injekt.
+ */
+metro {
+    optionalBindingBehavior.set(dev.zacsweers.metro.gradle.OptionalBindingBehavior.REQUIRE_OPTIONAL_BINDING)
 }
 
 dependencies {

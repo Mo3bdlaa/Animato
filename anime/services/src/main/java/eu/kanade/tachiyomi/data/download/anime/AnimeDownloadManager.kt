@@ -1,9 +1,12 @@
 package eu.kanade.tachiyomi.data.download.anime
 
 import android.content.Context
+import animato.anime.di.AnimatoScope
 import animato.anime.util.size
 import animato.source.local.io.ArchiveAnime
 import aniyomi.domain.download.service.AnimeDownloadPreferences
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
@@ -37,6 +40,8 @@ import uy.kohesive.injekt.api.get
  * and retrieved through dependency injection. You can use this class to queue new episodes or query
  * downloaded episodes.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class AnimeDownloadManager(
     private val context: Context,
     private val storageManager: StorageManager = Injekt.get(),

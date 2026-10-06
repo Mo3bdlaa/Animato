@@ -10,8 +10,11 @@ import android.os.Build
 import android.os.Bundle
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import animato.anime.di.AnimatoScope
 import animato.anime.player.getSimpleLocaleDisplayName
 import animato.anime.track.AnimeTrackerManager
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.track.anime.model.toDbTrack
 import eu.kanade.domain.track.anime.service.DelayedAnimeTrackingUpdateJob
@@ -60,6 +63,8 @@ import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.util.Date
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class ExternalIntents {
 
     /**

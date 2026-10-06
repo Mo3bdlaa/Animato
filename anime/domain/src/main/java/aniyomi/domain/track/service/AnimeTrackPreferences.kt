@@ -1,5 +1,8 @@
 package aniyomi.domain.track.service
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.PreferenceStore
 
 /**
@@ -10,6 +13,8 @@ import tachiyomi.core.common.preference.PreferenceStore
  * is the move this project exists to avoid. Their keys are Aniyomi's, so an imported install keeps
  * both settings.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class AnimeTrackPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

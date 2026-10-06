@@ -1,6 +1,9 @@
 package animato.anime.stremio
 
 import android.app.Application
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -154,6 +157,8 @@ private data class CollectionEntry(
  * Failure is an empty list. This is a nice-to-have section on a screen that works without it, and
  * an error banner about a directory nobody asked to load would be noise.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class StremioAddonDirectory(
     private val network: NetworkHelper = Injekt.get(),
     private val json: Json = Injekt.get(),

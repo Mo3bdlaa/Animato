@@ -1,5 +1,8 @@
 package animato.anime.player
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 
@@ -19,6 +22,8 @@ import tachiyomi.core.common.preference.PreferenceStore
  * column, because this describes how one subtitle file behaved on one phone rather than anything
  * worth migrating or restoring elsewhere, and bounded, because a library runs to thousands.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class SubtitleDelayMemory(preferenceStore: PreferenceStore) {
 
     private val stored: Preference<Map<Long, Int>> = preferenceStore.getObjectFromString(

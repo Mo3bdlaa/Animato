@@ -3,6 +3,7 @@ package animato.domain.content.interactor
 import animato.domain.content.ContentFilter
 import animato.domain.content.LibraryEntry
 import animato.domain.content.asLibraryEntry
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -22,6 +23,7 @@ import tachiyomi.domain.manga.interactor.GetLibraryManga
  * someone who only watches anime does no manga work at all, rather than doing it and discarding
  * the result.
  */
+@Inject
 class GetUnifiedLibrary(
     private val getLibraryManga: GetLibraryManga,
     private val getLibraryAnime: GetLibraryAnime,

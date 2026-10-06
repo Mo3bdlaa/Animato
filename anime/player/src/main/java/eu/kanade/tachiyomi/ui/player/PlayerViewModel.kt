@@ -142,6 +142,9 @@ import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.source.local.entries.anime.isLocal
+import tachiyomi.source.local.image.anime.LocalAnimeBackgroundManager
+import tachiyomi.source.local.image.anime.LocalAnimeCoverManager
+import tachiyomi.source.local.image.anime.LocalEpisodeThumbnailManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -2228,9 +2231,13 @@ class PlayerViewModel @JvmOverloads constructor(
         viewModelScope.launchNonCancellable {
             val result = try {
                 when (artType) {
-                    ArtType.Cover -> anime.editCover(Injekt.get(), imageStream())
-                    ArtType.Background -> anime.editBackground(Injekt.get(), imageStream())
-                    ArtType.Thumbnail -> episode.editThumbnail(anime, Injekt.get(), imageStream())
+                    ArtType.Cover -> anime.editCover(Injekt.get<LocalAnimeCoverManager>(), imageStream())
+                    ArtType.Background -> anime.editBackground(Injekt.get<LocalAnimeBackgroundManager>(), imageStream())
+                    ArtType.Thumbnail -> episode.editThumbnail(
+                        anime,
+                        Injekt.get<LocalEpisodeThumbnailManager>(),
+                        imageStream(),
+                    )
                 }
 
                 if (anime.isLocal() || anime.favorite) {

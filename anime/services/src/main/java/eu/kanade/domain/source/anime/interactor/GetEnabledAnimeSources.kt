@@ -1,6 +1,7 @@
 package eu.kanade.domain.source.anime.interactor
 
 import aniyomi.domain.source.service.AnimeSourcePreferences
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.source.service.SourcePreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -11,6 +12,7 @@ import tachiyomi.domain.source.anime.model.Pins
 import tachiyomi.domain.source.anime.repository.AnimeSourceRepository
 import tachiyomi.source.local.entries.anime.LocalAnimeSource
 
+@Inject
 class GetEnabledAnimeSources(
     private val repository: AnimeSourceRepository,
     private val preferences: AnimeSourcePreferences,

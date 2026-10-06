@@ -3,6 +3,7 @@ package eu.kanade.domain.source.anime.interactor
 import animato.anime.stremio.StremioAddonStore
 import animato.anime.stremio.StremioSource
 import aniyomi.domain.source.service.AnimeSourcePreferences
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
  * set holding two shapes of key is a small untidiness bought deliberately: the alternative is a
  * second preference and a second lookup in every caller, to express the same fact.
  */
+@Inject
 class GetAnimeIncognitoState(
     private val basePreferences: BasePreferences,
     private val sourcePreferences: AnimeSourcePreferences,

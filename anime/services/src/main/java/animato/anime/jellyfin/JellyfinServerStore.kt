@@ -1,7 +1,10 @@
 package animato.anime.jellyfin
 
+import animato.anime.di.AnimatoScope
 import animato.anime.util.credentialString
 import animato.anime.util.decodeOrSalvage
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -62,6 +65,8 @@ data class JellyfinServer(
  * credentials go in, a token comes back, and a failure here is the same failure the person would
  * see in any other client, said in the same terms.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class JellyfinServerStore(
     private val preferenceStore: PreferenceStore = Injekt.get(),
     private val network: NetworkHelper = Injekt.get(),

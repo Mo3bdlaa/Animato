@@ -1,6 +1,7 @@
 package aniyomi.domain.source.interactor
 
 import aniyomi.domain.source.service.AnimeSourcePreferences
+import dev.zacsweers.metro.Inject
 
 /**
  * How the anime migration source list is ordered.
@@ -13,6 +14,7 @@ import aniyomi.domain.source.service.AnimeSourcePreferences
  * The enums mirror Mihon's rather than referencing them: they are a stored preference value, and
  * sharing an enum with upstream would mean an upstream rename silently invalidating saved settings.
  */
+@Inject
 class SetAnimeMigrateSorting(
     private val preferences: AnimeSourcePreferences,
 ) {

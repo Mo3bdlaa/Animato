@@ -1,10 +1,12 @@
 package tachiyomi.domain.updates.anime.interactor
 
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.domain.updates.anime.model.AnimeUpdatesWithRelations
 import tachiyomi.domain.updates.anime.repository.AnimeUpdatesRepository
 import java.time.Instant
 
+@Inject
 class GetAnimeUpdates(
     private val repository: AnimeUpdatesRepository,
 ) {

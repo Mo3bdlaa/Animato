@@ -1,10 +1,15 @@
 package eu.kanade.tachiyomi.ui.player.settings
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.ui.player.LongPressGesture
 import eu.kanade.tachiyomi.ui.player.SingleActionGesture
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class GesturePreferences(
     private val preferenceStore: PreferenceStore,
 ) {

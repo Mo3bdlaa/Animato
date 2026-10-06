@@ -1,6 +1,9 @@
 package aniyomi.domain.source.service
 
+import animato.anime.di.AnimatoScope
 import aniyomi.domain.source.interactor.SetAnimeMigrateSorting
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
 
@@ -20,6 +23,8 @@ import tachiyomi.core.common.preference.getEnum
  * happen to have. The rest of our preference classes are still functions; see
  * UPSTREAM_DIVERGENCE.md.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class AnimeSourcePreferences(
     private val preferenceStore: PreferenceStore,
 ) {

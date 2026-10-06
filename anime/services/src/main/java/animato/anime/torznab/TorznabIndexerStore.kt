@@ -1,7 +1,10 @@
 package animato.anime.torznab
 
+import animato.anime.di.AnimatoScope
 import animato.anime.util.credentialString
 import animato.anime.util.decodeOrSalvage
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -42,6 +45,8 @@ data class TorznabIndexer(
  * tell a working indexer from a wrong address or a wrong key. It also returns the categories, so
  * the same request that proves the thing works is the one that fills the category chips.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class TorznabIndexerStore(
     private val preferenceStore: PreferenceStore = Injekt.get(),
     private val network: NetworkHelper = Injekt.get(),

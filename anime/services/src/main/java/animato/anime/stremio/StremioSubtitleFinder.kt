@@ -1,5 +1,8 @@
 package animato.anime.stremio
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -42,6 +45,8 @@ import java.util.concurrent.ConcurrentHashMap
  * subtitles for a different episode of the right show. It is the weakest link here and the reason
  * the tracks stay a list to choose from rather than something applied automatically.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class StremioSubtitleFinder(
     private val addonStore: StremioAddonStore = Injekt.get(),
     private val network: NetworkHelper = Injekt.get(),

@@ -1,11 +1,18 @@
 package tachiyomi.data.updates.anime
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.entries.anime.model.AnimeCover
 import tachiyomi.domain.updates.anime.model.AnimeUpdatesWithRelations
 import tachiyomi.domain.updates.anime.repository.AnimeUpdatesRepository
 
+@SingleIn(AnimatoScope::class)
+@ContributesBinding(AnimatoScope::class)
+@Inject
 class AnimeUpdatesRepositoryImpl(
     private val databaseHandler: AnimeDatabaseHandler,
 ) : AnimeUpdatesRepository {

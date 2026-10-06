@@ -1,7 +1,10 @@
 package tachiyomi.source.local.image.anime
 
 import android.content.Context
+import animato.anime.di.AnimatoScope
 import com.hippo.unifile.UniFile
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -12,6 +15,8 @@ import java.io.InputStream
 
 private const val DEFAULT_THUMBNAIL_NAME = "thumbnail.jpg"
 
+@SingleIn(AnimatoScope::class)
+@Inject
 class LocalEpisodeThumbnailManager(
     private val context: Context,
     private val fileSystem: LocalAnimeSourceFileSystem,

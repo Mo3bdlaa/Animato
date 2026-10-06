@@ -2,6 +2,7 @@ package eu.kanade.domain.items.episode.interactor
 
 import animato.anime.content.SourceProgress
 import aniyomi.domain.library.service.AnimeLibraryPreferences
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.entries.anime.model.toSAnime
 import eu.kanade.domain.items.episode.model.copyFromSEpisode
@@ -26,6 +27,7 @@ import java.lang.Long.max
 import java.time.ZonedDateTime
 import java.util.TreeSet
 
+@Inject
 class SyncEpisodesWithSource(
     private val downloadManager: AnimeDownloadManager,
     private val downloadProvider: AnimeDownloadProvider,

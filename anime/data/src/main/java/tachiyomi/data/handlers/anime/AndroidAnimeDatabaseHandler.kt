@@ -1,6 +1,7 @@
 package tachiyomi.data.handlers.anime
 
 import androidx.paging.PagingSource
+import animato.anime.di.AnimatoScope
 import app.cash.sqldelight.ExecutableQuery
 import app.cash.sqldelight.Query
 import app.cash.sqldelight.async.coroutines.awaitAsList
@@ -10,6 +11,10 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOne
 import app.cash.sqldelight.coroutines.mapToOneOrNull
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.OptionalBinding
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -35,13 +40,16 @@ import tachiyomi.mi.data.AnimeDatabase
  * So `AnimeTransactionContext.kt` is gone, and so is the query dispatcher: sending a read to IO by
  * hand would only be dispatching it twice.
  */
+@SingleIn(AnimatoScope::class)
+@ContributesBinding(AnimatoScope::class)
+@Inject
 class AndroidAnimeDatabaseHandler(
     val db: AnimeDatabase,
     /**
      * For the flows below, which hop off whatever thread the driver notified them on. Reads and
      * writes need no dispatcher of their own — the driver has one.
      */
-    private val flowDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    @OptionalBinding private val flowDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : AnimeDatabaseHandler {
 
     override suspend fun <T> await(inTransaction: Boolean, block: suspend AnimeDatabase.() -> T): T {

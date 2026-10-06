@@ -56,11 +56,11 @@ preferences, which a domain module has no business seeing.
 
 ## Runtime state
 
-The Injekt modules now exist, in `:animato-app` under `animato.di`: `AnimePreferenceModule`,
-`AnimeAppModule` and `AnimeDomainModule`, bootstrapped by `AnimeInjektInitializer`. Everything this
-module resolves is bound, with one deliberate exception.
+Bindings live in Animato's Metro graph, `animato.di.AnimatoGraph` in `:animato-app`: this module's
+classes are `@Inject` where they are declared, and the graph is bootstrapped by
+`AnimeInjektInitializer`. Everything this module resolves is bound, with one deliberate exception.
 
-`EpisodeVideoResolver` is implemented by `:anime:player` and bound in `AnimeAppModule`, so nothing
+`EpisodeVideoResolver` is implemented by `:anime:player` and contributed from there, so nothing
 this module resolves is unbound. `AnimeDownloader` still injects it lazily rather than taking it as
 a constructor parameter — the implementation lives above this layer, and resolving it eagerly would
 tie constructing the download manager to the player existing.

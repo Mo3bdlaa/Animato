@@ -1,5 +1,8 @@
 package aniyomi.domain.download.service
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.PreferenceStore
 
 /**
@@ -10,6 +13,8 @@ import tachiyomi.core.common.preference.PreferenceStore
  *
  * Preference keys are unchanged, so existing installs and backups keep their settings.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class AnimeDownloadPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

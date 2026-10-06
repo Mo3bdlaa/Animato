@@ -1,5 +1,8 @@
 package animato.app.library
 
+import animato.anime.di.AnimatoScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
 
@@ -16,6 +19,8 @@ import tachiyomi.core.common.preference.getEnum
  * walked to, not a setting, and reopening the app inside a shelf you cannot see the edge of is the
  * hidden-state problem the lens button exists to avoid.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class UnifiedLibraryPreferences(
     private val preferenceStore: PreferenceStore,
 ) {

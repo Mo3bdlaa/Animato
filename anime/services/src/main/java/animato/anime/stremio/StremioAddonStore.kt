@@ -1,7 +1,10 @@
 package animato.anime.stremio
 
 import android.app.Application
+import animato.anime.di.AnimatoScope
 import animato.anime.util.decodeOrSalvage
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
@@ -122,6 +125,8 @@ private const val TYPE_ANIME = "anime"
  * Preferences rather than a table: this is a handful of URLs, it has no relations, and nothing
  * else in the app reads it. A schema migration would cost more than the data is worth.
  */
+@SingleIn(AnimatoScope::class)
+@Inject
 class StremioAddonStore(
     private val preferenceStore: PreferenceStore = Injekt.get(),
     private val networkHelper: NetworkHelper = Injekt.get(),

@@ -1,6 +1,10 @@
 package tachiyomi.data.items.episode
 
+import animato.anime.di.AnimatoScope
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.JsonObject
 import logcat.LogPriority
@@ -10,6 +14,9 @@ import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.model.EpisodeUpdate
 import tachiyomi.domain.items.episode.repository.EpisodeRepository
 
+@SingleIn(AnimatoScope::class)
+@ContributesBinding(AnimatoScope::class)
+@Inject
 class EpisodeRepositoryImpl(
     private val handler: AnimeDatabaseHandler,
 ) : EpisodeRepository {

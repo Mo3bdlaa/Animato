@@ -1,6 +1,10 @@
 package animato.anime.player
 
+import animato.anime.di.AnimatoScope
 import animato.anime.services.download.EpisodeVideoResolver
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
@@ -19,6 +23,9 @@ import tachiyomi.domain.items.episode.model.Episode
  * Aniyomi had the downloader call [EpisodeLoader] and [HosterLoader] directly, which made a
  * background service depend on the player package.
  */
+@SingleIn(AnimatoScope::class)
+@ContributesBinding(AnimatoScope::class)
+@Inject
 class PlayerEpisodeVideoResolver : EpisodeVideoResolver {
 
     override suspend fun resolveBestVideo(episode: Episode, anime: Anime, source: AnimeSource): Video? {

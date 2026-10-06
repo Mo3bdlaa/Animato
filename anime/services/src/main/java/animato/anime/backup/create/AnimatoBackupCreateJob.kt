@@ -18,6 +18,7 @@ import androidx.work.workDataOf
 import animato.anime.backup.restore.AniyomiBackupRestoreJob
 import animato.anime.services.AnimeInjektHook
 import com.hippo.unifile.UniFile
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreWorker
@@ -53,7 +54,7 @@ class AnimatoBackupCreateJob(private val context: Context, workerParams: WorkerP
         AnimeInjektHook.ensure()
     }
 
-    private val notifier = BackupNotifier(context, Injekt.get())
+    private val notifier = BackupNotifier(context, Injekt.get<SecurityPreferences>())
 
     override suspend fun doWork(): Result {
         val isAutoBackup = inputData.getBoolean(IS_AUTO_BACKUP_KEY, true)

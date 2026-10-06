@@ -1,24 +1,19 @@
 #!/usr/bin/env bash
 #
-# Fails if anything asks Injekt for a type nothing registers.
+# Fails if something asks Injekt for a type Animato's Metro graph has no accessor for.
 #
-# Injekt resolves by type at runtime. Nothing about a missing binding is visible to the compiler,
-# and nothing about it is visible to a unit test that does not build the graph — which none of ours
-# do, because building it needs an Application. It appears as an exception the moment the screen
-# that needs it opens.
+# Every binding lives in animato.di.AnimatoGraph, which the compiler checks. What it cannot see is a
+# new `Injekt.get<Foo>()` — Injekt resolves by type at run time — so the graph carries one accessor
+# per requested type, generated from the call sites into InjektAccessors.kt. Metro then has to be
+# able to build each of them, and a type nothing provides fails the build.
 #
-# That is not hypothetical. Eleven of them were sitting in the anime side at once, and between them
-# they crashed the anime source list, the extension list and its filter, extension details,
-# migration, and the anime entry screen with its tracking dialog — every one a `= Injekt.get()`
-# default argument on a screen model, so the failure came while the screen was being constructed.
-# The code compiled, the tests passed, and none of it had ever run on a device.
+# This only checks the generated file is current. If it is not, regenerate it:
 #
-# The work is in list-injekt-bindings.py, which also checks the other direction: that the arguments
-# a registration passes to a constructor are themselves registered.
+#     python3 .github/generate-injekt-accessors.py
 
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-echo "Checking Injekt bindings…"
-exec python3 .github/list-injekt-bindings.py
+echo "Checking every Injekt request has a graph accessor…"
+exec python3 .github/generate-injekt-accessors.py --check
