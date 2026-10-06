@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import animato.app.extension.ExtensionsScreen
 import animato.app.tracking.TrackingHubScreen
+import animato.domain.content.ContentPreferences
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.base.BasePreferences
@@ -168,7 +169,7 @@ object AnimatoSettingsSourcesScreen : SearchableSettings {
                     ),
                 ),
             ),
-        ) + SettingsBrowseScreen.getPreferences() + Preference.PreferenceGroup(
+        ) + mihonBrowsePreferences() + Preference.PreferenceGroup(
             title = stringResource(AYMR.strings.label_anime),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.TextPreference(
@@ -193,6 +194,26 @@ object AnimatoSettingsSourcesScreen : SearchableSettings {
                     onClick = { navigator.push(AnimatoProxyScreen) },
                 ),
             ),
+        )
+    }
+}
+
+/**
+ * Mihon's browse settings, minus its link to the manga extension stores on a build with no manga.
+ *
+ * The list is Mihon's and not ours to edit, so the one row is dropped by its title. Everything else
+ * in it — content warnings above all — applies to anime extensions too and stays.
+ */
+@Composable
+private fun mihonBrowsePreferences(): List<Preference> {
+    val preferences = SettingsBrowseScreen.getPreferences()
+    if (!remember { Injekt.get<ContentPreferences>().lensIsFixed }) return preferences
+    val storesTitle = stringResource(MR.strings.extensionStores)
+    return preferences.map { group ->
+        if (group !is Preference.PreferenceGroup) return@map group
+        group.copy(
+            preferenceItems = group.preferenceItems
+                .filterNot { it is Preference.PreferenceItem.TextPreference && it.title == storesTitle },
         )
     }
 }

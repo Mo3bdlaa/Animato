@@ -285,6 +285,12 @@ dependencies {
     implementation(projects.app)
     implementation(projects.core.metro)
     implementation(libs.metro.runtime)
+    // LocalMetroViewModelFactory, which Mihon's screens read to build their view models. Mihon
+    // provides it from its own activity; ours has to provide it too, or every such screen crashes.
+    implementation(libs.metrox.viewmodel.compose)
+    // AppGraph implements the widget module's graph interface, so reading anything off AppGraph
+    // needs that interface on the classpath.
+    implementation(projects.presentationWidget)
 
     // Our theme and generalised components. MainActivity applies AnimatoTheme from here.
     implementation(projects.animatoUiKit)

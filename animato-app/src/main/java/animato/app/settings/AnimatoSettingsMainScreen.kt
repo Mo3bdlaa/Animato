@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import animato.anime.player.settings.PlayerSettingsMainScreen
 import animato.app.updater.AnimatoAppUpdateChecker
+import animato.domain.content.ContentPreferences
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
@@ -61,6 +62,8 @@ import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 /**
@@ -116,6 +119,7 @@ object AnimatoSettingsMainScreen : Screen() {
             },
             containerColor = MaterialTheme.colorScheme.surface,
         ) { contentPadding ->
+            val mangaUnavailable = remember { Injekt.get<ContentPreferences>().lensIsFixed }
             LazyColumn(contentPadding = contentPadding) {
                 groups.forEach { group ->
                     item(key = "header-${group.titleRes.resourceId}") {
@@ -131,7 +135,8 @@ object AnimatoSettingsMainScreen : Screen() {
                         )
                     }
                     items(
-                        items = group.items,
+                        // No reader settings on a build with no manga in it.
+                        items = group.items.filterNot { mangaUnavailable && it.screen == SettingsReaderScreen },
                         key = { it.titleRes.resourceId },
                     ) { item ->
                         val selected = twoPane && navigator.lastItem::class == item.screen::class

@@ -8,14 +8,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import animato.anime.ui.stores.AnimeExtensionStoresScreen
+import animato.domain.content.ContentPreferences
 import cafe.adriel.voyager.navigator.Navigator
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 /**
  * The two addresses that actually work, offered rather than typed.
@@ -83,7 +87,9 @@ internal fun KnownStoresDialog(
                     text = stringResource(AYMR.strings.known_stores_summary),
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                KNOWN_STORES.forEach { store ->
+                // Only the anime stores on a build that has no manga to read. See RepositoriesRow.
+                val mangaUnavailable = remember { Injekt.get<ContentPreferences>().lensIsFixed }
+                KNOWN_STORES.filter { it.isAnime || !mangaUnavailable }.forEach { store ->
                     ListItem(
                         modifier = Modifier.clickable {
                             onDismissRequest()

@@ -76,6 +76,7 @@ import animato.app.stremio.m3uPlaylists
 import animato.app.torznab.TorznabAddDialog
 import animato.app.torznab.torznabIndexers
 import animato.domain.content.ContentFilter
+import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.Pill
@@ -514,6 +515,7 @@ private fun RepositoriesRow(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     var knownStoresOpen by remember { mutableStateOf(false) }
+    val mangaUnavailable = remember { Injekt.get<ContentPreferences>().lensIsFixed }
 
     Box {
         ListItem(
@@ -537,13 +539,17 @@ private fun RepositoriesRow(
                     navigator.push(AnimeExtensionStoresScreen())
                 },
             )
-            DropdownMenuItem(
-                text = { Text(stringResource(AYMR.strings.label_manga)) },
-                onClick = {
-                    menuOpen = false
-                    navigator.push(ExtensionStoresScreen())
-                },
-            )
+            // Not on a build with no manga in it: a manga store there adds extensions nothing can
+            // open. See ContentPreferences.lensIsFixed.
+            if (!mangaUnavailable) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(AYMR.strings.label_manga)) },
+                    onClick = {
+                        menuOpen = false
+                        navigator.push(ExtensionStoresScreen())
+                    },
+                )
+            }
             /*
              * The one that had no home.
              *
