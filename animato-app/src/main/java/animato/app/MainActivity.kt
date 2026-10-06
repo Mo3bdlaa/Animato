@@ -54,6 +54,7 @@ import animato.anime.ui.stores.AnimeExtensionStoresScreen
 import animato.app.coil.AnimatoImageLoader
 import animato.app.crash.CrashRecorder
 import animato.app.crash.CrashReportPrompt
+import animato.app.crash.ExitReasons
 import animato.app.crash.RecoveryScreen
 import animato.app.crash.StartupGuard
 import animato.app.downloads.DownloadCleanupPreferences
@@ -219,6 +220,9 @@ class MainActivity : BaseActivity() {
         // the trace behind it survives being dismissed. See CrashRecorder for why this is a file
         // on the device rather than a report sent anywhere.
         CrashRecorder.install(application)
+        // And what CrashRecorder cannot see: the system ending the last session itself — not
+        // responding, or out of memory. See ExitReasons.
+        ExitReasons.check(application)
 
         /*
          * Whether the last two launches got this far and no further.

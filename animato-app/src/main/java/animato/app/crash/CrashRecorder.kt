@@ -49,17 +49,7 @@ class CrashRecorder private constructor(
     }
 
     private fun record(exception: Throwable) {
-        val at = System.currentTimeMillis()
-        val report = buildString {
-            appendLine("Animato ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-            appendLine("Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
-            appendLine("${Build.MANUFACTURER} ${Build.MODEL}")
-            appendLine(TIMESTAMP.format(Date(at)))
-            appendLine()
-            append(exception.stackTraceToString())
-        }
-        file().writeText(report)
-        pendingAt().set(at)
+        save(exception.stackTraceToString(), System.currentTimeMillis())
     }
 
     companion object {
@@ -84,6 +74,24 @@ class CrashRecorder private constructor(
             Thread.setDefaultUncaughtExceptionHandler(
                 CrashRecorder(context, Thread.getDefaultUncaughtExceptionHandler(), Injekt.get<PreferenceStore>()),
             )
+        }
+
+        /**
+         * Keep [body] as the report to offer on the next launch, under the usual header — version,
+         * Android, device, and [at]. The header is [HEADER_LINES] lines and a blank one, which the
+         * prompt skips to find the first line worth showing.
+         */
+        internal fun save(body: String, at: Long, context: Application = Injekt.get()) {
+            val report = buildString {
+                appendLine("Animato ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+                appendLine("Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+                appendLine("${Build.MANUFACTURER} ${Build.MODEL}")
+                appendLine(TIMESTAMP.format(Date(at)))
+                appendLine()
+                append(body)
+            }
+            file(context).writeText(report)
+            pendingAt().set(at)
         }
 
         /** When the last unacknowledged crash happened, or null if there is nothing to report. */
