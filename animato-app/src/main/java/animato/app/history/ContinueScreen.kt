@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.entry.EntryScreen
+import animato.app.entry.rememberOpenEntry
 import animato.app.navigation.HomeScreenModel
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -67,6 +68,7 @@ class ContinueScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val openEntry = rememberOpenEntry()
         val screenModel = viewModel { HomeScreenModel() }
         val state by screenModel.state.collectAsStateWithLifecycle()
         val lens = animato.app.navigation.contentLens()
@@ -105,7 +107,7 @@ class ContinueScreen : Screen() {
                             // the same list, and a gesture that works on one shelf and not on the
                             // screen behind it is a gesture nobody trusts.
                             .combinedClickable(
-                                onClick = { navigator.push(EntryScreen(item.entryId, item.contentType)) },
+                                onClick = { openEntry(item.entryId, item.contentType, false) },
                                 onLongClick = { menuOpen = true },
                             ),
                     ) {

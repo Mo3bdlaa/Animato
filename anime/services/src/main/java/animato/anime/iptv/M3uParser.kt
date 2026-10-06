@@ -25,7 +25,27 @@ data class M3uChannel(
      * are read here. See [parseHeaderDirective] and [splitPipeOptions].
      */
     val headers: Map<String, String> = emptyMap(),
-)
+) {
+    /**
+     * Whether this is a channel, on now, rather than a film or an episode sitting in the playlist.
+     *
+     * A provider's playlist is often more than channels: Xtream-style services export their films
+     * and series into the same file, as ordinary entries, distinguishable only by their address —
+     * `/movie/…` and `/series/…` paths, or a file that ends `.mp4` or `.mkv`. A live stream is the
+     * rest: `/live/…`, a bare `.ts`, an `.m3u8`. The address is all the file says, so it is what is
+     * read; anything it does not recognise stays a channel, which is what M3U was for.
+     */
+    val isLive: Boolean
+        get() {
+            val path = url.substringBefore('?').substringBefore('#').lowercase()
+            return VOD_PATHS.none { "/$it/" in path } && VOD_EXTENSIONS.none { path.endsWith(".$it") }
+        }
+
+    private companion object {
+        val VOD_PATHS = listOf("movie", "movies", "series", "vod")
+        val VOD_EXTENSIONS = listOf("mp4", "mkv", "avi", "mov", "webm", "m4v")
+    }
+}
 
 /**
  * An M3U playlist, parsed.
@@ -43,6 +63,19 @@ data class M3uChannel(
  * rather than pointed at nothing.
  */
 object M3uParser {
+
+    /**
+     * The live channel after [currentId] in [channels] — or before it, when [forward] is false —
+     * within the same group, wrapping round at either end. Null when [currentId] is not there or
+     * is the only live channel in its group. See [M3uSource.adjacentChannel] for why the group.
+     */
+    fun adjacentChannel(channels: List<M3uChannel>, currentId: String, forward: Boolean): M3uChannel? {
+        val current = channels.firstOrNull { it.id == currentId } ?: return null
+        val lineup = channels.filter { it.isLive && it.group == current.group }
+        val index = lineup.indexOfFirst { it.id == current.id }
+        if (index == -1 || lineup.size < 2) return null
+        return lineup[Math.floorMod(index + if (forward) 1 else -1, lineup.size)]
+    }
 
     /**
      * Every channel in [text], in the order the file lists them.

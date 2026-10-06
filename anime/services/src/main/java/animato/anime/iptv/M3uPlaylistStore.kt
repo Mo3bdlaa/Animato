@@ -124,6 +124,9 @@ class M3uPlaylistStore(
         }
     }
 
+    /** One channel out of the cached copy, without fetching; null if the playlist is not in hand. */
+    fun cachedChannel(url: String, id: String): M3uChannel? = channelCache[url]?.firstOrNull { it.id == id }
+
     /**
      * The groups this playlist uses, from what is already in hand.
      *

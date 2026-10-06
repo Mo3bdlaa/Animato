@@ -1,6 +1,7 @@
 package animato.anime.iptv
 
 import animato.anime.content.BrowsableByCategory
+import animato.anime.content.ChannelLineup
 import animato.anime.content.EntryForm
 import animato.anime.content.KnowsEntryForm
 import animato.anime.content.SourceCategory
@@ -42,7 +43,7 @@ import java.security.MessageDigest
  */
 class M3uSource(
     val playlist: M3uPlaylist,
-) : AnimeHttpSource(), KnowsEntryForm, BrowsableByCategory {
+) : AnimeHttpSource(), KnowsEntryForm, BrowsableByCategory, ChannelLineup {
 
     private val store: M3uPlaylistStore by injectLazy()
 
@@ -74,13 +75,27 @@ class M3uSource(
     override val supportsLatest: Boolean = false
 
     /**
-     * Everything in a playlist is live, without having to look.
+     * Live, unless the playlist's address for it says film or episode.
      *
-     * An M3U file holds channels and nothing else — there is no per-entry type to read and no
-     * exception to make — so the answer is the same for every url this source ever hands out. It is
-     * stated here so the app stops inferring it from a stream that happens to report no duration.
+     * Most playlists are channels and nothing else, but a provider exporting a whole service puts
+     * its films and series in the same file, and those are not on now — see [M3uChannel.isLive].
+     * Read from the copy in hand, since this cannot suspend; before the playlist has been read in
+     * this process the answer is Live, which is what an M3U entry almost always is, and the browse
+     * that lists an entry has read the playlist by then.
      */
-    override fun formOf(entryUrl: String): EntryForm = EntryForm.Live
+    override fun formOf(entryUrl: String): EntryForm =
+        if (store.cachedChannel(playlist.url, entryUrl)?.isLive == false) EntryForm.Single else EntryForm.Live
+
+    /**
+     * The next channel in the same group, the way channel up works on a television.
+     *
+     * The group rather than the whole file because a group is what somebody chose to watch from —
+     * the sports channels, one country's — and channel up out of the last sports channel into the
+     * first shopping one is not what they asked for. Films and episodes are skipped: they are in
+     * the playlist, not in the lineup.
+     */
+    override suspend fun adjacentChannel(entryUrl: String, forward: Boolean): SAnime? =
+        M3uParser.adjacentChannel(channels(), entryUrl, forward)?.let(::toSAnime)
 
     /**
      * The playlist's own groups, as a picker.
@@ -158,7 +173,8 @@ class M3uSource(
         return listOf(
             SEpisode.create().apply {
                 url = channel.id
-                name = LIVE_ITEM_NAME
+                // A film or an episode out of the playlist is called what it is; only a channel is "Live".
+                name = if (channel.isLive) LIVE_ITEM_NAME else channel.name
                 episode_number = 1f
                 date_upload = 0L
             },

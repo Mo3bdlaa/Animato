@@ -51,6 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.discover.AiringItem
 import animato.app.downloads.DownloadsScreen
 import animato.app.entry.EntryScreen
+import animato.app.entry.rememberOpenEntry
 import animato.app.history.ContinueScreen
 import animato.app.search.AnimatoSearchScreen
 import animato.app.settings.AnimatoSettingsScreen
@@ -103,6 +104,7 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 internal fun HomeScreenContent() {
     val navigator = LocalNavigator.currentOrThrow
+    val openEntry = rememberOpenEntry()
     val scope = rememberCoroutineScope()
     val screenModel = viewModel { HomeScreenModel() }
     val state by screenModel.state.collectAsState()
@@ -201,7 +203,7 @@ internal fun HomeScreenContent() {
                                 ContinueCard(
                                     item = item,
                                     onClick = {
-                                        navigator.push(EntryScreen(item.entryId, item.contentType))
+                                        openEntry(item.entryId, item.contentType, false)
                                     },
                                     onHide = { screenModel.hideFromContinue(item) },
                                 )
@@ -251,7 +253,7 @@ internal fun HomeScreenContent() {
                         UpdateRow(
                             item = item,
                             onClick = {
-                                navigator.push(EntryScreen(item.entryId, item.contentType))
+                                openEntry(item.entryId, item.contentType, false)
                             },
                         )
                     }
@@ -278,7 +280,7 @@ internal fun HomeScreenContent() {
                                 DownloadedCard(
                                     item = item,
                                     onClick = {
-                                        navigator.push(EntryScreen(item.entryId, item.contentType))
+                                        openEntry(item.entryId, item.contentType, false)
                                     },
                                 )
                             }

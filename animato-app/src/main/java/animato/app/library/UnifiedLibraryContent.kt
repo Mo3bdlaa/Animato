@@ -52,6 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.content.EntryForm
 import animato.anime.player.PlayerLauncher
 import animato.app.entry.EntryScreen
+import animato.app.entry.rememberOpenEntry
 import animato.app.navigation.LensButton
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
@@ -112,9 +113,8 @@ internal fun UnifiedLibraryContent() {
     val scope = rememberCoroutineScope()
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
 
-    val openEntry: (LibraryEntry) -> Unit = { entry ->
-        navigator.push(EntryScreen(entry.entryId, entry.contentType))
-    }
+    val open = rememberOpenEntry()
+    val openEntry: (LibraryEntry) -> Unit = { entry -> open(entry.entryId, entry.contentType, false) }
 
     Scaffold(
         topBar = { scrollBehavior ->

@@ -215,4 +215,37 @@ class M3uParserTest {
         M3uParser.parse("#EXTM3U") shouldBe emptyList()
         M3uParser.parse("not a playlist") shouldBe emptyList()
     }
+
+    @Test
+    fun `channels are live and a provider's films and series are not`() {
+        fun live(url: String) = M3uChannel(id = url, name = "x", url = url).isLive
+
+        live("http://example.test/live/user/pass/123.ts") shouldBe true
+        live("http://example.test/stream/index.m3u8") shouldBe true
+        live("http://example.test/123") shouldBe true
+
+        live("http://example.test/movie/user/pass/456.mkv") shouldBe false
+        live("http://example.test/series/user/pass/789.mp4") shouldBe false
+        live("http://example.test/films/Some.Film.2020.MP4?token=abc") shouldBe false
+    }
+
+    @Test
+    fun `next and previous channel stay in the group, skip films and wrap round`() {
+        fun channel(id: String, group: String, path: String = "live") =
+            M3uChannel(id = id, name = id, url = "http://example.test/$path/$id.ts", group = group)
+        val playlist = listOf(
+            channel("news1", "News"),
+            channel("sport1", "Sport"),
+            channel("news2", "News"),
+            channel("film", "News", path = "movie"),
+            channel("news3", "News"),
+        )
+
+        M3uParser.adjacentChannel(playlist, "news1", forward = true)?.id shouldBe "news2"
+        M3uParser.adjacentChannel(playlist, "news2", forward = true)?.id shouldBe "news3"
+        M3uParser.adjacentChannel(playlist, "news3", forward = true)?.id shouldBe "news1"
+        M3uParser.adjacentChannel(playlist, "news1", forward = false)?.id shouldBe "news3"
+        M3uParser.adjacentChannel(playlist, "sport1", forward = true) shouldBe null
+        M3uParser.adjacentChannel(playlist, "missing", forward = true) shouldBe null
+    }
 }

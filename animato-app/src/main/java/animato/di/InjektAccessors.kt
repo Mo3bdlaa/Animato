@@ -4,6 +4,7 @@ package animato.di
 
 import android.app.Application
 import android.content.Context
+import animato.anime.content.LiveChannels
 import animato.anime.iptv.M3uPlaylistStore
 import animato.anime.jellyfin.JellyfinServerStore
 import animato.anime.net.ProxyPreferences
@@ -287,6 +288,7 @@ interface InjektAccessors {
     val jellyfinServerStore: JellyfinServerStore
     val json: Json
     val libraryPreferences: LibraryPreferences
+    val liveChannels: LiveChannels
     val localAnimeBackgroundManager: LocalAnimeBackgroundManager
     val localAnimeCoverManager: LocalAnimeCoverManager
     val localAnimeSourceFileSystem: LocalAnimeSourceFileSystem
@@ -469,6 +471,7 @@ internal fun InjektAccessors.injektBindings(): Map<Type, () -> Any> = mapOf(
     JellyfinServerStore::class.java to { jellyfinServerStore },
     Json::class.java to { json },
     LibraryPreferences::class.java to { libraryPreferences },
+    LiveChannels::class.java to { liveChannels },
     LocalAnimeBackgroundManager::class.java to { localAnimeBackgroundManager },
     LocalAnimeCoverManager::class.java to { localAnimeCoverManager },
     LocalAnimeSourceFileSystem::class.java to { localAnimeSourceFileSystem },

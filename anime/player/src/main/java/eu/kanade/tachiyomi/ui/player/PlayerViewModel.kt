@@ -42,6 +42,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import animato.anime.content.ChannelLineup
+import animato.anime.content.EntryForm
+import animato.anime.content.LiveChannels
 import animato.anime.content.asProgressReporter
 import animato.anime.content.entryForm
 import animato.anime.player.CustomButtonFetchState
@@ -166,6 +169,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private val activity: PlayerActivity,
     private val savedState: SavedStateHandle,
     private val sourceManager: AnimeSourceManager = Injekt.get(),
+    private val liveChannels: LiveChannels = Injekt.get(),
     private val downloadManager: AnimeDownloadManager = Injekt.get(),
     private val imageSaver: ImageSaver = Injekt.get(),
     private val downloadPreferences: DownloadPreferences = Injekt.get(),
@@ -1134,6 +1138,13 @@ class PlayerViewModel @JvmOverloads constructor(
     }
 
     fun changeEpisode(previous: Boolean, autoPlay: Boolean = false) {
+        // A live channel has no next episode; it has a next channel. Not on autoplay, though: a
+        // live stream that "ends" has dropped, and flicking to another channel is not an answer.
+        if (isChannelWithLineup()) {
+            if (!autoPlay) changeChannel(forward = !previous)
+            return
+        }
+
         if (previous && !hasPreviousEpisode.value) {
             activity.showToast(activity.stringResource(AYMR.strings.no_prev_episode))
             return
@@ -1148,6 +1159,39 @@ class PlayerViewModel @JvmOverloads constructor(
             episodeId = getAdjacentEpisodeId(previous = previous),
             autoPlay = autoPlay,
         )
+    }
+
+    /** Whether this is a live channel whose source can step to the channels around it. */
+    private fun isChannelWithLineup(): Boolean {
+        val source = currentSource.value ?: return false
+        return source is ChannelLineup && source.entryForm(currentAnime.value?.url.orEmpty()) == EntryForm.Live
+    }
+
+    /**
+     * Channel up or down: the next live channel in the same group, opened in place.
+     *
+     * The channel next door may never have been opened, so it is added to the database first and its
+     * one row fetched — [LiveChannels] does both — and then opened the way any new title is.
+     */
+    fun changeChannel(forward: Boolean) {
+        val anime = currentAnime.value ?: return
+        viewModelScope.launch {
+            val target = withIOContext { runCatching { liveChannels.adjacent(anime, forward) }.getOrNull() }
+            if (target == null) {
+                activity.showToast(
+                    activity.stringResource(
+                        if (forward) AYMR.strings.no_next_episode else AYMR.strings.no_prev_episode,
+                    ),
+                )
+                return@launch
+            }
+            // What changing episode does first: stop this stream and forget its tracks and qualities,
+            // so the next channel does not start with the last one's audio track selected.
+            pause()
+            isLoading.update { _ -> true }
+            resetState()
+            activity.openEntry(animeId = target.first, episodeId = target.second)
+        }
     }
 
     fun handleLeftDoubleTap() {
@@ -1412,6 +1456,11 @@ class PlayerViewModel @JvmOverloads constructor(
 
                 _hasPreviousEpisode.update { _ -> getCurrentEpisodeIndex() != 0 }
                 _hasNextEpisode.update { _ -> getCurrentEpisodeIndex() != currentPlaylist.value.size - 1 }
+                // A channel is one episode, but the buttons are channel up and down.
+                if (isChannelWithLineup()) {
+                    _hasPreviousEpisode.update { _ -> true }
+                    _hasNextEpisode.update { _ -> true }
+                }
 
                 // Write to mpv table
                 MPVLib.setPropertyString("user-data/current-anime/anime-title", anime.title)

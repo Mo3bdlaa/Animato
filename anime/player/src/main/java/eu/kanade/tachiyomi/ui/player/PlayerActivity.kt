@@ -252,6 +252,20 @@ class PlayerActivity : BaseActivity() {
             AnimeNotifications.ID_NEW_EPISODES,
         )
 
+        openEntry(animeId, episodeId, hostList, hostIndex, vidIndex)
+        setIntent(intent)
+    }
+
+    /**
+     * Plays another title in this same player: a notification's episode, or the next live channel.
+     */
+    internal fun openEntry(
+        animeId: Long,
+        episodeId: Long,
+        hostList: String = "",
+        hostIndex: Int = -1,
+        vidIndex: Int = -1,
+    ) {
         viewModel.saveCurrentEpisodeWatchingProgress()
 
         lifecycleScope.launchNonCancellable {
@@ -291,8 +305,6 @@ class PlayerActivity : BaseActivity() {
                 }
             }
         }
-
-        setIntent(intent)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -1175,6 +1187,11 @@ class PlayerActivity : BaseActivity() {
                 viewModel.showControls()
                 viewModel.pauseUnpause()
             }
+
+            // The remote's channel buttons, and the media keys' skip: next and previous, which on a
+            // live channel are the channel either side of it and otherwise the next episode.
+            KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_MEDIA_NEXT -> viewModel.changeEpisode(previous = false)
+            KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_MEDIA_PREVIOUS -> viewModel.changeEpisode(previous = true)
 
             KeyEvent.KEYCODE_MEDIA_REWIND -> viewModel.handleLeftDoubleTap()
             KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> viewModel.handleRightDoubleTap()

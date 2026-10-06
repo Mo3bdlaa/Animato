@@ -62,6 +62,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.content.SourceCategory
 import animato.app.entry.EntryScreen
+import animato.app.entry.rememberOpenEntry
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
 import animato.ui.entries.ItemCover
@@ -115,6 +116,7 @@ class SourceBrowseScreen(
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
+        val openEntry = rememberOpenEntry()
         val screenModel = viewModel(key = "source-browse-$contentType-$sourceId") {
             SourceBrowseScreenModel(sourceId = sourceId, contentType = contentType)
         }
@@ -358,7 +360,7 @@ class SourceBrowseScreen(
                             Column(
                                 modifier = Modifier.combinedClickable(
                                     onClick = {
-                                        navigator.push(EntryScreen(item.entryId, contentType, fromSource = true))
+                                        openEntry(item.entryId, contentType, true)
                                     },
                                     onLongClick = { screenModel.toggleFavorite(item) },
                                 ),
