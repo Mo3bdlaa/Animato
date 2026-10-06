@@ -42,10 +42,21 @@
 # the generated graph's provider fields, with the generic signature that says what each provides,
 # and the public constructors of Mihon's classes, for the ones it builds itself. Nothing else calls
 # those constructors where R8 can see it — the anime side asks Injekt for a type, not a constructor.
+#
+# The signature is only half of it. R8 in full mode rewrites a kept signature by dropping every type
+# argument whose class is not itself kept, so `Provider<AndroidPreferenceStore>` reached the APK as
+# a bare `Provider` — and the bridge, not knowing what any provider built, found nothing, and the
+# release build died on its first Injekt call. Debug builds are not minified and never showed it.
+# Two things have to be kept for R8 to leave the type arguments in: Metro's `Provider` itself, whose
+# own `<T>` R8 otherwise erases (after which any `Provider<X>` is malformed and loses its argument),
+# and the classes named as arguments — Mihon's. Both by name only, not their members, and still
+# shrinkable. check-dex-keeps.sh checks the APK for this, so it cannot come back quietly.
 -keepattributes Signature,RuntimeVisibleAnnotations
 -keepclassmembers class mihon.app.di.AppGraph$Impl {
     dev.zacsweers.metro.Provider *;
 }
+-keep,allowshrinking,allowobfuscation interface dev.zacsweers.metro.Provider
+-keep,allowshrinking,allowobfuscation class eu.kanade.**, tachiyomi.**, mihon.**
 -keepclassmembers class eu.kanade.**, tachiyomi.**, mihon.** {
     public <init>(...);
 }
