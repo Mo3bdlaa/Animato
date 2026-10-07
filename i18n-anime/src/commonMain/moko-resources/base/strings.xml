@@ -363,6 +363,15 @@
     <string name="pref_proxy_kind">Kind</string>
     <string name="pref_proxy_kind_socks5">SOCKS5</string>
     <string name="pref_proxy_kind_http">HTTP</string>
+    <string name="pref_proxy_kind_xray">Built in (vless, vmess, trojan, reality)</string>
+    <string name="pref_proxy_xray_link">Share link</string>
+    <string name="pref_proxy_xray_link_summary">Paste a vless://, vmess://, trojan:// or ss:// link</string>
+    <string name="pref_proxy_scope_xray">Runs inside Animato. Browsing, sources and playback all go through it; nothing else on the device is affected, and no VPN permission is needed.</string>
+    <string name="pref_proxy_xray_status">Status</string>
+    <string name="pref_proxy_xray_off">Not running</string>
+    <string name="pref_proxy_xray_starting">Starting…</string>
+    <string name="pref_proxy_xray_running">Running: %1$s</string>
+    <string name="pref_proxy_xray_failed">Not running: %1$s</string>
     <string name="pref_proxy_host">Address</string>
     <string name="pref_proxy_host_summary">Host name or IP of the proxy</string>
     <string name="pref_proxy_port">Port</string>

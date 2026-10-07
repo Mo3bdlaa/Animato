@@ -291,6 +291,9 @@ dependencies {
     // AppGraph implements the widget module's graph interface, so reading anything off AppGraph
     // needs that interface on the classpath.
     implementation(projects.presentationWidget)
+    // Xray-core, for the built-in proxy (animato.app.xray). Built from animato-xray/ by
+    // build-aar.sh — CI runs it before Gradle; locally, run it once. MPL-2.0, used unmodified.
+    implementation(files(layout.settingsDirectory.file("animato-xray/build/libxray.aar")))
 
     // Our theme and generalised components. MainActivity applies AnimatoTheme from here.
     implementation(projects.animatoUiKit)

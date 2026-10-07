@@ -55,6 +55,9 @@ class AnimatoProxySelector(
 ) : ProxySelector() {
 
     override fun select(uri: URI?): List<Proxy> {
+        // The app's own servers — the torrent server, the player's local HTTP server — live on the
+        // loopback address, and a proxy elsewhere cannot reach them. Never proxied, whatever is set.
+        if (uri?.host.isLoopback()) return listOf(Proxy.NO_PROXY)
         val proxy = runCatching { Injekt.get<ProxyPreferences>().proxy() }
             // Reached before the graph is built — a request during start-up — which is a reason to
             // go by the system's answer rather than to bring the request down.
@@ -124,4 +127,9 @@ class AnimatoProxySelector(
             return PasswordAuthentication(user, secret.toCharArray())
         }
     }
+}
+
+private fun String?.isLoopback(): Boolean {
+    val host = this?.removeSurrounding("[", "]")?.lowercase() ?: return false
+    return host == "localhost" || host == "::1" || host.startsWith("127.")
 }

@@ -1,6 +1,7 @@
 package animato.anime.net
 
 import animato.anime.di.AnimatoScope
+import animato.anime.net.xray.XrayConfig
 import animato.anime.util.credentialString
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -20,6 +21,13 @@ import java.net.Proxy
 enum class ProxyKind {
     Socks5,
     Http,
+
+    /**
+     * Xray, built in: a vless, vmess, trojan or shadowsocks share link, run inside the app as a
+     * local proxy. The app then uses that proxy exactly as it would an HTTP one it was given — see
+     * [ProxyPreferences.proxy] and `animato.anime.net.xray`.
+     */
+    Xray,
 }
 
 /**
@@ -27,11 +35,11 @@ enum class ProxyKind {
  *
  * ## Why this exists instead of a VPN
  *
- * The request was an in-app VPN. A real one means [android.net.VpnService], an implementation of
- * WireGuard or OpenVPN, and servers to connect to — a separate application's worth of work, and
- * one this project would have nothing to point at. What people want *from* it here is narrower and
- * is what this does: reach a source that is blocked, from an address that is not blocked, using a
- * provider they already pay for.
+ * The request was an in-app VPN. A real one means [android.net.VpnService], a tunnel for the whole
+ * device and a permission to match. What people want *from* it here is narrower and is what this
+ * does: reach a source that is blocked, from an address that is not blocked, using a provider they
+ * already pay for. A proxy they have, typed in; or [ProxyKind.Xray], the share link their provider
+ * gave them, run inside the app as a local proxy — still only this app's traffic, still no VPN.
  *
  * ## Why the credentials are stored as they are
  *
@@ -73,6 +81,12 @@ class ProxyPreferences(
     val password = preferenceStore.credentialString("animato_proxy_password")
 
     /**
+     * The share link for [ProxyKind.Xray]. Private like the password: a vless link carries the
+     * user id that *is* the login, and a trojan link the password itself.
+     */
+    val xrayLink = preferenceStore.credentialString("animato_proxy_xray_link")
+
+    /**
      * The proxy as configured, or null when there is not one to use.
      *
      * Null rather than an exception for a half-filled form: the settings screen is where a blank
@@ -86,11 +100,18 @@ class ProxyPreferences(
      */
     fun proxy(): Proxy? {
         if (!enabled.get()) return null
+        // Built in: the local HTTP inbound Xray listens on, whenever a link has been given. Whether
+        // the core is actually up is the controller's business; a request made in the moment
+        // before it starts fails, rather than going out unproxied behind the user's back.
+        if (kind.get() == ProxyKind.Xray) {
+            if (xrayLink.get().isBlank()) return null
+            return Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved(XrayConfig.LISTEN, XrayConfig.HTTP_PORT))
+        }
         val address = host.get().trim().takeIf { it.isNotEmpty() } ?: return null
         val portNumber = port.get().trim().toIntOrNull()?.takeIf { it in 1..MAX_PORT } ?: return null
         val type = when (kind.get()) {
             ProxyKind.Socks5 -> Proxy.Type.SOCKS
-            ProxyKind.Http -> Proxy.Type.HTTP
+            ProxyKind.Http, ProxyKind.Xray -> Proxy.Type.HTTP
         }
         return Proxy(type, InetSocketAddress.createUnresolved(address, portNumber))
     }
@@ -108,6 +129,9 @@ class ProxyPreferences(
      * so this moves them, it does not expose them further.
      */
     fun httpProxyUrl(): String? {
+        if (kind.get() == ProxyKind.Xray) {
+            return proxy()?.let { "http://${XrayConfig.LISTEN}:${XrayConfig.HTTP_PORT}" }
+        }
         if (kind.get() != ProxyKind.Http) return null
         val proxy = proxy() ?: return null
         val address = proxy.address() as? InetSocketAddress ?: return null

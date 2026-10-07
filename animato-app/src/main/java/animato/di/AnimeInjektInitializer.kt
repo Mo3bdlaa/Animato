@@ -9,6 +9,7 @@ import android.os.Looper
 import animato.anime.net.AnimatoProxySelector
 import animato.anime.services.AnimeInjektHook
 import animato.anime.services.AnimeNotifications
+import animato.app.xray.XrayController
 
 /**
  * Runs the anime side's own application start-up at the first moment it can take effect.
@@ -73,6 +74,9 @@ class AnimeInjektInitializer : ContentProvider() {
         Handler(Looper.getMainLooper()).postAtFrontOfQueue {
             AnimeInjekt.ensureRegistered(app)
             AnimeNotifications.createChannels(app)
+            // The built-in proxy, if one is set, before anything the process was started for gets
+            // as far as a request. See XrayController.
+            XrayController.watch()
         }
         return true
     }

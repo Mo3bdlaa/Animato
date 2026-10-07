@@ -755,4 +755,13 @@
     <string name="pref_sync_now">زامن دلوقتي</string>
     <string name="pref_sync_last">آخر مزامنة %1$s</string>
     <string name="pref_sync_never">لسه ما اتزامنش</string>
+    <string name="pref_proxy_kind_xray">مدمج (vless، vmess، trojan، reality)</string>
+    <string name="pref_proxy_xray_link">رابط المشاركة</string>
+    <string name="pref_proxy_xray_link_summary">الصق رابط vless:// أو vmess:// أو trojan:// أو ss://</string>
+    <string name="pref_proxy_scope_xray">بيشتغل جوه Animato. التصفح والمصادر والتشغيل كلهم بيعدوا من خلاله؛ باقي الجهاز مش بيتأثر، ومش محتاج صلاحية VPN.</string>
+    <string name="pref_proxy_xray_status">الحالة</string>
+    <string name="pref_proxy_xray_off">مش شغال</string>
+    <string name="pref_proxy_xray_starting">بيبدأ…</string>
+    <string name="pref_proxy_xray_running">شغال: %1$s</string>
+    <string name="pref_proxy_xray_failed">مش شغال: %1$s</string>
 </resources>

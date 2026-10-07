@@ -54,3 +54,8 @@
 }
 -keep,allowshrinking,allowobfuscation interface dev.zacsweers.metro.Provider
 -keep,allowshrinking,allowobfuscation class tachiyomi.data.Database
+
+# The Xray bridge (animato-xray). gomobile's generated Java is called from Go by name over JNI,
+# so nothing R8 can see references most of it.
+-keep class go.** { *; }
+-keep class animato.xray.** { *; }

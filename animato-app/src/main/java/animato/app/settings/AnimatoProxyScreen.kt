@@ -2,10 +2,13 @@ package animato.app.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import animato.anime.net.ProxyKind
 import animato.anime.net.ProxyPreferences
+import animato.anime.net.xray.XrayLink
+import animato.app.xray.XrayController
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import kotlinx.collections.immutable.persistentListOf
@@ -50,6 +53,9 @@ object AnimatoProxyScreen : SearchableSettings {
         val port by preferences.port.collectAsState()
         val username by preferences.username.collectAsState()
         val password by preferences.password.collectAsState()
+        val xrayLink by preferences.xrayLink.collectAsState()
+        val xrayStatus by XrayController.status.collectAsState()
+        val isXray = kind == ProxyKind.Xray
 
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
@@ -69,21 +75,39 @@ object AnimatoProxyScreen : SearchableSettings {
                         entries = persistentMapOfKinds(),
                         title = stringResource(AYMR.strings.pref_proxy_kind),
                     ),
+                    // Built in: one link instead of an address and a login. See XrayController.
+                    Preference.PreferenceItem.EditTextPreference(
+                        preference = preferences.xrayLink,
+                        title = stringResource(AYMR.strings.pref_proxy_xray_link),
+                        // The server's name, never the link: it carries the login, and this is the
+                        // screen people hand to somebody else to look at.
+                        subtitle = xrayLinkSummary(xrayLink),
+                        visible = isXray,
+                    ),
+                    // The core's own answer, so a link that reads fine but will not connect says so.
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(AYMR.strings.pref_proxy_xray_status),
+                        subtitle = xrayStatusText(xrayStatus),
+                        visible = isXray && xrayLink.isNotBlank(),
+                    ),
                     Preference.PreferenceItem.EditTextPreference(
                         preference = preferences.host,
                         title = stringResource(AYMR.strings.pref_proxy_host),
                         subtitle = host.ifBlank { stringResource(AYMR.strings.pref_proxy_host_summary) },
+                        visible = !isXray,
                     ),
                     Preference.PreferenceItem.EditTextPreference(
                         preference = preferences.port,
                         title = stringResource(AYMR.strings.pref_proxy_port),
                         subtitle = port.ifBlank { stringResource(AYMR.strings.pref_proxy_not_set) },
+                        visible = !isXray,
                     ),
                     Preference.PreferenceItem.InfoPreference(
                         title = stringResource(
                             when (kind) {
                                 ProxyKind.Socks5 -> AYMR.strings.pref_proxy_scope_socks
                                 ProxyKind.Http -> AYMR.strings.pref_proxy_scope_http
+                                ProxyKind.Xray -> AYMR.strings.pref_proxy_scope_xray
                             },
                         ),
                     ),
@@ -91,7 +115,8 @@ object AnimatoProxyScreen : SearchableSettings {
             ),
             Preference.PreferenceGroup(
                 title = stringResource(AYMR.strings.pref_proxy_username),
-                visible = enabled,
+                // Xray's login is inside its link.
+                visible = enabled && !isXray,
                 preferenceItems = persistentListOf(
                     Preference.PreferenceItem.EditTextPreference(
                         preference = preferences.username,
@@ -154,5 +179,26 @@ object AnimatoProxyScreen : SearchableSettings {
     private fun persistentMapOfKinds(): Map<ProxyKind, String> = mapOf(
         ProxyKind.Socks5 to stringResource(AYMR.strings.pref_proxy_kind_socks5),
         ProxyKind.Http to stringResource(AYMR.strings.pref_proxy_kind_http),
+        ProxyKind.Xray to stringResource(AYMR.strings.pref_proxy_kind_xray),
     )
+
+    /** What the link is, read back: the server's name and protocol, or why it cannot be read. */
+    @Composable
+    private fun xrayLinkSummary(link: String): String {
+        if (link.isBlank()) return stringResource(AYMR.strings.pref_proxy_xray_link_summary)
+        return runCatching { XrayLink.parse(link) }
+            .map {
+                "${it.name} · ${it.protocol.name.lowercase()}" +
+                    if (it.security is XrayLink.Security.Reality) " · reality" else ""
+            }
+            .getOrElse { it.message.orEmpty() }
+    }
+
+    @Composable
+    private fun xrayStatusText(status: XrayController.Status): String = when (status) {
+        XrayController.Status.Off -> stringResource(AYMR.strings.pref_proxy_xray_off)
+        XrayController.Status.Starting -> stringResource(AYMR.strings.pref_proxy_xray_starting)
+        is XrayController.Status.Running -> stringResource(AYMR.strings.pref_proxy_xray_running, status.serverName)
+        is XrayController.Status.Failed -> stringResource(AYMR.strings.pref_proxy_xray_failed, status.reason)
+    }
 }

@@ -97,4 +97,22 @@ class ProxyPreferencesTest {
         // fail in a way that looks like the proxy rejecting the stream.
         preferences(kind = ProxyKind.Socks5).httpProxyUrl() shouldBe null
     }
+
+    @Test
+    fun `built in Xray is the local HTTP inbound, for the app and for playback`() {
+        val xray = preferences(kind = ProxyKind.Xray, host = "", port = "").apply {
+            xrayLink.set("vless://b831381d-6324-4d53-ad4f-8cda48b30811@server.example:443?security=tls#s")
+        }
+        val proxy = xray.proxy()
+        proxy?.type() shouldBe Proxy.Type.HTTP
+        val address = proxy?.address() as InetSocketAddress
+        address.hostString shouldBe "127.0.0.1"
+        address.port shouldBe animato.anime.net.xray.XrayConfig.HTTP_PORT
+        xray.httpProxyUrl() shouldBe "http://127.0.0.1:${animato.anime.net.xray.XrayConfig.HTTP_PORT}"
+    }
+
+    @Test
+    fun `built in Xray with no link is no proxy`() {
+        preferences(kind = ProxyKind.Xray).proxy() shouldBe null
+    }
 }

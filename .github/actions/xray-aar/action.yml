@@ -1,0 +1,29 @@
+name: Build the Xray library
+description: >
+  Builds animato-xray/build/libxray.aar — Xray-core and its bridge, for the built-in proxy — or
+  restores it from the cache when none of its inputs changed. The app's Gradle build depends on the
+  file, so this runs before any Gradle step that compiles :animato-app.
+
+runs:
+  using: composite
+  steps:
+    # Keyed on everything that goes into the library. A cold build is a few minutes of Go and the
+    # inputs change rarely, so nearly every run is a cache hit.
+    - name: Restore the Xray library
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: animato-xray/build/libxray.aar
+        key: libxray-${{ hashFiles('animato-xray/go.mod', 'animato-xray/go.sum', 'animato-xray/libxray/**', 'animato-xray/build-aar.sh') }}
+
+    - name: Set up Go
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: animato-xray/go.mod
+        cache-dependency-path: animato-xray/go.sum
+
+    - name: Build the Xray library
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: ./animato-xray/build-aar.sh
