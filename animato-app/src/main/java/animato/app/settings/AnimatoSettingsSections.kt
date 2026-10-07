@@ -4,6 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import animato.app.discover.DiscoverMode
+import animato.app.discover.DiscoverPreferences
+import animato.app.discover.labelRes
 import animato.app.extension.ExtensionsScreen
 import animato.app.tracking.TrackingHubScreen
 import animato.domain.content.ContentPreferences
@@ -144,7 +147,19 @@ object AnimatoSettingsSourcesScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val installer = remember { Injekt.get<BasePreferences>().extensionInstaller }
+        val discoverMode = remember { Injekt.get<DiscoverPreferences>().mode }
         return listOf(
+            // What Discover's front page is built from. Also switchable on Discover itself.
+            Preference.PreferenceGroup(
+                title = stringResource(AYMR.strings.label_discover),
+                preferenceItems = persistentListOf(
+                    Preference.PreferenceItem.ListPreference(
+                        preference = discoverMode,
+                        entries = DiscoverMode.entries.associateWith { stringResource(it.labelRes()) },
+                        title = stringResource(AYMR.strings.pref_discover_mode),
+                    ),
+                ),
+            ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.label_extensions),
                 preferenceItems = persistentListOf(

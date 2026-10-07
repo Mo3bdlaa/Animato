@@ -17,6 +17,7 @@ import animato.anime.stremio.StremioAddonStore
 import animato.anime.stremio.StremioSubtitleFinder
 import animato.anime.torznab.TorznabIndexerStore
 import animato.anime.track.AnimeTrackerManager
+import animato.app.discover.DiscoverPreferences
 import animato.app.discover.MetadataCatalog
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.entry.EntryOverrides
@@ -226,6 +227,7 @@ interface InjektAccessors {
     val deleteAnimeCategory: DeleteAnimeCategory
     val deleteAnimeTrack: DeleteAnimeTrack
     val deleteCustomButton: DeleteCustomButton
+    val discoverPreferences: DiscoverPreferences
     val downloadCache: DownloadCache
     val downloadCleanupPreferences: DownloadCleanupPreferences
     val downloadManager: DownloadManager
@@ -409,6 +411,7 @@ internal fun InjektAccessors.injektBindings(): Map<Type, () -> Any> = mapOf(
     DeleteAnimeCategory::class.java to { deleteAnimeCategory },
     DeleteAnimeTrack::class.java to { deleteAnimeTrack },
     DeleteCustomButton::class.java to { deleteCustomButton },
+    DiscoverPreferences::class.java to { discoverPreferences },
     DownloadCache::class.java to { downloadCache },
     DownloadCleanupPreferences::class.java to { downloadCleanupPreferences },
     DownloadManager::class.java to { downloadManager },

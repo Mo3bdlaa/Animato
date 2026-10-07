@@ -3,6 +3,7 @@ package animato.app.discover
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import animato.anime.content.BrowsableByCategory
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentPreferences
 import animato.domain.content.ContentType
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.manga.model.toDomainManga
@@ -81,6 +83,26 @@ data class DiscoverState(
     val metadataRails: List<MetadataRailState> = emptyList(),
     val popular: DiscoverRail = DiscoverRail(),
     val latest: DiscoverRail = DiscoverRail(),
+    val mode: DiscoverMode = DiscoverMode.GENERAL,
+    /** In [DiscoverMode.MY_SOURCES], one section per source catalogue. See `loadSections`. */
+    val sections: List<SourceSection> = emptyList(),
+)
+
+/**
+ * One section of Discover in [DiscoverMode.MY_SOURCES]: one catalogue of one source.
+ *
+ * [catalogue] is the catalogue's own name — *Popular movies*, a playlist group — or null for a
+ * source with no catalogues of its own, whose section is simply its popular page.
+ */
+@Immutable
+data class SourceSection(
+    val key: String,
+    val sourceId: Long,
+    val sourceName: String,
+    val contentType: ContentType,
+    val categoryId: String?,
+    val catalogue: String?,
+    val rail: DiscoverRail = DiscoverRail(),
 )
 
 /**
@@ -154,6 +176,7 @@ class DiscoverScreenModel(
     private val extensionManager: ExtensionManager = Injekt.get(),
     private val animeExtensionManager: AnimeExtensionManager = Injekt.get(),
     private val discoverCache: DiscoverCache = DiscoverCache(),
+    private val discoverPreferences: DiscoverPreferences = Injekt.get(),
     contentPreferences: ContentPreferences = Injekt.get(),
 ) : ViewModel() {
 
@@ -166,11 +189,28 @@ class DiscoverScreenModel(
 
     init {
         viewModelScope.launch {
-            contentPreferences.contentFilter.changes().collectLatest { lens ->
+            combine(
+                contentPreferences.contentFilter.changes(),
+                discoverPreferences.mode.changes(),
+            ) { lens, mode -> lens to mode }
+                .collectLatest { (lens, mode) -> rebuild(lens, mode) }
+        }
+    }
+
+    /** Which page Discover shows. Kept here as well as in Settings, where it is easy to miss. */
+    fun setMode(mode: DiscoverMode) = discoverPreferences.mode.set(mode)
+
+    private suspend fun rebuild(lens: ContentFilter, mode: DiscoverMode) = coroutineScope {
+        when (mode) {
+            DiscoverMode.GENERAL -> {
                 val rails = cachedRails(lens)
                 state.value = cachedState(lens, rails)
                 loadMetadata(rails)
                 loadSourceRails(lens)
+            }
+            DiscoverMode.MY_SOURCES -> {
+                state.value = DiscoverState(lens = lens, mode = mode)
+                loadSections(lens)
             }
         }
     }
@@ -182,11 +222,7 @@ class DiscoverScreenModel(
      */
     fun refresh() {
         viewModelScope.launch {
-            val lens = state.value.lens
-            val rails = cachedRails(lens)
-            state.value = cachedState(lens, rails)
-            loadMetadata(rails)
-            loadSourceRails(lens)
+            rebuild(state.value.lens, discoverPreferences.mode.get())
         }
     }
 
@@ -307,6 +343,126 @@ class DiscoverScreenModel(
     }
 
     /**
+     * *My sources*: a section for each catalogue a source offers.
+     *
+     * A source with catalogues of its own — a Stremio addon's *Popular movies* and *Popular series*,
+     * a playlist's groups, a media server's libraries — gets a section per catalogue, up to
+     * [SECTIONS_PER_SOURCE]; anything else gets one, its popular page. The same sources the general
+     * page would ask (pinned first, disabled and NSFW never), at most [SECTION_LIMIT] sections in
+     * all: a front page that opened forty requests on arrival would be slower than the sources it
+     * shows.
+     *
+     * The section list appears at once, each holding whatever it held last time; then every section
+     * asks its source separately, so one slow addon holds up nobody but itself.
+     */
+    private fun CoroutineScope.loadSections(lens: ContentFilter) {
+        launch {
+            railSources(lens, unpinnedLimit = UNPINNED_SECTION_SOURCES).collectLatest { sourcesByType ->
+                val anySources = sourcesByType.values.any { it.isNotEmpty() }
+                state.update { it.copy(hasSources = anySources) }
+                if (!anySources) {
+                    state.update { it.copy(sections = emptyList()) }
+                    return@collectLatest
+                }
+
+                val sections = withContext(SOURCE_DISPATCHER) { sectionsFor(sourcesByType) }
+                    .take(SECTION_LIMIT)
+                    .map { section ->
+                        val cached = discoverCache.loadSourceRail(section.cacheName, lens)
+                        if (cached.isEmpty()) {
+                            section
+                        } else {
+                            section.copy(
+                                rail = DiscoverRail(isLoading = false, items = cached),
+                            )
+                        }
+                    }
+                state.update { it.copy(sections = sections) }
+
+                sections.forEach { section ->
+                    launch(SOURCE_DISPATCHER) {
+                        val result = fetchSection(section)
+                        val rail = DiscoverRail(
+                            isLoading = false,
+                            items = result.getOrNull().orEmpty().take(RAIL_LIMIT),
+                            failedSources = listOfNotNull(result.exceptionOrNull()?.let { section.sourceName }),
+                        )
+                        if (rail.items.isNotEmpty()) discoverCache.saveSourceRail(section.cacheName, lens, rail.items)
+                        state.update { current ->
+                            current.copy(
+                                sections = current.sections.map {
+                                    if (it.key == section.key) it.copy(rail = it.rail.keepCacheUnless(rail)) else it
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun sectionsFor(sourcesByType: Map<ContentType, List<Long>>): List<SourceSection> =
+        sourcesByType.flatMap { (type, ids) ->
+            ids.flatMap { sourceId ->
+                val name = sourceNameOf(type, sourceId)
+                val source = if (type == ContentType.ANIME) animeSourceManager.get(sourceId) else null
+                val catalogues = (source as? BrowsableByCategory)
+                    ?.let { runCatching { it.categories() }.getOrNull() }
+                    .orEmpty()
+                    // Top-level catalogues only: a genre inside one is a filter, not a shelf.
+                    .filter { it.group == null }
+                    .take(SECTIONS_PER_SOURCE)
+                if (catalogues.isEmpty()) {
+                    listOf(
+                        SourceSection(
+                            key = "${type.name}-$sourceId",
+                            sourceId = sourceId,
+                            sourceName = name,
+                            contentType = type,
+                            categoryId = null,
+                            catalogue = null,
+                        ),
+                    )
+                } else {
+                    catalogues.map { category ->
+                        SourceSection(
+                            key = "${type.name}-$sourceId-${category.id}",
+                            sourceId = sourceId,
+                            sourceName = name,
+                            contentType = type,
+                            categoryId = category.id,
+                            catalogue = category.label,
+                        )
+                    }
+                }
+            }
+        }
+
+    private suspend fun fetchSection(section: SourceSection): Result<List<DiscoverItem>> {
+        val categoryId = section.categoryId
+            ?: return fetch(section.contentType, section.sourceId, latest = false)
+        return runCatching {
+            val source = animeSourceManager.get(section.sourceId) as? BrowsableByCategory
+                ?: return@runCatching emptyList()
+            source.browseCategory(categoryId, 1).animes.map { anime ->
+                val domain = anime.toDomainAnime(section.sourceId)
+                DiscoverItem(
+                    key = "anime-${section.sourceId}-${domain.url}",
+                    title = domain.title,
+                    coverData = domain.asAnimeCover(),
+                    sourceId = section.sourceId,
+                    url = domain.url,
+                    contentType = ContentType.ANIME,
+                )
+            }
+        }.onFailure {
+            logcat(LogPriority.WARN, it) { "Discover: ${section.sourceName} / ${section.catalogue} did not answer" }
+        }
+    }
+
+    private val SourceSection.cacheName: String get() = "section-$key"
+
+    /**
      * Which sources *Your sources* asks, per half the lens admits.
      *
      * ## It used to mean "pinned", and pinning is opt-in
@@ -331,9 +487,12 @@ class DiscoverScreenModel(
      * Disabled sources are dropped in both cases: hiding a source and then being shown its popular
      * page is the setting not working.
      */
-    private fun railSources(lens: ContentFilter): Flow<Map<ContentType, List<Long>>> = combine(
-        if (lens.includesManga) mangaRailSources() else flowOf(emptyList()),
-        if (lens.includesAnime) animeRailSources() else flowOf(emptyList()),
+    private fun railSources(
+        lens: ContentFilter,
+        unpinnedLimit: Int = UNPINNED_SOURCES,
+    ): Flow<Map<ContentType, List<Long>>> = combine(
+        if (lens.includesManga) mangaRailSources(unpinnedLimit) else flowOf(emptyList()),
+        if (lens.includesAnime) animeRailSources(unpinnedLimit) else flowOf(emptyList()),
     ) { manga, anime ->
         buildMap {
             if (lens.includesManga) put(ContentType.MANGA, manga)
@@ -344,20 +503,36 @@ class DiscoverScreenModel(
     // Built on the manager's own flow rather than a snapshot, so installing an extension makes its
     // source appear here without leaving the screen and coming back. `HttpSource` is what excludes
     // the local library, whose "popular" page is a folder on the phone.
-    private fun mangaRailSources(): Flow<List<Long>> = combine(
+    private fun mangaRailSources(unpinnedLimit: Int): Flow<List<Long>> = combine(
         sourceManager.sources,
         sourcePreferences.pinnedSources.changes(),
         sourcePreferences.disabledSources.changes(),
     ) { sources, pinned, disabled ->
-        choose(sources.filterIsInstance<HttpSource>().map { it.id }, pinned, disabled, nsfwMangaSources())
+        choose(
+            sources.filterIsInstance<HttpSource>().map {
+                it.id
+            },
+            pinned,
+            disabled,
+            nsfwMangaSources(),
+            unpinnedLimit,
+        )
     }
 
-    private fun animeRailSources(): Flow<List<Long>> = combine(
+    private fun animeRailSources(unpinnedLimit: Int): Flow<List<Long>> = combine(
         animeSourceManager.sources,
         animeSourcePreferences.pinnedAnimeSources.changes(),
         animeSourcePreferences.disabledAnimeSources.changes(),
     ) { sources, pinned, disabled ->
-        choose(sources.filterIsInstance<AnimeHttpSource>().map { it.id }, pinned, disabled, nsfwAnimeSources())
+        choose(
+            sources.filterIsInstance<AnimeHttpSource>().map {
+                it.id
+            },
+            pinned,
+            disabled,
+            nsfwAnimeSources(),
+            unpinnedLimit,
+        )
     }
 
     /**
@@ -375,10 +550,11 @@ class DiscoverScreenModel(
         pinned: Set<String>,
         disabled: Set<String>,
         nsfw: Set<Long>,
+        unpinnedLimit: Int,
     ): List<Long> {
         val allowed = available.filter { it.toString() !in disabled && it !in nsfw }
         val pinnedIds = allowed.filter { it.toString() in pinned }
-        return pinnedIds.ifEmpty { allowed.take(UNPINNED_SOURCES) }
+        return pinnedIds.ifEmpty { allowed.take(unpinnedLimit) }
     }
 
     /** Source ids belonging to an installed extension the repository marks NSFW. */
@@ -497,6 +673,15 @@ class DiscoverScreenModel(
 
         /** How many sources to ask when nobody has pinned any. See `railSources`. */
         private const val UNPINNED_SOURCES = 5
+
+        /** *My sources* is the whole page rather than one block of it, so it asks a few more. */
+        private const val UNPINNED_SECTION_SOURCES = 8
+
+        /** Catalogues per source in *My sources*; past this, the source's own screen is the place. */
+        private const val SECTIONS_PER_SOURCE = 4
+
+        /** Sections in *My sources* altogether. See `loadSections`. */
+        private const val SECTION_LIMIT = 16
 
         /**
          * Off the main thread, and a few sources at a time.

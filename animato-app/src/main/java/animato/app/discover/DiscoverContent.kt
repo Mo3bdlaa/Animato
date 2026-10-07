@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,9 +41,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.app.entry.EntryScreen
+import animato.app.entry.rememberOpenEntry
 import animato.app.extension.ExtensionsScreen
 import animato.app.navigation.LensButton
 import animato.app.search.AnimatoSearchScreen
+import animato.app.source.SourceBrowseScreen
 import animato.domain.content.ContentFilter
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -98,10 +101,12 @@ internal fun DiscoverContent() {
         if (text.isNotBlank()) navigator.push(AnimatoSearchScreen(text, restrictTo))
     }
 
+    // Through the shared opener, so a live channel on a section plays rather than opening a page.
+    val openEntry = rememberOpenEntry()
     val openSourceItem: (DiscoverItem) -> Unit = { item ->
         scope.launch {
             val id = withIOContext { screenModel.resolveEntryId(item) }
-            navigator.push(EntryScreen(id, item.contentType, fromSource = true))
+            openEntry(id, item.contentType, true)
         }
     }
 
@@ -132,6 +137,30 @@ internal fun DiscoverContent() {
                     )
                 }
 
+                item(key = "mode") {
+                    DiscoverModeRow(mode = state.mode, onModeChange = screenModel::setMode)
+                }
+
+                if (state.mode == DiscoverMode.MY_SOURCES) {
+                    if (!state.hasSources) {
+                        item(key = "no-sources") {
+                            NoSourcesCard(onAddSources = { AnimatoNavigator.openTab(AnimatoTab.SOURCES) })
+                        }
+                    }
+                    state.sections.forEach { section ->
+                        sourceRail(
+                            id = section.key,
+                            title = {
+                                section.catalogue?.let { "${section.sourceName} · $it" } ?: section.sourceName
+                            },
+                            rail = section.rail,
+                            onViewAll = { navigator.push(SourceBrowseScreen(section.sourceId, section.contentType)) },
+                            onClick = openSourceItem,
+                        )
+                    }
+                    return@LazyColumn
+                }
+
                 state.metadataRails.forEach { rail ->
                     // A metadata title has no source, so the only thing a tap can mean is "find me this
                     // in what I have". Restricted to the rail's own medium: a trending anime has no
@@ -160,8 +189,10 @@ internal fun DiscoverContent() {
                         NoSourcesCard(onAddSources = { AnimatoNavigator.openTab(AnimatoTab.SOURCES) })
                     }
                 } else {
-                    sourceRail("popular", MR.strings.popular, state.popular, openSourceItem)
-                    sourceRail("latest", MR.strings.latest, state.latest, openSourceItem)
+                    sourceRail("popular", {
+                        stringResource(MR.strings.popular)
+                    }, state.popular, onClick = openSourceItem)
+                    sourceRail("latest", { stringResource(MR.strings.latest) }, state.latest, onClick = openSourceItem)
                 }
             }
         }
@@ -306,14 +337,28 @@ private fun MetadataCard(item: MetadataItem, onClick: () -> Unit) {
 
 private fun LazyListScope.sourceRail(
     id: String,
-    titleRes: StringResource,
+    title: @Composable () -> String,
     rail: DiscoverRail,
+    onViewAll: (() -> Unit)? = null,
     onClick: (DiscoverItem) -> Unit,
 ) {
     if (!rail.isLoading && rail.items.isEmpty() && rail.failedSources.isEmpty()) return
 
     item(key = "source-header-$id") {
-        SectionHeader(stringResource(titleRes))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SectionHeader(title(), modifier = Modifier.weight(1f))
+            if (onViewAll != null) {
+                TextButton(
+                    onClick = onViewAll,
+                    modifier = Modifier.padding(end = MaterialTheme.padding.small),
+                ) {
+                    Text(stringResource(AYMR.strings.discover_view_all))
+                }
+            }
+        }
     }
     item(key = "source-rail-$id") {
         LazyRow(
@@ -356,6 +401,34 @@ private fun LazyListScope.sourceRail(
             )
         }
     }
+}
+
+/**
+ * *General* or *My sources*: what the world is watching, or what your own sources offer.
+ *
+ * On the page itself as well as in Settings, because it changes the whole page and somebody who
+ * wonders why Discover shows charts rather than their addons should find the answer where they
+ * are looking. See [DiscoverPreferences].
+ */
+@Composable
+private fun DiscoverModeRow(mode: DiscoverMode, onModeChange: (DiscoverMode) -> Unit) {
+    Row(
+        modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+    ) {
+        DiscoverMode.entries.forEach { option ->
+            FilterChip(
+                selected = mode == option,
+                onClick = { onModeChange(option) },
+                label = { Text(stringResource(option.labelRes())) },
+            )
+        }
+    }
+}
+
+internal fun DiscoverMode.labelRes(): StringResource = when (this) {
+    DiscoverMode.GENERAL -> AYMR.strings.discover_mode_general
+    DiscoverMode.MY_SOURCES -> AYMR.strings.discover_mode_my_sources
 }
 
 /**

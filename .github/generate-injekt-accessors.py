@@ -59,7 +59,12 @@ NOT_ACCESSORS = set()
 
 
 def sources():
-    listed = subprocess.run(["git", "ls-files", "*.kt"], capture_output=True, text=True, check=True).stdout.split()
+    # Untracked files too: a class added in the change being made is not in the index yet, and an
+    # accessor for it is exactly what the change needs.
+    listed = subprocess.run(
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard", "*.kt"],
+        capture_output=True, text=True, check=True,
+    ).stdout.split()
     return [f for f in listed if "/build/" not in f and "/src/test/" not in f and Path(f).is_file()]
 
 
