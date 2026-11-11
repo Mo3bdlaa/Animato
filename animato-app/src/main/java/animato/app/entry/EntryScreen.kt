@@ -335,23 +335,21 @@ class EntryScreen(
                              * answer at all for an extension that stopped working. This is the
                              * entrance, not a reimplementation.
                              *
-                             * Only for a title in the library. Migrating something you have not
-                             * saved is moving nothing from nowhere.
+                             * Also for a title outside the library: what has been read or watched on it
+                             * is worth carrying to the new source too.
                              */
-                            if (state.inLibrary) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.action_migrate)) },
-                                    onClick = {
-                                        menuOpen = false
-                                        navigator.push(
-                                            when (contentType) {
-                                                ContentType.MANGA -> MigrateSearchScreen(entryId)
-                                                ContentType.ANIME -> MigrateAnimeSearchScreen(entryId)
-                                            },
-                                        )
-                                    },
-                                )
-                            }
+                            DropdownMenuItem(
+                                text = { Text(stringResource(MR.strings.action_migrate)) },
+                                onClick = {
+                                    menuOpen = false
+                                    navigator.push(
+                                        when (contentType) {
+                                            ContentType.MANGA -> MigrateSearchScreen(entryId)
+                                            ContentType.ANIME -> MigrateAnimeSearchScreen(entryId)
+                                        },
+                                    )
+                                },
+                            )
                             DropdownMenuItem(
                                 // Everything this page deliberately does not re-implement is one tap
                                 // away and unchanged.
