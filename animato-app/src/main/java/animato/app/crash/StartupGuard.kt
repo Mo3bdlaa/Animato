@@ -45,10 +45,17 @@ object StartupGuard {
      */
     fun beginStartup(): Int {
         val attempts = attempts()
+        // Once per process: a rotation, a theme change or a second activity instance is not a launch,
+        // and counting them sent people to recovery with nothing wrong
+        if (counted) return attempts.get()
+        counted = true
         val next = attempts.get() + 1
         attempts.set(next)
         return next
     }
+
+    @Volatile
+    private var counted = false
 
     /** Whether this launch should go to recovery rather than into an app that will not open. */
     fun isLooping(): Boolean = attempts().get() >= LOOP_THRESHOLD

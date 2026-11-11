@@ -204,6 +204,12 @@ class MainActivity : BaseActivity() {
         registerSecureActivity(this)
     }
 
+    override fun onDestroy() {
+        // Left on purpose, however soon: a crash never gets here
+        if (isFinishing) StartupGuard.succeeded()
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val isLaunch = savedInstanceState == null
 
