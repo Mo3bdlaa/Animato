@@ -1028,4 +1028,6 @@
     <string name="pref_extensions_remove_unused">Remove unused extensions</string>
     <string name="pref_extensions_remove_unused_never">Never</string>
     <string name="error_log_title">What went wrong</string>
+    <string name="pref_proxy_vpn">Proxy &amp; VPN</string>
+    <string name="pref_proxy_vpn_summary">Built-in Xray for vless, vmess, trojan and shadowsocks links, or an HTTP or SOCKS proxy</string>
 </resources>

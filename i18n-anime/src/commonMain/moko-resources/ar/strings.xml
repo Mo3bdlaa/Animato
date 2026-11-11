@@ -791,4 +791,6 @@
     <string name="pref_extensions_remove_unused">مسح الإضافات اللي مش مستخدمة</string>
     <string name="pref_extensions_remove_unused_never">أبدًا</string>
     <string name="error_log_title">إيه اللي حصل</string>
+    <string name="pref_proxy_vpn">بروكسي و VPN</string>
+    <string name="pref_proxy_vpn_summary">Xray مدمج لروابط vless وvmess وtrojan وshadowsocks، أو بروكسي HTTP أو SOCKS</string>
 </resources>

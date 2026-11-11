@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -257,7 +258,7 @@ object AnimatoSettingsMainScreen : Screen() {
     )
 
     /**
-     * Eleven destinations under three headings, organised by what someone is doing.
+     * Twelve destinations under three headings, organised by what someone is doing.
      *
      * The flat list was already better than the tree it replaced — Reading and Watching as equals
      * instead of a Player buried inside a bucket called Anime — and a device still called it "a
@@ -305,6 +306,13 @@ object AnimatoSettingsMainScreen : Screen() {
                     subtitleRes = AYMR.strings.pref_sources_summary,
                     icon = Icons.Outlined.Explore,
                     screen = AnimatoSettingsSourcesScreen,
+                ),
+                // Its own row, not only inside Sources: the built-in proxy is a reason to open settings
+                Item(
+                    titleRes = AYMR.strings.pref_proxy_vpn,
+                    subtitleRes = AYMR.strings.pref_proxy_vpn_summary,
+                    icon = Icons.Outlined.VpnLock,
+                    screen = AnimatoProxyScreen,
                 ),
                 Item(
                     titleRes = AYMR.strings.pref_downloads_storage,
