@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import animato.anime.player.PlayerLauncher
+import animato.app.search.AnimatoSearchScreen
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
 import animato.ui.components.Pill
@@ -137,6 +138,10 @@ class EntryScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        // The title, the author or a genre, looked up across every source of the same kind
+        val searchAllSources: (String) -> Unit = { query ->
+            navigator.push(AnimatoSearchScreen(initialQuery = query, restrictTo = contentType))
+        }
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val screenModel = viewModel(key = "entry-$contentType-$entryId") {
@@ -392,6 +397,7 @@ class EntryScreen(
                     item(key = "header") {
                         EntryHeader(
                             state = state,
+                            onSearch = searchAllSources,
                             onToggleLibrary = screenModel::toggleInLibrary,
                             onResume = { state.nextItem?.let(open) },
                             onRefresh = screenModel::refresh,
@@ -438,6 +444,7 @@ class EntryScreen(
                             state = state,
                             expanded = showAbout,
                             onToggle = { showAbout = !showAbout },
+                            onSearch = searchAllSources,
                         )
                     }
 
@@ -654,6 +661,7 @@ private fun SeasonRow(
 @Composable
 private fun EntryHeader(
     state: EntryState,
+    onSearch: (String) -> Unit,
     onToggleLibrary: () -> Unit,
     onResume: () -> Unit,
     onRefresh: () -> Unit,
@@ -697,6 +705,7 @@ private fun EntryHeader(
             ) {
                 Text(
                     text = state.title,
+                    modifier = Modifier.clickable { onSearch(state.title) },
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -706,6 +715,7 @@ private fun EntryHeader(
                 state.author?.takeIf { it.isNotBlank() }?.let {
                     Text(
                         text = it,
+                        modifier = Modifier.clickable { onSearch(it) },
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = SUBDUED_ALPHA),
                         maxLines = 1,
@@ -857,6 +867,7 @@ private fun AboutSection(
     state: EntryState,
     expanded: Boolean,
     onToggle: () -> Unit,
+    onSearch: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -880,7 +891,7 @@ private fun AboutSection(
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
             ) {
                 state.genres.forEach { genre ->
-                    AssistChip(onClick = onToggle, label = { Text(genre) })
+                    AssistChip(onClick = { onSearch(genre) }, label = { Text(genre) })
                 }
             }
         }
