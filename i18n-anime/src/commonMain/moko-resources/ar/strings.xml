@@ -786,4 +786,8 @@
     <string name="stremio_suggested_comet">فيديو من مواقع التورنت، على ElfHosted</string>
     <string name="stremio_suggested_mediafusion">فيديو وكتالوجات، منها الرياضة المباشرة، على ElfHosted</string>
     <string name="stremio_suggested_anime_catalogs">قوائم الأنمي من MyAnimeList وAniList وغيرهم. افتح صفحته الأول واختار الكتالوجات، وبعدين الصق العنوان اللي بيديهولك.</string>
+    <string name="pref_extensions_auto_update">تحديث الإضافات تلقائيًا</string>
+    <string name="pref_extensions_auto_update_summary">في الخلفية من غير ما يسأل. محتاج طريقة التثبيت الخاصة.</string>
+    <string name="pref_extensions_remove_unused">مسح الإضافات اللي مش مستخدمة</string>
+    <string name="pref_extensions_remove_unused_never">أبدًا</string>
 </resources>

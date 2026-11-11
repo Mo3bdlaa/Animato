@@ -21,6 +21,7 @@ import animato.app.discover.DiscoverPreferences
 import animato.app.discover.MetadataCatalog
 import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.entry.EntryOverrides
+import animato.app.extension.ExtensionBridgePreferences
 import animato.app.library.UnifiedLibraryPreferences
 import animato.app.sync.SyncPreferences
 import animato.domain.content.ContentPreferences
@@ -236,6 +237,7 @@ interface InjektAccessors {
     val downloadProvider: DownloadProvider
     val entryOverrides: EntryOverrides
     val episodeVideoResolver: EpisodeVideoResolver
+    val extensionBridgePreferences: ExtensionBridgePreferences
     val extensionManager: ExtensionManager
     val extensionStoreRestorer: ExtensionStoreRestorer
     val extensionStoresBackupCreator: ExtensionStoresBackupCreator
@@ -421,6 +423,7 @@ internal fun InjektAccessors.injektBindings(): Map<Type, () -> Any> = mapOf(
     DownloadProvider::class.java to { downloadProvider },
     EntryOverrides::class.java to { entryOverrides },
     EpisodeVideoResolver::class.java to { episodeVideoResolver },
+    ExtensionBridgePreferences::class.java to { extensionBridgePreferences },
     ExtensionManager::class.java to { extensionManager },
     ExtensionStoreRestorer::class.java to { extensionStoreRestorer },
     ExtensionStoresBackupCreator::class.java to { extensionStoresBackupCreator },

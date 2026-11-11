@@ -157,8 +157,12 @@ internal fun ExtensionsContent(canGoBack: Boolean = false) {
     // The merge a device asked for: an installed extension is somewhere you can GO, not just
     // a thing you manage. One source opens straight into its browse screen; several open a
     // picker first, because ten languages of one site are ten different sources.
-    val openSource: (ExtensionRow, RowSource) -> Unit = { row, source ->
-        navigator.push(SourceBrowseScreen(source.id, row.contentType))
+    // A store's extension opens the same way, installing itself first. See ExtensionsScreenModel.open.
+    val openSource: (ExtensionRow, RowSource) -> Unit = screenModel::open
+    LaunchedEffect(screenModel) {
+        screenModel.opens.collect { (sourceId, contentType) ->
+            navigator.push(SourceBrowseScreen(sourceId, contentType))
+        }
     }
 
     if (languagesOpen) {
@@ -818,7 +822,7 @@ private fun ExtensionListItem(
         }
 
         ListItem(
-            modifier = Modifier.clickable(enabled = row.isInstalled && row.sources.isNotEmpty()) {
+            modifier = Modifier.clickable(enabled = row.sources.isNotEmpty() && !row.installStep.isOngoing()) {
                 if (row.sources.size == 1) {
                     onOpenSource(row.sources.first())
                 } else {
@@ -991,7 +995,7 @@ private fun ShipsEmptyState(onBrowse: () -> Unit) {
     )
 }
 
-private fun InstallStep.isOngoing(): Boolean =
+internal fun InstallStep.isOngoing(): Boolean =
     this == InstallStep.Pending || this == InstallStep.Downloading || this == InstallStep.Installing
 
 private val SourceIconSize = 40.dp

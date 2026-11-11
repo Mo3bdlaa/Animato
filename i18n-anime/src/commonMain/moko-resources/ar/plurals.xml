@@ -62,4 +62,12 @@
         <item quantity="few">%d حاجات مستنيين</item>
         <item quantity="other">%d حاجة مستنية</item>
     </plurals>
+    <plurals name="pref_extensions_remove_unused_after">
+        <item quantity="zero">بعد %d يوم من غير استخدام</item>
+        <item quantity="one">بعد يوم من غير استخدام</item>
+        <item quantity="two">بعد يومين من غير استخدام</item>
+        <item quantity="few">بعد %d أيام من غير استخدام</item>
+        <item quantity="many">بعد %d يوم من غير استخدام</item>
+        <item quantity="other">بعد %d يوم من غير استخدام</item>
+    </plurals>
 </resources>

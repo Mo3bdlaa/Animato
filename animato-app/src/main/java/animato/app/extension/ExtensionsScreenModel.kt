@@ -20,6 +20,8 @@ import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,14 +33,21 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withTimeoutOrNull
 import mihon.domain.extension.anime.interactor.GetAnimeExtensionStoreCountAsFlow
 import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow
 import mihon.domain.extension.model.ContentWarning
+import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Which half an extension belongs to, and the object the managers want back.
@@ -52,15 +61,18 @@ import uy.kohesive.injekt.api.get
 sealed interface ExtensionHandle {
 
     val contentType: ContentType
+    val pkgName: String
 
     @Immutable
     data class Manga(val extension: Extension) : ExtensionHandle {
         override val contentType = ContentType.MANGA
+        override val pkgName get() = extension.pkgName
     }
 
     @Immutable
     data class Anime(val extension: AnimeExtension) : ExtensionHandle {
         override val contentType = ContentType.ANIME
+        override val pkgName get() = extension.pkgName
     }
 }
 
@@ -131,7 +143,7 @@ data class ExtensionRow(
      */
     val icon: Any?,
     val handle: ExtensionHandle,
-    /** Installed rows only: what tapping the row can open. Empty before installing. */
+    /** What tapping the row can open; on a store row, opening installs it first. */
     val sources: List<RowSource> = emptyList(),
 ) {
     val contentType: ContentType get() = handle.contentType
@@ -212,7 +224,15 @@ class ExtensionsScreenModel(
     private val extensionManager: ExtensionManager = Injekt.get(),
     private val animeExtensionManager: AnimeExtensionManager = Injekt.get(),
     private val sourcePreferences: SourcePreferences = Injekt.get(),
+    private val sourceManager: SourceManager = Injekt.get(),
+    private val animeSourceManager: AnimeSourceManager = Injekt.get(),
+    private val bridgePreferences: ExtensionBridgePreferences = Injekt.get(),
 ) : ViewModel() {
+
+    private val openRequests = Channel<Pair<Long, ContentType>>(Channel.BUFFERED)
+
+    /** Sources ready to browse, once an extension opened from a store has finished installing. */
+    val opens: Flow<Pair<Long, ContentType>> = openRequests.receiveAsFlow()
 
     val state: StateFlow<ExtensionsState>
         field = MutableStateFlow(ExtensionsState(lens = contentPreferences.contentFilter.get()))
@@ -371,18 +391,50 @@ class ExtensionsScreenModel(
     }
 
     fun install(row: ExtensionRow) {
-        viewModelScope.launchIO {
-            when (val handle = row.handle) {
+        viewModelScope.launchIO { install(row.handle) }
+    }
+
+    private suspend fun install(handle: ExtensionHandle) {
+        run {
+            when (handle) {
                 is ExtensionHandle.Manga -> {
-                    val extension = handle.extension as? Extension.Available ?: return@launchIO
+                    val extension = handle.extension as? Extension.Available ?: return@run
                     extensionManager.installExtension(extension).track(extension.pkgName, ContentType.MANGA)
                 }
                 is ExtensionHandle.Anime -> {
-                    val extension = handle.extension as? AnimeExtension.Available ?: return@launchIO
+                    val extension = handle.extension as? AnimeExtension.Available ?: return@run
                     animeExtensionManager.installExtension(extension).track(extension.pkgName, ContentType.ANIME)
                 }
             }
         }
+    }
+
+    /**
+     * Opens [source], installing its extension first when it is still only on a store. The install is
+     * private, so there is nothing to confirm, and the extension is then kept up to date and removed
+     * once unused by [ExtensionMaintenanceJob].
+     */
+    fun open(row: ExtensionRow, source: RowSource) {
+        if (row.isInstalled) {
+            openRequests.trySend(source.id to row.contentType)
+            return
+        }
+        if (row.installStep.isOngoing()) return
+        viewModelScope.launchIO {
+            install(row.handle)
+            val ready = withTimeoutOrNull(SOURCE_REGISTRATION_TIMEOUT) {
+                while (!isRegistered(source.id, row.contentType)) delay(SOURCE_POLL_INTERVAL)
+            }
+            if (ready == null) return@launchIO
+            bridgePreferences.onDemandPackages.getAndSet { it + row.handle.pkgName }
+            bridgePreferences.markUsed(source.id)
+            openRequests.send(source.id to row.contentType)
+        }
+    }
+
+    private suspend fun isRegistered(sourceId: Long, contentType: ContentType): Boolean = when (contentType) {
+        ContentType.MANGA -> sourceManager.get(sourceId) != null
+        ContentType.ANIME -> animeSourceManager.get(sourceId) != null
     }
 
     fun update(row: ExtensionRow) {
@@ -500,6 +552,9 @@ class ExtensionsScreenModel(
     }
 
     private companion object {
+        val SOURCE_REGISTRATION_TIMEOUT = 30.seconds
+        val SOURCE_POLL_INTERVAL = 250.milliseconds
+
         /**
          * Arabic first, then everything else by the platform's own order.
          *
@@ -604,9 +659,11 @@ private fun Extension.toRow(steps: Map<String, InstallActivity>, onDevice: Insta
     failure = steps[pkgName]?.failure,
     icon = extensionIcon(),
     handle = ExtensionHandle.Manga(this),
-    sources = (this as? Extension.Loaded)?.sources
-        ?.map { RowSource(id = it.id, name = it.name, lang = it.lang) }
-        .orEmpty(),
+    sources = when (this) {
+        is Extension.Loaded -> sources.map { RowSource(id = it.id, name = it.name, lang = it.lang) }
+        is Extension.Available -> sources.map { RowSource(id = it.id, name = it.name, lang = it.lang) }
+        is Extension.NotLoaded -> emptyList()
+    },
 )
 
 /**
@@ -647,9 +704,11 @@ private fun AnimeExtension.toRow(steps: Map<String, InstallActivity>, onDevice: 
     failure = steps[pkgName]?.failure,
     icon = extensionIcon(),
     handle = ExtensionHandle.Anime(this),
-    sources = (this as? AnimeExtension.Installed)?.sources
-        ?.map { RowSource(id = it.id, name = it.name, lang = it.lang) }
-        .orEmpty(),
+    sources = when (this) {
+        is AnimeExtension.Installed -> sources.map { RowSource(id = it.id, name = it.name, lang = it.lang) }
+        is AnimeExtension.Available -> sources.map { RowSource(id = it.id, name = it.name, lang = it.lang) }
+        is AnimeExtension.Untrusted -> emptyList()
+    },
 )
 
 private fun ExtensionRow.matches(query: String?): Boolean {

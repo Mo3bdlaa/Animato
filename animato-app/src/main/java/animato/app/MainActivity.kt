@@ -62,6 +62,7 @@ import animato.app.downloads.DownloadCleanupPreferences
 import animato.app.downloads.OrphanedDownloadSweeper
 import animato.app.entry.EntryScreen
 import animato.app.extension.ExtensionInstallerDefaults
+import animato.app.extension.ExtensionMaintenanceJob
 import animato.app.extension.ExtensionUpdateCheck
 import animato.app.navigation.AnimatoHomeScreen
 import animato.app.navigation.setContentLens
@@ -281,6 +282,7 @@ class MainActivity : BaseActivity() {
             // work across an app update on some devices, and re-enqueueing on every launch is
             // idempotent.
             LibrarySyncJob.setupTask(appContext)
+            ExtensionMaintenanceJob.setupTask(appContext)
         }
 
         // The first query waits for the schema upgrade, so its return is the end of the migration

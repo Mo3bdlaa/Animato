@@ -65,6 +65,11 @@ class ExtensionUpdateCheck(
      * about it should interrupt them.
      */
     suspend fun check(context: Context) = withIOContext {
+        // Applied in the background rather than announced, when that can happen without a prompt
+        if (ExtensionMaintenanceJob.updatesSilently()) {
+            ExtensionMaintenanceJob.runNow(context)
+            return@withIOContext
+        }
         checkManga(context)
         checkAnime(context)
     }

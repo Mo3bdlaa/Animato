@@ -68,4 +68,8 @@
         <item quantity="one">%d downloaded</item>
         <item quantity="other">%d downloaded</item>
     </plurals>
+    <plurals name="pref_extensions_remove_unused_after">
+        <item quantity="one">After %d day without use</item>
+        <item quantity="other">After %d days without use</item>
+    </plurals>
 </resources>

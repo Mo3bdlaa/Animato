@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import animato.app.discover.DiscoverMode
 import animato.app.discover.DiscoverPreferences
 import animato.app.discover.labelRes
+import animato.app.extension.ExtensionBridgePreferences
 import animato.app.extension.ExtensionsScreen
 import animato.app.tracking.TrackingHubScreen
 import animato.domain.content.ContentPreferences
@@ -24,6 +25,7 @@ import eu.kanade.tachiyomi.util.system.isShizukuInstalled
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -147,6 +149,7 @@ object AnimatoSettingsSourcesScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val installer = remember { Injekt.get<BasePreferences>().extensionInstaller }
+        val bridge = remember { Injekt.get<ExtensionBridgePreferences>() }
         val discoverMode = remember { Injekt.get<DiscoverPreferences>().mode }
         return listOf(
             // What Discover's front page is built from. Also switchable on Discover itself.
@@ -181,6 +184,22 @@ object AnimatoSettingsSourcesScreen : SearchableSettings {
                             .filter { it != ExtensionInstaller.SHIZUKU || context.isShizukuInstalled }
                             .associateWith { stringResource(it.titleRes) },
                         title = stringResource(MR.strings.ext_installer_pref),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = bridge.autoUpdate,
+                        title = stringResource(AYMR.strings.pref_extensions_auto_update),
+                        subtitle = stringResource(AYMR.strings.pref_extensions_auto_update_summary),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = bridge.removeUnusedAfterDays,
+                        entries = listOf(0, 14, 30, 60).associateWith { days ->
+                            if (days == 0) {
+                                stringResource(AYMR.strings.pref_extensions_remove_unused_never)
+                            } else {
+                                pluralStringResource(AYMR.plurals.pref_extensions_remove_unused_after, days, days)
+                            }
+                        },
+                        title = stringResource(AYMR.strings.pref_extensions_remove_unused),
                     ),
                 ),
             ),

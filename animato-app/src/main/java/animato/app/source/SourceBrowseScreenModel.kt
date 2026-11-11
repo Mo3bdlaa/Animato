@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import animato.anime.content.BrowsableByCategory
 import animato.anime.content.SourceCategory
+import animato.app.extension.ExtensionBridgePreferences
 import animato.domain.content.ContentType
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.manga.interactor.UpdateManga
@@ -131,6 +132,8 @@ class SourceBrowseScreenModel(
     private var page = 1
 
     init {
+        // What ExtensionMaintenanceJob reads to tell a source in use from one to remove
+        Injekt.get<ExtensionBridgePreferences>().markUsed(sourceId)
         // On the model's scope, because Mihon's source manager answers only from a coroutine now.
         // The first page waits for the source, as it always had to.
         viewModelScope.launch { start() }
