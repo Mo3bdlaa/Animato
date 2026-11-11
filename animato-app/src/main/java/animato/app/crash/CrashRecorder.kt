@@ -99,7 +99,15 @@ class CrashRecorder private constructor(
 
         /** The report itself, or null if the file is gone — which a reinstall or a clear makes it. */
         fun report(context: Application): String? =
-            file(context).takeIf { it.exists() }?.runCatching { readText() }?.getOrNull()
+            file(context)
+                .takeIf { it.exists() && it.lastModified() >= installedAt(context) }
+                ?.runCatching { readText() }
+                ?.getOrNull()
+
+        /** A crash from before this version was installed says nothing about this version. */
+        private fun installedAt(context: Application): Long =
+            runCatching { context.packageManager.getPackageInfo(context.packageName, 0).lastUpdateTime }
+                .getOrDefault(0L)
 
         /**
          * Stop offering it.
