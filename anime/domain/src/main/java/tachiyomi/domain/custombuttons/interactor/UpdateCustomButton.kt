@@ -1,7 +1,8 @@
 package tachiyomi.domain.custombuttons.interactor
 
 import dev.zacsweers.metro.Inject
-import tachiyomi.core.common.util.lang.withNonCancellableContext
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import tachiyomi.domain.custombuttons.model.CustomButtonUpdate
 import tachiyomi.domain.custombuttons.repository.CustomButtonRepository
 
@@ -9,7 +10,7 @@ import tachiyomi.domain.custombuttons.repository.CustomButtonRepository
 class UpdateCustomButton(
     private val customButtonRepository: CustomButtonRepository,
 ) {
-    suspend fun await(update: CustomButtonUpdate) = withNonCancellableContext {
+    suspend fun await(update: CustomButtonUpdate) = withContext(NonCancellable) {
         try {
             customButtonRepository.updatePartialCustomButton(update)
         } catch (e: Exception) {
@@ -17,7 +18,7 @@ class UpdateCustomButton(
         }
     }
 
-    suspend fun await(updates: List<CustomButtonUpdate>) = withNonCancellableContext {
+    suspend fun await(updates: List<CustomButtonUpdate>) = withContext(NonCancellable) {
         try {
             customButtonRepository.updatePartialCustomButtons(updates)
             Result.Success

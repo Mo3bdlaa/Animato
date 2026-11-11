@@ -527,4 +527,6 @@
     <string name="pref_download_fillermarked_items">Permitir la descarga de episodios de relleno</string>
     <string name="show_episode_previews">Miniaturas de episodio</string>
     <string name="show_episode_summaries">Resúmenes de episodio</string>
+    <string name="file_select_backup">Elige una copia de respaldo</string>
+    <string name="onboarding_action_skip">Saltar</string>
 </resources>

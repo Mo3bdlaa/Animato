@@ -41,7 +41,7 @@ fun UpdatesWithRelations.toUpdateItem() = UpdateItem(
     contentType = ContentType.MANGA,
     title = mangaTitle,
     itemName = chapterName,
-    fetchedAt = dateFetch,
+    fetchedAt = dateFetch.toEpochMilliseconds(),
     isNew = !read,
     coverData = coverData,
 )

@@ -104,7 +104,7 @@ class AnimatoBackupCreateJob(private val context: Context, workerParams: WorkerP
     }
 
     companion object {
-        fun isManualJobRunning(context: Context): Boolean = context.workManager.isRunning(TAG_MANUAL)
+        suspend fun isManualJobRunning(context: Context): Boolean = context.workManager.isRunning(TAG_MANUAL)
 
         /**
          * Puts this job in the periodic slot, at whatever interval the user chose.

@@ -105,7 +105,7 @@ data object AnimeLibraryTab : Tab {
 
         val snackbarHostState = remember { SnackbarHostState() }
 
-        val onClickRefresh: (AnimeCategory?) -> Boolean = { category ->
+        val onClickRefresh: suspend (AnimeCategory?) -> Boolean = { category ->
             val started = AnimeLibraryUpdateJob.startNow(context, category)
             scope.launch {
                 val msgRes = if (started) MR.strings.updating_category else MR.strings.update_already_running
@@ -143,11 +143,9 @@ data object AnimeLibraryTab : Tab {
                     },
                     onClickFilter = screenModel::showSettingsDialog,
                     onClickRefresh = {
-                        onClickRefresh(
-                            state.categories[screenModel.activeCategoryIndex],
-                        )
+                        scope.launch { onClickRefresh(state.categories[screenModel.activeCategoryIndex]) }
                     },
-                    onClickGlobalUpdate = { onClickRefresh(null) },
+                    onClickGlobalUpdate = { scope.launch { onClickRefresh(null) } },
                     onClickOpenRandomManga = {
                         scope.launch {
                             val randomItem = screenModel.getRandomAnimelibItemForCurrentCategory()

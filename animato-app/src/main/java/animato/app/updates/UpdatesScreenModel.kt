@@ -167,7 +167,7 @@ class UpdatesScreenModel(
      * reported as started when either accepted, because one half already working is still the
      * screen doing what was asked.
      */
-    fun refresh(): Boolean {
+    suspend fun refresh(): Boolean {
         val context = Injekt.get<Application>()
         val manga = state.value.lens.includesManga && LibraryUpdateWorker.startNow(context.workManager)
         val anime = state.value.lens.includesAnime && AnimeLibraryUpdateJob.startNow(context)

@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
  * components plus the loader's own terminal `EngineInterceptor`, appended last. Copying that
  * engine into a new loader parks it at the head of the new chain, where it serves every request
  * against the OLD registry and the anime components behind it never run. So the copy must take
- * every loadable and no interceptors — which is exactly what these tests pin down.
+ * every loadable and every interceptor but the engine — which is exactly what these tests pin down.
  */
 class AddAllLoadablesTest {
 
@@ -81,6 +81,21 @@ class AddAllLoadablesTest {
 
         // An interceptor copied out of a live loader is that loader's engine.
         copy.interceptors shouldBe emptyList()
+    }
+
+    @Test
+    fun `keeps interceptors other than the engine`() {
+        val source = composedRegistry()
+
+        val copy = ComponentRegistry.Builder().addInterceptorsButEngine(source).build()
+
+        copy.interceptors shouldBe source.interceptors
+    }
+
+    @Test
+    fun `the engine it leaves out is Coil's`() {
+        // A renamed engine would be copied again, and serve every request against the old registry
+        Class.forName(COIL_ENGINE_INTERCEPTOR)
     }
 
     @Test

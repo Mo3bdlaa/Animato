@@ -32,13 +32,12 @@ dependencies {
     implementation(projects.sourceApi)
     implementation(projects.domain)
     implementation(projects.core.common)
+    implementation(projects.core.metro)
 
     implementation(libs.metro.runtime)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.jsonOkio)
     implementation(libs.kotlinx.serialization.protobuf)
-
-    implementation(libs.injekt)
 
     implementation(libs.kotlinx.datetime)
 

@@ -41,6 +41,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.coroutines.launch
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
@@ -248,6 +249,7 @@ object AnimatoSettingsDataScreen : SearchableSettings {
     @Composable
     private fun getBackupGroup(): Preference.PreferenceGroup {
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
         val navigator = LocalNavigator.currentOrThrow
         val backupPreferences = remember { Injekt.get<BackupPreferences>() }
         val lastAutoBackup by backupPreferences.lastAutoBackupTimestamp.collectAsState()
@@ -257,7 +259,7 @@ object AnimatoSettingsDataScreen : SearchableSettings {
                 override fun createIntent(context: Context, input: String): Intent {
                     return Intent.createChooser(
                         super.createIntent(context, input),
-                        context.stringResource(MR.strings.file_select_backup),
+                        context.stringResource(AYMR.strings.file_select_backup),
                     )
                 }
             },
@@ -294,17 +296,19 @@ object AnimatoSettingsDataScreen : SearchableSettings {
                                 modifier = Modifier.fillMaxHeight(),
                                 checked = false,
                                 onCheckedChange = {
-                                    val busy = AniyomiBackupRestoreJob.isRunning(context) ||
-                                        BackupRestoreWorker.isRunning(context.workManager)
-                                    if (busy) {
-                                        context.toast(MR.strings.restore_in_progress)
-                                        return@SegmentedButton
+                                    scope.launch {
+                                        val busy = AniyomiBackupRestoreJob.isRunning(context) ||
+                                            BackupRestoreWorker.isRunning(context.workManager)
+                                        if (busy) {
+                                            context.toast(MR.strings.restore_in_progress)
+                                            return@launch
+                                        }
+                                        if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
+                                            context.toast(MR.strings.restore_miui_warning)
+                                        }
+                                        // Wrapped in a chooser, so there is always something to handle it.
+                                        chooseBackup.launch("*/*")
                                     }
-                                    if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
-                                        context.toast(MR.strings.restore_miui_warning)
-                                    }
-                                    // Wrapped in a chooser, so there is always something to handle it.
-                                    chooseBackup.launch("*/*")
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(1, 2),
                             ) {
@@ -341,6 +345,7 @@ object AnimatoSettingsDataScreen : SearchableSettings {
     @Composable
     private fun getAniyomiImportGroup(): Preference.PreferenceGroup {
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
         val navigator = LocalNavigator.currentOrThrow
 
         val chooseBackup = rememberLauncherForActivityResult(
@@ -367,12 +372,14 @@ object AnimatoSettingsDataScreen : SearchableSettings {
                     title = stringResource(AYMR.strings.aniyomi_import),
                     subtitle = stringResource(AYMR.strings.aniyomi_import_summary),
                     onClick = {
-                        val busy = AniyomiBackupRestoreJob.isRunning(context) ||
-                            BackupRestoreWorker.isRunning(context.workManager)
-                        if (busy) {
-                            context.toast(AYMR.strings.aniyomi_import_in_progress)
-                        } else {
-                            chooseBackup.launch("*/*")
+                        scope.launch {
+                            val busy = AniyomiBackupRestoreJob.isRunning(context) ||
+                                BackupRestoreWorker.isRunning(context.workManager)
+                            if (busy) {
+                                context.toast(AYMR.strings.aniyomi_import_in_progress)
+                            } else {
+                                chooseBackup.launch("*/*")
+                            }
                         }
                     },
                 ),

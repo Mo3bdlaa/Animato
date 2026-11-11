@@ -7,6 +7,9 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.data.saver.ImageSaver
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.data.Database
@@ -62,7 +65,7 @@ object MihonBindings {
     @Provides
     @SingleIn(AnimatoScope::class)
     fun storageManager(context: Context, storagePreferences: StoragePreferences): StorageManager =
-        StorageManager(context, storagePreferences)
+        StorageManager(CoroutineScope(SupervisorJob() + Dispatchers.IO), context, storagePreferences)
 
     @Provides
     @SingleIn(AnimatoScope::class)

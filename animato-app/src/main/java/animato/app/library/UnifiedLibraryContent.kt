@@ -155,14 +155,13 @@ internal fun UnifiedLibraryContent() {
             refreshing = isRefreshing,
             enabled = true,
             onRefresh = {
-                if (screenModel.refresh()) {
-                    scope.launch {
-                        // Honest for a second, then gone: the update is a background job with its
-                        // own notification. Same trade Mihon's library makes.
-                        isRefreshing = true
-                        delay(1.seconds)
-                        isRefreshing = false
-                    }
+                scope.launch {
+                    if (!screenModel.refresh()) return@launch
+                    // Honest for a second, then gone: the update is a background job with its
+                    // own notification. Same trade Mihon's library makes.
+                    isRefreshing = true
+                    delay(1.seconds)
+                    isRefreshing = false
                 }
             },
             indicatorPadding = PaddingValues(top = contentPadding.calculateTopPadding()),

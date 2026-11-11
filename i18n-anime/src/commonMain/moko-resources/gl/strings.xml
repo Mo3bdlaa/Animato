@@ -3,4 +3,6 @@
     <string name="pref_library_summary">Categorías, actualización global, accións ao arrastrar</string>
     <string name="manga_categories">Categorías</string>
     <string name="default_manga_category">Categoría por defecto</string>
+    <string name="file_select_backup">Elexir o ficheiro da copia de seguridade</string>
+    <string name="onboarding_action_skip">Omitir</string>
 </resources>

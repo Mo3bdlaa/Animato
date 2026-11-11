@@ -1,8 +1,9 @@
 package tachiyomi.domain.custombuttons.interactor
 
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.custombuttons.model.CustomButtonUpdate
 import tachiyomi.domain.custombuttons.repository.CustomButtonRepository
@@ -11,12 +12,12 @@ import tachiyomi.domain.custombuttons.repository.CustomButtonRepository
 class DeleteCustomButton(
     private val customButtonRepository: CustomButtonRepository,
 ) {
-    suspend fun await(customButtonId: Long) = withNonCancellableContext {
+    suspend fun await(customButtonId: Long) = withContext(NonCancellable) {
         try {
             customButtonRepository.deleteCustomButton(customButtonId)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
-            return@withNonCancellableContext Result.InternalError(e)
+            return@withContext Result.InternalError(e)
         }
 
         val customButtons = customButtonRepository.getAll()

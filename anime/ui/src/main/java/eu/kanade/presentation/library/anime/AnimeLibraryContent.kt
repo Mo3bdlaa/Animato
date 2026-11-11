@@ -41,7 +41,7 @@ fun AnimeLibraryContent(
     onContinueWatchingClicked: ((LibraryAnime) -> Unit)?,
     onToggleSelection: (LibraryAnime) -> Unit,
     onToggleRangeSelection: (LibraryAnime) -> Unit,
-    onRefresh: (AnimeCategory?) -> Boolean,
+    onRefresh: suspend (AnimeCategory?) -> Boolean,
     onGlobalSearchClicked: () -> Unit,
     getNumberOfAnimeForCategory: (AnimeCategory) -> Int?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
@@ -88,9 +88,8 @@ fun AnimeLibraryContent(
         PullRefresh(
             refreshing = isRefreshing,
             onRefresh = {
-                val started = onRefresh(categories[currentPage()])
-                if (!started) return@PullRefresh
                 scope.launch {
+                    if (!onRefresh(categories[currentPage()])) return@launch
                     // Fake refresh status but hide it after a second as it's a long running task
                     isRefreshing = true
                     delay(1.seconds)

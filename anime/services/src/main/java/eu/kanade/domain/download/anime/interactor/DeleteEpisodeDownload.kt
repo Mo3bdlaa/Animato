@@ -2,7 +2,8 @@ package eu.kanade.domain.download.anime.interactor
 
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
-import tachiyomi.core.common.util.lang.withNonCancellableContext
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
@@ -13,7 +14,7 @@ class DeleteEpisodeDownload(
     private val downloadManager: AnimeDownloadManager,
 ) {
 
-    suspend fun awaitAll(anime: Anime, vararg episodes: Episode) = withNonCancellableContext {
+    suspend fun awaitAll(anime: Anime, vararg episodes: Episode) = withContext(NonCancellable) {
         sourceManager.get(anime.source)?.let { source ->
             downloadManager.deleteEpisodes(episodes.toList(), anime, source)
         }

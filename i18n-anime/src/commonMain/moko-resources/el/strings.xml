@@ -14,4 +14,6 @@
     <string name="download_paused">Παύση</string>
     <string name="download_notifier_download_paused_chapters">Λήψη σε παύση</string>
     <string name="channel_new_chapters_episodes">Ενημερώσεις κεφαλαίων</string>
+    <string name="file_select_backup">Επιλέξτε αρχείο αντιγράφου ασφαλείας</string>
+    <string name="onboarding_action_skip">Παράλειψη</string>
 </resources>

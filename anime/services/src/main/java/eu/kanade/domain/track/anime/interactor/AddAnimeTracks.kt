@@ -11,10 +11,11 @@ import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.animeService
 import eu.kanade.tachiyomi.util.lang.convertEpochMillisZone
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.withIOContext
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
@@ -32,7 +33,7 @@ class AddAnimeTracks(
 ) {
 
     // TODO: update all trackers based on common data
-    suspend fun bind(tracker: AnimeTracker, item: AnimeTrack, animeId: Long) = withNonCancellableContext {
+    suspend fun bind(tracker: AnimeTracker, item: AnimeTrack, animeId: Long) = withContext(NonCancellable) {
         withIOContext {
             val allChapters = getEpisodesByAnimeId.await(animeId)
             val hasSeenEpisodes = allChapters.any { it.seen }
@@ -81,7 +82,7 @@ class AddAnimeTracks(
         }
     }
 
-    suspend fun bindEnhancedTrackers(anime: Anime, source: AnimeSource) = withNonCancellableContext {
+    suspend fun bindEnhancedTrackers(anime: Anime, source: AnimeSource) = withContext(NonCancellable) {
         withIOContext {
             trackerManager.loggedInTrackers()
                 .filterIsInstance<EnhancedAnimeTracker>()

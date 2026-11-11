@@ -82,7 +82,7 @@ class HttpServerService : Service() {
             setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
             setSmallIcon(AnimeR.drawable.ic_dns_24dp)
             addAction(
-                R.drawable.ic_close_24dp,
+                AnimeR.drawable.ic_close_24dp,
                 stringResource(MR.strings.action_close),
                 pendingStopIntent,
             )

@@ -52,4 +52,6 @@
     <string name="action_reorganize_by">पुनः क्रमित करें</string>
     <string name="action_continue">जारी रखे</string>
     <string name="manga">Manga</string>
+    <string name="file_select_backup">बैकअप फ़ाइल का चयन करें</string>
+    <string name="onboarding_action_skip">छोड़ें</string>
 </resources>

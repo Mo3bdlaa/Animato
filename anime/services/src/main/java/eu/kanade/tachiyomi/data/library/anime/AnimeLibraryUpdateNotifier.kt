@@ -77,12 +77,12 @@ class AnimeLibraryUpdateNotifier(
     val progressNotificationBuilder by lazy {
         context.notificationBuilder(Notifications.CHANNEL_LIBRARY_PROGRESS) {
             setContentTitle(context.stringResource(MR.strings.app_name))
-            setSmallIcon(R.drawable.ic_refresh_24dp)
+            setSmallIcon(AnimeR.drawable.ic_refresh_24dp)
             setLargeIcon(notificationBitmap)
             setOngoing(true)
             setOnlyAlertOnce(true)
             addAction(
-                R.drawable.ic_close_24dp,
+                AnimeR.drawable.ic_close_24dp,
                 context.stringResource(MR.strings.action_cancel),
                 cancelIntent,
             )
@@ -129,7 +129,7 @@ class AnimeLibraryUpdateNotifier(
                     context.stringResource(MR.strings.notification_size_warning),
                 ),
             )
-            setSmallIcon(R.drawable.ic_warning_white_24dp)
+            setSmallIcon(AnimeR.drawable.ic_warning_white_24dp)
             setTimeoutAfter(AnimeDownloader.WARNING_NOTIF_TIMEOUT_MS)
             setContentIntent(NotificationHandler.openUrl(context, HELP_WARNING_URL))
         }
@@ -157,7 +157,7 @@ class AnimeLibraryUpdateNotifier(
                 NotificationCompat.BigTextStyle()
                     .bigText(context.stringResource(MR.strings.notification_size_warning)),
             )
-            setSmallIcon(R.drawable.ic_warning_white_24dp)
+            setSmallIcon(AnimeR.drawable.ic_warning_white_24dp)
             setTimeoutAfter(AnimeDownloader.WARNING_NOTIF_TIMEOUT_MS)
             setContentIntent(NotificationHandler.openUrl(context, HELP_WARNING_URL))
         }
@@ -293,7 +293,7 @@ class AnimeLibraryUpdateNotifier(
 
             // Mark episodes as seen action
             addAction(
-                R.drawable.ic_done_24dp,
+                AnimeR.drawable.ic_done_24dp,
                 context.stringResource(AYMR.strings.action_mark_as_seen),
                 AnimeNotificationReceiver.markAsViewedPendingBroadcast(
                     context,
@@ -304,7 +304,7 @@ class AnimeLibraryUpdateNotifier(
             )
             // View episodes action
             addAction(
-                R.drawable.ic_book_24dp,
+                AnimeR.drawable.ic_book_24dp,
                 context.stringResource(AYMR.strings.action_view_episodes),
                 AnimeNotificationReceiver.openAnimeEntryPendingActivity(
                     context,

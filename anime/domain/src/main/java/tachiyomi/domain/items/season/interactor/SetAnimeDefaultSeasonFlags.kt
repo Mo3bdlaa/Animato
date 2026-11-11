@@ -3,7 +3,8 @@ package tachiyomi.domain.items.season.interactor
 import aniyomi.domain.anime.SeasonDisplayMode
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import dev.zacsweers.metro.Inject
-import tachiyomi.core.common.util.lang.withNonCancellableContext
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
 import tachiyomi.domain.entries.anime.interactor.SetAnimeSeasonFlags
 import tachiyomi.domain.entries.anime.model.Anime
@@ -15,7 +16,7 @@ class SetAnimeDefaultSeasonFlags(
     private val getAnimeFavorites: GetAnimeFavorites,
 ) {
     suspend fun await(anime: Anime) {
-        withNonCancellableContext {
+        withContext(NonCancellable) {
             with(libraryPreferences) {
                 setAnimeSeasonFlags.awaitSetAllFlags(
                     animeId = anime.id,
@@ -41,7 +42,7 @@ class SetAnimeDefaultSeasonFlags(
     }
 
     suspend fun awaitAll() {
-        withNonCancellableContext {
+        withContext(NonCancellable) {
             getAnimeFavorites.await().forEach { await(it) }
         }
     }

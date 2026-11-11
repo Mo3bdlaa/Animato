@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.data.backup.create.creators.ExtensionStoresBackupCrea
 import eu.kanade.tachiyomi.data.backup.create.creators.MangaBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.PreferenceBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.SourcesBackupCreator
+import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import okio.buffer
@@ -92,7 +93,7 @@ class AnimatoBackupCreator(
                 emptyList()
             }
             val backupManga = if (options.libraryEntries) {
-                mangaBackupCreator(getMangaFavorites.await() + nonLibraryManga, options)
+                mangaBackupCreator(getMangaFavorites.await() + nonLibraryManga, options).toList()
             } else {
                 emptyList()
             }
@@ -100,7 +101,7 @@ class AnimatoBackupCreator(
             val envelope = AniyomiBackupWriteEnvelope(
                 backupManga = backupManga,
                 backupCategories = if (options.categories) mangaCategoriesBackupCreator() else emptyList(),
-                backupSources = mangaSourcesBackupCreator(backupManga),
+                backupSources = mangaSourcesBackupCreator(backupManga.mapTo(mutableSetOf()) { it.source }),
                 backupPreferences = if (options.appSettings) {
                     preferenceBackupCreator.createApp(includePrivatePreferences = options.privateSettings)
                 } else {

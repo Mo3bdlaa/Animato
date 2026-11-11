@@ -116,7 +116,7 @@ abstract class InstallerAnime(private val service: Service) {
         queue.forEach {
             extensionManager.updateInstallStep(
                 it.downloadId,
-                InstallStep.Error("The installer stopped before it got to this one"),
+                InstallStep.Error,
             )
         }
         queue.clear()

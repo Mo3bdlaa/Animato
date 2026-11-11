@@ -11,6 +11,7 @@ import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import animato.anime.services.R as AnimeR
 
 /**
  * Tells the user that anime extensions have updates waiting.
@@ -47,7 +48,7 @@ class AnimeExtensionUpdateNotifier(
                 setContentText(extNames)
                 setStyle(NotificationCompat.BigTextStyle().bigText(extNames))
             }
-            setSmallIcon(R.drawable.ic_extension_24dp)
+            setSmallIcon(AnimeR.drawable.ic_extension_24dp)
             setContentIntent(
                 AnimeNotifications.openMainActivity(
                     context,

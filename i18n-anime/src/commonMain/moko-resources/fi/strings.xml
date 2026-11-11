@@ -324,4 +324,5 @@
     <string name="player_sheets_sub_typography_font_size">Kirjasimen koko</string>
     <string name="player_sheets_sub_typography_border_style">Reunuksen tyyli</string>
     <string name="player_sheets_sub_typography_border_size">Reunuksen koko</string>
+    <string name="file_select_backup">Valitse varmuuskopio-tiedosto</string>
 </resources>

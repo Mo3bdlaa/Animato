@@ -82,7 +82,7 @@ class AniyomiBackupRestoreJob(private val context: Context, workerParams: Worker
     }
 
     companion object {
-        fun isRunning(context: Context): Boolean = context.workManager.isRunning(TAG)
+        suspend fun isRunning(context: Context): Boolean = context.workManager.isRunning(TAG)
 
         fun start(context: Context, uri: Uri, options: RestoreOptions) {
             val request = OneTimeWorkRequestBuilder<AniyomiBackupRestoreJob>()

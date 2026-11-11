@@ -527,4 +527,6 @@
     <string name="pref_download_fillermarked_items">Izinkan pengunduhan episode fillermarked</string>
     <string name="show_episode_previews">Thumbnail Episode</string>
     <string name="show_episode_summaries">Episode ringkasan</string>
+    <string name="file_select_backup">Pilih berkas cadangan</string>
+    <string name="onboarding_action_skip">Lewati</string>
 </resources>

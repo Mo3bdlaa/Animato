@@ -494,4 +494,6 @@
     <string name="pref_mark_duplicate_seen_episode_seen">ডুপ্লিকেট দেখা এপিচ’ডক দেখা বুলি চিহ্নিত কৰক</string>
     <string name="pref_mark_duplicate_seen_episode_seen_existing">এপিচ’ড চোৱাৰ পিছত</string>
     <string name="pref_mark_duplicate_seen_episode_seen_new">নতুন এপিচ’ড আনাৰ পিছত</string>
+    <string name="file_select_backup">বেকআপ ফাইল বাছনি কৰক</string>
+    <string name="onboarding_action_skip">স্কিপ কৰক</string>
 </resources>

@@ -101,8 +101,8 @@ internal fun UpdatesContent() {
     val refreshingMessage = stringResource(MR.strings.updating_library)
     val alreadyRunning = stringResource(MR.strings.update_already_running)
     val refresh: () -> Unit = {
-        val started = screenModel.refresh()
         scope.launch {
+            val started = screenModel.refresh()
             snackbarHostState.showSnackbar(if (started) refreshingMessage else alreadyRunning)
         }
     }

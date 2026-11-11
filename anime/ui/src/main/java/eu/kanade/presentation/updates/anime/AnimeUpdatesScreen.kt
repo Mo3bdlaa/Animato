@@ -41,7 +41,7 @@ fun AnimeUpdateScreen(
     onClickCover: (AnimeUpdatesItem) -> Unit,
     onSelectAll: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
-    onUpdateLibrary: () -> Boolean,
+    onUpdateLibrary: suspend () -> Boolean,
     onDownloadEpisode: (List<AnimeUpdatesItem>, EpisodeDownloadAction) -> Unit,
     onMultiBookmarkClicked: (List<AnimeUpdatesItem>, bookmark: Boolean) -> Unit,
     onMultiFillermarkClicked: (List<AnimeUpdatesItem>, fillermark: Boolean) -> Unit,
@@ -79,9 +79,8 @@ fun AnimeUpdateScreen(
                 PullRefresh(
                     refreshing = isRefreshing,
                     onRefresh = {
-                        val started = onUpdateLibrary()
-                        if (!started) return@PullRefresh
                         scope.launch {
+                            if (!onUpdateLibrary()) return@launch
                             // Fake refresh status but hide it after a second as it's a long running task
                             isRefreshing = true
                             delay(1.seconds)

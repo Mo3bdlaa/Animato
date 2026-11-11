@@ -263,4 +263,6 @@
     <string name="onboarding_storage_action_create_folder">기본 Aniyomi 폴더 생성</string>
     <string name="download_speed_limit">다운로드 속도 제한</string>
     <string name="download_speed_limit_hint">속도 제한을 비활성화하려면 0으로 설정하세요.</string>
+    <string name="file_select_backup">백업 파일 선택</string>
+    <string name="onboarding_action_skip">건너뛰기</string>
 </resources>

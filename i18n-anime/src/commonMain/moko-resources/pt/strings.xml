@@ -451,4 +451,6 @@
     <string name="type">Tipo</string>
     <string name="player_sheets_add_ext_audio">Adicionar faixas de áudio externas</string>
     <string name="player_hoster_tap_to_load">Toque para carregar vídeos</string>
+    <string name="file_select_backup">Selecionar ficheiro de cópia de segurança</string>
+    <string name="onboarding_action_skip">Pular</string>
 </resources>

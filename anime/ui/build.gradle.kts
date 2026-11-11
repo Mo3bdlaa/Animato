@@ -59,6 +59,8 @@ dependencies {
     implementation(projects.coreMetadata)
     implementation(projects.sourceApi)
     implementation(projects.i18n)
+    implementation(projects.icons.customMaterialSymbols)
+    implementation(projects.icons.materialSymbols)
     implementation(projects.icons.simpleIcons)
 
     // Compose artifacts arrive transitively from Mihon's app without versions; the BOM supplies them.
@@ -89,11 +91,4 @@ dependencies {
     implementation(libs.composeGrid)
     implementation(libs.reorderable)
     implementation(libs.swipe)
-
-    // The anime download queue is Aniyomi's RecyclerView screen, not Compose. 6c replaces it with
-    // the Downloads destination from the brand sheet; until then it needs its adapter.
-    implementation(libs.flexibleAdapter)
-    // Its layout is one of Mihon's, so the generated binding comes from :app and no view binding
-    // is needed here — but the views in it are Material Components, a different artifact from Compose.
-    implementation(libs.material)
 }

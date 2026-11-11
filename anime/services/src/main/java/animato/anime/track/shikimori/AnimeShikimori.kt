@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.data.track.shikimori.Shikimori
 import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriInterceptor
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.serialization.json.Json
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
@@ -22,7 +23,7 @@ import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
  * Shikimori uses the same status words for both kinds of media — "watching" means reading on a
  * manga — so the numbers here are the anime ones and the words are Shikimori's.
  */
-class AnimeShikimori(private val delegate: Shikimori) :
+class AnimeShikimori(private val delegate: Shikimori, private val json: Json) :
     Tracker by delegate,
     AnimeTracker,
     DeletableAnimeTracker {
@@ -48,7 +49,7 @@ class AnimeShikimori(private val delegate: Shikimori) :
         }
     }
 
-    private val interceptor by lazy { ShikimoriInterceptor(delegate) }
+    private val interceptor by lazy { ShikimoriInterceptor(delegate, json) }
 
     private val api by lazy { AnimeShikimoriApi(delegate.id, delegate.client, interceptor) }
 

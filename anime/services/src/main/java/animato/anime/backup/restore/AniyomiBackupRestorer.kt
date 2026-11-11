@@ -205,18 +205,30 @@ class AniyomiBackupRestorer(
         backup: AniyomiBackup,
         categories: List<BackupCategory>,
     ) = launch {
-        mangaRestorer.sortByNew(backup.manga).forEach { manga ->
+        backup.manga.chunked(MANGA_BATCH).forEach { chunk ->
             ensureActive()
 
-            try {
-                mangaRestorer.restore(listOf(manga), categories)
+            val restoredAsBatch = try {
+                mangaRestorer.restore(chunk, categories)
+                true
             } catch (e: Exception) {
                 ensureActive()
-                val sourceName = mangaSourceNames[manga.source] ?: manga.source.toString()
-                errors.add(Date() to "${manga.title} [$sourceName]: ${e.message}")
+                false
             }
 
-            reportProgress(manga.title)
+            chunk.forEach { manga ->
+                if (!restoredAsBatch) {
+                    ensureActive()
+                    try {
+                        mangaRestorer.restore(listOf(manga), categories)
+                    } catch (e: Exception) {
+                        ensureActive()
+                        val sourceName = mangaSourceNames[manga.source] ?: manga.source.toString()
+                        errors.add(Date() to "${manga.title} [$sourceName]: ${e.message}")
+                    }
+                }
+                reportProgress(manga.title)
+            }
         }
     }
 
@@ -309,5 +321,6 @@ class AniyomiBackupRestorer(
 
     private companion object {
         const val ERROR_LOG_NAME = "animato_restore_error.txt"
+        const val MANGA_BATCH = 100
     }
 }

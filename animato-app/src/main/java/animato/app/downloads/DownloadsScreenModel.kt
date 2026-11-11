@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
@@ -176,7 +177,7 @@ class DownloadsScreenModel(
 
     fun pauseOrResume() {
         if (state.value.isRunning) {
-            downloadManager.pauseDownloads()
+            viewModelScope.launch { downloadManager.pauseDownloads() }
             animeDownloadManager.pauseDownloads()
         } else {
             downloadManager.startDownloads()
@@ -185,7 +186,7 @@ class DownloadsScreenModel(
     }
 
     fun clearQueue() {
-        downloadManager.clearQueue()
+        viewModelScope.launch { downloadManager.clearQueue() }
         animeDownloadManager.clearQueue()
     }
 
@@ -207,7 +208,7 @@ class DownloadsScreenModel(
             ContentType.MANGA ->
                 downloadManager.queueState.value
                     .firstOrNull { it.key() == row.key }
-                    ?.let { downloadManager.cancelQueuedDownloads(listOf(it)) }
+                    ?.let { viewModelScope.launch { downloadManager.cancelQueuedDownloads(listOf(it)) } }
             ContentType.ANIME ->
                 animeDownloadManager.queueState.value
                     .firstOrNull { it.key() == row.key }

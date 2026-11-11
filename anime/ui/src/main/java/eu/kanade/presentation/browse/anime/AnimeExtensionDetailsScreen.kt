@@ -57,6 +57,8 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Eyeglasses2
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
@@ -358,7 +360,7 @@ private fun DetailsHeader(
             modifier = Modifier.padding(horizontal = MaterialTheme.padding.small),
             title = stringResource(MR.strings.pref_incognito_mode),
             subtitle = stringResource(MR.strings.pref_incognito_mode_extension_summary),
-            icon = ImageVector.vectorResource(R.drawable.ic_glasses_24dp),
+            icon = MaterialSymbols.Rounded.Eyeglasses2,
             widget = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

@@ -18,6 +18,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 import kotlin.math.absoluteValue
 
 /**
@@ -45,7 +46,7 @@ fun relativeDateTimeText(localDateTime: LocalDateTime?): String {
 
     val preferences = remember { Injekt.get<UiPreferences>() }
     val relativeTime = remember { preferences.relativeTime.get() }
-    val dateFormat = remember { UiPreferences.dateFormat(preferences.dateFormat.get()) }
+    val dateFormat = remember { UiPreferences.dateFormat(preferences.dateFormat.get(), Locale.getDefault()) }
 
     return localDateTime?.toRelativeString(
         context = context,

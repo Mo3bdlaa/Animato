@@ -20,7 +20,6 @@ import aniyomi.domain.library.service.AnimeLibraryPreferences
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.fastFilterNot
-import eu.kanade.core.util.fastPartition
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
 import eu.kanade.domain.items.episode.interactor.SetSeenStatus
@@ -687,7 +686,7 @@ class AnimeLibraryScreenModel(
                 val categoryId = state.categories[index].id
                 val items = state.getAnimelibItemsByCategoryId(categoryId)?.fastMap { it.libraryAnime }.orEmpty()
                 val selectedIds = list.fastMap { it.id }
-                val (toRemove, toAdd) = items.fastPartition { it.id in selectedIds }
+                val (toRemove, toAdd) = items.partition { it.id in selectedIds }
                 val toRemoveIds = toRemove.fastMap { it.id }
                 list.removeAll { it.id in toRemoveIds }
                 list.addAll(toAdd)

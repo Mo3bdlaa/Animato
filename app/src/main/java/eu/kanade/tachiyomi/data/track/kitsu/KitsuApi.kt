@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.dataOrElse
 import eu.kanade.tachiyomi.network.parseAs
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import mihon.graphql.kitsu.KitsuAddLibMangaMutation
 import mihon.graphql.kitsu.KitsuDeleteLibEntryMutation
@@ -22,12 +23,11 @@ import mihon.graphql.kitsu.KitsuGetMangaDetailsByIdQuery
 import mihon.graphql.kitsu.KitsuGetMangaDetailsBySlugQuery
 import mihon.graphql.kitsu.KitsuSearchMangaByTitleQuery
 import mihon.graphql.kitsu.KitsuUpdateLibMangaMutation
+import mihon.graphql.kitsu.type.MangaSubtypeEnum
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
-import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
-import uy.kohesive.injekt.injectLazy
 import kotlin.time.Instant
 import tachiyomi.domain.track.model.Track as DomainTrack
 
@@ -35,9 +35,8 @@ class KitsuApi(
     private val trackerId: Long,
     private val client: OkHttpClient,
     interceptor: KitsuInterceptor,
+    private val json: Json,
 ) {
-
-    private val json: Json by injectLazy()
 
     private val authClient = client.newBuilder().addInterceptor(interceptor).build()
 
@@ -159,6 +158,7 @@ class KitsuApi(
                 default = { emptyList() },
             ) {
                 it.searchMangaByTitle.nodes
+                    ?.filterNot { node -> node?.mangaFragment?.subtype == MangaSubtypeEnum.NOVEL }
                     ?.mapNotNull { node -> node?.toTrackSearch(trackerId) }
             }
             ?: emptyList()
@@ -181,7 +181,7 @@ class KitsuApi(
     }
 
     suspend fun login(username: String, password: String): KitsuOAuth {
-        return withIOContext {
+        return withContext(Dispatchers.IO) {
             val formBody: RequestBody = FormBody.Builder()
                 .add("username", username)
                 .add("password", password)

@@ -527,4 +527,6 @@
     <string name="pref_download_fillermarked_items">Consenti il download degli episodi segnati come filler</string>
     <string name="show_episode_previews">Miniature episodi</string>
     <string name="show_episode_summaries">Riepiloghi episodi</string>
+    <string name="file_select_backup">Seleziona file di backup</string>
+    <string name="onboarding_action_skip">Salta</string>
 </resources>

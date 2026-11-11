@@ -35,7 +35,7 @@ value class MangaLibraryEntry(val libraryManga: LibraryManga) : LibraryEntry {
 
     override val favorite: Boolean get() = libraryManga.manga.favorite
 
-    override val dateAdded: Long get() = libraryManga.manga.favoriteAt ?: 0L
+    override val dateAdded: Long get() = libraryManga.manga.favoriteAt?.toEpochMilliseconds() ?: 0L
 
     override val genre: List<String>? get() = libraryManga.manga.genre
 
@@ -45,11 +45,11 @@ value class MangaLibraryEntry(val libraryManga: LibraryManga) : LibraryEntry {
 
     override val bookmarkCount: Long get() = libraryManga.bookmarkCount
 
-    override val latestUpload: Long get() = libraryManga.latestUpload
+    override val latestUpload: Long get() = libraryManga.latestUpload?.toEpochMilliseconds() ?: 0L
 
-    override val lastViewed: Long get() = libraryManga.lastRead
+    override val lastViewed: Long get() = libraryManga.lastRead?.toEpochMilliseconds() ?: 0L
 
-    override val itemsFetchedAt: Long get() = libraryManga.chapterFetchedAt
+    override val itemsFetchedAt: Long get() = libraryManga.chapterFetchedAt?.toEpochMilliseconds() ?: 0L
 }
 
 fun LibraryManga.asLibraryEntry(): LibraryEntry = MangaLibraryEntry(this)

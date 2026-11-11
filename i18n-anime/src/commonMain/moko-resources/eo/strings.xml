@@ -9,4 +9,6 @@
     <string name="download_paused">Paŭzigita</string>
     <string name="download_notifier_download_paused_chapters">Elŝutito paŭzigita</string>
     <string name="channel_new_chapters_episodes">Ĉapitraj ĝisdatigoj</string>
+    <string name="file_select_backup">Elekti savkopian dosieron</string>
+    <string name="onboarding_action_skip">Preterpasi</string>
 </resources>

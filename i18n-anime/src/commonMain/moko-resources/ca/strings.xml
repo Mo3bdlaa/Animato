@@ -238,4 +238,6 @@
     <string name="wsrv">wsrv.nl</string>
     <string name="resmush">resmush.it</string>
     <string name="bandwidth_data_saver_server">Bandwidth Hero Proxy Server</string>
+    <string name="file_select_backup">Seleccioneu el fitxer de còpia de seguretat</string>
+    <string name="onboarding_action_skip">Omet</string>
 </resources>

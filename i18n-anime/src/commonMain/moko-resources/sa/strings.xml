@@ -13,4 +13,5 @@
     <string name="download_paused">विरमितम्</string>
     <string name="download_notifier_download_paused_chapters">अवारोपणं विरमितम्</string>
     <string name="channel_new_chapters_episodes">अध्यायनवीकरणानि</string>
+    <string name="file_select_backup">प्रतिलेखनसञ्चिकां चिनोतु</string>
 </resources>

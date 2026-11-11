@@ -62,14 +62,15 @@ object AnimatoImageLoader {
          * sat unreachable behind a terminated chain.
          *
          * So: copy every *loadable* — mappers, keyers, fetchers, decoders, which are inert
-         * registrations — and no interceptors. The only interceptor in the composed registry is
-         * the old engine (Mihon's `newImageLoader` registers none of its own), and the new loader
-         * appends its own engine and platform components when it is built.
+         * registrations — and every interceptor but the old engine. Mihon registers one of its own
+         * (`CoverRequestInterceptor`, which shares one cover decode between rows), and the new
+         * loader appends its own engine and platform components when it is built.
          */
         val extended = current.newBuilder()
             .components(
                 ComponentRegistry.Builder()
                     .addAllLoadables(current.components)
+                    .addInterceptorsButEngine(current.components)
                     .add(AnimeCoverFetcher.AnimeCoverFactory(callFactoryLazy))
                     .add(AnimeCoverFetcher.AnimeFactory(callFactoryLazy))
                     .add(AnimeCoverKeyer())
@@ -94,3 +95,12 @@ internal fun ComponentRegistry.Builder.addAllLoadables(from: ComponentRegistry):
     from.fetcherFactories.forEach { (factory, type) -> add(factory as Fetcher.Factory<Any>, type as KClass<Any>) }
     from.decoderFactories.forEach { add(it) }
 }
+
+internal const val COIL_ENGINE_INTERCEPTOR = "coil3.intercept.EngineInterceptor"
+
+internal fun ComponentRegistry.Builder.addInterceptorsButEngine(from: ComponentRegistry): ComponentRegistry.Builder =
+    apply {
+        from.interceptors
+            .filterNot { it::class.java.name == COIL_ENGINE_INTERCEPTOR }
+            .forEach { add(it) }
+    }

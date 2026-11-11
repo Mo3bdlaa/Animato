@@ -3,8 +3,9 @@ package tachiyomi.domain.category.anime.interactor
 import animato.domain.category.AnimeCategory
 import animato.domain.category.AnimeCategoryUpdate
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 
@@ -13,7 +14,7 @@ class RenameAnimeCategory(
     private val categoryRepository: AnimeCategoryRepository,
 ) {
 
-    suspend fun await(categoryId: Long, name: String) = withNonCancellableContext {
+    suspend fun await(categoryId: Long, name: String) = withContext(NonCancellable) {
         val update = AnimeCategoryUpdate(
             id = categoryId,
             name = name,

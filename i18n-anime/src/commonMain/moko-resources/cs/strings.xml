@@ -443,4 +443,6 @@
     <string name="confirm_tracker_update_anime">Aktualizovat sledovače na epizodu %d?</string>
     <string name="trackers_updated_summary_manga">Sledovače aktualizovány na kapitolu %d</string>
     <string name="trackers_updated_summary_anime">Sledovače aktualizovány na epizodu %d</string>
+    <string name="file_select_backup">Vybrat záložní soubor</string>
+    <string name="onboarding_action_skip">Přeskočit</string>
 </resources>

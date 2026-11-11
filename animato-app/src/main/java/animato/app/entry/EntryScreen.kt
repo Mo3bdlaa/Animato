@@ -104,6 +104,7 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
+import kotlin.time.Instant
 
 /**
  * The title page, the same page for both halves.
@@ -988,7 +989,7 @@ private fun ItemRow(
                     text = listOfNotNull(
                         // When it was published, which the old screen showed and this one dropped. It
                         // is the only thing on the row that says whether a source has stopped updating.
-                        item.dateUpload.takeIf { it > 0 }?.let { relativeDateText(it) },
+                        item.dateUpload.takeIf { it > 0 }?.let { relativeDateText(Instant.fromEpochMilliseconds(it)) },
                         item.scanlator?.takeIf { it.isNotBlank() },
                         stringResource(
                             when (contentType) {

@@ -126,7 +126,7 @@ class TorrentServerService : Service() {
             setDeleteIntent(startAgainIntent)
             setUsesChronometer(true)
             addAction(
-                R.drawable.ic_close_24dp,
+                AnimeR.drawable.ic_close_24dp,
                 "Stop",
                 exitPendingIntent,
             )

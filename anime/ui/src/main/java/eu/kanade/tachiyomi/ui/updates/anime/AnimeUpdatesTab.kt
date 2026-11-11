@@ -175,7 +175,7 @@ fun Screen.animeUpdatesTab(
                 AppBar.Action(
                     title = stringResource(MR.strings.action_update_library),
                     icon = Icons.Outlined.Refresh,
-                    onClick = { screenModel.updateLibrary() },
+                    onClick = { scope.launch { screenModel.updateLibrary() } },
                 ),
             )
         },

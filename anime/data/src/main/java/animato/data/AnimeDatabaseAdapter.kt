@@ -3,6 +3,7 @@ package animato.data
 import app.cash.sqldelight.ColumnAdapter
 import eu.kanade.tachiyomi.animesource.model.AnimeUpdateStrategy
 import eu.kanade.tachiyomi.animesource.model.FetchType
+import java.util.Date
 
 object AnimeUpdateStrategyColumnAdapter : ColumnAdapter<AnimeUpdateStrategy, Long> {
     override fun decode(databaseValue: Long): AnimeUpdateStrategy =
@@ -16,4 +17,12 @@ object FetchTypeColumnAdapter : ColumnAdapter<FetchType, Long> {
         FetchType.entries.getOrElse(databaseValue.toInt()) { FetchType.Episodes }
 
     override fun encode(value: FetchType): Long = value.ordinal.toLong()
+}
+
+/**
+ * The anime database still stores `Date`. Mihon moved its own to `Instant` and dropped this adapter.
+ */
+object DateColumnAdapter : ColumnAdapter<Date, Long> {
+    override fun decode(databaseValue: Long): Date = Date(databaseValue)
+    override fun encode(value: Date): Long = value.time
 }

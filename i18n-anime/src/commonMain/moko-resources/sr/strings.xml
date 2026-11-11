@@ -398,4 +398,6 @@
     <string name="onboarding_storage_action_create_folder">Креирај подразумевану Aniyomi фасциклу</string>
     <string name="download_speed_limit">Ограничење брзине преузимања</string>
     <string name="download_speed_limit_hint">Поставите на 0 да бисте онемогућили ограничење брзине.</string>
+    <string name="file_select_backup">Изаберите датотеку резервне копије</string>
+    <string name="onboarding_action_skip">Пресокочи</string>
 </resources>

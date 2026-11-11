@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import animato.anime.di.AnimatoScope
 import animato.data.AnimeUpdateStrategyColumnAdapter
+import animato.data.DateColumnAdapter
 import animato.data.FetchTypeColumnAdapter
 import animato.domain.content.ContentPreferences
 import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteConfiguration
@@ -18,7 +19,6 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import io.github.mo3bdlaa.animato.BuildConfig
 import tachiyomi.core.common.preference.PreferenceStore
-import tachiyomi.data.DateColumnAdapter
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.mi.data.AnimeDatabase

@@ -91,6 +91,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.util.Locale
 import kotlin.time.Clock
 import tachiyomi.domain.track.anime.model.AnimeTrack as DbAnimeTrack
 
@@ -108,6 +109,7 @@ data class AnimeTrackInfoDialogHomeScreen(
         val dateFormat = remember {
             UiPreferences.dateFormat(
                 Injekt.get<UiPreferences>().dateFormat.get(),
+                Locale.getDefault(),
             )
         }
         val state by screenModel.state.collectAsState()

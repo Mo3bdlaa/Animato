@@ -7,6 +7,7 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -30,7 +31,9 @@ import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
  *
  * There is no score: a server has no opinion about what is good.
  */
-class AnimeJellyfin : AnimeOnlyTracker(AnimeTrackerIds.JELLYFIN, "Jellyfin"), EnhancedAnimeTracker {
+class AnimeJellyfin(dependencies: TrackerDependencies) :
+    AnimeOnlyTracker(AnimeTrackerIds.JELLYFIN, "Jellyfin", dependencies),
+    EnhancedAnimeTracker {
 
     companion object {
         const val UNSEEN = 1L

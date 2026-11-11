@@ -1,10 +1,11 @@
 package tachiyomi.domain.custombuttons.interactor
 
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.custombuttons.model.CustomButton
 import tachiyomi.domain.custombuttons.model.CustomButtonUpdate
@@ -16,7 +17,7 @@ class ToggleFavoriteCustomButton(
 ) {
     private val mutex = Mutex()
 
-    suspend fun await(customButton: CustomButton) = withNonCancellableContext {
+    suspend fun await(customButton: CustomButton) = withContext(NonCancellable) {
         try {
             if (customButton.isFavorite) {
                 val update = CustomButtonUpdate(

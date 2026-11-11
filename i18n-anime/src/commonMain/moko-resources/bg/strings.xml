@@ -14,4 +14,6 @@
     <string name="download_paused">На пауза</string>
     <string name="download_notifier_download_paused_chapters">Изтеглянето спряно</string>
     <string name="channel_new_chapters_episodes">Нови глави</string>
+    <string name="file_select_backup">Изберете резервно копие</string>
+    <string name="onboarding_action_skip">Пропусни</string>
 </resources>

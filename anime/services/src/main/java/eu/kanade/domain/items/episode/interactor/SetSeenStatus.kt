@@ -2,8 +2,9 @@ package eu.kanade.domain.items.episode.interactor
 
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.download.anime.interactor.DeleteEpisodeDownload
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entries.anime.model.Anime
@@ -28,7 +29,7 @@ class SetSeenStatus(
         )
     }
 
-    suspend fun await(seen: Boolean, vararg episodes: Episode): Result = withNonCancellableContext {
+    suspend fun await(seen: Boolean, vararg episodes: Episode): Result = withContext(NonCancellable) {
         val episodesToUpdate = episodes.filter {
             when (seen) {
                 true -> !it.seen
@@ -36,7 +37,7 @@ class SetSeenStatus(
             }
         }
         if (episodesToUpdate.isEmpty()) {
-            return@withNonCancellableContext Result.NoEpisodes
+            return@withContext Result.NoEpisodes
         }
 
         try {
@@ -45,7 +46,7 @@ class SetSeenStatus(
             )
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
-            return@withNonCancellableContext Result.InternalError(e)
+            return@withContext Result.InternalError(e)
         }
 
         if (seen && downloadPreferences.removeAfterMarkedAsRead.get()) {
@@ -62,7 +63,7 @@ class SetSeenStatus(
         Result.Success
     }
 
-    suspend fun await(animeId: Long, seen: Boolean): Result = withNonCancellableContext {
+    suspend fun await(animeId: Long, seen: Boolean): Result = withContext(NonCancellable) {
         await(
             seen = seen,
             episodes = episodeRepository

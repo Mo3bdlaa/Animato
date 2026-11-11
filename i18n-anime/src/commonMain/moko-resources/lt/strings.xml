@@ -17,4 +17,5 @@
     <string name="snack_add_to_manga_library">Pridėti į biblioteką?</string>
     <string name="download_error">Klaida</string>
     <string name="download_paused">Pristabdyta</string>
+    <string name="file_select_backup">Pasirinkti atsarginės kopijos failą</string>
 </resources>

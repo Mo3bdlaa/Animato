@@ -6,6 +6,7 @@ import animato.anime.track.AnimeTrackerIds
 import animato.anime.track.simkl.dto.SimklOAuth
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.data.database.models.anime.AnimeTrack
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -25,7 +26,7 @@ import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
  * so "started watching again" leaves the entry alone rather than writing something Simkl would
  * reject — the same arrangement Bangumi needs.
  */
-class AnimeSimkl : AnimeOnlyTracker(AnimeTrackerIds.SIMKL, "Simkl") {
+class AnimeSimkl(dependencies: TrackerDependencies) : AnimeOnlyTracker(AnimeTrackerIds.SIMKL, "Simkl", dependencies) {
 
     companion object {
         const val WATCHING = 1L

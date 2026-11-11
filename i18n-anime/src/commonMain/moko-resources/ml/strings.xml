@@ -13,4 +13,5 @@
     <string name="manga">മാംഗ</string>
     <string name="action_show_manga">മാംഗയെ കാണിക്കൂ</string>
     <string name="action_display_show_continue_reading_button">കാണുന്നത്/വായന തുടരുക ബട്ടൺ</string>
+    <string name="onboarding_action_skip">ഒഴിവാക്കുക</string>
 </resources>

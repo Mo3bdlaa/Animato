@@ -2,7 +2,8 @@ package tachiyomi.domain.items.episode.interactor
 
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import dev.zacsweers.metro.Inject
-import tachiyomi.core.common.util.lang.withNonCancellableContext
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import tachiyomi.domain.entries.anime.interactor.GetAnimeFavorites
 import tachiyomi.domain.entries.anime.interactor.SetAnimeEpisodeFlags
 import tachiyomi.domain.entries.anime.model.Anime
@@ -15,7 +16,7 @@ class SetAnimeDefaultEpisodeFlags(
 ) {
 
     suspend fun await(anime: Anime) {
-        withNonCancellableContext {
+        withContext(NonCancellable) {
             with(libraryPreferences) {
                 setAnimeEpisodeFlags.awaitSetAllFlags(
                     animeId = anime.id,
@@ -34,7 +35,7 @@ class SetAnimeDefaultEpisodeFlags(
     }
 
     suspend fun awaitAll() {
-        withNonCancellableContext {
+        withContext(NonCancellable) {
             getFavorites.await().forEach { await(it) }
         }
     }

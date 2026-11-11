@@ -3,10 +3,11 @@ package tachiyomi.domain.category.anime.interactor
 import animato.domain.category.AnimeCategory
 import animato.domain.category.AnimeCategoryUpdate
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 
@@ -17,7 +18,7 @@ class ReorderAnimeCategory(
 
     private val mutex = Mutex()
 
-    suspend fun await(category: AnimeCategory, newIndex: Int) = withNonCancellableContext {
+    suspend fun await(category: AnimeCategory, newIndex: Int) = withContext(NonCancellable) {
         mutex.withLock {
             val categories = categoryRepository.getAllAnimeCategories()
                 .filterNot(AnimeCategory::isSystemCategory)
@@ -25,7 +26,7 @@ class ReorderAnimeCategory(
 
             val currentIndex = categories.indexOfFirst { it.id == category.id }
             if (currentIndex == -1) {
-                return@withNonCancellableContext Result.Unchanged
+                return@withContext Result.Unchanged
             }
 
             try {

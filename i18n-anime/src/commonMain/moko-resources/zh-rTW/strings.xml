@@ -267,4 +267,6 @@
     <string name="onboarding_storage_action_create_folder">建立預設的 Aniyomi 資料夾</string>
     <string name="download_speed_limit">下載速度限制</string>
     <string name="download_speed_limit_hint">設定為 0 以停用速度限制。</string>
+    <string name="file_select_backup">選擇備份檔</string>
+    <string name="onboarding_action_skip">略過</string>
 </resources>

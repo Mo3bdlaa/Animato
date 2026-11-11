@@ -61,6 +61,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
+import mihon.icons.custommaterialsymbols.rounded.DonePrevious
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -195,7 +197,7 @@ fun EntryBottomActionMenu(
                     }
                     Button(
                         title = stringResource(previousUnviewed),
-                        icon = ImageVector.vectorResource(R.drawable.ic_done_prev_24dp),
+                        icon = CustomMaterialSymbols.Rounded.DonePrevious,
                         toConfirm = confirm[6],
                         onLongClick = { onLongClickItem(6) },
                         onClick = onMarkPreviousAsViewedClicked,

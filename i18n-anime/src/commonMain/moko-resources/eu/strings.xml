@@ -13,4 +13,5 @@
     <string name="download_paused">Gelditurik</string>
     <string name="download_notifier_download_paused_chapters">Deskarga pausatu da</string>
     <string name="channel_new_chapters_episodes">Kapituluaren eguneraketak</string>
+    <string name="file_select_backup">Hautatu babeskopia fitxategia</string>
 </resources>

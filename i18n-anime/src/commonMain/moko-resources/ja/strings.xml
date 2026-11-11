@@ -69,4 +69,6 @@
     <string name="label_anime_extensions">アニメの拡張機能</string>
     <string name="label_migration_manga">漫画を移行</string>
     <string name="label_migration_anime">アニメを移行</string>
+    <string name="file_select_backup">バックアップファイルを選択</string>
+    <string name="onboarding_action_skip">スキップ</string>
 </resources>

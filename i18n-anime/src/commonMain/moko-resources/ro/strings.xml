@@ -14,4 +14,6 @@
     <string name="download_paused">Întrerupt</string>
     <string name="download_notifier_download_paused_chapters">Descărcare întreruptă</string>
     <string name="channel_new_chapters_episodes">Actualizări de capitole</string>
+    <string name="file_select_backup">Selectează fișierul de rezervă</string>
+    <string name="onboarding_action_skip">Omite</string>
 </resources>

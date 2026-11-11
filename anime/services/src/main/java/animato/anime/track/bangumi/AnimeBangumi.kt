@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.data.track.bangumi.BangumiInterceptor
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.serialization.json.Json
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
@@ -24,7 +25,7 @@ import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
  * not a status — which is what makes "started watching again" leave the entry alone rather than
  * write something Bangumi would reject.
  */
-class AnimeBangumi(private val delegate: Bangumi) : Tracker by delegate, AnimeTracker {
+class AnimeBangumi(private val delegate: Bangumi, private val json: Json) : Tracker by delegate, AnimeTracker {
 
     companion object {
         private val SCORE_LIST = IntRange(0, 10).map(Int::toString).toImmutableList()
@@ -35,7 +36,7 @@ class AnimeBangumi(private val delegate: Bangumi) : Tracker by delegate, AnimeTr
         private const val NO_REWATCHING_STATUS = -1L
     }
 
-    private val interceptor by lazy { BangumiInterceptor(delegate) }
+    private val interceptor by lazy { BangumiInterceptor(delegate, json) }
 
     private val api by lazy { AnimeBangumiApi(delegate.id, delegate.client, interceptor) }
 

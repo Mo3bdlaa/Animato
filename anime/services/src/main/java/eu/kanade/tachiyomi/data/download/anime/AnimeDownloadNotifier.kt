@@ -20,6 +20,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.injectLazy
 import java.util.regex.Pattern
+import animato.anime.services.R as AnimeR
 
 /**
  * DownloadNotifier is used to show notifications when downloading one or multiple chapters.
@@ -83,12 +84,12 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 isDownloading = true
                 // Pause action
                 addAction(
-                    R.drawable.ic_pause_24dp,
+                    AnimeR.drawable.ic_pause_24dp,
                     context.stringResource(AYMR.strings.action_stop),
                     AnimeNotificationReceiver.pauseAnimeDownloadsPendingBroadcast(context),
                 )
                 addAction(
-                    R.drawable.ic_book_24dp,
+                    AnimeR.drawable.ic_book_24dp,
                     context.stringResource(AYMR.strings.action_show_anime),
                     AnimeNotificationReceiver.openAnimeEntryPendingActivity(context, download.anime.id),
                 )
@@ -131,7 +132,7 @@ internal class AnimeDownloadNotifier(private val context: Context) {
         with(progressNotificationBuilder) {
             setContentTitle(context.stringResource(AYMR.strings.download_paused))
             setContentText(context.stringResource(AYMR.strings.download_notifier_download_paused_episodes))
-            setSmallIcon(R.drawable.ic_pause_24dp)
+            setSmallIcon(AnimeR.drawable.ic_pause_24dp)
             setProgress(0, 0, false)
             setOngoing(false)
             clearActions()
@@ -139,13 +140,13 @@ internal class AnimeDownloadNotifier(private val context: Context) {
             setContentIntent(AnimeNotifications.openAnimeDownloadManagerPendingActivity(context))
             // Resume action
             addAction(
-                R.drawable.ic_play_arrow_24dp,
+                AnimeR.drawable.ic_play_arrow_24dp,
                 context.stringResource(MR.strings.action_resume),
                 AnimeNotificationReceiver.resumeAnimeDownloadsPendingBroadcast(context),
             )
             // Clear action
             addAction(
-                R.drawable.ic_close_24dp,
+                AnimeR.drawable.ic_close_24dp,
                 context.stringResource(MR.strings.action_cancel_all),
                 AnimeNotificationReceiver.clearAnimeDownloadsPendingBroadcast(context),
             )
@@ -178,13 +179,13 @@ internal class AnimeDownloadNotifier(private val context: Context) {
         with(errorNotificationBuilder) {
             setContentTitle(context.stringResource(MR.strings.download_notifier_downloader_title))
             setStyle(NotificationCompat.BigTextStyle().bigText(reason))
-            setSmallIcon(R.drawable.ic_warning_white_24dp)
+            setSmallIcon(AnimeR.drawable.ic_warning_white_24dp)
             setAutoCancel(true)
             clearActions()
             setContentIntent(AnimeNotifications.openAnimeDownloadManagerPendingActivity(context))
             if (animeId != null) {
                 addAction(
-                    R.drawable.ic_book_24dp,
+                    AnimeR.drawable.ic_book_24dp,
                     context.stringResource(AYMR.strings.action_show_anime),
                     AnimeNotificationReceiver.openAnimeEntryPendingActivity(context, animeId),
                 )
@@ -217,12 +218,12 @@ internal class AnimeDownloadNotifier(private val context: Context) {
                 ),
             )
             setContentText(error ?: context.stringResource(MR.strings.download_notifier_unknown_error))
-            setSmallIcon(R.drawable.ic_warning_white_24dp)
+            setSmallIcon(AnimeR.drawable.ic_warning_white_24dp)
             clearActions()
             setContentIntent(AnimeNotifications.openAnimeDownloadManagerPendingActivity(context))
             if (animeId != null) {
                 addAction(
-                    R.drawable.ic_book_24dp,
+                    AnimeR.drawable.ic_book_24dp,
                     context.stringResource(AYMR.strings.action_show_anime),
                     AnimeNotificationReceiver.openAnimeEntryPendingActivity(context, animeId),
                 )

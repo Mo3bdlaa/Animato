@@ -496,4 +496,6 @@
     <string name="player_sheets_chapters_title">Poglavlja</string>
     <string name="type">Vrsta</string>
     <string name="select_hoster_from_empty_list">Usluga hostinga odabrana iz praznog popisa</string>
+    <string name="file_select_backup">Odaberi datoteku sigurnosne kopije</string>
+    <string name="onboarding_action_skip">Preskoči</string>
 </resources>

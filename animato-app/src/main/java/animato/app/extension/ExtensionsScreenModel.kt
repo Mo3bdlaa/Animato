@@ -2,6 +2,7 @@ package animato.app.extension
 
 import android.app.Application
 import android.content.Context
+import android.content.res.Resources
 import androidx.compose.runtime.Immutable
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.lifecycle.ViewModel
@@ -12,6 +13,7 @@ import animato.domain.content.ContentType
 import eu.kanade.domain.extension.anime.interactor.GetAnimeExtensionsByType
 import eu.kanade.domain.extension.interactor.GetExtensionsByType
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.data.coil.InstalledExtensionIcon
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
@@ -616,7 +618,7 @@ private fun Extension.toRow(steps: Map<String, InstallActivity>, onDevice: Insta
  * being untrusted is supposed to prevent.
  */
 private fun Extension.extensionIcon(): Any? = when (this) {
-    is Extension.Loaded -> icon
+    is Extension.Loaded -> InstalledExtensionIcon(pkgName, versionCode, Resources.getSystem().displayMetrics.densityDpi)
     is Extension.Available -> iconUrl
     is Extension.NotLoaded -> null
 }

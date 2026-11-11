@@ -845,6 +845,8 @@
     <string name="aniyomi_import_summary">Bring a library across from an Aniyomi backup</string>
     <string name="aniyomi_import_info">Animato does not upgrade over an existing Aniyomi install. Pick the file Aniyomi wrote — its name ends in .tachibk — and everything in it comes across: anime and manga, categories, history, tracking and settings. Importing again later is safe; nothing is deleted and progress is kept at whichever side got further.</string>
     <string name="aniyomi_import_select_file">Select an Aniyomi backup</string>
+    <string name="file_select_backup">Select backup file</string>
+    <string name="onboarding_action_skip">Skip</string>
     <string name="aniyomi_import_action">Import</string>
     <string name="aniyomi_import_contents">This backup holds %1$d anime and %2$d manga.</string>
     <string name="aniyomi_import_in_progress">An import is already running</string>

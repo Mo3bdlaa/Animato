@@ -4,6 +4,7 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.AnimeTracker
 import eu.kanade.tachiyomi.data.track.BaseTracker
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import tachiyomi.domain.track.model.Track as DomainTrack
 
@@ -25,7 +26,9 @@ import tachiyomi.domain.track.model.Track as DomainTrack
  * and the `AnimeTracker` interface. So [notAMangaTracker] marks code that is unreachable by
  * construction, and says why rather than pretending otherwise.
  */
-abstract class AnimeOnlyTracker(id: Long, name: String) : BaseTracker(id, name), AnimeTracker {
+abstract class AnimeOnlyTracker(id: Long, name: String, dependencies: TrackerDependencies) :
+    BaseTracker(id, name, dependencies),
+    AnimeTracker {
 
     private fun notAMangaTracker(): Nothing =
         throw UnsupportedOperationException("$name tracks anime only")

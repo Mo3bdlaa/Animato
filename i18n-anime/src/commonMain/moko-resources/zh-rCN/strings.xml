@@ -497,4 +497,6 @@
     <string name="action_display_show_continue_watching_button">继续观看按钮</string>
     <string name="action_display_grid_mode">网格显示模式</string>
     <string name="display_mode_season">第 %1$s 季</string>
+    <string name="file_select_backup">选择备份文件</string>
+    <string name="onboarding_action_skip">跳过</string>
 </resources>

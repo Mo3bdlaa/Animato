@@ -50,8 +50,8 @@ android {
             "APPLICATION_ID",
             "\"${providers.gradleProperty("animato.applicationId").get()}\"",
         )
-        buildConfigField("int", "VERSION_CODE", "34")
-        buildConfigField("String", "VERSION_NAME", "\"0.20.4\"")
+        buildConfigField("int", "VERSION_CODE", "39")
+        buildConfigField("String", "VERSION_NAME", "\"0.21.3\"")
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
@@ -184,6 +184,7 @@ kotlin {
 
 dependencies {
     implementation(projects.i18n)
+    implementation(projects.icons.customMaterialSymbols)
     implementation(projects.icons.materialSymbols)
     implementation(projects.icons.simpleIcons)
     implementation(projects.core.archive)
@@ -207,6 +208,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.uiTooling)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.compose.uiUtil)
+    implementation(libs.androidx.navigationEvent)
 
     implementation(libs.androidx.interpolator)
 
@@ -250,7 +252,6 @@ dependencies {
     implementation(libs.jsoup)
 
     // Disk
-    implementation(libs.diskLruCache)
     implementation(libs.unifile)
 
     // Preferences
@@ -273,7 +274,6 @@ dependencies {
 
     // UI libraries
     implementation(libs.material)
-    implementation(libs.flexibleAdapter)
     implementation(libs.photoView)
     implementation(libs.directionalViewPager) {
         exclude(group = "androidx.viewpager", module = "viewpager")

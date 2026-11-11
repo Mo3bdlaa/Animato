@@ -153,6 +153,7 @@ import uy.kohesive.injekt.api.get
 import java.io.File
 import java.io.InputStream
 import java.util.Date
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
@@ -1258,7 +1259,7 @@ class PlayerViewModel @JvmOverloads constructor(
     private val downloadAheadAmount = animeDownloadPreferences.autoDownloadWhileWatching().get()
 
     internal val relativeTime = uiPreferences.relativeTime.get()
-    internal val dateFormat = UiPreferences.dateFormat(uiPreferences.dateFormat.get())
+    internal val dateFormat = UiPreferences.dateFormat(uiPreferences.dateFormat.get(), Locale.getDefault())
 
     /**
      * The position in the current video. Used to restore from process kill.

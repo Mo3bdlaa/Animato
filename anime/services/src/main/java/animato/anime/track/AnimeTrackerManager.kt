@@ -11,10 +11,12 @@ import animato.anime.track.simkl.AnimeSimkl
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.track.AnimeTracker
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.serialization.json.Json
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -38,16 +40,18 @@ import uy.kohesive.injekt.api.get
 @Inject
 class AnimeTrackerManager(
     trackerManager: TrackerManager = Injekt.get(),
+    json: Json = Injekt.get(),
+    dependencies: TrackerDependencies = Injekt.get(),
 ) {
 
-    val myAnimeList = AnimeMyAnimeList(trackerManager.myAnimeList)
+    val myAnimeList = AnimeMyAnimeList(trackerManager.myAnimeList, json)
     val aniList = AnimeAnilist(trackerManager.aniList)
-    val kitsu = AnimeKitsu(trackerManager.kitsu)
-    val shikimori = AnimeShikimori(trackerManager.shikimori)
-    val bangumi = AnimeBangumi(trackerManager.bangumi)
+    val kitsu = AnimeKitsu(trackerManager.kitsu, json)
+    val shikimori = AnimeShikimori(trackerManager.shikimori, json)
+    val bangumi = AnimeBangumi(trackerManager.bangumi, json)
 
-    val simkl = AnimeSimkl()
-    val jellyfin = AnimeJellyfin()
+    val simkl = AnimeSimkl(dependencies)
+    val jellyfin = AnimeJellyfin(dependencies)
 
     val trackers: List<AnimeTracker> =
         listOf(myAnimeList, aniList, kitsu, shikimori, bangumi, simkl, jellyfin)

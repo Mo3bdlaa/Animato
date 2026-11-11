@@ -214,4 +214,6 @@
     <string name="resmush">resmush.it</string>
     <string name="bandwidth_data_saver_server">سرور پروکسی Bandwidth Hero</string>
     <string name="data_saver_server_summary">آدرس سرور پروکسی Bandwidth Hero را اینجا قرار دهید</string>
+    <string name="file_select_backup">فایل پشتیبان را انتخاب کنید</string>
+    <string name="onboarding_action_skip">پرش</string>
 </resources>

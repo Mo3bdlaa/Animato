@@ -525,4 +525,6 @@
     <string name="show_episode_previews">Miniaturas dos episódios</string>
     <string name="show_episode_summaries">Resumos dos episódios</string>
     <string name="pref_hosters">Hosters</string>
+    <string name="file_select_backup">Selecionar arquivo de backup</string>
+    <string name="onboarding_action_skip">Pular</string>
 </resources>

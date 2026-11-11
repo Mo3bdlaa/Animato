@@ -174,7 +174,7 @@ class AnimeMetadataUpdateJob(private val context: Context, workerParams: WorkerP
 
         private const val MANGA_PER_SOURCE_QUEUE_WARNING_THRESHOLD = 60
 
-        fun startNow(context: Context): Boolean {
+        suspend fun startNow(context: Context): Boolean {
             val wm = context.workManager
             if (wm.isRunning(TAG)) {
                 // Already running either as a scheduled or manual job

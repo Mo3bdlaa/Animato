@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.data.track.kitsu.KitsuInterceptor
 import eu.kanade.tachiyomi.data.track.model.AnimeTrackSearch
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.serialization.json.Json
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import java.text.DecimalFormat
@@ -23,7 +24,10 @@ import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
  * Kitsu has no rewatching status, so there is no number for one here and the tracking sheet does
  * not offer it. The status numbers are otherwise Aniyomi's, because they go into every backup.
  */
-class AnimeKitsu(private val delegate: Kitsu) : Tracker by delegate, AnimeTracker, DeletableAnimeTracker {
+class AnimeKitsu(
+    private val delegate: Kitsu,
+    private val json: Json,
+) : Tracker by delegate, AnimeTracker, DeletableAnimeTracker {
 
     companion object {
         const val WATCHING = 11L
@@ -37,7 +41,7 @@ class AnimeKitsu(private val delegate: Kitsu) : Tracker by delegate, AnimeTracke
         fun animeUrl(remoteId: Long): String = BASE_ANIME_URL + remoteId
     }
 
-    private val interceptor by lazy { KitsuInterceptor(delegate) }
+    private val interceptor by lazy { KitsuInterceptor(delegate, json) }
 
     private val api by lazy { AnimeKitsuApi(delegate.client, interceptor) }
 

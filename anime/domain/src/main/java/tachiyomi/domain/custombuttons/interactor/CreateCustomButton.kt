@@ -1,8 +1,9 @@
 package tachiyomi.domain.custombuttons.interactor
 
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.custombuttons.repository.CustomButtonRepository
 
@@ -15,7 +16,7 @@ class CreateCustomButton(
         content: String,
         longPressContent: String,
         onStartup: String,
-    ): Result = withNonCancellableContext {
+    ): Result = withContext(NonCancellable) {
         val customButtons = customButtonRepository.getAll()
         val nextSortIndex = customButtons.maxOfOrNull { it.sortIndex }?.plus(1) ?: 0
 

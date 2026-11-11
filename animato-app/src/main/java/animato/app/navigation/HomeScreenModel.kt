@@ -183,7 +183,7 @@ class HomeScreenModel(
                             contentType = ContentType.MANGA,
                             title = it.title,
                             itemNumber = it.chapterNumber,
-                            lastViewedAt = it.readAt?.time ?: 0L,
+                            lastViewedAt = it.readAt?.toEpochMilliseconds() ?: 0L,
                             coverData = it.coverData,
                         ),
                     )
@@ -308,7 +308,7 @@ class HomeScreenModel(
      * Each job refuses if it is already running and says so by returning false; started means
      * either half accepted.
      */
-    fun refresh(): Boolean {
+    suspend fun refresh(): Boolean {
         val context = Injekt.get<Application>()
         val lens = contentPreferences.contentFilter.get()
         val manga = lens.includesManga && LibraryUpdateWorker.startNow(context.workManager)

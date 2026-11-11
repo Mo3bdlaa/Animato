@@ -3,8 +3,9 @@ package tachiyomi.domain.category.anime.interactor
 import animato.domain.category.AnimeCategory
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 
@@ -20,7 +21,7 @@ class CreateAnimeCategoryWithName(
             return sort.type.flag or sort.direction.flag
         }
 
-    suspend fun await(name: String): Result = withNonCancellableContext {
+    suspend fun await(name: String): Result = withContext(NonCancellable) {
         val categories = categoryRepository.getAllAnimeCategories()
         val nextOrder = categories.maxOfOrNull { it.order }?.plus(1) ?: 0
         val newCategory = AnimeCategory(

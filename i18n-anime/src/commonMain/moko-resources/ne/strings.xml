@@ -14,4 +14,6 @@
     <string name="download_paused">रोकिएको</string>
     <string name="download_notifier_download_paused_chapters">डाउनलोडहरु रोकियो</string>
     <string name="channel_new_chapters_episodes">अध्याय अपडेटहरू</string>
+    <string name="file_select_backup">ब्याकअप फाइल चयन गर्नुहोस्</string>
+    <string name="onboarding_action_skip">छोड</string>
 </resources>

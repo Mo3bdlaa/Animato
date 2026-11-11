@@ -9,10 +9,11 @@ import eu.kanade.domain.track.anime.service.DelayedAnimeTrackingUpdateJob
 import eu.kanade.domain.track.anime.store.DelayedAnimeTrackingStore
 import eu.kanade.tachiyomi.data.track.animeService
 import eu.kanade.tachiyomi.util.system.isOnline
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.track.anime.interactor.GetAnimeTracks
 import tachiyomi.domain.track.anime.interactor.InsertAnimeTrack
@@ -26,9 +27,9 @@ class TrackEpisode(
 ) {
 
     suspend fun await(context: Context, animeId: Long, episodeNumber: Double, setupJobOnFailure: Boolean = true) {
-        withNonCancellableContext {
+        withContext(NonCancellable) {
             val tracks = getTracks.await(animeId)
-            if (tracks.isEmpty()) return@withNonCancellableContext
+            if (tracks.isEmpty()) return@withContext
 
             tracks.mapNotNull { track ->
                 val service = trackerManager.get(track.trackerId)

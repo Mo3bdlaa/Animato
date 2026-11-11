@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeListInterceptor
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.serialization.json.Json
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
@@ -21,7 +22,7 @@ import tachiyomi.domain.track.anime.model.AnimeTrack as DomainAnimeTrack
  *
  * The status numbers are Aniyomi's, because they go into the database and into every backup.
  */
-class AnimeMyAnimeList(private val delegate: MyAnimeList) :
+class AnimeMyAnimeList(private val delegate: MyAnimeList, private val json: Json) :
     Tracker by delegate,
     AnimeTracker,
     DeletableAnimeTracker {
@@ -55,7 +56,7 @@ class AnimeMyAnimeList(private val delegate: MyAnimeList) :
         }
     }
 
-    private val interceptor by lazy { MyAnimeListInterceptor(delegate) }
+    private val interceptor by lazy { MyAnimeListInterceptor(delegate, json) }
 
     private val api by lazy { AnimeMyAnimeListApi(delegate.id, delegate.client, interceptor) }
 

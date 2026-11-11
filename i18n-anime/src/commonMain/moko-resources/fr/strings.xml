@@ -496,4 +496,6 @@
     <string name="pref_mark_duplicate_seen_episode_seen_new">Après avoir récupéré un nouvel épisode</string>
     <string name="action_stop">Arrêter</string>
     <string name="action_continue">Continuer</string>
+    <string name="file_select_backup">Sélectionner fichier de sauvegarde</string>
+    <string name="onboarding_action_skip">Passer</string>
 </resources>

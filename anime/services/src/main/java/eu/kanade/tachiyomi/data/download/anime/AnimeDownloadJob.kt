@@ -15,20 +15,18 @@ import animato.anime.services.AnimeInjektHook
 import animato.anime.services.AnimeNotifications
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.util.system.NetworkState
 import eu.kanade.tachiyomi.util.system.activeNetworkState
-import eu.kanade.tachiyomi.util.system.networkStateFlow
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combineTransform
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withContext
 import tachiyomi.domain.download.service.DownloadPreferences
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * This worker is used to manage the downloader. The system can decide to stop the worker, in
@@ -60,48 +58,38 @@ class AnimeDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
     }
 
     override suspend fun doWork(): Result {
-        var networkCheck = checkNetworkState(
-            applicationContext.activeNetworkState(),
-            downloadPreferences.downloadOnlyOverWifi.get(),
-        )
-        var active = networkCheck && downloadManager.downloaderStart()
-
-        if (!active) {
+        var networkIssue = networkIssue()
+        if (networkIssue != null) {
+            downloadManager.downloaderStop(networkIssue)
             return Result.failure()
         }
 
-        setForegroundSafely()
+        if (!downloadManager.downloaderStart()) return Result.failure()
 
-        coroutineScope {
-            combineTransform(
-                applicationContext.networkStateFlow(),
-                downloadPreferences.downloadOnlyOverWifi.changes(),
-                transform = { a, b -> emit(checkNetworkState(a, b)) },
-            )
-                .onEach { networkCheck = it }
-                .launchIn(this)
-        }
+        try {
+            setForegroundSafely()
 
-        // Keep the worker running when needed
-        while (active) {
-            active = !isStopped && downloadManager.isRunning && networkCheck
+            while (networkIssue == null && downloadManager.isRunning) {
+                delay(1.seconds)
+                networkIssue = networkIssue()
+            }
+        } finally {
+            // Stopped by WorkManager means already cancelled, and taking the lock would then throw instead of stopping
+            if (downloadManager.isRunning && (networkIssue != null || isStopped)) {
+                withContext(NonCancellable) { downloadManager.downloaderStop(networkIssue) }
+            }
         }
 
         return Result.success()
     }
 
-    private fun checkNetworkState(state: NetworkState, requireWifi: Boolean): Boolean {
-        return if (state.isOnline) {
-            val noWifi = requireWifi && !state.isWifi
-            if (noWifi) {
-                downloadManager.downloaderStop(
-                    applicationContext.getString(R.string.download_notifier_text_only_wifi),
-                )
-            }
-            !noWifi
-        } else {
-            downloadManager.downloaderStop(applicationContext.getString(R.string.download_notifier_no_network))
-            false
+    private fun networkIssue(): String? {
+        val state = applicationContext.activeNetworkState()
+        return when {
+            !state.isOnline -> applicationContext.getString(R.string.download_notifier_no_network)
+            downloadPreferences.downloadOnlyOverWifi.get() && !state.isWifi ->
+                applicationContext.getString(R.string.download_notifier_text_only_wifi)
+            else -> null
         }
     }
 

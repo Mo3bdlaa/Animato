@@ -94,7 +94,6 @@ import eu.kanade.presentation.components.IndexingBannerBackgroundColor
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
-import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
@@ -113,6 +112,7 @@ import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
@@ -126,6 +126,7 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.appGraph
 import mihon.core.migration.Migrator
+import mihon.data.cache.ChapterCache
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
@@ -193,6 +194,9 @@ class MainActivity : BaseActivity() {
      */
     var ready = false
 
+    private val isAppMigrating = MutableStateFlow(Migrator.isRunning)
+    private val isDatabaseMigrating = MutableStateFlow(false)
+
     private var navigator: Navigator? = null
 
     init {
@@ -258,20 +262,33 @@ class MainActivity : BaseActivity() {
         // AnimatoImageLoader for why it extends Mihon's loader instead of building one.
         AnimatoImageLoader.install(this)
 
-        Migrator.awaitAndRelease()
+        lifecycleScope.launch {
+            Migrator.awaitAndRelease()
+            isAppMigrating.value = false
 
-        /*
-         * Claim the periodic backup slot, now that the migrations have finished.
-         *
-         * One of Mihon's migrations schedules Mihon's backup job under the same name, and that job
-         * writes manga only — on this app, half a backup. Doing it here rather than earlier is the
-         * point of doing it at all: `awaitAndRelease` above has already run every migration, so
-         * this is the last word rather than a race with one.
-         */
-        AnimatoBackupCreateJob.setupTask(this)
-        // Beside the backup job for the same reason it is here: WorkManager forgets periodic work
-        // across an app update on some devices, and re-enqueueing on every launch is idempotent.
-        LibrarySyncJob.setupTask(this)
+            /*
+             * Claim the periodic backup slot, now that the migrations have finished.
+             *
+             * One of Mihon's migrations schedules Mihon's backup job under the same name, and that
+             * job writes manga only — on this app, half a backup. Doing it here rather than earlier
+             * is the point of doing it at all: `awaitAndRelease` above has already run every
+             * migration, so this is the last word rather than a race with one.
+             */
+            AnimatoBackupCreateJob.setupTask(this@MainActivity)
+            // Beside the backup job for the same reason it is here: WorkManager forgets periodic
+            // work across an app update on some devices, and re-enqueueing on every launch is
+            // idempotent.
+            LibrarySyncJob.setupTask(this@MainActivity)
+        }
+
+        // The first query waits for the schema upgrade, so its return is the end of the migration
+        if (MihonDatabaseVersion.needsUpgrade(this)) {
+            isDatabaseMigrating.value = true
+            lifecycleScope.launchIO {
+                appGraph.getCategories.await()
+                isDatabaseMigrating.value = false
+            }
+        }
 
         /*
          * NSFW hidden unless somebody chose otherwise, and anything adult incognito by default —
@@ -394,134 +411,140 @@ class MainActivity : BaseActivity() {
                 // Every list item asks this once rather than asking the system service per item,
                 // and it is inside the theme so the focus border can read the accent colour.
                 AnimatoTheme {
-                    ProvideIsTelevision {
-                        val context = LocalContext.current
+                    MigrationGate(
+                        appMigrating = isAppMigrating,
+                        databaseMigrating = isDatabaseMigrating,
+                        onShown = { ready = true },
+                    ) {
+                        ProvideIsTelevision {
+                            val context = LocalContext.current
 
-                        // Asked once, on the launch after a crash — which is the only moment somebody
-                        // has a reason to care that a report exists.
-                        CrashReportPrompt()
+                            // Asked once, on the launch after a crash — which is the only moment somebody
+                            // has a reason to care that a report exists.
+                            CrashReportPrompt()
 
-                        var incognito by remember { mutableStateOf(false) }
-                        val downloadOnly by preferences.downloadedOnly.collectAsState()
-                        val indexing by downloadCache.isInitializing.collectAsState()
+                            var incognito by remember { mutableStateOf(false) }
+                            val downloadOnly by preferences.downloadedOnly.collectAsState()
+                            val indexing by downloadCache.isInitializing.collectAsState()
 
-                        val isSystemInDarkTheme = isSystemInDarkTheme()
-                        val statusBarBackgroundColor = when {
-                            indexing -> IndexingBannerBackgroundColor
-                            downloadOnly -> DownloadedOnlyBannerBackgroundColor
-                            incognito -> IncognitoModeBannerBackgroundColor
-                            else -> MaterialTheme.colorScheme.surface
-                        }
-                        LaunchedEffect(isSystemInDarkTheme, statusBarBackgroundColor) {
-                            // Draw edge-to-edge and set system bars color to transparent
-                            val lightStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.BLACK)
-                            val darkStyle = SystemBarStyle.dark(Color.TRANSPARENT)
-                            enableEdgeToEdge(
-                                statusBarStyle = if (statusBarBackgroundColor.luminance() > 0.5) {
-                                    lightStyle
-                                } else {
-                                    darkStyle
-                                },
-                                navigationBarStyle = if (isSystemInDarkTheme) darkStyle else lightStyle,
-                            )
-                        }
-
-                        Navigator(
-                            screen = AnimatoHomeScreen,
-                            disposeBehavior = NavigatorDisposeBehavior(
-                                disposeNestedNavigators = false,
-                                disposeSteps = true,
-                            ),
-                        ) { navigator ->
-                            LaunchedEffect(navigator) {
-                                this@MainActivity.navigator = navigator
-
-                                if (isLaunch) {
-                                    // Set start screen
-                                    handleIntentAction(intent, navigator)
-
-                                    // Reset Incognito Mode on relaunch
-                                    preferences.incognitoMode.set(false)
-                                }
-
-                                // See the note on `ready`: Mihon's tabs cannot reach this activity to set it.
-                                ready = true
+                            val isSystemInDarkTheme = isSystemInDarkTheme()
+                            val statusBarBackgroundColor = when {
+                                indexing -> IndexingBannerBackgroundColor
+                                downloadOnly -> DownloadedOnlyBannerBackgroundColor
+                                incognito -> IncognitoModeBannerBackgroundColor
+                                else -> MaterialTheme.colorScheme.surface
                             }
-                            // Which source, if any, is being browsed right now — the banner is
-                            // per-source, because incognito is. `SourceBrowseScreen` is what browsing
-                            // a source is in this app; upstream's is still named for the case where a
-                            // deep link or a shortcut lands on it.
-                            LaunchedEffect(navigator.lastItem) {
-                                when (val screen = navigator.lastItem) {
-                                    is SourceBrowseScreen -> screen.sourceId
-                                    is BrowseSourceScreen -> screen.sourceId
-                                    else -> null
-                                }
-                                    .let(getIncognitoState::subscribe)
-                                    .collectLatest { incognito = it }
+                            LaunchedEffect(isSystemInDarkTheme, statusBarBackgroundColor) {
+                                // Draw edge-to-edge and set system bars color to transparent
+                                val lightStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.BLACK)
+                                val darkStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+                                enableEdgeToEdge(
+                                    statusBarStyle = if (statusBarBackgroundColor.luminance() > 0.5) {
+                                        lightStyle
+                                    } else {
+                                        darkStyle
+                                    },
+                                    navigationBarStyle = if (isSystemInDarkTheme) darkStyle else lightStyle,
+                                )
                             }
 
-                            val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
-                            Scaffold(
-                                topBar = {
-                                    AppStateBanners(
-                                        downloadedOnlyMode = downloadOnly,
-                                        incognitoMode = incognito,
-                                        indexing = indexing,
-                                        modifier = Modifier.windowInsetsPadding(scaffoldInsets),
-                                    )
-                                },
-                                contentWindowInsets = scaffoldInsets,
-                            ) { contentPadding ->
-                                // Consume insets already used by app state banners
-                                Box {
-                                    // Shows current screen
-                                    DefaultNavigatorScreenTransition(
-                                        navigator = navigator,
-                                        modifier = Modifier
-                                            .padding(contentPadding)
-                                            .consumeWindowInsets(contentPadding),
-                                    )
+                            Navigator(
+                                screen = AnimatoHomeScreen,
+                                disposeBehavior = NavigatorDisposeBehavior(
+                                    disposeNestedNavigators = false,
+                                    disposeSteps = true,
+                                ),
+                            ) { navigator ->
+                                LaunchedEffect(navigator) {
+                                    this@MainActivity.navigator = navigator
 
-                                    // Draw navigation bar scrim when needed
-                                    if (remember { isNavigationBarNeedsScrim() }) {
-                                        Spacer(
-                                            modifier = Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .fillMaxWidth()
-                                                .windowInsetsBottomHeight(WindowInsets.navigationBars)
-                                                .alpha(0.8f)
-                                                .background(MaterialTheme.colorScheme.surfaceContainer),
-                                        )
+                                    if (isLaunch) {
+                                        // Set start screen
+                                        handleIntentAction(intent, navigator)
+
+                                        // Reset Incognito Mode on relaunch
+                                        preferences.incognitoMode.set(false)
                                     }
-                                }
-                            }
 
-                            // Pop source-related screens when incognito mode is turned off
-                            LaunchedEffect(Unit) {
-                                preferences.incognitoMode.changes()
-                                    .drop(1)
-                                    .filter { !it }
-                                    .onEach {
-                                        val currentScreen = navigator.lastItem
-                                        // EntryScreen is ours and replaced Mihon's as the page a source
-                                        // result opens, so the rule has to name it too — otherwise
-                                        // leaving incognito quietly stopped popping anything.
-                                        if (currentScreen is BrowseSourceScreen ||
-                                            currentScreen is SourceBrowseScreen ||
-                                            (currentScreen is MangaScreen && currentScreen.fromSource) ||
-                                            (currentScreen is EntryScreen && currentScreen.fromSource)
-                                        ) {
-                                            navigator.popUntilRoot()
+                                    // See the note on `ready`: Mihon's tabs cannot reach this activity to set it.
+                                    ready = true
+                                }
+                                // Which source, if any, is being browsed right now — the banner is
+                                // per-source, because incognito is. `SourceBrowseScreen` is what browsing
+                                // a source is in this app; upstream's is still named for the case where a
+                                // deep link or a shortcut lands on it.
+                                LaunchedEffect(navigator.lastItem) {
+                                    when (val screen = navigator.lastItem) {
+                                        is SourceBrowseScreen -> screen.sourceId
+                                        is BrowseSourceScreen -> screen.sourceId
+                                        else -> null
+                                    }
+                                        .let(getIncognitoState::subscribe)
+                                        .collectLatest { incognito = it }
+                                }
+
+                                val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
+                                Scaffold(
+                                    topBar = {
+                                        AppStateBanners(
+                                            downloadedOnlyMode = downloadOnly,
+                                            incognitoMode = incognito,
+                                            indexing = indexing,
+                                            modifier = Modifier.windowInsetsPadding(scaffoldInsets),
+                                        )
+                                    },
+                                    contentWindowInsets = scaffoldInsets,
+                                ) { contentPadding ->
+                                    // Consume insets already used by app state banners
+                                    Box {
+                                        // Shows current screen
+                                        DefaultNavigatorScreenTransition(
+                                            navigator = navigator,
+                                            modifier = Modifier
+                                                .padding(contentPadding)
+                                                .consumeWindowInsets(contentPadding),
+                                        )
+
+                                        // Draw navigation bar scrim when needed
+                                        if (remember { isNavigationBarNeedsScrim() }) {
+                                            Spacer(
+                                                modifier = Modifier
+                                                    .align(Alignment.BottomCenter)
+                                                    .fillMaxWidth()
+                                                    .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                                                    .alpha(0.8f)
+                                                    .background(MaterialTheme.colorScheme.surfaceContainer),
+                                            )
                                         }
                                     }
-                                    .launchIn(this)
+                                }
+
+                                // Pop source-related screens when incognito mode is turned off
+                                LaunchedEffect(Unit) {
+                                    preferences.incognitoMode.changes()
+                                        .drop(1)
+                                        .filter { !it }
+                                        .onEach {
+                                            val currentScreen = navigator.lastItem
+                                            // EntryScreen is ours and replaced Mihon's as the page a source
+                                            // result opens, so the rule has to name it too — otherwise
+                                            // leaving incognito quietly stopped popping anything.
+                                            if (currentScreen is BrowseSourceScreen ||
+                                                currentScreen is SourceBrowseScreen ||
+                                                (currentScreen is MangaScreen && currentScreen.fromSource) ||
+                                                (currentScreen is EntryScreen && currentScreen.fromSource)
+                                            ) {
+                                                navigator.popUntilRoot()
+                                            }
+                                        }
+                                        .launchIn(this)
+                                }
+
+                                HandleOnNewIntent(context = context, navigator = navigator)
+
+                                if (isLaunch) CheckForUpdates()
+                                ShowOnboarding()
                             }
-
-                            HandleOnNewIntent(context = context, navigator = navigator)
-
-                            if (isLaunch) CheckForUpdates()
-                            ShowOnboarding()
                         }
                     }
                 }

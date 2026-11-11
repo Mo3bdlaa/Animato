@@ -175,7 +175,7 @@ internal class AnimeExtensionInstaller(private val context: Context) {
                     // Unlikely but just in case
                     extensionManager.updateInstallStep(
                         downloadId,
-                        InstallStep.Error("Could not clear the previous download"),
+                        InstallStep.Error,
                     )
                     return
                 }
@@ -192,14 +192,12 @@ internal class AnimeExtensionInstaller(private val context: Context) {
                     } else {
                         extensionManager.updateInstallStep(
                             downloadId,
-                            InstallStep.Error(
-                                "Not a valid extension, or an older version or different signature than the installed one",
-                            ),
+                            InstallStep.Error,
                         )
                     }
                 } catch (e: Exception) {
                     logcat(LogPriority.ERROR, e) { "Failed to read downloaded extension file." }
-                    extensionManager.updateInstallStep(downloadId, InstallStep.Error.from(e))
+                    extensionManager.updateInstallStep(downloadId, InstallStep.Error)
                 }
 
                 tempFile.delete()
@@ -310,7 +308,7 @@ internal class AnimeExtensionInstaller(private val context: Context) {
             // Set next installation step
             if (uri == null) {
                 logcat(LogPriority.ERROR) { "Couldn't locate downloaded APK" }
-                updateInstallStep(id, InstallStep.Error("The downloaded file could not be found"))
+                updateInstallStep(id, InstallStep.Error)
                 return
             }
 

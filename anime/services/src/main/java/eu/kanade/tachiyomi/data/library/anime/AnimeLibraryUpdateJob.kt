@@ -530,7 +530,7 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
                 context.workManager.cancelUniqueWork(WORK_NAME_AUTO)
             }
         }
-        fun startNow(
+        suspend fun startNow(
             context: Context,
             category: AnimeCategory? = null,
         ): Boolean {

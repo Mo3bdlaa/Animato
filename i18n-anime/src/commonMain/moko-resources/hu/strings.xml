@@ -14,4 +14,6 @@
     <string name="download_paused">Szünetel</string>
     <string name="download_notifier_download_paused_chapters">Letöltés szüneteltetve</string>
     <string name="channel_new_chapters_episodes">Fejezetfrissítések</string>
+    <string name="file_select_backup">Biztonsági mentési fájl kiválasztása</string>
+    <string name="onboarding_action_skip">Kihagyás</string>
 </resources>

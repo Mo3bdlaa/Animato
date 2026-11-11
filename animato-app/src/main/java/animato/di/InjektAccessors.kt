@@ -74,7 +74,6 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.MangaRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.data.cache.AnimeBackgroundCache
 import eu.kanade.tachiyomi.data.cache.AnimeCoverCache
-import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.DownloadProvider
@@ -82,6 +81,7 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.saver.ImageSaver
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
@@ -99,6 +99,7 @@ import eu.kanade.tachiyomi.ui.player.settings.SubtitlePreferences
 import eu.kanade.tachiyomi.ui.player.utils.TrackSelect
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
+import mihon.data.cache.ChapterCache
 import mihon.domain.extension.anime.interactor.AddAnimeExtensionStore
 import mihon.domain.extension.anime.interactor.GetAnimeExtensionStoreCountAsFlow
 import mihon.domain.extension.anime.interactor.GetAnimeExtensionStores
@@ -355,6 +356,7 @@ interface InjektAccessors {
     val trackPreferences: TrackPreferences
     val trackRepository: TrackRepository
     val trackSelect: TrackSelect
+    val trackerDependencies: TrackerDependencies
     val trackerManager: TrackerManager
     val trustAnimeExtension: TrustAnimeExtension
     val uiPreferences: UiPreferences
@@ -539,6 +541,7 @@ internal fun InjektAccessors.injektBindings(): Map<Type, () -> Any> = mapOf(
     TrackPreferences::class.java to { trackPreferences },
     TrackRepository::class.java to { trackRepository },
     TrackSelect::class.java to { trackSelect },
+    TrackerDependencies::class.java to { trackerDependencies },
     TrackerManager::class.java to { trackerManager },
     TrustAnimeExtension::class.java to { trustAnimeExtension },
     UiPreferences::class.java to { uiPreferences },

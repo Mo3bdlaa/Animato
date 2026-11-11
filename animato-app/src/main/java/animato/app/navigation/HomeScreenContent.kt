@@ -167,12 +167,11 @@ internal fun HomeScreenContent() {
             refreshing = isRefreshing,
             enabled = true,
             onRefresh = {
-                if (screenModel.refresh()) {
-                    scope.launch {
-                        isRefreshing = true
-                        delay(1.seconds)
-                        isRefreshing = false
-                    }
+                scope.launch {
+                    if (!screenModel.refresh()) return@launch
+                    isRefreshing = true
+                    delay(1.seconds)
+                    isRefreshing = false
                 }
             },
             indicatorPadding = contentPadding,

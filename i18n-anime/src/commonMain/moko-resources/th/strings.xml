@@ -14,4 +14,6 @@
     <string name="download_paused">หยุดชั่วคราว</string>
     <string name="download_notifier_download_paused_chapters">การดาวน์โหลดหยุดชั่วคราว</string>
     <string name="channel_new_chapters_episodes">อัปเดตตอน</string>
+    <string name="file_select_backup">เลือกแฟ้มข้อมูลสำรอง</string>
+    <string name="onboarding_action_skip">ข้าม</string>
 </resources>

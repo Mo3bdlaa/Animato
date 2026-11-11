@@ -7,6 +7,7 @@ import animato.anime.content.EntryForm
 import animato.anime.content.entryForm
 import animato.anime.player.describeForUser
 import animato.domain.content.ContentType
+import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.domain.chapter.model.applyFilters
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
@@ -311,6 +312,7 @@ class EntryScreenModel(
     private val sourceManager: SourceManager = Injekt.get(),
     private val animeSourceManager: AnimeSourceManager = Injekt.get(),
     private val downloadManager: DownloadManager = Injekt.get(),
+    private val basePreferences: BasePreferences = Injekt.get(),
     private val animeDownloadManager: AnimeDownloadManager = Injekt.get(),
     private val setReadStatus: SetReadStatus = Injekt.get(),
     private val setSeenStatus: SetSeenStatus = Injekt.get(),
@@ -443,7 +445,8 @@ class EntryScreenModel(
             val source = sourceManager.getOrStub(manga.source)
             val edited = overrides[EntryOverrides.key(ContentType.MANGA, entryId)]
             // The entry's own sort and filters, which this page applied none of. See the class note.
-            val ordered = withIOContext { chapters.applyFilters(manga, downloadManager) }
+            val ordered =
+                withIOContext { chapters.applyFilters(manga, basePreferences.downloadedOnly.get(), downloadManager) }
             EntryState(
                 entryId = entryId,
                 contentType = ContentType.MANGA,
@@ -476,7 +479,7 @@ class EntryScreenModel(
                             scanlator = chapter.scanlator,
                             viewed = chapter.read,
                             bookmarked = chapter.bookmark,
-                            dateUpload = chapter.dateUpload,
+                            dateUpload = chapter.dateUpload?.toEpochMilliseconds() ?: 0L,
                             downloaded = downloadManager.isChapterDownloaded(
                                 chapterName = chapter.name,
                                 chapterScanlator = chapter.scanlator,

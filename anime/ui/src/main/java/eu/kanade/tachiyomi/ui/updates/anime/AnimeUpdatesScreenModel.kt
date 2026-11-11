@@ -136,11 +136,9 @@ class AnimeUpdatesScreenModel(
             .toPersistentList()
     }
 
-    fun updateLibrary(): Boolean {
+    suspend fun updateLibrary(): Boolean {
         val started = AnimeLibraryUpdateJob.startNow(Injekt.get<Application>())
-        viewModelScope.launch {
-            _events.send(Event.LibraryUpdateTriggered(started))
-        }
+        _events.send(Event.LibraryUpdateTriggered(started))
         return started
     }
 

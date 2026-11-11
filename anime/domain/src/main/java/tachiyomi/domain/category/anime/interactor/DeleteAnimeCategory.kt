@@ -4,8 +4,9 @@ import animato.domain.category.AnimeCategoryUpdate
 import aniyomi.domain.download.service.AnimeDownloadPreferences
 import aniyomi.domain.library.service.AnimeLibraryPreferences
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.repository.AnimeCategoryRepository
 
@@ -16,12 +17,12 @@ class DeleteAnimeCategory(
     private val downloadPreferences: AnimeDownloadPreferences,
 ) {
 
-    suspend fun await(categoryId: Long) = withNonCancellableContext {
+    suspend fun await(categoryId: Long) = withContext(NonCancellable) {
         try {
             categoryRepository.deleteAnimeCategory(categoryId)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
-            return@withNonCancellableContext Result.InternalError(e)
+            return@withContext Result.InternalError(e)
         }
 
         val categories = categoryRepository.getAllAnimeCategories()

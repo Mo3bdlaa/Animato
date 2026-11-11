@@ -124,7 +124,7 @@ class AnimatoOnboardingScreen : Screen() {
                 // On every step including the first. A flow that promises skippable and hides the
                 // control on step one has broken the promise before it starts.
                 TextButton(onClick = finish) {
-                    Text(stringResource(MR.strings.onboarding_action_skip))
+                    Text(stringResource(AYMR.strings.onboarding_action_skip))
                 }
             }
 

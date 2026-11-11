@@ -26,12 +26,12 @@ import androidx.compose.ui.unit.dp
 import animato.domain.items.episode.formatEpisodeNumber
 import animato.ui.entries.ItemCover
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import eu.kanade.tachiyomi.util.lang.toTimestampString
 import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import java.text.DateFormat
 
 private val HistoryItemHeight = 96.dp
 
@@ -72,7 +72,9 @@ fun AnimeHistoryItem(
                 overflow = TextOverflow.Ellipsis,
                 style = textStyle,
             )
-            val seenAt = remember { history.seenAt?.toTimestampString() ?: "" }
+            val seenAt = remember(history.seenAt) {
+                history.seenAt?.let(DateFormat.getTimeInstance(DateFormat.SHORT)::format) ?: ""
+            }
             Text(
                 text = if (history.episodeNumber > -1) {
                     stringResource(

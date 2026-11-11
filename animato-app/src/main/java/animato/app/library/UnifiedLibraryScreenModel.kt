@@ -219,7 +219,7 @@ class UnifiedLibraryScreenModel(
      * The same refresh the Updates screen runs: ask both libraries for anything new, per the
      * lens. Each job refuses if already running; started means either half accepted.
      */
-    fun refresh(): Boolean {
+    suspend fun refresh(): Boolean {
         val context = Injekt.get<android.app.Application>()
         val lens = contentPreferences.contentFilter.get()
         val manga =

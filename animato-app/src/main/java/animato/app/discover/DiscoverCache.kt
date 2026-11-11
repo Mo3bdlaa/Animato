@@ -79,7 +79,7 @@ class DiscoverCache(
                         sourceId = it.sourceId ?: 0L,
                         isMangaFavorite = false,
                         url = it.coverUrl,
-                        lastModified = 0L,
+                        lastModified = null,
                     )
                     ContentType.ANIME -> AnimeCover(
                         animeId = -1L,
