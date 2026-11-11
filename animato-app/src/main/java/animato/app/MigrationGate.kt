@@ -1,7 +1,6 @@
 package animato.app
 
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -15,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
+import java.io.RandomAccessFile
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
@@ -54,17 +54,37 @@ fun MigrationGate(
 /**
  * Whether Mihon's manga database is on an older schema than this build, so opening it will migrate.
  *
- * Mihon tracks this in its `DatabaseRepository`, which its graph doesn't expose; the version is
- * read straight from the file instead, before Mihon's driver opens it.
+ * Mihon tracks this in its `DatabaseRepository`, which its graph doesn't expose. The version is read
+ * from the file header rather than through SQLite: a second SQLite copy opening the file beside
+ * Mihon's bundled one can corrupt it. A version still sitting in the WAL reads as older, which at
+ * worst shows the migrating screen until the first query returns.
  */
 object MihonDatabaseVersion {
 
+    private const val USER_VERSION_OFFSET = 60L
+
+    @Volatile
+    private var checked: Boolean? = null
+
     fun needsUpgrade(context: Context): Boolean {
+        checked?.let { return it }
+        return read(context).also { checked = it }
+    }
+
+    /** The schema is current from here on, whatever the header said at launch. */
+    fun markUpgraded() {
+        checked = false
+    }
+
+    private fun read(context: Context): Boolean {
         val file = context.getDatabasePath("tachiyomi.db")
         if (!file.exists()) return false
         return try {
-            SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY).use { it.version }
-                .let { it in 1..<Database.Schema.version }
+            val version = RandomAccessFile(file, "r").use {
+                it.seek(USER_VERSION_OFFSET)
+                it.readInt()
+            }
+            version in 1..<Database.Schema.version
         } catch (e: Exception) {
             logcat(LogPriority.WARN, e) { "Couldn't read the manga database version" }
             false

@@ -286,6 +286,7 @@ class MainActivity : BaseActivity() {
             isDatabaseMigrating.value = true
             lifecycleScope.launchIO {
                 appGraph.getCategories.await()
+                MihonDatabaseVersion.markUpgraded()
                 isDatabaseMigrating.value = false
             }
         }
