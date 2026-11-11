@@ -262,7 +262,9 @@ class MainActivity : BaseActivity() {
         // AnimatoImageLoader for why it extends Mihon's loader instead of building one.
         AnimatoImageLoader.install(this)
 
-        lifecycleScope.launch {
+        // On the migrator's own scope: leaving the migrating screen must not cancel the slot claim below
+        val appContext = applicationContext
+        Migrator.scope.launch {
             Migrator.awaitAndRelease()
             isAppMigrating.value = false
 
@@ -274,15 +276,15 @@ class MainActivity : BaseActivity() {
              * is the point of doing it at all: `awaitAndRelease` above has already run every
              * migration, so this is the last word rather than a race with one.
              */
-            AnimatoBackupCreateJob.setupTask(this@MainActivity)
+            AnimatoBackupCreateJob.setupTask(appContext)
             // Beside the backup job for the same reason it is here: WorkManager forgets periodic
             // work across an app update on some devices, and re-enqueueing on every launch is
             // idempotent.
-            LibrarySyncJob.setupTask(this@MainActivity)
+            LibrarySyncJob.setupTask(appContext)
         }
 
         // The first query waits for the schema upgrade, so its return is the end of the migration
-        if (MihonDatabaseVersion.needsUpgrade(this)) {
+        if (MihonDatabaseVersion.needsUpgrade(appContext)) {
             isDatabaseMigrating.value = true
             lifecycleScope.launchIO {
                 appGraph.getCategories.await()
