@@ -93,9 +93,9 @@ class GetUnifiedLibraryTest {
         totalChapters = 20,
         readCount = 5,
         bookmarkCount = 0,
-        latestUpload = 0,
-        chapterFetchedAt = 0,
-        lastRead = 0,
+        latestUpload = null,
+        chapterFetchedAt = null,
+        lastRead = null,
     )
 
     private fun libraryAnime(id: Long) = LibraryAnime(
