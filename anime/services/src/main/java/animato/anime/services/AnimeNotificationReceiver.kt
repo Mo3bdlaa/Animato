@@ -202,13 +202,15 @@ class AnimeNotificationReceiver : BroadcastReceiver() {
          * Opens a saved error log.
          *
          * Mihon has the same few lines, but `internal` to its module, so this is ours rather than
-         * a call into theirs. Nothing about it is anime-specific.
+         * a call into theirs. Kept to this package, so the app's own log viewer opens it rather
+         * than a picker of every text viewer installed.
          */
         fun openErrorLogPendingActivity(context: Context, uri: Uri): PendingIntent = PendingIntent.getActivity(
             context,
             0,
             Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "text/plain")
+                setPackage(context.packageName)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
             },
             PendingIntent.FLAG_IMMUTABLE,

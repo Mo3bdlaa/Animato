@@ -138,6 +138,26 @@
         </activity>
 
         <!--
+          Mihon's update and restore notifications open their error logs as plain text from our
+          file provider. Matching only that provider, this offers the app itself among the viewers;
+          our own notifications address it directly.
+        -->
+        <activity
+            android:name="animato.app.errorlog.ErrorLogActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:scheme="content"
+                    android:host="${applicationId}.provider"
+                    android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!--
           Mihon's entry point stops being one. This is a directive in our manifest, not an edit to
           theirs: the class stays exactly as it is, it simply stops being declared.
         -->

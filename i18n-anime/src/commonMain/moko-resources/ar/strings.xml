@@ -790,4 +790,5 @@
     <string name="pref_extensions_auto_update_summary">في الخلفية من غير ما يسأل. محتاج طريقة التثبيت الخاصة.</string>
     <string name="pref_extensions_remove_unused">مسح الإضافات اللي مش مستخدمة</string>
     <string name="pref_extensions_remove_unused_never">أبدًا</string>
+    <string name="error_log_title">إيه اللي حصل</string>
 </resources>
