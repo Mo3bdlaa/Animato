@@ -766,4 +766,24 @@
     <string name="pref_proxy_xray_failed">مش شغال: %1$s</string>
     <string name="file_select_backup">اختر ملف النسخة الاحتياطية</string>
     <string name="onboarding_action_skip">تخطَّ</string>
+    <string name="known_stores_title">متاجر معروفة</string>
+    <string name="known_stores_summary">عناوين كانت شغالة وقت بناء النسخة دي. الضغط على واحد بيسأل قبل ما يضيف أي حاجة.</string>
+    <string name="known_store_keiyoushi">مانجا · متجر المجتمع، حوالي ١٦٠٠ إضافة</string>
+    <string name="known_store_aniyomi">فيديو · صغير، وأدوات أكتر منه مصادر مشاهدة</string>
+    <string name="known_store_yuzono">فيديو · أكبر متجر، حوالي ٢٥٠ إضافة بلغات كتير منها العربي</string>
+    <string name="known_store_salmanbappi">فيديو · حوالي ١٠٠ إضافة، أغلبها إنجليزي وبنغالي</string>
+    <string name="known_store_secozzi">فيديو · Jellyfin وStremio وTorbox كإضافات</string>
+    <string name="known_store_kavita">مانجا · بيتوصل بسيرفر Kavita بتاعك</string>
+    <string name="known_store_suwayomi">مانجا · بيتوصل بسيرفر Suwayomi بتاعك</string>
+    <string name="known_stores_anime_note">المتاجر بيديرها أصحابها مش Animato، وممكن أي واحد يتنقل أو يقف في أي وقت.</string>
+    <string name="stremio_suggested">تبدأ بيهم</string>
+    <string name="stremio_suggested_kitsu">أنمي، من Kitsu</string>
+    <string name="stremio_suggested_cinemeta">أفلام ومسلسلات، بالبوسترات والوصف</string>
+    <string name="stremio_suggested_torrentio">فيديو من مواقع التورنت. افتح صفحته الأول واختار المزودين والجودة، وبعدين الصق العنوان اللي بيديهولك.</string>
+    <string name="stremio_suggested_opensubtitles">ترجمات بلغات كتير لأي حاجة ليها IMDb id</string>
+    <string name="stremio_suggested_tmdb">كتالوجات أفلام ومسلسلات من The Movie Database</string>
+    <string name="stremio_suggested_streaming_catalogs">اللي معروض على Netflix وDisney+ وPrime Video وغيرهم</string>
+    <string name="stremio_suggested_comet">فيديو من مواقع التورنت، على ElfHosted</string>
+    <string name="stremio_suggested_mediafusion">فيديو وكتالوجات، منها الرياضة المباشرة، على ElfHosted</string>
+    <string name="stremio_suggested_anime_catalogs">قوائم الأنمي من MyAnimeList وAniList وغيرهم. افتح صفحته الأول واختار الكتالوجات، وبعدين الصق العنوان اللي بيديهولك.</string>
 </resources>

@@ -22,34 +22,18 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /**
- * The two addresses that actually work, offered rather than typed.
+ * Store addresses that work, offered rather than typed.
  *
- * ## Why this exists
+ * The app ships with no stores, and the screen for adding one expects a URL ending in
+ * `index.min.json` — honest about the mechanism, useless to somebody who has just installed the app.
  *
- * The app ships with no stores, deliberately, and the screen for adding one is a text field
- * expecting a URL ending in `index.min.json`. That is honest about the mechanism and useless as a
- * starting point: somebody who has just installed the app cannot know what to put in it, and the
- * addresses are not the kind of thing anybody types from memory. Reported plainly from a device —
- * *I feel a lack of sources* — by somebody who had already found the screen.
+ * Each one was checked when this list was written: its index and its `repo.json`, which carries the
+ * signing key extensions are trusted by, both answered. A store without that file cannot be added,
+ * so none is listed. They are run by their own authors; one can move or stop at any time.
  *
- * ## Why only two, and why one of them comes with a warning
- *
- * These are the two that answered when this was written, checked rather than remembered. The manga
- * one carries around thirteen hundred extensions and is the store the community actually uses.
- *
- * The anime one carries three, and all three are utilities — Google Drive, a Drive index, and
- * Jellyfin. That is not a bad snapshot, it is the state of the world: the public store of anime
- * streaming extensions is gone, and no replacement is published at a stable address. Offering it
- * without saying so would leave somebody tapping it, seeing three unfamiliar rows, and concluding
- * the app is broken. So the note under it says what is true, and points at the ways in that do
- * work — which is the whole reason this fork grew addons, playlists and servers.
- *
- * ## Why tapping does not add anything
- *
- * Each row opens the store screen for that half with the address filled in, which is the same path
- * a `tachiyomi://add-repo` link takes and ends at the same confirmation. A store decides what code
- * gets installed on the device; it is not something to hand over on one tap from a list the app
- * wrote.
+ * Tapping a row opens the store screen for that half with the address filled in, the same path a
+ * `tachiyomi://add-repo` link takes. A store decides what code gets installed on the device, so it
+ * is never added on one tap from a list the app wrote.
  */
 private data class KnownStore(
     val name: String,
@@ -60,16 +44,46 @@ private data class KnownStore(
 
 private val KNOWN_STORES = listOf(
     KnownStore(
-        name = "Keiyoushi",
-        indexUrl = "https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json",
-        note = AYMR.strings.known_store_keiyoushi,
-        isAnime = false,
+        name = "Yūzōnō",
+        indexUrl = "https://raw.githubusercontent.com/yuzono/anime-repo/repo/index.min.json",
+        note = AYMR.strings.known_store_yuzono,
+        isAnime = true,
+    ),
+    KnownStore(
+        name = "SalmanBappi",
+        indexUrl = "https://raw.githubusercontent.com/salmanbappi/extensions-repo/main/index.min.json",
+        note = AYMR.strings.known_store_salmanbappi,
+        isAnime = true,
+    ),
+    KnownStore(
+        name = "Secozzi",
+        indexUrl = "https://raw.githubusercontent.com/Secozzi/aniyomi-extensions/refs/heads/repo/index.min.json",
+        note = AYMR.strings.known_store_secozzi,
+        isAnime = true,
     ),
     KnownStore(
         name = "Official Aniyomi extensions",
         indexUrl = "https://raw.githubusercontent.com/aniyomiorg/aniyomi-extensions/repo/index.min.json",
         note = AYMR.strings.known_store_aniyomi,
         isAnime = true,
+    ),
+    KnownStore(
+        name = "Keiyoushi",
+        indexUrl = "https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json",
+        note = AYMR.strings.known_store_keiyoushi,
+        isAnime = false,
+    ),
+    KnownStore(
+        name = "Kavita",
+        indexUrl = "https://raw.githubusercontent.com/Kareadita/tach-extension/repo/index.min.json",
+        note = AYMR.strings.known_store_kavita,
+        isAnime = false,
+    ),
+    KnownStore(
+        name = "Suwayomi",
+        indexUrl = "https://raw.githubusercontent.com/suwayomi/tachiyomi-extension/repo/index.min.json",
+        note = AYMR.strings.known_store_suwayomi,
+        isAnime = false,
     ),
 )
 

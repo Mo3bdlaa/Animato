@@ -306,8 +306,8 @@ internal fun LazyListScope.addonStore(
         .filter { !liveTvOnly || it.servesLiveTv }
         .filter { matches(query, it.manifest.name, it.manifest.description, it.url) }
     // Suggestions the person already took are not suggestions any more.
-    // None of the four we suggest is a television addon, so under the live-TV heading the section
-    // is empty rather than four rows of the wrong thing.
+    // The suggestions are not television addons, so under the live-TV heading the section is
+    // empty rather than rows of the wrong thing.
     val suggestions = if (liveTvOnly) {
         emptyList()
     } else {

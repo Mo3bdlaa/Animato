@@ -459,6 +459,11 @@
     <string name="stremio_suggested_cinemeta">Films and series, with posters and descriptions</string>
     <string name="stremio_suggested_torrentio">Video from torrent sites. Open its own page first to choose providers and quality, then paste the address it gives you.</string>
     <string name="stremio_suggested_opensubtitles">Subtitles in many languages, for anything with an IMDb id</string>
+    <string name="stremio_suggested_tmdb">Films and series catalogues from The Movie Database</string>
+    <string name="stremio_suggested_streaming_catalogs">What is on Netflix, Disney+, Prime Video and others</string>
+    <string name="stremio_suggested_comet">Video from torrent sites, hosted by ElfHosted</string>
+    <string name="stremio_suggested_mediafusion">Video and catalogues, including live sport, hosted by ElfHosted</string>
+    <string name="stremio_suggested_anime_catalogs">Anime charts from MyAnimeList, AniList and others. Open its own page first to choose catalogues, then paste the address it gives you.</string>
     <!-- Editing an entry's details by hand -->
     <string name="action_edit_details">Edit details</string>
     <string name="edit_details_genres">Genres, separated by commas</string>
@@ -889,9 +894,14 @@
     <string name="recovery_action_share">Share the crash report</string>
     <string name="known_stores_title">Known stores</string>
     <string name="known_stores_summary">Addresses that were working when this version was built. Tapping one asks before it adds anything.</string>
-    <string name="known_store_keiyoushi">Manga · the community store, around 1,300 extensions</string>
-    <string name="known_store_aniyomi">Anime · small, and utilities rather than streaming sources</string>
-    <string name="known_stores_anime_note">There is no public store of video streaming extensions any more. For anime, films and series it is Stremio addons, an M3U playlist, or your own server.</string>
+    <string name="known_store_keiyoushi">Manga · the community store, around 1,600 extensions</string>
+    <string name="known_store_yuzono">Video · the largest store, around 250 extensions in many languages, Arabic included</string>
+    <string name="known_store_salmanbappi">Video · around 100 extensions, mostly English and Bengali</string>
+    <string name="known_store_secozzi">Video · Jellyfin, Stremio and Torbox, as extensions</string>
+    <string name="known_store_kavita">Manga · connects to your own Kavita server</string>
+    <string name="known_store_suwayomi">Manga · connects to your own Suwayomi server</string>
+    <string name="known_store_aniyomi">Video · small, and utilities rather than streaming sources</string>
+    <string name="known_stores_anime_note">Stores are run by their own authors, not by Animato, and one can move or stop at any time.</string>
 
     <!-- Discover -->
     <string name="discover_search_hint">Search anime, films, series and manga</string>

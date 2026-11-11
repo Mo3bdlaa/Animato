@@ -11,9 +11,8 @@ import tachiyomi.i18n.aniyomi.AYMR
  * to find a Torrentio address at all. Somebody who has just installed the app has no way to know
  * that a catalogue and a stream provider are different addons, let alone what either is called.
  *
- * Four, not forty. This is a starting point rather than a directory: one anime catalogue, one
- * general one, one source of video and one of subtitles — which between them is a working setup,
- * and past that people know what they are looking for.
+ * A handful, not the whole directory: catalogues, sources of video and subtitles that answered
+ * without an account when this list was written. The full directory is a search away.
  *
  * Tapping one fills the address field rather than installing straight away. That looks like an
  * extra tap and is not: the address stays visible and editable, which is what Torrentio needs
@@ -38,14 +37,39 @@ val SUGGESTED_ADDONS = listOf(
         description = AYMR.strings.stremio_suggested_kitsu,
     ),
     SuggestedAddon(
+        name = "Anime Catalogs",
+        url = "https://1fe84bc728af-stremio-anime-catalogs.baby-beamup.club/manifest.json",
+        description = AYMR.strings.stremio_suggested_anime_catalogs,
+    ),
+    SuggestedAddon(
         name = "Cinemeta",
         url = "https://v3-cinemeta.strem.io/manifest.json",
         description = AYMR.strings.stremio_suggested_cinemeta,
     ),
     SuggestedAddon(
+        name = "The Movie Database",
+        url = "https://94c8cb9f702d-tmdb-addon.baby-beamup.club/manifest.json",
+        description = AYMR.strings.stremio_suggested_tmdb,
+    ),
+    SuggestedAddon(
+        name = "Streaming Catalogs",
+        url = "https://7a82163c306e-stremio-netflix-catalog-addon.baby-beamup.club/manifest.json",
+        description = AYMR.strings.stremio_suggested_streaming_catalogs,
+    ),
+    SuggestedAddon(
         name = "Torrentio",
         url = "https://torrentio.strem.fun/manifest.json",
         description = AYMR.strings.stremio_suggested_torrentio,
+    ),
+    SuggestedAddon(
+        name = "Comet",
+        url = "https://comet.elfhosted.com/manifest.json",
+        description = AYMR.strings.stremio_suggested_comet,
+    ),
+    SuggestedAddon(
+        name = "MediaFusion",
+        url = "https://mediafusion.elfhosted.com/manifest.json",
+        description = AYMR.strings.stremio_suggested_mediafusion,
     ),
     SuggestedAddon(
         name = "OpenSubtitles v3",
