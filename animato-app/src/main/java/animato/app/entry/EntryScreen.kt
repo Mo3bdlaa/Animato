@@ -930,6 +930,7 @@ private fun ItemRow(
 ) {
     val alpha = if (item.viewed) VIEWED_ALPHA else 1f
     var menuOpen by remember { mutableStateOf(false) }
+    var deleteMenuOpen by remember { mutableStateOf(false) }
 
     Box {
         Row(
@@ -1039,22 +1040,35 @@ private fun ItemRow(
              * is here, not whether it is arriving, so a progress spinner would be an animation with
              * nothing behind it; the queue's own notification is where progress actually lives.
              */
-            IconButton(onClick = onToggleDownload) {
-                Icon(
-                    imageVector = if (item.downloaded) {
-                        Icons.Outlined.DownloadDone
-                    } else {
-                        Icons.Outlined.Download
-                    },
-                    contentDescription = stringResource(
-                        if (item.downloaded) MR.strings.action_delete else MR.strings.action_download,
-                    ),
-                    tint = if (item.downloaded) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
+            // A finished download asks before it goes: one stray tap on the tick lost a whole episode
+            Box {
+                IconButton(onClick = { if (item.downloaded) deleteMenuOpen = true else onToggleDownload() }) {
+                    Icon(
+                        imageVector = if (item.downloaded) {
+                            Icons.Outlined.DownloadDone
+                        } else {
+                            Icons.Outlined.Download
+                        },
+                        contentDescription = stringResource(
+                            if (item.downloaded) MR.strings.action_delete else MR.strings.action_download,
+                        ),
+                        tint = if (item.downloaded) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+                DropdownMenu(expanded = deleteMenuOpen, onDismissRequest = { deleteMenuOpen = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(MR.strings.action_delete)) },
+                        leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+                        onClick = {
+                            deleteMenuOpen = false
+                            onToggleDownload()
+                        },
+                    )
+                }
             }
         }
 
