@@ -52,7 +52,7 @@ object AnimeExtensionLoader {
     private const val METADATA_CONTENT_WARNING = "aniyomix.contentWarning"
     private const val METADATA_IS_TORRENT = "aniyomix.torrent"
 
-    private val SUPPORTED_LIB_VERSIONS = listOf(14.0, 16.0)
+    private val SUPPORTED_LIB_VERSIONS = listOf(14.0, 16.0, 17.0)
 
     @Suppress("DEPRECATION")
     private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or
@@ -259,7 +259,10 @@ object AnimeExtensionLoader {
         }
 
         // Validate lib version
-        val libVersion = appInfo.metaData.getString(METADATA_EXTENSION_LIB)?.toDouble()
+        val libVersion = appInfo.metaData.getInt(METADATA_EXTENSION_LIB)
+            .takeUnless { it == 0 }
+            ?.toString()
+            ?.toDouble()
             ?: versionName.substringBeforeLast('.').toDoubleOrNull()
         if (libVersion == null || libVersion !in SUPPORTED_LIB_VERSIONS) {
             logcat(LogPriority.WARN) {
