@@ -665,6 +665,10 @@ private fun EntryHeader(
     onRefresh: () -> Unit,
     onOpenInBrowser: () -> Unit,
 ) {
+    var previewOpen by remember { mutableStateOf(false) }
+    if (previewOpen) {
+        CoverPreviewDialog(data = state.coverData, title = state.title, onDismiss = { previewOpen = false })
+    }
     Box(modifier = Modifier.fillMaxWidth().height(BackdropHeight)) {
         AsyncImage(
             model = state.coverData,
@@ -696,6 +700,7 @@ private fun EntryHeader(
                 contentDescription = state.title,
                 modifier = Modifier.width(CoverWidth),
                 shape = RoundedCornerShape(CoverRadius),
+                onClick = { previewOpen = true },
             )
             Column(
                 modifier = Modifier.weight(1f),
