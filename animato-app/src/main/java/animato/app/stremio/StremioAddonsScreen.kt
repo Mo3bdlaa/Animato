@@ -53,6 +53,7 @@ import animato.anime.stremio.DirectoryAddon
 import animato.anime.stremio.StremioAddon
 import animato.anime.stremio.StremioSource
 import animato.anime.stremio.StremioUrls
+import animato.app.ReleaseChannel
 import animato.app.source.SourceBrowseScreen
 import animato.domain.content.ContentType
 import animato.ui.components.AnimatoEmptyState
@@ -206,7 +207,8 @@ class StremioAddonsScreen(
                 }
                 addonStore(
                     addons = addons,
-                    directory = directory,
+                    // The curated lists are for alphas; see ReleaseChannel
+                    directory = if (ReleaseChannel.isAlpha) directory else emptyList(),
                     query = query.orEmpty(),
                     kind = kind,
                     onKindChange = { kind = it },
@@ -315,7 +317,7 @@ internal fun LazyListScope.addonStore(
     // Suggestions the person already took are not suggestions any more.
     // The suggestions are not television addons, so under the live-TV heading the section is
     // empty rather than rows of the wrong thing.
-    val suggestions = if (liveTvOnly) {
+    val suggestions = if (liveTvOnly || !ReleaseChannel.isAlpha) {
         emptyList()
     } else {
         SUGGESTED_ADDONS

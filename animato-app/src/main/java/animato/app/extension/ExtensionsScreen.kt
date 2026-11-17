@@ -66,6 +66,7 @@ import animato.anime.stremio.StremioSource
 import animato.anime.torznab.TorznabIndexerStore
 import animato.anime.torznab.TorznabSource
 import animato.anime.ui.stores.AnimeExtensionStoresScreen
+import animato.app.ReleaseChannel
 import animato.app.jellyfin.JellyfinSignInDialog
 import animato.app.jellyfin.jellyfinServers
 import animato.app.navigation.LensButton
@@ -588,13 +589,15 @@ private fun RepositoriesRow(
              * is upstream's and not ours to add a section to — and splitting the answer across two
              * places would be worse than not having it.
              */
-            DropdownMenuItem(
-                text = { Text(stringResource(AYMR.strings.known_stores_title)) },
-                onClick = {
-                    menuOpen = false
-                    knownStoresOpen = true
-                },
-            )
+            if (ReleaseChannel.isAlpha) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(AYMR.strings.known_stores_title)) },
+                    onClick = {
+                        menuOpen = false
+                        knownStoresOpen = true
+                    },
+                )
+            }
         }
     }
 
