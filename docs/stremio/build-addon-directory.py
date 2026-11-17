@@ -90,6 +90,12 @@ STREMIO_CATALOGS = (
     "https://v3-cinemeta.strem.io/addon_catalog/all/official.json",
 )
 
+# ElfHosted's recommended addons: hosted instances, several of them the usual starting point
+# (Comet, MediaFusion, TMDB). The page links each addon's host; its manifest is at one of these.
+ELFHOSTED_GUIDE = "https://docs.elfhosted.com/stremio-addons/guide/recommended-addons/"
+ELFHOSTED_NOT_ADDONS = {"docs", "store", "status", "discord", "aiomanager"}
+MANIFEST_PATHS = ("manifest.json", "stremio/manifest.json")
+
 
 def get(url, timeout=45):
     request = urllib.request.Request(
@@ -281,6 +287,30 @@ def entry_from(manifest, url, fallback_name, resources=None):
     return entry
 
 
+def elfhosted_entries():
+    """The addons ElfHosted's guide recommends, read from their own manifests."""
+    try:
+        page = get(ELFHOSTED_GUIDE)
+    except Exception as error:  # noqa: BLE001 - the other sources still stand without this one
+        print(f"  {ELFHOSTED_GUIDE}: {error}")
+        return []
+    hosts = sorted(set(re.findall(r"https://([a-z0-9-]+)\.elfhosted\.com", page)) - ELFHOSTED_NOT_ADDONS)
+    entries = []
+    for host in hosts:
+        for path in MANIFEST_PATHS:
+            url = f"https://{host}.elfhosted.com/{path}"
+            try:
+                manifest = json.loads(get(url, timeout=VALIDATION_TIMEOUT_SECONDS))
+            except Exception:  # noqa: BLE001 - not at this path; try the next
+                continue
+            if isinstance(manifest, dict) and manifest.get("id"):
+                entry = entry_from(manifest, url, fallback_name=host)
+                if entry:
+                    entries.append(entry)
+                break
+    return entries
+
+
 def stremio_catalog_entries():
     """Stremio's own community and official lists. A list that cannot be read adds nothing."""
     entries = []
@@ -319,8 +349,8 @@ def main():
             print(f"  {index}/{len(every)} — {len(out)} kept, {skipped} skipped")
         time.sleep(POLITE_DELAY_SECONDS)
 
-    print("\nreading Stremio's own lists")
-    extra = stremio_catalog_entries()
+    print("\nreading Stremio's own lists and ElfHosted's guide")
+    extra = stremio_catalog_entries() + elfhosted_entries()
     print(f"  {len(extra)} addons")
     out.extend(extra)
 
