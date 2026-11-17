@@ -1,23 +1,18 @@
 package animato.app.xray
 
-import kotlin.time.Duration.Companion.hours
-import kotlin.coroutines.cancellation.CancellationException
-import java.net.Proxy
-import okhttp3.Headers
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.delay
-import eu.kanade.tachiyomi.network.awaitSuccess
-import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.network.GET
-import animato.anime.net.xray.XraySubscription
 import animato.anime.net.ProxyKind
 import animato.anime.net.ProxyPreferences
 import animato.anime.net.xray.XrayConfig
 import animato.anime.net.xray.XrayLink
+import animato.anime.net.xray.XraySubscription
 import animato.xray.libxray.Libxray
+import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.awaitSuccess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,10 +20,15 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import okhttp3.Headers
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.net.Proxy
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.hours
 
 /**
  * Keeps the built-in Xray core in step with the proxy settings.
