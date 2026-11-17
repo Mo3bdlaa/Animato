@@ -1,5 +1,33 @@
 [
  {
+  "name": "101Catalogs",
+  "description": "600+ movie & TV lists, with metadata. 148 Anime Kitsu lists, 70 streaming lists like AppleTV +, Disney, HBO Max... All the Catalogs you need in a single place + exclusive lists.",
+  "url": "https://api.101catalogs.xyz/manifest.json",
+  "resources": [
+   "catalog",
+   "meta"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "101Genres"
+  ]
+ },
+ {
+  "name": "123av",
+  "description": "Personal 123av catalog for adult content. Only use with content you are authorized to access.",
+  "url": "https://av.sudolocal.qzz.io/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
+  ],
+  "adult": true
+ },
+ {
   "name": "3D Movies",
   "description": "Stream the ultimate 3D experience. Watch premium 1080p SBS (side-by-side) and OU (over-under) movies, updated daily on your Meta Quest, Google Cardboard, VR BOX or 3D TV from LG and Samsung. For support or custom addon development, contact: 3dmovies@atomicmail.io.",
   "url": "https://fun.3dmovies.workers.dev/manifest.json",
@@ -24,8 +52,20 @@
   ]
  },
  {
+  "name": "[NEW] TurkceAltyazi.Org",
+  "description": "Bu eklenti,TurkceAltyazi.org'dan tüm Türkçe altyazıları alır ve Stremio'nuza getirir.",
+  "url": "https://turkcealtyaziorg-stremio-addon.mycodelab.com.tr/manifest.json",
+  "resources": [
+   "subtitles"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Absolute Cinema",
-  "description": "Movies, shows, anime, live TV and sports in one addon. Streams from 17 torrent sources and 13 debrid services, with P2P fallback. Direct HTTP sources sit in the same list. Filter by quality, size, seeders, audio and keywords. Rows: TMDB trending, Top 10, curated picks, anime, Asian drama, Bollywood, Horror, Marvel and DC, Up Next, live TV, world news and sport fixtures. Posters show IMDb, Metacritic and Rotten Tomatoes scores. Multi-source subtitles and setup in 131 languages. Help and requests on Discord, support on Ko-fi.",
+  "description": "Movies, shows, anime and live TV in one addon. Streams from 17 torrent sources through 13 debrid services with P2P fallback, plus TMDB, AniList and MAL catalogs, Asian drama, Bollywood and South Asian rows, 3D movies, multi-source subtitles and smart filters. Join the Discord for help and requests, and support the project on Ko-fi.",
   "url": "https://cinema.debrid.in/manifest.json",
   "resources": [
    "catalog",
@@ -41,54 +81,15 @@
   ]
  },
  {
-  "name": "Abyssus",
-  "description": "The Eternal Archive of All Tongues and Tales",
-  "url": "https://a.abyssus.dpdns.org/manifest.json",
-  "resources": [
-   "stream"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
-  "name": "Access Bollywood — New Titles",
-  "description": "New Indian movies & series on Netflix, Amazon Prime, Hulu, Zee5 and India OTT (SonyLIV, JioHotstar, …), from the daily monitor (Access Bollywood + Cinebuds + OTTweek, Hindi-first). IMDb-matched, with posters.",
-  "url": "https://varad25.github.io/bollywood-ott/manifest.json",
-  "resources": [
-   "catalog",
-   "meta"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
-  "name": "Actor Search (Full Filmography)",
-  "description": "Search actors and directors to browse their complete movie filmography",
-  "url": "https://stremio-actor-search.onrender.com/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "movie"
-  ]
- },
- {
   "name": "AcuAnime",
   "description": "High-speed anime streams from multiple sources.",
-  "url": "https://acuanime.pages.dev/manifest.json",
+  "url": "https://acuanime.dpdns.org/manifest.json",
   "resources": [
    "stream"
   ],
   "types": [
    "series",
-   "movie",
-   "anime"
+   "movie"
   ]
  },
  {
@@ -101,17 +102,6 @@
   ],
   "types": [
    "movie",
-   "series"
-  ]
- },
- {
-  "name": "addic7ed subtitles by dexter21767",
-  "description": "Addon for getting subtitles from addic7ed, by Dexter21767.",
-  "url": "https://2ecbbd610840-addic7ed.baby-beamup.club/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
    "series"
   ]
  },
@@ -130,16 +120,73 @@
   ]
  },
  {
-  "name": "Addon Order",
-  "description": "Change the order of your add-ons — on the home screen, in Discover and in search. Click Configure to reorder them. / Muda a ordem das tuas extensões. Carrega em Configurar.",
-  "url": "https://megacosmos.github.io/stremio-addon-order/manifest.json",
+  "name": "AddTORR",
+  "description": "Smart filtering and stream customization for Stremio Filtragem inteligente e personalização de streams para Stremio.",
+  "url": "https://add-torr-main.vercel.app/manifest.json",
   "resources": [
-   "catalog"
+   "stream"
   ],
   "types": [
    "movie",
    "series"
   ]
+ },
+ {
+  "name": "Adult Addon",
+  "description": "Browse, search and stream adult videos (18+)",
+  "url": "https://addonjs.onrender.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
+  ],
+  "adult": true
+ },
+ {
+  "name": "Adult Anime & Shorts",
+  "description": "Streaming 100% free adult anime and short videos.",
+  "url": "https://stremio-addon-olive.vercel.app/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
+  ],
+  "adult": true
+ },
+ {
+  "name": "Adult Stremio Addon",
+  "description": "Adult content with a ton of customization, and enhanced metadata (posters, scene info, performers, etc). Supports Real-Debrid and TorBox streaming. Click CONFIGURE before installing to add tokens and customize your catalogs.",
+  "url": "https://asa.00696900.xyz/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "porn"
+  ],
+  "adult": true
+ },
+ {
+  "name": "Adult Video HD",
+  "description": "Adult Video HD is a single, always-on library that pulls together adult content from across the web into one clean catalog. Enjoy full-length Japanese AV — censored, uncensored, amateur and VR — side by side with the biggest Western studios and tube channels. Now with Javtiful and JAVHD support, adding even more high-quality JAV scenes and studio releases to the mix. Browse dedicated rows for Newest, Trending, Most Viewed, Top Rated, Longest and Most Commented, dive into hundreds of categories, or jump straight to a favourite pornstar or model. Instant search by title, code or performer finds any scene in seconds, and everything streams in crisp quality up to 1080p with no account, no setup and nothing to configure. The library refreshes around the clock, so there is always something new the moment you open Stremio.",
+  "url": "https://h-gate.site/AdultVideo/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream",
+   "subtitles"
+  ],
+  "types": [
+   "AdultVideo"
+  ],
+  "adult": true
  },
  {
   "name": "Age Ratings",
@@ -167,11 +214,23 @@
  },
  {
   "name": "AI Streams v2",
-  "description": "Discovery, metadata, and AI-powered recommendations for Stremio and Nuvio. Curated rows across genres, decades, trending, top-rated, streaming platforms and community lists, plus semantic search and 12 mood catalogs. Free forever, no AI key needed: AI Picks learn from what you open and finish. Pro personalizes your whole board with our AI, with no key and no daily cap: 7-day free trial, then from $2/mo at aistreams.org/pricing. Catalog + metadata only, no stream resource: pair with the playback addon of your choice.",
+  "description": "Discovery, metadata, and AI-powered recommendations for Stremio. Curated rows across genres, decades, trending, top-rated, streaming platforms and community lists, plus semantic search and 12 mood catalogs. Free forever with your own AI key. Pro adds AI Picks with no API key needed, Because You Watched and New This Week rows, and stored keys: 7-day free trial, then from $4/mo at aistreams.org/pricing. Catalog + metadata only, no stream resource: pair with the playback addon of your choice.",
   "url": "https://www.aistreams.org/manifest.json",
   "resources": [
    "catalog",
    "meta"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "AIO Substitle",
+  "description": "Unofficial addon to get subtitles from Subscene, OpenSubtitles, and Kitsunekko. Uses Microsoft Translator to translate subtitles if they are available from providers. Visit https://aiosubtitle.org to easily download subtitles.",
+  "url": "https://3b4bbf5252c4-aio-streaming.baby-beamup.club/manifest.json",
+  "resources": [
+   "subtitles"
   ],
   "types": [
    "movie",
@@ -191,18 +250,6 @@
   ]
  },
  {
-  "name": "AIO Subtitle PRO",
-  "description": "Subtitle addon using OpenSubtitles PRO, OpenAI for context-aware subtitle translations, Bilingual and SDH support. Visit https://aiosubtitle.org to easily download subtitles.",
-  "url": "https://aiosubtitle.org/stremio/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
   "name": "AIOCatalogs",
   "description": "AIOCatalogs is an open-source addon that combines multiple catalog addons into a single one with enhanced performance and a user-friendly configuration interface. It features multi-platform compatibility, serverless deployment options, and an optimized caching system. Join our community on Discord (discord.gg/Ma4SnagqwE) or contribute on GitHub (github.com/panteLx/aiocatalogs)",
   "url": "https://aio.pantelx.com/manifest.json",
@@ -211,6 +258,22 @@
   ],
   "types": [
    "movie"
+  ]
+ },
+ {
+  "name": "AIOLists",
+  "description": "Manage all your lists in one place.",
+  "url": "https://aiolists.elfhosted.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "all",
+   "search",
+   "anime"
   ]
  },
  {
@@ -239,6 +302,37 @@
   ]
  },
  {
+  "name": "AIOStatus",
+  "description": "Track premium status, expiration dates & API quotas for 100+ Debrid, Usenet, Indexers, Subtitles, Metadata, and AI services.",
+  "url": "https://p01--status--sdfgdgfsgdfs--s2qq-tktv.code.run/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "other"
+  ]
+ },
+ {
+  "name": "Akashi TV (Free)",
+  "description": "Versão Grátis - Assine o Premium em akashitv.com.br",
+  "url": "https://addon.akashitv.com.br/free/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "tv",
+   "channel"
+  ]
+ },
+ {
   "name": "Akwam",
   "description": "Elevate your Stremio experience with seamless access to Akwam links, effortlessly",
   "url": "https://akwam.driviumapp.com/manifest.json",
@@ -254,7 +348,7 @@
  },
  {
   "name": "All IPTV",
-  "description": "Watch 12,000+ daily updated premium IPTV channels in English, Spanish, Russian, French, German, Hindi, Chinese and other languages. Explore categories like Movies, Series, Sports, Cooking, Music, Anime and other genres. Stream top favorites including BBC News, CNN, Cartoon Network, Disney, MTV, ESPN Deportes, Fox Sports, AMC, AXN, Nickelodeon, Crunchyroll, CSI, NCIS and many more. For support or custom addon development, contact: alliptv@atomicmail.io.",
+  "description": "Watch 12,000+ daily updated premium IPTV channels in English, Spanish, Russian, French, German, Hindi, Chinese and other languages. Explore categories like Movies, Series, Sports, Cooking, Music, Anime, Porn and other genres. Stream top favorites including BBC News, CNN, Cartoon Network, Disney, MTV, ESPN Deportes, Fox Sports, AMC, AXN, Nickelodeon, Crunchyroll, CSI, NCIS, Playboy TV, Miami TV and many more. For support or custom addon development, contact: alliptv@atomicmail.io.",
   "url": "https://fun.lnpx.workers.dev/manifest.json",
   "resources": [
    "catalog",
@@ -263,7 +357,8 @@
   ],
   "types": [
    "tv"
-  ]
+  ],
+  "adult": true
  },
  {
   "name": "AltyaziDB Subtitles",
@@ -290,6 +385,21 @@
   ]
  },
  {
+  "name": "Amatsu",
+  "description": "The ultimate Nyaa Gateway. Parallel Search for Anime, Live-Action, and more.",
+  "url": "https://amatsu.ruka.pw/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "anime",
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "AniLibria",
   "description": "Russian anime dub streams from AniLibria. Shows stream options for anime series and movies, plus live catalogs of what AniLibria is dubbing now and of trending anime available with a Russian dub. This addon logs anonymous usage data to help improve performance and your experience. v3.0.0",
   "url": "https://anilibria-stremio.online/manifest.json",
@@ -304,14 +414,16 @@
   ]
  },
  {
-  "name": "Animaze",
-  "description": "Animaze curates and updates a weekly list of top anime from Anilist, Ranker bringing fans the most popular series from trusted sources.",
-  "url": "https://animaze-fohz.onrender.com/manifest.json",
+  "name": "AnilistStream",
+  "description": "Streaming anime and Anilist sync",
+  "url": "https://aniliststream.edmit.in/manifest.json",
   "resources": [
-   "catalog"
+   "catalog",
+   "meta",
+   "stream"
   ],
   "types": [
-   "series"
+   "anime"
   ]
  },
  {
@@ -325,6 +437,18 @@
   "types": [
    "anime",
    "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "Anime Filler Checker",
+  "description": "Detects filler, canon, mixed, and anime-canon episodes for anime series. Shows filler status in the stream list so you know before you hit play. Visit animefillerchecker.com for more info and gain access to browser extensions.",
+  "url": "https://www.animefillerchecker.com/stremio/manifest.json",
+  "resources": [
+   "stream",
+   "subtitles"
+  ],
+  "types": [
    "series"
   ]
  },
@@ -344,26 +468,13 @@
   ]
  },
  {
-  "name": "Anime Seasons (with ratings)",
-  "description": "Catalogs that show newest anime movie and series releases. Optionally supports adding a RPDB key for rating posters. This addon is a fork of \"Animes' Season\" addon.",
-  "url": "https://1fe84bc728af-anime-seasons.baby-beamup.club/manifest.json",
-  "resources": [
-   "catalog"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
-  "name": "Anime47 & AnimeVui",
-  "description": "Anime Vietsub chất lượng cao từ Anime47 & AnimeVui. Hỗ trợ Stremio Desktop, Stremio Web và Nuvio Web (nuvioapp.stream) với direct HLS stream 📢 Hỗ trợ & Thảo luận: https://t.me/addon_w08",
-  "url": "https://anime47.q-1208.fun/manifest.json",
+  "name": "Anime World India Addon",
+  "description": "Watch anime in Hindi, Tamil, Telugu & English from WatchAnimeWorld.net",
+  "url": "https://anime-world-stremio-addon.onrender.com/manifest.json",
   "resources": [
    "catalog",
    "meta",
-   "stream",
-   "subtitles"
+   "stream"
   ],
   "types": [
    "anime",
@@ -403,20 +514,6 @@
   ]
  },
  {
-  "name": "AnimeHay - Anime Vietsub HD",
-  "description": "Xem phim Anime Vietsub trực tuyến Full HD mượt mà từ AnimeHay 📢 Hỗ trợ & Thảo luận: https://t.me/addon_w08",
-  "url": "https://animehay.q-1208.fun/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "series",
-   "movie"
-  ]
- },
- {
   "name": "animeo",
   "description": "Track your anime progress with anilist while using stremio.",
   "url": "https://7a625ac658ec-animeo.baby-beamup.club/manifest.json",
@@ -444,7 +541,7 @@
  },
  {
   "name": "AnimES",
-  "description": "Add AnimeAV1, Henaojara, TioAnime, Latanime & Apotoxin Fansub functionallity to Stremio, including catalogs, streams and metadata, even showing upcoming episodes in the calendar! Not affiliated with AnimeAV1, Henaojara, TioAnime, or Latanime. GitHub repo: https://github.com/Pigamer37/animeflv-stremio-addon",
+  "description": "Add AnimeAV1, Henaojara, TioAnime & Latanime functionallity to Stremio, including catalogs, streams and metadata, even showing upcoming episodes in the calendar! Not affiliated with AnimeAV1, Henaojara, TioAnime, or Latanime. GitHub repo: https://github.com/Pigamer37/animeflv-stremio-addon",
   "url": "https://pigamer37.alwaysdata.net/manifest.json",
   "resources": [
    "catalog",
@@ -459,15 +556,30 @@
   ]
  },
  {
-  "name": "Animes' season",
-  "description": "A catalog addon for the latest anime seasons",
-  "url": "https://victorgveloso.github.io/animes-season-addon/manifest.json",
+  "name": "Animes BR",
+  "description": "Episódios de anime dublados/legendados em PT-BR!",
+  "url": "https://animes-br-self.vercel.app/manifest.json",
   "resources": [
-   "catalog"
+   "stream"
   ],
   "types": [
    "movie",
-   "series"
+   "series",
+   "other"
+  ]
+ },
+ {
+  "name": "AnimesDigital",
+  "description": "Assista animes online em HD diretamente do AnimesDigital.org. Catálogo completo com todos os episódios, lançamentos, legendados e dublados.",
+  "url": "https://animesdigital-vercel.vercel.app/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "series",
+   "movie"
   ]
  },
  {
@@ -592,19 +704,6 @@
   ]
  },
  {
-  "name": "Anthony Bourdain Fans",
-  "description": "Anthony Bourdain series at Dailymotion.com",
-  "url": "https://ramonmedeiros.github.io/org.stremio.NoReservationDailyMotion/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "series"
-  ]
- },
- {
   "name": "AnySubs",
   "description": "Stuck without subtitles? Translate with AI. Dual subtitles for Stremio. Subscription required: a paid plan unlocks native (real, human-made) subtitles plus AI translation into 66 languages, with customizable subtitle appearance (font size, position, color, background box). Subscribe at anysubs.store. AI translations load reliably on the first try.",
   "url": "https://www.anysubs.store/manifest.json",
@@ -644,6 +743,18 @@
   ]
  },
  {
+  "name": "Arabic Auto-Sync Subtitles",
+  "description": "🎯 ترجمات عربية مزامنة تلقائياً من OpenSubtitles وSubDL وSubSource | Automatic Arabic subtitle sync from 3 sources using reference-based alignment",
+  "url": "https://7000-i5qiinvaxas86mhpc6fn7-1ee50674.sg1.manus.computer/manifest.json",
+  "resources": [
+   "subtitles"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Aradeb",
   "description": "Addon that resolve streams for arabic content with private trackers using debrid.",
   "url": "https://aradeb.518878.xyz/manifest.json",
@@ -658,8 +769,21 @@
   ]
  },
  {
+  "name": "Argentina TV",
+  "description": "Argentina TV provee acceso a canales de interes general, noticias, deportes, entretenimiento, cine, series, estilo de vida, programas infantiles y culturales.",
+  "url": "https://848b3516657c-argentinatv.baby-beamup.club/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv"
+  ]
+ },
+ {
   "name": "Asian Club",
-  "description": "Tu contenido asiático en un solo lugar.",
+  "description": "Gems of Asian cinema in one place.",
   "url": "https://ac.aransystems.duckdns.org/manifest.json",
   "resources": [
    "catalog",
@@ -682,6 +806,18 @@
    "movie",
    "series",
    "anime"
+  ]
+ },
+ {
+  "name": "Astral Flow",
+  "description": "Astral Flow ranks streams by quality first, then peers, with a clean Stremio output.",
+  "url": "https://astral-mu-two.vercel.app/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -711,30 +847,6 @@
    "Audiobooki",
    "other",
    "Podcasty"
-  ]
- },
- {
-  "name": "Auto Subtitle Translate by geanpn",
-  "description": "This addon takes subtitles from OpenSubtitlesV3 then translates into desired language using Google Translate, or ChatGPT (OpenAI Compatible Providers). For donations:in progress Bug report: geanpn@gmail.com",
-  "url": "https://stremio-translate.geanpedro.com.br/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "series",
-   "movie"
-  ]
- },
- {
-  "name": "Auto Subtitle Translate by SonsuzAnime (DeepL)",
-  "description": "This addon takes subtitles from OpenSubtitlesV3 then translates into desired language.For donations: https://www.buymeacoffee.com/sonsuzosman Bug report: infinity@sonsuzanime.com",
-  "url": "https://deeplsubtitle.sonsuzanime.com/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "series",
-   "movie"
   ]
  },
  {
@@ -845,6 +957,21 @@
   ]
  },
  {
+  "name": "BestCine",
+  "description": "Filmes, séries e canais de TV ao vivo em HD/4K PT-BR. Múltiplos servidores dedicados.",
+  "url": "https://bestcine.dpdns.org/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "tv"
+  ]
+ },
+ {
   "name": "BeTor v3 Oficial",
   "description": "Busca de torrents brasileiros do BeTor",
   "url": "https://stremio-betor.onrender.com/manifest.json",
@@ -926,6 +1053,18 @@
   ]
  },
  {
+  "name": "bgSubs",
+  "description": "Bulgarian subtitles - Български субтитри",
+  "url": "https://bg-subs-addon-dev-weql.onrender.com/manifest.json",
+  "resources": [
+   "subtitles"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Bharat Binge",
   "description": "Discover Indian content - Top 10 charts from Netflix, Prime Video, ZEE5, JioHotstar + Hindi, Tamil, Telugu & more regional catalogs",
   "url": "https://bharat-binge.semi-column.workers.dev/manifest.json",
@@ -951,18 +1090,6 @@
   "types": [
    "movie",
    "series"
-  ]
- },
- {
-  "name": "Bollywood Streams",
-  "description": "Browse Hindi, Punjabi & South Indian dubbed movies (popular, top rated, new, by genre) and stream them via public torrents.",
-  "url": "https://bollywood-streams.onrender.com/manifest.json",
-  "resources": [
-   "catalog",
-   "stream"
-  ],
-  "types": [
-   "movie"
   ]
  },
  {
@@ -1044,7 +1171,7 @@
  {
   "name": "Canales Deportivos",
   "description": "Canales deportivos en vivo (actualizado julio 2026)",
-  "url": "https://139c618fc3f4-canales-deportivos.baby-beamup.club/manifest.json",
+  "url": "https://thenasalies.onrender.com/manifest.json",
   "resources": [
    "catalog",
    "meta",
@@ -1093,18 +1220,6 @@
   ]
  },
  {
-  "name": "Catalog Builder",
-  "description": "Personalize your Stremio experience by selecting custom catalogs.",
-  "url": "https://1fe84bc728af-catalog-builder.baby-beamup.club/manifest.json",
-  "resources": [
-   "catalog"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
   "name": "Cauldron",
   "description": "Open-source torrent search + debrid resolution service.",
   "url": "https://cauldron.forthewizards.uk/manifest.json",
@@ -1117,26 +1232,15 @@
   ]
  },
  {
-  "name": "Christmas Movies",
-  "description": "Cinemeta movie / series catalogs",
-  "url": "https://cinemeta-catalogs.strem.io/christmaspopular/manifest.json",
+  "name": "CCloud",
+  "description": "Movies & Series from CCloud & CCloud+ Servers.",
+  "url": "https://stremio-ccloud.liara.run/manifest.json",
   "resources": [
-   "catalog"
+   "stream"
   ],
   "types": [
-   "movie"
-  ]
- },
- {
-  "name": "Christmas Movies & Specials",
-  "description": "Christmas Movies, Classic Specials, and Holiday Episodes",
-  "url": "https://christmas-stremio-addon.onrender.com/manifest.json",
-  "resources": [
-   "catalog",
-   "meta"
-  ],
-  "types": [
-   "movie"
+   "movie",
+   "series"
   ]
  },
  {
@@ -1147,6 +1251,18 @@
    "catalog"
   ],
   "types": [
+   "series"
+  ]
+ },
+ {
+  "name": "CIN",
+  "description": "CIN enhances your Stremio experience with fast loading, high-quality playback options, and a clean modern interface — built for speed, simplicity, and convenience. 🚀 Fast source loading ✨ High-quality options 🌍 Multi-language support 🎧 Advanced audio & video support ⚡ Lightweight and optimized",
+  "url": "https://cinnn.vercel.app/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
    "series"
   ]
  },
@@ -1193,31 +1309,28 @@
   ]
  },
  {
-  "name": "Cinemeta",
-  "description": "The official addon for movie and series catalogs",
-  "url": "https://v3-cinemeta.strem.io/manifest.json",
+  "name": "CineMaratona BR 🎬",
+  "description": "Your favorite sagas, organized by fans. // Suas sagas e séries favoritas, organizadas por fãs na ordem correta. 🎬",
+  "url": "https://cinemaratona-br.vercel.app/manifest.json",
   "resources": [
-   "addon_catalog",
    "catalog",
    "meta"
   ],
   "types": [
-   "movie",
-   "series"
+   "movie"
   ]
  },
  {
-  "name": "Cinemeta (with ratings)",
-  "description": "This addon allows adding ratings to Cinemeta posters with a RPDB Key. The addon only works with paid RPDB Keys (not free keys).",
-  "url": "https://cinemeta.ratingposterdb.com/manifest.json",
+  "name": "Cinemeta of Audiobooks",
+  "description": "Comprehensive audiobook discovery, cinema-grade metadata, and source-aggregation engine.",
+  "url": "https://audioibook-addon.up.railway.app/%7B%22cat_free_public_domain%22%3Afalse%2C%22cat_short_stories%22%3Afalse%2C%22cat_drama%22%3Afalse%2C%22cat_full_cast%22%3Afalse%2C%22cat_series%22%3Afalse%2C%22hide_explicit%22%3Atrue%7D/manifest.json",
   "resources": [
-   "addon_catalog",
    "catalog",
-   "meta"
+   "meta",
+   "stream"
   ],
   "types": [
-   "movie",
-   "series"
+   "movie"
   ]
  },
  {
@@ -1276,15 +1389,31 @@
   ]
  },
  {
-  "name": "Community OpenSubtitles",
-  "description": "Community add-on for subtitles from OpenSubtitles",
-  "url": "https://32d94ecc2689-stremio-addon-opensubtitles.baby-beamup.club/pick/manifest.json",
+  "name": "CometFR | TORRENT",
+  "description": "Stremio addon for french contents.",
+  "url": "https://comet.stremiofr.com/manifest.json",
   "resources": [
-   "subtitles"
+   "stream"
   ],
   "types": [
    "movie",
-   "series"
+   "series",
+   "anime",
+   "other"
+  ]
+ },
+ {
+  "name": "CometNet | ElfHosted",
+  "description": "Stremio's fastest torrent/debrid search add-on.",
+  "url": "https://cometnet.elfhosted.com/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "anime",
+   "other"
   ]
  },
  {
@@ -1329,18 +1458,16 @@
   ]
  },
  {
-  "name": "CotonetKids",
-  "description": "🇵🇹 Em português de Portugal. 12 fontes: Cotonet, TugaKids, PTGDrive, Tugaflix, Os Teus Filmes Tuga, TVParaPobres KiDS, … 2000 filmes e 500 séries.",
-  "url": "https://tvs-de-portugal.fly.dev/kids/manifest.json",
+  "name": "Crunch",
+  "description": "Crunch is a lightweight Stremio addon for discovering and streaming user-uploaded music. It provides search, track metadata, and audio playback through a minimal install flow.",
+  "url": "https://stremio-crunch-addon.onrender.com/manifest.json",
   "resources": [
    "catalog",
    "meta",
-   "stream",
-   "subtitles"
+   "stream"
   ],
   "types": [
-   "movie",
-   "series"
+   "music"
   ]
  },
  {
@@ -1370,6 +1497,25 @@
   ]
  },
  {
+  "name": "CVNFLIX Streams",
+  "description": "CVNFLIX Streams - Stremio ve Nuvio için hesabınızla kişisel kurulum bağlantısı oluşturun.",
+  "url": "https://cvnflix.onrcvndev.com.tr/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream",
+   "subtitles"
+  ],
+  "types": [
+   "series",
+   "movie",
+   "tv",
+   "CVNFLIX-Dizi",
+   "CVNFLIX-Film",
+   "CVNFLIX-Spor"
+  ]
+ },
+ {
   "name": "CvnStream",
   "description": "IMDb ID üzerinden seçili kaynaklarda stream linki bulur.",
   "url": "https://cvnstream.onrcvndev.com.tr/manifest.json",
@@ -1395,15 +1541,28 @@
   ]
  },
  {
-  "name": "DC Timeline",
-  "description": "Explore DC movies, TV series, animation and LEGO, with suggested watch orders and collections featuring Batman, Superman, Wonder Woman, the DCEU, DCU, Arrowverse and more. Choose all catalogs or select just your favorites during setup. Free to use. Independent fan project; not affiliated with DC. Catalogs only; playback requires other add-ons. Optional support: https://ko-fi.com/dolphindiver",
-  "url": "https://dc-timeline-stremio.onrender.com/manifest.json",
+  "name": "Daebak Korean Drama",
+  "description": "Korean Drama & Series for your long day.",
+  "url": "https://daebak.muvibox.my.id/manifest.json",
   "resources": [
    "catalog",
-   "meta"
+   "meta",
+   "stream",
+   "subtitles"
   ],
   "types": [
-   "DC",
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "DC Universe",
+  "description": "Explore the DC Universe by release date, movies, series, and animations!",
+  "url": "https://addon-dc-cq85.onrender.com/manifest.json",
+  "resources": [
+   "catalog"
+  ],
+  "types": [
    "movie",
    "series"
   ]
@@ -1521,29 +1680,15 @@
   ]
  },
  {
-  "name": "Discord Rich Presence Addon",
-  "description": "Addon that updates Discord status with the current stream from Stremio.",
-  "url": "https://4daa2bdba2f6-stremio-rich-presence.baby-beamup.club/manifest.json",
-  "resources": [
-   "meta",
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series",
-   "channel"
-  ]
- },
- {
-  "name": "Discussio | ElfHosted",
-  "description": "Opens Google search for TV show episodes and movie discussions with one click. Simply select an episode or movie to search for its discussions online. Hosted by ElfHosted!",
-  "url": "https://discussio.elfhosted.com/manifest.json",
+  "name": "DigiMoviez",
+  "description": "دسترسی به آرشیو فیلم و سریال دیجی‌موویز. برای اتصال حساب اشتراکی خود، دکمه پیکربندی را انتخاب کنید.",
+  "url": "https://stremio-digimoviez-addon.liara.run/manifest.json",
   "resources": [
    "stream"
   ],
   "types": [
-   "series",
-   "movie"
+   "movie",
+   "series"
   ]
  },
  {
@@ -1589,24 +1734,12 @@
   ]
  },
  {
-  "name": "Docs PT",
-  "description": "Documentários que tocam no Stremio, sem DRM, da RTP Play, da Fundação Francisco Manuel dos Santos, do Opto e do TVI Player. Addon não oficial, sem qualquer ligação a estas entidades",
-  "url": "https://tvs-de-portugal.fly.dev/docs/manifest.json",
+  "name": "DonTorrent",
+  "description": "Peliculas y series en espa���ol desde DonTorrent",
+  "url": "https://streamingaddons.xyz/manifest.json",
   "resources": [
    "catalog",
    "meta",
-   "stream"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
-  "name": "DoesTheDogDie (Jump Scares)",
-  "description": "Adds jump scare information from DoesTheDogDie.com, with link to full page. Open source at <a href='https://github.com/neon-ninja/stremio_doesthedogdie'>https://github.com/neon-ninja/stremio_doesthedogdie</a>",
-  "url": "https://a00f518e60ff-doesthedogdie.baby-beamup.club/manifest.json",
-  "resources": [
    "stream"
   ],
   "types": [
@@ -1693,6 +1826,45 @@
   ]
  },
  {
+  "name": "DZ-Arabic",
+  "description": "Arabic Subtitles By Superadlen - Dz Devloper ترجمة عربية للكل",
+  "url": "https://superadlen-dz-arabic.hf.space/manifest.json",
+  "resources": [
+   "subtitles"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "DZ-Movie🔗",
+  "description": "DZ-Movie Premium Smart Addon",
+  "url": "https://superadlen-dz-movie.hf.space/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "EasyAnime",
+  "description": "The best anime catalog with automatic translations.",
+  "url": "https://easyanime.stremio.dpdns.org/eyJsYW5ndWFnZSI6ImVuLVVTIiwidGl0bGVfbGFuZ3VhZ2UiOiJlbiIsInByaW9yaXR5X29yZGVyIjpbImtpdHN1X2xhdGVzdF9lcGlzb2RlIiwia2l0c3VfbGF0ZXN0X21vdmllIiwia2l0c3VfbGF0ZXN0X290aGVyIiwia2l0c3VfcG9wdWxhcl9zZXJpZSIsImtpdHN1X3BvcHVsYXJfbW92aWUiLCJraXRzdV90b3ByYXRlZF9zZXJpZSIsImtpdHN1X3RvcHJhdGVkX21vdmllIiwia2l0c3Vfc2VhcmNoX3NlcmllIiwia2l0c3Vfc2VhcmNoX21vdmllIiwia2l0c3VfcG9wdWxhcl9vdmEiLCJraXRzdV9wb3B1bGFyX29uYSIsImtpdHN1X3BvcHVsYXJfc3BlY2lhbCJdfQ==/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "anime",
+   "series",
+   "movie"
+  ]
+ },
+ {
   "name": "Easynews",
   "description": "The original (still mainteined, developed and going strong) Easynews addon",
   "url": "https://ea627ddf0ee7-easynews.baby-beamup.club/manifest.json",
@@ -1724,6 +1896,18 @@
   "resources": [
    "catalog",
    "meta"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "Eclipsia",
+  "description": "Curated Collection of Providers",
+  "url": "https://jsn.eclipsia.dpdns.org/manifest.json",
+  "resources": [
+   "stream"
   ],
   "types": [
    "movie",
@@ -1797,15 +1981,27 @@
  },
  {
   "name": "ember",
-  "description": "Smarter picks, less scrolling. Personalized movie and series discovery inside Stremio, with AI-powered search and For You rows that learn from what you watch.",
+  "description": "Smarter picks, less scrolling. Personalized movie discovery inside Stremio, with AI-powered search, More Like This on every film and For You rows that learn from what you watch.",
   "url": "https://stremio.ember.film/manifest.json",
   "resources": [
    "catalog",
    "stream"
   ],
   "types": [
-   "movie",
-   "series"
+   "movie"
+  ]
+ },
+ {
+  "name": "EPG - TV",
+  "description": "Watch your own IPTV playlist with EPG in Stremio. Configure it using your M3U and XMLTV URLs.",
+  "url": "https://epg.akahobby.com/epg-tv-addon/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv"
   ]
  },
  {
@@ -1835,19 +2031,6 @@
   ]
  },
  {
-  "name": "Estações de rádios - Brasil",
-  "description": "RADIO BR reúne estações brasileiras com pesquisa, rádios em destaque, navegação por gênero e informações das emissoras para descobrir e reproduzir streams diretos no Nuvio.",
-  "url": "https://radiobr-nuvio.onrender.com/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "tv"
-  ]
- },
- {
   "name": "FayaTV",
   "description": "IPTV channels from every country and live-sports",
   "url": "https://fayatv.stravo.site/d/manifest.json",
@@ -1874,12 +2057,26 @@
   ]
  },
  {
+  "name": "Fenix TV",
+  "description": "Addon brasileiro de canais de TV ao vivo com opções em HD até 4K e vários servidores, totalmente em português (PT-BR)",
+  "url": "https://fenixtv.fenixhub.online/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv",
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "FenixFlix",
   "description": "Addon de filmes, séries, novelas, doramas e animes dublados e legendados em português (PT-BR), com conteúdos em qualidade HD e 4K",
   "url": "https://fenixflix.fenixhub.online/manifest.json",
   "resources": [
    "catalog",
-   "meta",
    "stream"
   ],
   "types": [
@@ -1897,6 +2094,36 @@
   ],
   "types": [
    "movie"
+  ]
+ },
+ {
+  "name": "Filmes, Series e Novelas Portuguesas Addon Stremio",
+  "description": "Filmes, series e novelas portuguesas com streams externos.",
+  "url": "https://filme-series-e-novelas-portuguesas.vercel.app/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "Filmora",
+  "description": "Catalogs and streams gathered in one add-on, with sources sorted by peers.",
+  "url": "https://filmora2.vercel.app/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "anime",
+   "other"
   ]
  },
  {
@@ -1996,6 +2223,18 @@
   ]
  },
  {
+  "name": "FLIXOO",
+  "description": "FLIXOO brings movies, series, and anime together in a simple, fast, and organized Stremio experience.",
+  "url": "https://flixo-o.vercel.app/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Forced Sub (IT)",
   "description": "Legenda forced em italiano - so os trechos em outro idioma dentro do audio italiano (ex: dothraki em Game of Thrones). Feito para funcionar na Samsung TV Tizen.",
   "url": "https://stremio-forced-sub.info-rercoin.workers.dev/manifest.json",
@@ -2034,6 +2273,18 @@
   ]
  },
  {
+  "name": "Frenchio | ElfHosted",
+  "description": "Addon non configuré : allez sur /configure pour générer votre lien d'installation.",
+  "url": "https://frenchio.elfhosted.com/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "FrostStream",
   "description": "Filmes e séries com reprodução rapida, multiplas fontes para assistir, e sobretudo sem travamentos e com ótima qualidade. Aproveite sem interrupções.",
   "url": "https://froststream.cloutteam.com/manifest.json",
@@ -2044,6 +2295,19 @@
   "types": [
    "movie",
    "series"
+  ]
+ },
+ {
+  "name": "FrostView TV",
+  "description": "Canais Brasileiros fechados totalmente de graça. Assista a canais como Globo, SBT, Record, ESPN, HBO e muito mais sem nenhum tipo de cobrança! Melhor Qualidade Em Primeiro Lugar!",
+  "url": "https://frostview.cloutteam.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "channel"
   ]
  },
  {
@@ -2058,6 +2322,33 @@
   "types": [
    "tv"
   ]
+ },
+ {
+  "name": "G-Tube",
+  "description": "Browse and play gay videos from XVideos and xHamster with duration filters. Self-hosted personal use only.",
+  "url": "https://g-tube-2nxs.onrender.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "Porn"
+  ]
+ },
+ {
+  "name": "G-TV",
+  "description": "CAM4 e Stripchat · Câmeras masculinas do Brasil · Conteúdo adulto 18+",
+  "url": "https://gtv-workers.ensamanur.workers.dev/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv"
+  ],
+  "adult": true
  },
  {
   "name": "Game Cinema",
@@ -2112,11 +2403,11 @@
   ]
  },
  {
-  "name": "GlobalSubs",
-  "description": "AI subtitle translation into 25 languages, powered by OpenAI. Sign in at globalsubs-ai.com to activate.",
-  "url": "https://addon.globalsubs-ai.com/manifest.json",
+  "name": "Grab",
+  "description": "Watch movies and series via the Grab backend",
+  "url": "https://addon.openexplorer.xyz/manifest.json",
   "resources": [
-   "subtitles"
+   "stream"
   ],
   "types": [
    "movie",
@@ -2166,6 +2457,18 @@
   ]
  },
  {
+  "name": "GuIndex",
+  "description": "Addon brasileiro para Stremio. Busca torrents nacionais via torrent-indexer e resolve via Real-Debrid ou TorBox.",
+  "url": "https://guindex-stremio.vercel.app/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Gundam",
   "description": "The complete Mobile Suit Gundam universe in one add-on — from the original 0079 saga through Zeta, Char's Counterattack, Unicorn and Hathaway to SEED, Wing, 00, Iron-Blooded Orphans, The Witch from Mercury, GQuuuuuuX and the Build series. Every timeline gets its own catalog sorted in recommended watch order, with search across the whole franchise and streams in up to 1080p — no account, nothing to configure. The first two episodes of every series stream free — subscribe to unlock the whole library.",
   "url": "https://h-gate.site/gundam/manifest.json",
@@ -2207,6 +2510,21 @@
   ]
  },
  {
+  "name": "Hanime",
+  "description": "Enjoy your unlimited hentai & anime collection. We are the definitive source for the best curated 720p / 1080p HD hentai videos for free.",
+  "url": "https://hanime-stremio.fly.dev/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "anime",
+   "series"
+  ],
+  "adult": true
+ },
+ {
   "name": "HdHub",
   "description": "Watch movies and series from HdHub.",
   "url": "https://hdhub.thevolecitor.qzz.io/eyJ0b3Jib3giOiJ1bnNldCIsInF1YWxpdGllcyI6IjIxNjBwLDEwODBwLDcyMHAiLCJzb3J0IjoiZGVzYyJ9/manifest.json",
@@ -2218,6 +2536,19 @@
    "movie",
    "series",
    "HdHub"
+  ]
+ },
+ {
+  "name": "Heartio",
+  "description": "Stream your favorite iHeartRadio stations directly in Stremio.",
+  "url": "https://heartio-ydud.onrender.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "radio"
   ]
  },
  {
@@ -2269,6 +2600,21 @@
   ]
  },
  {
+  "name": "HentaiStream",
+  "description": "18+ ONLY - Your one stop shop for all your favourite Hentai! The content is fetched from 3 Providers: HentaiMama, HentaiTV and HentaiSea. The addon has aggregated ratings from all sources, catalogs (Top Rated, Recent Releases, Animation Studios, Release Year as well as 100+ genre filters.",
+  "url": "https://hentaistream-addon.keypop3750.workers.dev/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "hentai",
+   "series"
+  ],
+  "adult": true
+ },
+ {
   "name": "Heroes",
   "description": "Heroes is a single, always-on home for the tokusatsu universe — Kamen Rider, Super Sentai, Ultraman, Metal Heroes and more, from the classics to the latest seasons, with fresh episodes added continuously. Browse by series, search any title in seconds, and start watching instantly with no account and nothing to configure. The first two episodes of every series stream free — unlock every remaining episode for $2/month or $13 lifetime.",
   "url": "https://h-gate.site/Heroes/manifest.json",
@@ -2280,20 +2626,6 @@
   ],
   "types": [
    "Heroes"
-  ]
- },
- {
-  "name": "HHTQ - Hoạt Hình Trung Quốc (Team & 4K)",
-  "description": "Addon xem Hoạt Hình Trung Quốc 3D/4K Vietsub & Thuyết Minh tốc độ cao từ hhhtq.team và hhtq.sh 📢 Hỗ trợ & Thảo luận: https://t.me/addon_w08",
-  "url": "https://hhtq.q-1208.fun/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "series",
-   "movie"
   ]
  },
  {
@@ -2323,24 +2655,25 @@
   ]
  },
  {
-  "name": "Hoofoot",
-  "description": "Live soccer and highlights for EPL, Championship, Serie A, Laliga, Bundesliga, Ligue 1 among other leagues/cup",
-  "url": "https://hoofoot.stravo.site/d/manifest.json",
+  "name": "Horror",
+  "description": "Every kind of scary, sorted. Build your own horror shelf from 20 subgenres (slasher to folk horror to giallo), every decade since the 60s, 20 franchises, horror on 12 streaming services, and special rows like Trending, Hidden Gems, J-Horror, A24 and Scariest Ever. TMDB powered, refreshes on its own, no API key needed. Join the Discord to request catalogs, and support the project on Ko-fi.",
+  "url": "https://horror.debrid.in/manifest.json",
+  "resources": [
+   "catalog"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "Hoạt Hình 3D Trung Quốc",
+  "description": "Kho phim Hoạt Hình 3D & 2D Trung Quốc Vietsub & Thuyết minh lồng tiếng tổng hợp từ Hoạt Hình 3D (hoathinh3d.cv) và YanHH3D (yanhh3d.lol). Hỗ trợ HLS Proxy, tự động đổi nguồn khi lỗi.",
+  "url": "https://hh3dkp.k-20.xyz/manifest.json",
   "resources": [
    "catalog",
    "meta",
    "stream"
-  ],
-  "types": [
-   "sports"
-  ]
- },
- {
-  "name": "Horror",
-  "description": "Every kind of scary, sorted. Build your own horror shelf from 20 subgenres (slasher, folk horror, giallo and more), seven decades from the 60s on, 20 franchises, horror on 12 streaming services and 17 special rows like Trending, Hidden Gems, J-Horror, A24 and Scariest Ever. Pick movies, shows or both, set your region for the streaming rows and a language for titles and overviews, and put the rows in your own order. They refresh on their own and show IMDb, Metacritic and Rotten Tomatoes scores on the posters. TMDB powered, no API key needed, and the setup page speaks 131 languages. These rows now live in Absolute Cinema too: the configure page opens a catalog-only Absolute Cinema install with your Horror selection, ready to replace this addon. Join the Discord to request catalogs, and support the project on Ko-fi.",
-  "url": "https://horror.debrid.in/manifest.json",
-  "resources": [
-   "catalog"
   ],
   "types": [
    "movie",
@@ -2471,9 +2804,20 @@
   ]
  },
  {
+  "name": "Indo",
+  "description": "Addon for MDBList custom lists, optionally supports rating posters from RPDB.",
+  "url": "https://1fe84bc728af-stremio-mdblist.baby-beamup.club/unified/indo/userapi-7fx-3h2bscdk333boj1b0xhil43xb/MDBList/manifest.json",
+  "resources": [
+   "catalog"
+  ],
+  "types": [
+   "MDBList"
+  ]
+ },
+ {
   "name": "IndTorrents",
   "description": "Torrent aggregator for South Indian Movies",
-  "url": "https://indtorrents.kodecrafts.workers.dev/manifest.json",
+  "url": "https://indtorrents.codecrafts.workers.dev/manifest.json",
   "resources": [
    "catalog",
    "meta",
@@ -2538,8 +2882,51 @@
   ]
  },
  {
+  "name": "IPTV Addon by Savi",
+  "description": "Stream your IPTV channels in Stremio. This is a public instance, please check out my Github for source code and self-hosting.",
+  "url": "https://263f84288ddb-iptv-stremio-addon.baby-beamup.club/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv"
+  ]
+ },
+ {
+  "name": "IPTV Bridge",
+  "description": "Serverless Xtream & M3U IPTV Addon with TMDB Resolution, Global Search & Clean Categorization",
+  "url": "https://iptvbridge.vercel.app/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv",
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "IPTV Catchup (M3U/EPG)",
+  "description": "Self-hosted IPTV for Stremio: M3U or Xtream, EPG, category filters, favorites, and catch-up TV. Each user configures their own playlist on the server — no shared streams or credentials in the catalog entry.",
+  "url": "https://iptv.arielinnovations.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv",
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Iracemaflix",
-  "description": "Filmes, séries, canais de TV, eventos ao vivo, doramas, novelas, animes e muito mais. Conteúdos dublados em PT-BR e legendados.",
+  "description": "Filmes, séries e TV sem categorias ou conteúdo adulto.",
   "url": "https://6880ee460bc3-iracemaflix.baby-beamup.club/manifest.json",
   "resources": [
    "catalog",
@@ -2550,7 +2937,8 @@
    "movie",
    "series",
    "tv"
-  ]
+  ],
+  "adult": true
  },
  {
   "name": "Iran Provider",
@@ -2582,36 +2970,9 @@
   ]
  },
  {
-  "name": "Israel TV",
-  "description": "Israeli TV shows and live channels from Keshet 12, Reshet 13 and Kan. Keshet 12 needs your own home helper; some shows play only in Israel.",
-  "url": "https://israel-tv.israeltv2.workers.dev/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "series",
-   "tv"
-  ]
- },
- {
   "name": "israel tv for stremio",
   "description": "watch israel tv",
   "url": "https://stremioaddon.vercel.app/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "tv"
-  ]
- },
- {
-  "name": "Israeli TV",
-  "description": "Live Israeli TV channels from several public playlists, with multiple sources per channel. Updated automatically.",
-  "url": "https://mudales.github.io/stremio-tv-il/manifest.json",
   "resources": [
    "catalog",
    "meta",
@@ -2643,6 +3004,19 @@
   "types": [
    "movie",
    "series",
+   "anime"
+  ]
+ },
+ {
+  "name": "JKAnime TV Nativo",
+  "description": "Encuentra enlaces de anime en jkanime.net - Versión para TV.",
+  "url": "https://injection-faq-fun-lonely.trycloudflare.com/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "series",
+   "movie",
    "anime"
   ]
  },
@@ -2717,6 +3091,33 @@
   ]
  },
  {
+  "name": "Kick Streams & Videos",
+  "description": "Watch Kick livestreams and seekable past VODs",
+  "url": "https://kick-streams-addon-stremio.onrender.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "kick"
+  ]
+ },
+ {
+  "name": "Kids Filmes e Series de Animacao PT-PT Addon Stremio",
+  "description": "Filmes e series de animacao em PT-PT com streams externos.",
+  "url": "https://anima-o-pt-pt-addon-stremio-6dzv.vercel.app/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Killer Bean",
   "description": "A catalog of all entries in the Killer Bean media franchise by Jeff Lew.",
   "url": "https://pigamer37.github.io/stremio/killer-bean/manifest.json",
@@ -2770,6 +3171,20 @@
   ]
  },
  {
+  "name": "Kitsu Tracker",
+  "description": "Your ultimate Kitsu anime catalog and watch-tracker for Stremio.",
+  "url": "https://kitsu.ruka.pw/manifest.json",
+  "resources": [
+   "catalog",
+   "subtitles"
+  ],
+  "types": [
+   "anime",
+   "series",
+   "movie"
+  ]
+ },
+ {
   "name": "KKPhim",
   "description": "Kho phim KKPhim – Phim Lẻ, Phim Bộ, Thuyết Minh và Vietsub.",
   "url": "https://kkphim-stremio-addon-ymoc.onrender.com/manifest.json",
@@ -2781,6 +3196,20 @@
   "types": [
    "movie",
    "series"
+  ]
+ },
+ {
+  "name": "KOD",
+  "description": "Torrent streams for movies, series, and anime from 29 sources. Sorted by seeders by default. Quality filters, debrid, and source settings at https://kod-three.vercel.app/configure",
+  "url": "https://kod-three.vercel.app/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "anime",
+   "other"
   ]
  },
  {
@@ -2862,17 +3291,15 @@
   ]
  },
  {
-  "name": "LegendasBR (PT-BR & Multi-Fonte)",
-  "description": "Legendas em Português do Brasil (PT-BR) e Português (PT) com atualização dinâmica.",
-  "url": "https://legendas.legendasbr.site/stremio/manifest.json",
+  "name": "LegendasBR",
+  "description": "Legendas em Português do Brasil com IA auto hospedada.",
+  "url": "https://legendas.legendasbr.site/manifest.json",
   "resources": [
    "subtitles"
   ],
   "types": [
    "movie",
-   "series",
-   "anime",
-   "tv"
+   "series"
   ]
  },
  {
@@ -2915,6 +3342,19 @@
   ]
  },
  {
+  "name": "Leviathan",
+  "description": "Leviathan è un protocollo di aggregazione Italy-first per Stremio, progettato per unire torrent intelligence, web extraction, routing adattivo, cache condivisa e presentazione premium dei risultati. Supporta film, serie e anime con Real-Debrid, TorBox, Saved Cloud opzionale con dedupe, modalità P2P, filtri ITA/ENG/Hybrid, provider web italiani, anime/Kitsu intelligence e formatter avanzato per release 4K/HDR, WEB, BluRay e italiane.",
+  "url": "https://leviathanaddon.dpdns.org/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "anime"
+  ]
+ },
+ {
   "name": "Librario",
   "description": "Your Stremio library as customizable catalogs",
   "url": "https://librario.up.railway.app/manifest.json",
@@ -2926,6 +3366,20 @@
    "series",
    "channel",
    "tv"
+  ]
+ },
+ {
+  "name": "LimonTorrents",
+  "description": "Filmes e séries em português com dual áudio do LimonTorrents.vip",
+  "url": "https://renoviana.com.br/stremio/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -2957,7 +3411,7 @@
  {
   "name": "LTAN - ANIME",
   "description": "Es un addon centrado en facilitar el acceso a animes en español latino ofreciendo una experiencia sencilla y practica.",
-  "url": "https://ltan.onrender.com/addon/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzbGlyZW5kZXYiLCJleHAiOjE3OTUwNjgzODZ9.AB7EDLJ8m5ZzRF6MheR34MB7MCiSDkTDcCG_A04emD8/manifest.json",
+  "url": "https://ltan.onrender.com/addon/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzbGlyZW5kZXYiLCJleHAiOjE3OTM4MTE5OTR9.aKmXABZbdpbmwrkagLb32G97ISuAKXy4QF13JSUXipU/manifest.json",
   "resources": [
    "stream"
   ],
@@ -3058,6 +3512,22 @@
   ]
  },
  {
+  "name": "Magnetflix",
+  "description": "Addon de filmes, séries e animes dublados e legendados em Português (PT-BR)",
+  "url": "https://magnetflix.flixbr.online/qualities%3D4k%2C1080p%2C720p%2Csd%7Caudio%3Ddublado%2Clegendado%7Ccatalogs%3Dpopulares_movie%2Cpopulares_series%2Crecentes_servidor_movie%2Crecentes_servidor_series%2Cemalta_movie%2Cemalta_series/manifest.json",
+  "resources": [
+   "catalog",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "anime",
+   "other",
+   "tv"
+  ]
+ },
+ {
   "name": "Magnetio",
   "description": "Magnetio - configure sources, subtitles and debrid services at /configure",
   "url": "https://magnetio.peterdsp.dev/manifest.json",
@@ -3071,6 +3541,18 @@
    "movie",
    "series",
    "anime"
+  ]
+ },
+ {
+  "name": "Magneto",
+  "description": "Agregador de torrents para filmes e séries com foco no público BR. Reúne resultados de indexadores nacionais, prioriza áudio dublado em português (com legendado logo depois) e exibe idioma, qualidade e seeders em cada stream. Com a chave do TorBox, o que está em cache toca na hora.",
+  "url": "https://magneto-jnv5.onrender.com/v1/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -3169,19 +3651,6 @@
   ]
  },
  {
-  "name": "Marvel Timeline",
-  "description": "Explore Marvel movies, TV series and animation, including MCU story and release orders, Spider-Man, X-Men, Fantastic Four and more. Choose all catalogs or select just your favorites during setup. Free to use. Independent fan project; not affiliated with Marvel. Catalogs only; playback requires other add-ons. Optional support: https://ko-fi.com/dolphindiver",
-  "url": "https://marvel-timeline-stremio.onrender.com/manifest.json",
-  "resources": [
-   "catalog"
-  ],
-  "types": [
-   "Marvel",
-   "movie",
-   "series"
-  ]
- },
- {
   "name": "MatchLetter · Watch Together",
   "description": "Your MatchLetter watchlist, friends’ Letterboxd watchlists, shared movie-night picks, public Letterboxd/IMDb lists and recommendations. See your friends’ ratings right on the movie page.",
   "url": "https://www.matchletter.com/stremio/manifest.json",
@@ -3251,6 +3720,45 @@
   ]
  },
  {
+  "name": "MediathekView DE (Erweitert)",
+  "description": "Alle deutschen ÖR-Sender mit erhöhter Anzahl an Inhalten",
+  "url": "https://mediathekviewpro-myromiles.onrender.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
+  ]
+ },
+ {
+  "name": "MediathekView DE (Erweitert)",
+  "description": "Alle deutschen ÖR-Sender mit erhöhter Anzahl an Inhalten",
+  "url": "https://mhub-addon.onrender.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
+  ]
+ },
+ {
+  "name": "MeteGol",
+  "description": "Fútbol en vivo: las principales ligas de toda América y Europa. Si un canal no reproduce, probá con otro reproductor: el más estable es MPV. | Live football: the main leagues of all the Americas and Europe. If a channel doesn't play, try a different player: MPV is the most stable.",
+  "url": "https://stream.metegol.dpdns.org/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv"
+  ]
+ },
+ {
   "name": "Meteor",
   "description": "Conservative, franchise-aware torrent matching.",
   "url": "https://meteorfortheweebs.midnightignite.me/stremio/manifest.json",
@@ -3289,24 +3797,56 @@
   ]
  },
  {
-  "name": "More Like This",
-  "description": "Shows recommendations from various sources",
-  "url": "https://bbab4a35b833-more-like-this.baby-beamup.club/manifest.json",
+  "name": "Midnight",
+  "description": "Catalogs and streams for Hentai, Porn and other adult contents",
+  "url": "https://midnight.stravo.site/local/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream",
+   "subtitles"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ],
+  "adult": true
+ },
+ {
+  "name": "MindGeek",
+  "description": "Enjoy Premium Adult Content.",
+  "url": "https://www.mindgeek.app/manifest.json",
   "resources": [
    "catalog",
    "meta",
    "stream"
   ],
   "types": [
-   "movie",
-   "series"
+   "MindGeek",
+   "MindGeek Compact"
+  ],
+  "adult": true
+ },
+ {
+  "name": "Minha TV",
+  "description": "O Melhor do IPTV na sua TV",
+  "url": "https://da5f663b4690-minhatv.baby-beamup.club/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv"
   ]
  },
  {
-  "name": "Motchill Direct Stream",
-  "description": "Direct streaming provider from Motchill (No proxy, 1080p HLS)",
-  "url": "https://motchillv.q-1208.fun/manifest.json",
+  "name": "More Like This",
+  "description": "Shows recommendations from various sources",
+  "url": "https://bbab4a35b833-more-like-this.baby-beamup.club/manifest.json",
   "resources": [
+   "catalog",
+   "meta",
    "stream"
   ],
   "types": [
@@ -3351,6 +3891,18 @@
   ]
  },
  {
+  "name": "MSubtitles",
+  "description": "MSubtitles is an add-on that allows you to manage your subtitles or follow the subtitles of other users completely free of charge.",
+  "url": "https://msubtitles.lowlevel1989.click/conf/api/v1/manifest.json",
+  "resources": [
+   "subtitles"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Mubi Catalog",
   "description": "Mubi Catalogs - Films of the day and Archive - by APP",
   "url": "https://mubi2stremio.adiba.ro/manifest.json",
@@ -3374,18 +3926,6 @@
   ]
  },
  {
-  "name": "MultiSub",
-  "description": "Can't find subtitles? MultiSub translates the best human-created subtitles into 40+ languages using AI. Watch with dual subtitles (two languages synced) to learn a language or bridge barriers.",
-  "url": "https://www.multisub.org/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
   "name": "Music Concerts",
   "description": "Live Music Concerts on IMDB",
   "url": "https://7a82163c306e-stremio-concerts.baby-beamup.club/manifest.json",
@@ -3397,14 +3937,26 @@
   ]
  },
  {
-  "name": "Muvibox - Hopefully best http streams ever - NoTorrent",
-  "description": "Movies, Series, Anime streams and substitles from Netflix, Disney+, Prime Video, Apple TV+, Paramount+, HBO Max, Crunchyroll, Vidio, etc. PRO version available on https://muvipro.inulpc.web.id/configure",
-  "url": "https://muvibox.znzcloud.my.id/manifest.json",
+  "name": "Muvibox",
+  "description": "Movies, Series, Anime streams and substitles from Moviebox",
+  "url": "https://muvibox.inulpc.web.id/manifest.json",
   "resources": [
    "catalog",
    "meta",
    "stream",
    "subtitles"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "MY CINE",
+  "description": "(Torrent + Free Debrid), Tenha o melhor do cinema em sua casa com MY CINE, Torrents via LINK DIRETO para garantir sua privacidade",
+  "url": "https://mycine.alwaysdata.net/manifest.json",
+  "resources": [
+   "stream"
   ],
   "types": [
    "movie",
@@ -3439,7 +3991,7 @@
  {
   "name": "NADA TV HLS",
   "description": "Addon de Stremio con canales de TV en vivo en formato HLS.",
-  "url": "https://7e2a912be9c9-nada-tv-hls.baby-beamup.club/manifest.json",
+  "url": "https://nadapro.vercel.app/manifest.json",
   "resources": [
    "catalog",
    "meta",
@@ -3488,11 +4040,25 @@
   ]
  },
  {
+  "name": "Napisy24 Addon",
+  "description": "Addon for getting polish subtitles from Napisy24.pl",
+  "url": "https://napisy24-stremio.top/manifest.json",
+  "resources": [
+   "subtitles"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Nauta Live TV",
   "description": "Canales de TV de Argentina, deportes, películas, infantiles, 24/7",
   "url": "https://nautatv.kozow.com/manifest.json",
   "resources": [
-   "meta"
+   "catalog",
+   "meta",
+   "stream"
   ],
   "types": [
    "tv"
@@ -3511,8 +4077,8 @@
   ]
  },
  {
-  "name": "Nebula Sports Private Manifest",
-  "description": "The shared free install ended. Create a private free manifest to continue.",
+  "name": "Nebula Sports",
+  "description": "Live sport and full-match replays. Browse all TV channels; donate from $1.50 to unlock channel streams.",
   "url": "https://sports.nebulapro.xyz/sports/i/free/manifest.json",
   "resources": [
    "catalog",
@@ -3549,6 +4115,36 @@
   ]
  },
  {
+  "name": "Nexio Nagare",
+  "description": "English direct streams for anime, sourced from public providers (123anime, Anizone, Anichi, Animenosub, Animexin and more).",
+  "url": "https://nagare.nexioapp.org/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "anime",
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "Nexio Torii",
+  "description": "Anime streams from Nyaa through StremThru-backed premium unlockers and optional P2P.",
+  "url": "https://torii.nexioapp.org/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "anime",
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "NexoTV",
   "description": "Stream your IPTV channels in Stremio",
   "url": "https://263f84288ddb-nexotv.baby-beamup.club/manifest.json",
@@ -3560,6 +4156,21 @@
   "types": [
    "tv"
   ]
+ },
+ {
+  "name": "Nexus",
+  "description": "JAV (Japanese Adult Video) catalog for viewers 18+. Browse and stream the latest releases, trending titles, and full studio & actress catalogs.",
+  "url": "https://app.jnexus.site/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "other"
+  ],
+  "adult": true
  },
  {
   "name": "NhảmSubtitle AI",
@@ -3588,7 +4199,7 @@
  },
  {
   "name": "NightKnight Cinema",
-  "description": "NightKnight Cinema v2.0 (@NightKnight24) — Complete all-in-one cinema & media hub: Multi-Indexer Stream Failover, Resolution & Language/Dubbing Priority Sorter + CAM Shield, ⚡ Real-Debrid Cloud Streams (Click ⚙️ Configure), 2,200+ Global Live TV Channels & Multi-Server TV Guide (EPG), Next-Gen YouTube Channels & Creators, Twitch Live/VODs/Clips & Ad-Free HLS, Global Country & Trending Telemetry, 80+ Language Subtitles, DRM-Free Cinema & Streaming Hubs. Throne: https://throne.com/nightknight24 • GitHub: https://github.com/NightKnight24",
+  "description": "Created by NightKnight (@NightKnight24). Complete cinema hub: Native Multi-Language Subtitles Engine (80+ languages), Regional Live TV & TV Guide (EPG), 24/7 Live Music TV & Radios (UK, US, Canada, Australia, Ireland, India), DRM-Free Cinema playback, YouTube in-app player, streaming hubs (BBC iPlayer, ITVX, Netflix, Disney+, Hotstar), franchise viewing orders & speed engine. See my projects: https://github.com/NightKnight24",
   "url": "https://nightknight-cinema.vercel.app/manifest.json",
   "resources": [
    "catalog",
@@ -3600,6 +4211,18 @@
    "movie",
    "series",
    "channel"
+  ]
+ },
+ {
+  "name": "NoDebrid",
+  "description": "لا تورنت. لا ديبريد. فقط شغّل واستمتع. | Direct streaming without debrid - just play and enjoy!",
+  "url": "https://nodebrid.fly.dev/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -3630,17 +4253,18 @@
   ]
  },
  {
-  "name": "NoTorrent",
-  "description": "All TV shows from Netflix, Disney+, Prime Video, Apple TV+, Paramount+, HBO Max, Crunchyroll, and over 25K movies in English & Spanish.",
-  "url": "https://addon.notorrent2.workers.dev/manifest.json",
+  "name": "Notxo",
+  "description": "Dive into a premium collection of short adult videos — sleek, fast, and effortlessly streamed. Curated for quality, built for pleasure. Your ultimate Stremio experience awaits.",
+  "url": "https://notxo.vercel.app/manifest.json",
   "resources": [
    "catalog",
+   "meta",
    "stream"
   ],
   "types": [
-   "series",
    "movie"
-  ]
+  ],
+  "adult": true
  },
  {
   "name": "Nova Channels",
@@ -3653,6 +4277,18 @@
   ],
   "types": [
    "tv"
+  ]
+ },
+ {
+  "name": "Nova Streams",
+  "description": "Smart Aggregator Engine",
+  "url": "https://nova-streamz.vercel.app/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -3677,19 +4313,6 @@
   "types": [
    "series",
    "movie"
-  ]
- },
- {
-  "name": "NTC TV",
-  "description": "Canais ao vivo NTC TV – Esportes, Notícias e Entretenimento.",
-  "url": "https://ntcstudios.com.br/ntctv/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "tv"
   ]
  },
  {
@@ -3759,6 +4382,19 @@
   "types": [
    "movie",
    "series"
+  ]
+ },
+ {
+  "name": "Onair",
+  "description": "Live TV for Stremio with a native EPG programme guide. Browse Entertainment, General, News and Sports channel catalogs and watch live channels from Discover or the guide grid.",
+  "url": "https://onair-gmcm.onrender.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv"
   ]
  },
  {
@@ -3839,6 +4475,20 @@
   ]
  },
  {
+  "name": "OnlyPorn",
+  "description": "Use your TV remote to its full potential!",
+  "url": "https://07b88951aaab-jaxxx-v2.baby-beamup.club/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
+  ],
+  "adult": true
+ },
+ {
   "name": "opensubtitles PRO",
   "description": "ad-free and spam-free subtitles addon",
   "url": "https://opensubtitlesv3-pro.dexter21767.com/manifest.json",
@@ -3903,19 +4553,6 @@
   ]
  },
  {
-  "name": "OTTCatalog",
-  "description": "Catalog of movies and tv shows of various OTT platform like Netflix, Amazon Prime, Disney+ Hotstar etc",
-  "url": "https://5c338d22c948-ott-catalog.baby-beamup.club/manifest.json",
-  "resources": [
-   "catalog",
-   "meta"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
   "name": "Overseerr Requests",
   "description": "Request movies and shows through Overseerr - configure your instance",
   "url": "https://stremio-overseerr-addon.vercel.app/manifest.json",
@@ -3949,6 +4586,19 @@
   "types": [
    "movie",
    "series"
+  ]
+ },
+ {
+  "name": "Películas de Cinecalidad",
+  "description": "Cinecalidad es un sitio público para Películas Full UHD/HD en Latino Dual.",
+  "url": "https://cinecalidad-stremio-addon.fly.dev/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
   ]
  },
  {
@@ -4059,18 +4709,6 @@
   ]
  },
  {
-  "name": "PGSSUBTITLE V1.0.1",
-  "description": "Local subtitles imported from multiple sources (OpenSubtitles.org, SubSource.net, Sub-Scene.com, Community Sub, Internet Sub,...). Supports .srt, .vtt, .ass, .sub formats.",
-  "url": "https://pgssubtitle.onrender.com/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
   "name": "Pictorium",
   "description": "Custom poster manager for Stremio — loghi, badge trend, premi e rating",
   "url": "https://pictorium.elfhosted.com/manifest.json",
@@ -4084,6 +4722,32 @@
    "anime.movie",
    "anime.series",
    "anime"
+  ]
+ },
+ {
+  "name": "PimpBunny",
+  "description": "Browse and stream videos from pimpbunny.com. Categories, qualities and streams are auto-fetched from the site.",
+  "url": "https://hamster-monkey-stremio-addon.onrender.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
+  ]
+ },
+ {
+  "name": "Pinoy Movies",
+  "description": "Philippines R-18 movies from TMDB.",
+  "url": "https://peenoise.fkye.workers.dev/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
   ]
  },
  {
@@ -4116,24 +4780,14 @@
   "description": "Built for Plavio Media — works with Plavio and any other app that supports Stremio addons. HD movies, series and live sports over direct HTTPS, no torrents.",
   "url": "https://hd.plavio.site/manifest.json",
   "resources": [
+   "catalog",
+   "meta",
    "stream",
    "subtitles"
   ],
   "types": [
    "movie",
-   "series"
-  ]
- },
- {
-  "name": "PlavioLive",
-  "description": "Live sports TV — cricket, football, tennis and more, streamed over direct HTTPS.",
-  "url": "https://addon.plavio.site/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
+   "series",
    "tv"
   ]
  },
@@ -4172,6 +4826,20 @@
    "movie",
    "series",
    "anime"
+  ]
+ },
+ {
+  "name": "Plexio",
+  "description": "Play movies and series from plex.tv.",
+  "url": "https://plexio.stream/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -4216,7 +4884,7 @@
  {
   "name": "PMeta",
   "description": "PlavioMeta catalogs and metadata, powered by TMDB — works with Plavio and compatible apps.",
-  "url": "https://meta.plavio.site/manifest.json",
+  "url": "https://plaviometa.vercel.app/manifest.json",
   "resources": [
    "catalog",
    "meta"
@@ -4280,16 +4948,31 @@
   ]
  },
  {
-  "name": "Praias tugas",
-  "description": "As câmaras das praias de Portugal em direto, das mais vistas às menos. Addon não oficial.",
-  "url": "https://tvs-de-portugal.fly.dev/beachcams/manifest.json",
+  "name": "Porn Tube",
+  "description": "Premium Porn Torrents, 4K & VR. Supports Real-Debrid, TorBox & Easynews.",
+  "url": "https://dirty-pink.ers.pw/manifest.json",
   "resources": [
    "catalog",
    "meta",
    "stream"
   ],
   "types": [
-   "tv"
+   "movie"
+  ],
+  "adult": true
+ },
+ {
+  "name": "Premiumize Library",
+  "description": "Access your Premiumize cloud library",
+  "url": "https://premiumize.almosteffective.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream",
+   "subtitles"
+  ],
+  "types": [
+   "series"
   ]
  },
  {
@@ -4313,42 +4996,6 @@
   "resources": [
    "catalog",
    "meta",
-   "stream"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
-  "name": "Public Domain Movies",
-  "description": "Torrents for public domain movies. Includes a collection of more then 500 public domain movies.",
-  "url": "https://caching.stremio.net/publicdomainmovies.now.sh/manifest.json",
-  "resources": [
-   "catalog",
-   "stream"
-  ],
-  "types": [
-   "movie"
-  ]
- },
- {
-  "name": "Q08",
-  "description": "Q08 VIP Direct Stream Provider (4K Remux, 1080p Web-DL) 📢 Hỗ trợ & Thảo luận: https://t.me/addon_w08",
-  "url": "https://x20.q-1208.fun/manifest.json",
-  "resources": [
-   "stream"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
-  "name": "Q08 - Dexter",
-  "description": "Q08 Tier 1 Direct Stream Provider for Dexter (cno.to) (4K UHD & 1080p FHD Direct Links) 📢 Hỗ trợ & Thảo luận: https://t.me/addon_w08",
-  "url": "https://dexter.q-1208.fun/manifest.json",
-  "resources": [
    "stream"
   ],
   "types": [
@@ -4396,17 +5043,6 @@
   ]
  },
  {
-  "name": "Random Movie",
-  "description": "Press \"Configure\" to get a random movie.",
-  "url": "https://1fe84bc728af-random-movie.baby-beamup.club/manifest.json",
-  "resources": [
-   "catalog"
-  ],
-  "types": [
-   "movie"
-  ]
- },
- {
   "name": "Rapideo",
   "description": "Dodatek umożliwiający odtwarzanie treści w Stremio za pomocą konta Rapideo.",
   "url": "https://stremio.rapideo.tv/manifest.json",
@@ -4434,15 +5070,18 @@
   ]
  },
  {
-  "name": "Rede Canais TV",
-  "description": "Canais brasileiros organizados por categoria, com busca e suporte a fontes HLS autorizadas.",
-  "url": "https://redecanaistv-addon-stremio.onrender.com/manifest.json",
+  "name": "Reddate YT",
+  "description": "YouTube in your app. Open the setup page to add your free YouTube API key.",
+  "url": "https://tv.reddate.xyz/yt/manifest.json",
   "resources": [
    "catalog",
    "meta",
    "stream"
   ],
   "types": [
+   "movie",
+   "series",
+   "channel",
    "tv"
   ]
  },
@@ -4528,7 +5167,7 @@
  {
   "name": "RTP Play",
   "description": "Os canais de televisão e as rádios da RTP em direto, e os programas recentes do RTP Play, no Stremio. Addon não oficial, sem qualquer ligação à RTP.",
-  "url": "https://tvs-de-portugal.fly.dev/rtp/manifest.json",
+  "url": "https://http--tvs-de-portugal--hyfs2rvj5wgf.code.run/rtp/manifest.json",
   "resources": [
    "catalog",
    "meta",
@@ -4536,6 +5175,21 @@
   ],
   "types": [
    "tv",
+   "series"
+  ]
+ },
+ {
+  "name": "RTVE",
+  "description": "Node.js addon to add RTVE (Spanish Television & Radio) functionallity to Stremio, not affiliated with RTVE. GitHub repo: https://github.com/Pigamer37/rtve-stremio-addon",
+  "url": "https://rtve-stremio-addon.vercel.app/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv",
+   "movie",
    "series"
   ]
  },
@@ -4564,18 +5218,6 @@
   "types": [
    "movie",
    "series"
-  ]
- },
- {
-  "name": "Sagas & Collections",
-  "description": "As sagas mais conhecidas (Marvel, Star Wars, Harry Potter…) e as de animação (Toy Story, Shrek, Frozen…) do mais antigo para o mais recente, com vistas por ordem cronológica, filmes e séries.",
-  "url": "https://addon-stremio-sagas-e-colecoes.tmssts23.workers.dev/manifest.json",
-  "resources": [
-   "catalog"
-  ],
-  "types": [
-   "Sagas e Coleções",
-   "Animações – Sagas e Coleções"
   ]
  },
  {
@@ -4629,6 +5271,20 @@
    "movie",
    "series",
    "music"
+  ]
+ },
+ {
+  "name": "SeedSphere (Private)",
+  "description": "The Last Media Addon You'll Ever Need. Powered by a community swarm.",
+  "url": "https://seedsphere.fly.dev/manifest.json",
+  "resources": [
+   "catalog",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "anime"
   ]
  },
  {
@@ -4692,21 +5348,6 @@
   "types": [
    "movie",
    "series"
-  ]
- },
- {
-  "name": "SIC",
-  "description": "Os canais da SIC em direto e os títulos grátis do Opto, séries e filmes, no Stremio. Addon não oficial, sem qualquer ligação à SIC.",
-  "url": "https://tvs-de-portugal.fly.dev/sic/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "tv",
-   "series",
-   "movie"
   ]
  },
  {
@@ -4787,7 +5428,7 @@
  {
   "name": "SkylineWebcams",
   "description": "The most watched webcams of SkylineWebcams, live. Unofficial: it has no connection to SkylineWebcams.",
-  "url": "https://tvs-de-portugal.fly.dev/skyline/manifest.json",
+  "url": "https://http--tvs-de-portugal--hyfs2rvj5wgf.code.run/skyline/manifest.json",
   "resources": [
    "catalog",
    "meta",
@@ -4795,6 +5436,23 @@
   ],
   "types": [
    "tv"
+  ]
+ },
+ {
+  "name": "SM Addon",
+  "description": "Addon SM - Giải Trí Miễn Phí",
+  "url": "https://smove.manucn.dpdns.org/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "sm",
+   "tv",
+   "thethao",
+   "movie",
+   "series"
   ]
  },
  {
@@ -4810,23 +5468,24 @@
   ]
  },
  {
-  "name": "SosacTV2",
-  "description": "Doplněk Sosac.tv - sledujte filmy a seriály online",
-  "url": "https://stremio.sosac.tv/cs/manifest.json",
+  "name": "Sootio",
+  "description": "Your ultimate debrid companion. Sootio intelligently searches your debrid services for cached torrents, using a smart, tiered scoring system to prioritize the highest quality streams first.",
+  "url": "https://sootio.elfhosted.com/manifest.json",
   "resources": [
    "catalog",
-   "meta",
    "stream"
   ],
   "types": [
    "movie",
-   "series"
+   "series",
+   "anime",
+   "other"
   ]
  },
  {
-  "name": "Spanish Streams",
-  "description": "Películas y series con audio en español (latino, castellano o genérico). Catálogos y streams solo con fuentes que tengan audio en español.",
-  "url": "https://965d83ef8484-stremio-latino.baby-beamup.club/manifest.json",
+  "name": "SosacTV2",
+  "description": "Doplněk Sosac.tv - sledujte filmy a seriály online",
+  "url": "https://stremio.sosac.tv/cs/manifest.json",
   "resources": [
    "catalog",
    "meta",
@@ -4900,6 +5559,19 @@
   "types": [
    "movie",
    "series"
+  ]
+ },
+ {
+  "name": "StashDB - Easynews",
+  "description": "Stream trending scenes from StashDB via Easynews",
+  "url": "https://7a82163c306e-stremio-stashdb.baby-beamup.club/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
   ]
  },
  {
@@ -5031,6 +5703,19 @@
   ]
  },
  {
+  "name": "StreamFusion",
+  "description": "StreamFusion enhances Stremio by integrating torrent indexers and debrid services, providing access to a vast array of cached torrent sources. This plugin seamlessly bridges Stremio with popular indexers and debrid platforms, offering users an expanded content library and a smooth streaming experience.",
+  "url": "https://stream-fusion.stremiofr.com/manifest.json",
+  "resources": [
+   "catalog",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "StreamGram",
   "description": "Free, open-source Telegram addon for Stremio. Search and stream videos from your Telegram account. Requires your own server and Telegram account; open Configure for installation instructions.",
   "url": "https://streamgram.duckdns.org/manifest.json",
@@ -5083,6 +5768,19 @@
   ]
  },
  {
+  "name": "StreamsPPV",
+  "description": "Live Sports Streams & Sports TV Channels -- Discord: NonExistent",
+  "url": "https://addon3.gstream.stream/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "StreamsPPV"
+  ]
+ },
+ {
   "name": "StreamUnion · Noam sasson",
   "description": "מקורות צפייה, כתוביות וקטלוגים מהתוספים שבחרת, בקישור אישי אחד.",
   "url": "https://zerphyx.com/hub/addon/88451c43272887a57145539caa7714fa0ddd7df7002b990abdc2df0d070360b1/manifest.json",
@@ -5111,8 +5809,24 @@
   ]
  },
  {
+  "name": "StreamViX | ElfHosted",
+  "description": "StreamViX addon con Vixsrc, Guardaserie, Altadefinizione, AnimeUnity, AnimeSaturn, AnimeWorld, Eurostreaming, TV ed Eventi Live",
+  "url": "https://streamvix.hayd.uk/%7B%22tmdbApiKey%22%3A%22%22%2C%22mediaFlowProxyUrl%22%3A%22%22%2C%22mediaFlowProxyPassword%22%3A%22%22%2C%22animeunityEnabled%22%3A%22on%22%2C%22animesaturnEnabled%22%3A%22on%22%2C%22animeworldEnabled%22%3A%22on%22%7D/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series",
+   "tv",
+   "anime"
+  ]
+ },
+ {
   "name": "StreamX",
-  "description": "UPDATE! Recreate with install name + salt and enable For you for a stable URL and personalized catalog. High-quality, filtered torrents from public indexers.",
+  "description": "High-quality, filtered torrents from public indexers.",
   "url": "https://streamx.electron.al/manifest.json",
   "resources": [
    "stream"
@@ -5144,6 +5858,18 @@
   ],
   "types": [
    "movie"
+  ]
+ },
+ {
+  "name": "Stremify | Hayduk",
+  "description": "A multi-server streaming addon.",
+  "url": "https://stremify.elfhosted.com/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -5235,6 +5961,18 @@
   ]
  },
  {
+  "name": "Stremio Stream Store",
+  "description": "Save and serve custom stream links for movies and TV episodes using IMDb IDs. Free and open source.",
+  "url": "https://stremio-stream-store.vercel.app/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "stremio-serializd",
   "description": "Provides a Serializd watchlist as a catalog",
   "url": "https://serializd.almosteffective.com/manifest.json",
@@ -5255,6 +5993,19 @@
    "stream"
   ],
   "types": [
+   "series"
+  ]
+ },
+ {
+  "name": "Stremlist",
+  "description": "Your IMDb Watchlist in Stremio",
+  "url": "https://stremlist.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta"
+  ],
+  "types": [
+   "movie",
    "series"
   ]
  },
@@ -5322,30 +6073,6 @@
   ]
  },
  {
-  "name": "Stremy",
-  "description": "1-click install, no setup. No debrid, no account, no email. Ready-made library, cached at high speed, about 9 in 10 titles with German + English audio. 30 days free in 1080p, up to 4K with a pass.",
-  "url": "https://stremy.eu/manifest.json",
-  "resources": [
-   "stream"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
-  "name": "SubAI Movies",
-  "description": "Phụ đề Việt cá nhân",
-  "url": "https://sub.nangcapvns.site/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
   "name": "SubAlchemy",
   "description": "Universal SRT Converter for Tizen 9 & Anime. Fetches subtitles from 5 sources and converts VTT/ASS/ZIP to SRT on the fly.",
   "url": "https://subalchemy.7badger.com/manifest.json",
@@ -5385,6 +6112,18 @@
   ]
  },
  {
+  "name": "SubHero v2",
+  "description": "Subtitles with language filtering, release matching, caching, file format conversion and more. Powered by Wyzie API.",
+  "url": "https://subhero.chromeknight.dev/manifest.json",
+  "resources": [
+   "subtitles"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Sublatino - dAV1ron",
   "description": "¡Subtítulos en español latino neutro con calidad de estudio! Traducción automática al instante con DeepL, Gemini o OpenAI usando tu propia API key. Formato estilo Netflix: 42×2 líneas, corte inteligente y timestamps perfectos. Caché permanente, sin telemetría y completamente gratis para instalar.",
   "url": "https://addon.sublatino-dav1ron.us/manifest.json",
@@ -5401,19 +6140,6 @@
   "name": "SubMaker | ElfHosted",
   "description": "Configuration Error: Session token not found or expired. Please reconfigure the addon to continue using it.",
   "url": "https://submaker.elfhosted.com/addon/bedadbea77057c6e79adb38710386e3d/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series",
-   "anime"
-  ]
- },
- {
-  "name": "SubMaker | ElfHosted",
-  "description": "Take control of your subtitles! Fetch and translate subtitles from OpenSubtitles, SubScene, and SubDL with AI translation powered by Gemini, OpenAI, Anthropic, and more. Configure the addon to get started.",
-  "url": "https://submaker.elfhosted.com/manifest.json",
   "resources": [
    "subtitles"
   ],
@@ -5445,18 +6171,6 @@
   ],
   "types": [
    "subtitles"
-  ]
- },
- {
-  "name": "Subscene subtitles by dexter21767",
-  "description": "Addon for getting subtitles from Subscene, by Dexter21767.",
-  "url": "https://2ecbbd610840-subscene.baby-beamup.club/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series"
   ]
  },
  {
@@ -5496,17 +6210,6 @@
   "types": [
    "movie",
    "series"
-  ]
- },
- {
-  "name": "Subtis - Beta Pública",
-  "description": "Subtis es tu fuente de subtítulos para tus películas favoritas.",
-  "url": "https://stremio.fly.dev/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "movie"
   ]
  },
  {
@@ -5561,27 +6264,16 @@
   ]
  },
  {
-  "name": "subtitle.ifim",
-  "description": "Subtitles in your language for any movie or TV show: subtitle.ifim translates the English subtitles that match your video with AI. 20+ languages, bilingual option. Free API key at subtitle.ifim.shop.",
-  "url": "https://subtitle.ifim.shop/stremio/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
   "name": "Subtito",
-  "description": "AI translated subtitles in your language. Works with your own OpenRouter key.",
+  "description": "The content you love, with the subtitles you need. AI translated subtitles in your language.",
   "url": "https://subtito.com/manifest.json",
   "resources": [
    "subtitles"
   ],
   "types": [
+   "series",
    "movie",
-   "series"
+   "anime"
   ]
  },
  {
@@ -5600,15 +6292,17 @@
   ]
  },
  {
-  "name": "SuperStream",
-  "description": "🎬 Busca por Título + Ano - Com Detecção de Legendado",
-  "url": "https://da5f663b4690-superstream.baby-beamup.club/manifest.json",
+  "name": "SUPREME",
+  "description": "Streams for movies, series, and anime from providers such as YTS, EZTV, TorrentGalaxy, NyaaSi, Knaben, Torrentio, and more. Configure sources, debrid, quality, and sorting at https://sup-nyp1.onrender.com/configure",
+  "url": "https://sup-nyp1.onrender.com/manifest.json",
   "resources": [
    "stream"
   ],
   "types": [
    "movie",
-   "series"
+   "series",
+   "anime",
+   "other"
   ]
  },
  {
@@ -5639,6 +6333,31 @@
   ]
  },
  {
+  "name": "TENIES.SITE",
+  "description": "Premium Stremio streams powered by TENIES.SITE.",
+  "url": "https://nuvio-addon.tenies.site/abckdhfik-34585674/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "TENIES.SPACE Live TV & Sports",
+  "description": "Live TV channels and live sporting events",
+  "url": "https://live-addon.vercel.app/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv"
+  ]
+ },
+ {
   "name": "The Movie Database Addon",
   "description": "Stremio addon that provides rich metadata for movies and TV shows from TMDB, featuring customizable catalogs, multi-language support, favorites lists, watchlist, ratings, and IMDb integration. Current settings: Language: en-US | TMDB Account: Not Connected | MDBList Integration: Not Connected | IMDb Integration: Disabled | RPDB Integration: Disabled | Search: Enabled | Active Catalogs: 10",
   "url": "https://94c8cb9f702d-tmdb-addon.baby-beamup.club/manifest.json",
@@ -5652,12 +6371,11 @@
   ]
  },
  {
-  "name": "The Movie Database Addon",
-  "description": "Stremio addon that provides rich metadata for movies and TV shows from TMDB, featuring customizable catalogs, multi-language support, favorites lists, watchlist, ratings, and IMDb integration. Current settings: Language: en-US | TMDB Account: Not Connected | Trakt Integration: Not Connected | MDBList Integration: Not Connected | IMDb Integration: Disabled | RPDB Integration: Disabled | Top Posters Integration: Disabled | Search: Enabled | Active Catalogs: 12",
-  "url": "https://tmdb.elfhosted.com/manifest.json",
+  "name": "TheBeginning",
+  "description": "Stremio addon",
+  "url": "https://thebeginningjuststarted.xyz/5f5b2c7060f6cf0a/manifest.json",
   "resources": [
-   "catalog",
-   "meta"
+   "stream"
   ],
   "types": [
    "movie",
@@ -5691,11 +6409,11 @@
   ]
  },
  {
-  "name": "Titlovi.com Subtitles (Community addon by CoRySus)",
-  "description": "Addon for subtitles from titlovi.com",
-  "url": "https://subtitles.mooo.com/manifest.json",
+  "name": "TILL",
+  "description": "Streams for movies and series. Supports public torrent providers plus optional Jackett, Prowlarr, and Zilean. Debrid services include RealDebrid, Premiumize, AllDebrid, DebridLink, TorBox, Put.io, Offcloud, and EasyDebrid.",
+  "url": "https://till-8b4w.onrender.com/manifest.json",
   "resources": [
-   "subtitles"
+   "stream"
   ],
   "types": [
    "movie",
@@ -5726,35 +6444,6 @@
   "types": [
    "movie",
    "collections"
-  ]
- },
- {
-  "name": "TMDB Dice",
-  "description": "- Dice to get some random movies. 🍭Buy me a Lollipop 🔗https://linktr.ee/vancengvn",
-  "url": "https://tmdb-dice.stremio.homes/manifest.json",
-  "resources": [
-   "catalog",
-   "meta"
-  ],
-  "types": [
-   "movie",
-   "Dice",
-   "ads"
-  ]
- },
- {
-  "name": "TMDB Streaming ES",
-  "description": "Streaming en España 🇪🇸 · 30+ catálogos por plataforma: Netflix, Prime Video, Disney+, Max, Apple TV+, Filmin, SkyShowtime, FlixOlé, Rakuten, Movistar+, Crunchyroll, RTVE, MUBI · Anime · Música · Top Valoradas · Estrenos · Búsqueda por actor y director · Tráileres · URLs directas vía JustWatch.",
-  "url": "https://tmdb-streaming-services.orkestr.run/api/stremio/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "movie",
-   "series",
-   "channel"
   ]
  },
  {
@@ -5798,34 +6487,9 @@
   ]
  },
  {
-  "name": "Top Seeded Torrent Catalogs",
-  "description": "Catalogs that show top seeded movies, series and anime. Optionally supports adding a RPDB key for rating posters. This addon is a clone of the \"Torrent Catalogs\" addon with added poster ratings support.",
-  "url": "https://1fe84bc728af-top-seeded.baby-beamup.club/manifest.json",
-  "resources": [
-   "catalog"
-  ],
-  "types": [
-   "movie",
-   "series",
-   "anime"
-  ]
- },
- {
   "name": "TOP Streaming",
-  "description": "Top 10 charts from 48 streaming platforms in 92 countries, refreshed every night, plus Letterboxd, MyAnimeList, Ranker, Shudder, IMDb and Simkl lists, a new list, director and actor every day or week, and your own lists. Titles, plots and posters in your language. This link has no lists of its own: open https://top-streaming.stream/ to choose yours and install your personal addon.",
+  "description": "Top 10 Catalog Lists from the main Streaming Platforms - Available Platforms: 48, Available Countries: 93",
   "url": "https://top-streaming.stream/manifest.json",
-  "resources": [
-   "catalog",
-   "meta"
-  ],
-  "types": [
-   "movie"
-  ]
- },
- {
-  "name": "TOP X",
-  "description": "Classifiche Top X con cover numerate HD per Nuvio & Stremio",
-  "url": "https://topx.stremio-italia.eu/manifest.json",
   "resources": [
    "catalog",
    "meta"
@@ -5872,6 +6536,18 @@
   ]
  },
  {
+  "name": "Torrent to weblink",
+  "description": "Auto-rotating Scrapers | Multi-Format Series Search | 4K HDR",
+  "url": "https://stremio.eletroclay.com/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "TorrentClaw",
   "description": "One addon instead of eight: streams, TMDB metadata, subtitles, anime IDs and debrid — all in one. Replaces Torrentio + Cinemeta + OpenSubtitles + Anime Kitsu. 30+ sources, every result AI-verified against the real file (TrueSpec ✅) and quality-scored, streams sorted by your language. Bring your own debrid (RealDebrid, AllDebrid, TorBox, Premiumize) for instant cached playback — no account needed. Spanish/LATAM sources built in. No dead links, no fakes. Changelog: https://torrentclaw.com/stremio/changelog",
   "url": "https://torrentclaw.com/api/stremio/manifest.json",
@@ -5893,6 +6569,18 @@
   ],
   "types": [
    "movie"
+  ]
+ },
+ {
+  "name": "Torrenthan 🇮🇹",
+  "description": "L'esperienza definitiva per lo streaming in Italia. Include filtri per risoluzione e ordinamento avanzato.",
+  "url": "https://torrenthan.stremioluca.dpdns.org/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -5924,6 +6612,18 @@
   ]
  },
  {
+  "name": "Torrent♦️Dz",
+  "description": "Multi-Sources Rapide - Films & Series By Superadlen DZ",
+  "url": "https://adlencin-vv.onrender.com/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "Torrin",
   "description": "Open-source debrid service with instant streaming.",
   "url": "https://addon.torrin.app/manifest.json",
@@ -5937,6 +6637,21 @@
    "anime",
    "other"
   ]
+ },
+ {
+  "name": "TPB 4K Porn",
+  "description": "The ultimate porn paradise for Stremio and Nuvio: P2P torrents from 12+ indexers, 75+ tube sites, Stripchat and Chaturbate live cams, megapacks, and Usenet search, in 4K, HD, and VR. Browse Straight, Lesbian, Gay, Trans, JAV, Hentai, Indian, and more, with optional TPDB, StashDB, JavStash, and MAL-Hentai metadata. Streams via 15 debrid providers with P2P fallback and an optional MediaFlow proxy. Sign in to save favourites across devices. Install with zero configuration or configure every source and catalog. Join the Discord to request sites, megapacks, and features. Always free and self-hostable.",
+  "url": "https://tpb-adult-addon.click/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream",
+   "subtitles"
+  ],
+  "types": [
+   "Porn"
+  ],
+  "adult": true
  },
  {
   "name": "TR Altyazı",
@@ -5963,50 +6678,6 @@
   ]
  },
  {
-  "name": "Trakt Tv",
-  "description": "Addon for getting Trakt's public and user lists, recommendations and watch list. user authentication failed, please try again",
-  "url": "https://2ecbbd610840-trakt.baby-beamup.club/eyJsaXN0cyI6W10sImlkcyI6WyJrYW5rYXBvbGF0Oml6bGV5ZWNla2xlcmltOmFkZGVkLGFzYyIsImthbmthcG9sYXQ6bXlhbmltZWxpc3Q6YWRkZWQsYXNjIiwia2Fua2Fwb2xhdDpzZXZkaWNlZ2ltLWlsZS1pemxlbmVjZWtsZXI6YWRkZWQsYXNjIl0sImFjY2Vzc190b2tlbiI6Ijk4OTJjMzYzZDJjNTVmYjZhYmI0ZjZlMjQ3YTBjNzIwZjdkMjBmYWVhYTNlODIxZjY5OTY5OTgyZGQ5NGNjMjEiLCJyZWZyZXNoX3Rva2VuIjoiMTZhOTU3NDVlMmZkZGFhZTYxNGU4MzlkNTE2OGNkZjMzNTAzZWI3ZDMxNTRiMTgyZDQyZDEwM2FlMjdkMmUzNSIsImV4cGlyZXMiOjE3Mzk2NzAyNzgsInJlbW92ZVByZWZpeCI6ZmFsc2V9/manifest.json",
-  "resources": [
-   "meta"
-  ],
-  "types": []
- },
- {
-  "name": "Trakt Tv",
-  "description": "Addon for getting Trakt's public and user lists, recommendations and watch list.",
-  "url": "https://2ecbbd610840-trakt.baby-beamup.club/manifest.json",
-  "resources": [
-   "meta"
-  ],
-  "types": []
- },
- {
-  "name": "Tu Subtitulo",
-  "description": "Obtiene subtitulos de series en español de españa, español latino, catalán e inglés de TuSubtitulo.com, este addon no está afiliado a TuSubtitulo.com",
-  "url": "https://58196d6c26cf-stremio-tusubtitulo.baby-beamup.club/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "series"
-  ]
- },
- {
-  "name": "Tu Tiên TV",
-  "description": "Phim hoạt hình tiên hiệp, kiếm hiệp Trung Quốc từ tutien.tv 📢 Hỗ trợ & Thảo luận: https://t.me/addon_w08",
-  "url": "https://tutientv.q-1208.fun/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "series",
-   "movie",
-   "anime"
-  ]
- },
- {
   "name": "Tubi Movies",
   "description": "Browse movies from Tubi and play available direct streams in Stremio. Availability depends on region and title.",
   "url": "https://tubi-stremio.duckdns.org/manifest.json",
@@ -6020,9 +6691,24 @@
   ]
  },
  {
-  "name": "TurkceAltyazi.Org",
-  "description": "Bu eklenti,TurkceAltyazi.org'dan tüm Türkçe altyazıları alır ve Stremio'nuza getirir.",
-  "url": "https://5a0d1888fa64-turkcealtyaziorg.baby-beamup.club/manifest.json",
+  "name": "Tuga TV",
+  "description": "Addon de canais de TV ao vivo com opções em HD até 4K e vários servidores, totalmente em português (PT-PT)",
+  "url": "https://tugatv.fenixhub.online/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv",
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "TugaSubs",
+  "description": "Legendas em Português de Portugal para filmes, séries e animes no Stremio.",
+  "url": "https://tugasubs.pt-pt.workers.dev/manifest.json",
   "resources": [
    "subtitles"
   ],
@@ -6072,17 +6758,15 @@
   ]
  },
  {
-  "name": "TVI Player",
-  "description": "Os canais da TVI em direto e os programas do TVI Player, no Stremio. Addon não oficial, sem qualquer ligação à TVI.",
-  "url": "https://tvs-de-portugal.fly.dev/tvi/manifest.json",
+  "name": "TVGardenio | ElfHosted",
+  "description": "Play TVGarden live-streams.",
+  "url": "https://tvgardenio.hayd.uk/manifest.json",
   "resources": [
    "catalog",
-   "meta",
-   "stream"
+   "meta"
   ],
   "types": [
-   "tv",
-   "series"
+   "TVGarden"
   ]
  },
  {
@@ -6099,22 +6783,9 @@
   ]
  },
  {
-  "name": "TVPlay",
-  "description": "Canais de TV ao vivo no Stremio, com catálogo atualizado automaticamente e relay HLS próprio para tocar em qualquer player.",
+  "name": "TVPlay IPFS",
+  "description": "TVPlay IPFS! — Catálogo e streams diretos via CDN, com conteúdo atualizado automaticamente através de IPNS.",
   "url": "https://tvplay.megaembed-frost.workers.dev/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
-   "stream"
-  ],
-  "types": [
-   "tv"
-  ]
- },
- {
-  "name": "TVs de Portugal",
-  "description": "Só os canais, sem programas nem podcasts. Addon não oficial, sem qualquer ligação à RTP, à SIC nem à TVI.",
-  "url": "https://tvs-de-portugal.fly.dev/tv/manifest.json",
   "resources": [
    "catalog",
    "meta",
@@ -6140,7 +6811,7 @@
  {
   "name": "TvVoo | ElfHosted",
   "description": "Stremio addon that lists VAVOO TV channels and resolves clean HLS using the viewer's IP.",
-  "url": "https://tvvoo.stremio-italia.eu/cfg-it-uk-fr/manifest.json",
+  "url": "https://tvvoo.hayd.uk/cfg-it-uk-fr/manifest.json",
   "resources": [
    "catalog",
    "meta",
@@ -6166,33 +6837,8 @@
   ]
  },
  {
-  "name": "UK TV Panel Shows",
-  "description": "All the best UK TV panel shows in one place. Note: This addon is not affiliated in any way with the respective owners of these shows or UKTV.",
-  "url": "https://1abd9c55e1ba-stremio-addon-uk-tv-panel-shows.baby-beamup.club/manifest.json",
-  "resources": [
-   "catalog"
-  ],
-  "types": [
-   "series"
-  ]
- },
- {
-  "name": "ULT AddOn",
-  "description": "Ultimate Stremio addon for TV Show and Movie torrents with subtitles and smart quality filtering",
-  "url": "https://ult-addon-for-stremio.onrender.com/manifest.json",
-  "resources": [
-   "catalog",
-   "stream",
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
   "name": "Ultimate Smart Subs (USS)",
-  "description": "Multi-source subtitles for Stremio and Nuvio: smart release matching, auto sync and bilingual subtitles. Optional Gemini/DeepL AI translation and Gemini/OpenAI review use your own keys. Searches OpenSubtitles, SubDL, SubSource and local sources. Basic search is keyless.",
+  "description": "USS searches and ranks subtitles in your languages, adjusts timing when reliable, and optionally translates with your own AI key when no usable subtitle is found.",
   "url": "https://uss.ezerche.com/manifest.json",
   "resources": [
    "subtitles"
@@ -6217,6 +6863,19 @@
   ]
  },
  {
+  "name": "UnioFlix",
+  "description": "Assista a filmes e sÃ©ries com reproduÃ§Ã£o rÃ¡pida, diversas opÃ§Ãµes de fontes e excelente qualidade. Desfrute de uma experiÃªncia fluida, estÃ¡vel e sem interrupÃ§Ãµes",
+  "url": "https://bcf125302240-unioflix.baby-beamup.club/manifest.json",
+  "resources": [
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
   "name": "UploadedPremiumLink",
   "description": "Access and stream your UploadedPremiumLink media files directly on Stremio. Watch your generated links on TV, PC, or mobile — no downloads needed.",
   "url": "https://stremio.uploadedpremiumlink.net/manifest.json",
@@ -6228,6 +6887,19 @@
   "types": [
    "movie",
    "series"
+  ]
+ },
+ {
+  "name": "USA TV",
+  "description": "USA TV provides access to channels across various categories including local channels, news, sports, entertainment, premium, lifestyle, kids' shows, documentaries, Latino programming, and much more.",
+  "url": "https://848b3516657c-usatv.baby-beamup.club/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv"
   ]
  },
  {
@@ -6245,7 +6917,7 @@
  {
   "name": "Veyra",
   "description": "Múltiplas fontes, reprodução rápida e ótima qualidade para você aproveitar seus conteúdos favoritos com mais praticidade e sem depender de torrents.",
-  "url": "https://veyra.shardweb.app/auto-canais~iUDsthOe6ieibNnF6wI5FTL7Z3Td-AMudLJ-GAOg/manifest.json",
+  "url": "https://veyra.shardweb.app/auto-canais/manifest.json",
   "resources": [
    "catalog",
    "meta",
@@ -6255,6 +6927,19 @@
    "movie",
    "series",
    "tv"
+  ]
+ },
+ {
+  "name": "Vietnamese Sexy Girl Stream",
+  "description": "Watch Vietnamese live streams directly in Stremio",
+  "url": "https://stremio.mmlive.qzz.io/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "channel"
   ]
  },
  {
@@ -6289,11 +6974,12 @@
   ]
  },
  {
-  "name": "VoteIt",
-  "description": "Pick what to watch together. Everyone votes on their phone, and the winners appear as a row on your Stremio home screen. Tap Configure to start or join a group.",
-  "url": "https://voteit.co.uk/VOTEIT/manifest.json",
+  "name": "W Bandes-Annonces VF",
+  "description": "Addon Stremio bande d'annonce VF",
+  "url": "https://vf-trailer-off.vercel.app/manifest.json",
   "resources": [
-   "catalog"
+   "meta",
+   "stream"
   ],
   "types": [
    "movie",
@@ -6309,18 +6995,6 @@
   ],
   "types": [
    "movie",
-   "series"
-  ]
- },
- {
-  "name": "Watch Calendar",
-  "description": "Browse your Stremio watch history grouped by day on a calendar",
-  "url": "https://671b48e0b461-stremio-watch-calendar.baby-beamup.club/manifest.json",
-  "resources": [
-   "catalog",
-   "meta"
-  ],
-  "types": [
    "series"
   ]
  },
@@ -6356,9 +7030,7 @@
   "url": "https://watchario.app/AwwAAQ/manifest.json",
   "resources": [
    "catalog",
-   "library",
    "meta",
-   "player",
    "stream",
    "subtitles"
   ],
@@ -6366,6 +7038,18 @@
    "movie",
    "series",
    "anime"
+  ]
+ },
+ {
+  "name": "WatchFlix | DevStreamz",
+  "description": "WatchFlix streaming addon powered by DevStreamz.",
+  "url": "https://dev-streamz-navy.vercel.app/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -6408,18 +7092,6 @@
   ]
  },
  {
-  "name": "Watchlist (Good Quality Tracker)",
-  "description": "Tracks when your movies release in good quality (HD, 1080p, 4K). ⚠️ IMPORTANT: Add movies to your watchlist via the website: https://stremiowatchlist.vercel.app",
-  "url": "https://stremiowatchlist.vercel.app/manifest.json",
-  "resources": [
-   "catalog",
-   "meta"
-  ],
-  "types": [
-   "movie"
-  ]
- },
- {
   "name": "Watchly | ElfHosted",
   "description": "Movie and series recommendations based on your Stremio library.",
   "url": "https://watchly.elfhosted.com/manifest.json",
@@ -6428,19 +7100,17 @@
   ],
   "types": [
    "movie",
-   "series",
-   "all"
+   "series"
   ]
  },
  {
-  "name": "WatchNest by DolphinDiver",
-  "description": "Your personal movie and TV collections. Manage titles on the configuration page. Separate from Stremio Library; no streams hosted. Optional support: https://ko-fi.com/dolphindiver",
-  "url": "https://dolphindiver-collections.onrender.com/manifest.json",
+  "name": "WatchNow",
+  "description": "WatchNow — stream Movies & Series in 4K, 1080p and more. Powered by DevStreams. Supported languages: Gujarati, Hindi, Malayalam, Punjabi, Tamil, Telugu Supported sources: 4KHDHub, HDHub4u, Showbox Supported extractors: HubCloud, HubDrive, Direct, DoodStream, Dropload, Fastream, FileLions, FileMoon, Fsst, KinoGer, LuluStream, Mixdrop, RgShows, SaveFiles, StreamEmbed, Streamtape, SuperVideo, Uqload, Vidora, VidSrc, VixSrc, VOE, YouTube, External",
+  "url": "https://sword-watch.vercel.app/manifest.json",
   "resources": [
-   "catalog"
+   "stream"
   ],
   "types": [
-   "My Watchlist",
    "movie",
    "series"
   ]
@@ -6528,19 +7198,6 @@
   ]
  },
  {
-  "name": "Where's The Jump",
-  "description": "Adds jump scare information and subtitles from wheresthejump.com. Open source at <a href='https://github.com/neon-ninja/wheresthejump'>https://github.com/neon-ninja/wheresthejump</a>",
-  "url": "https://a00f518e60ff-wheresthejump.baby-beamup.club/manifest.json",
-  "resources": [
-   "stream",
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series"
-  ]
- },
- {
   "name": "Whoniverse",
   "description": "Doctor Who and everything around it, in one place: the original run, the years off the air, the revived series, and the spin-offs Torchwood, The Sarah Jane Adventures, Class and The War Between the Land and the Sea. Every special, minisode, prequel and animated serial that carries the story sits inside its season at the point it belongs, so it all runs straight through. Every series plays now. The Complete Chronology runs every series as one list.",
   "url": "https://whoniverse.nubblyn.com/manifest.json",
@@ -6579,8 +7236,23 @@
   ]
  },
  {
+  "name": "Woo",
+  "description": "Canais ao vivo 18+: mulheres, homens, trans e casais, direto no Stremio. Conteúdo adulto — apenas para maiores de 18 anos.",
+  "url": "https://woo.oracle-woo.workers.dev/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "channel",
+   "tv"
+  ],
+  "adult": true
+ },
+ {
   "name": "Wyzie Subs",
-  "description": "Subtitles from Wyzie sources, matched to your release, with cleanup options. Pro keys add more providers (including anime), dual-language subtitles, SDH removal and profanity masking. AI translation works on any key. Get a free key at sub.wyzie.io/redeem.",
+  "description": "Subtitles from OpenSubtitles, matched to your release, with cleanup options. Pro keys add more providers (including anime), dual-language subtitles, AI translation, SDH removal and profanity masking. Get a free key at store.wyzie.io/#plans.",
   "url": "https://stremio.wyzie.io/manifest.json",
   "resources": [
    "subtitles"
@@ -6591,32 +7263,33 @@
   ]
  },
  {
-  "name": "X-Files: Mythology Arc",
-  "description": "A curated collection of The X-Files mythology arc episodes - the overarching conspiracy storyline across all seasons. This addon *Does NOT provide any streaming sources*",
-  "url": "https://4e9abfcf9dcb-xfiles-mythology.baby-beamup.club/manifest.json",
-  "resources": [
-   "catalog",
-   "meta"
-  ],
-  "types": [
-   "series"
-  ]
- },
- {
-  "name": "Xpartacus",
-  "description": "Xpartacus organiza cine, series, anime, rankings, TV y deportes. La reproducción depende de fuentes disponibles y autorizadas.",
-  "url": "https://xpartacus.stream/manifest.json",
+  "name": "Xtremio",
+  "description": "Watch movies and series from your Xtream server",
+  "url": "https://xtremio.qzz.io/manifest.json",
   "resources": [
    "catalog",
    "meta",
-   "stream",
-   "subtitles"
+   "stream"
   ],
   "types": [
    "movie",
    "series",
    "tv"
   ]
+ },
+ {
+  "name": "xxxClub",
+  "description": "High Quality Adult Content Scraper by github.com/vauth.",
+  "url": "https://xclub-stremio.vercel.app/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "movie"
+  ],
+  "adult": true
  },
  {
   "name": "yastream",
@@ -6645,15 +7318,41 @@
   ]
  },
  {
-  "name": "YouTube",
-  "description": "Watch your favourite YouTube channels ad-free and get notified when they upload new videos.",
-  "url": "https://v3-channels.strem.io/manifest.json",
+  "name": "Yomi",
+  "description": "The ultimate Sukebei gateway. The Biggest Collection of Hentai.",
+  "url": "https://yomi.ruka.pw/manifest.json",
   "resources": [
    "catalog",
-   "meta"
+   "meta",
+   "stream"
   ],
   "types": [
-   "channel"
+   "anime"
+  ],
+  "adult": true
+ },
+ {
+  "name": "YouTube Recaps",
+  "description": "Cherche des résumés (recaps) sur YouTube pour les films et séries.",
+  "url": "https://youtuberecaps.vercel.app/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "YouTube Trailers",
+  "description": "Direct links to YouTube trailers - No buffering!",
+  "url": "https://stremio-trailer-addon.vercel.app/manifest.json",
+  "resources": [
+   "stream"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -6734,44 +7433,39 @@
   ]
  },
  {
-  "name": "Zeus",
-  "description": "Encontre animes, filmes, séries, doramas e novelas em fontes selecionadas, com opções dubladas e legendadas em português.",
-  "url": "https://zeus-br.shardweb.app/manifest.json",
+  "name": "ZMB",
+  "description": "Stremio addon for torrent streaming",
+  "url": "https://str.zmb.lat/manifest.json",
   "resources": [
-   "catalog",
-   "meta",
-   "stream",
-   "subtitles"
-  ],
-  "types": [
-   "series",
-   "movie"
-  ]
- },
- {
-  "name": "ZinTV BR",
-  "description": "Canais de TV aberta, rádios, cinema grátis e TV do mundo, além dos catálogos dos streamings do Brasil. Feito por drinkzin.",
-  "url": "https://streambr.onrender.com/manifest.json",
-  "resources": [
-   "catalog",
-   "meta",
    "stream"
   ],
   "types": [
-   "tv",
    "movie",
    "series"
   ]
  },
  {
-  "name": "КЮЧЕК",
-  "description": "вечните класики",
-  "url": "https://ivshti.github.io/stremio-kyuchek/manifest.json",
+  "name": "ZMB",
+  "description": "Stremio addon for torrent streaming",
+  "url": "https://str.zmb.lat/lite/manifest.json",
   "resources": [
-   "meta"
+   "stream"
   ],
   "types": [
-   "kyuchek"
+   "movie",
+   "series"
+  ]
+ },
+ {
+  "name": "כתוביות בעברית",
+  "description": "אדון כתוביות בעברית מ-7 מקורות: Wizdom, OpenSubtitles (כולל hash), SubDL, YIFY, Podnapisi, Subsource, Ktuvit. תמיד תהיה כתובית.",
+  "url": "https://sub.scary.network/manifest.json",
+  "resources": [
+   "subtitles"
+  ],
+  "types": [
+   "movie",
+   "series"
   ]
  },
  {
@@ -6834,7 +7528,7 @@
  },
  {
   "name": "🍿 Subtitles: Extended",
-  "description": "Subtitles from 14 sources, best match first • Cleaned of ads and junk • Spoiler-free notes in the quiet moments: facts, trivia, cast, songs, scares, recaps, stingers",
+  "description": "Subtitles aggregator (10+ sources) • Cleaned of ads and junk • Facts, trivia, who plays whom and more, injected in the quiet moments, spoiler-free",
   "url": "https://popcorn-notes.lsoares.workers.dev/manifest.json",
   "resources": [
    "subtitles"
@@ -6945,6 +7639,19 @@
   ]
  },
  {
+  "name": "📺 TV en Direct",
+  "description": "Regardez les chaînes TV françaises en direct",
+  "url": "https://tv.stremiofr.com/manifest.json",
+  "resources": [
+   "catalog",
+   "meta",
+   "stream"
+  ],
+  "types": [
+   "tv"
+  ]
+ },
+ {
   "name": "🔥 Fireplace",
   "description": "Cozy live streams, 24/7: a fireplace, lofi, rain and synthwave first, then the best of music, nature, animals, space, ASMR and trains, and groups of each",
   "url": "https://lsoares.github.io/fireplace/manifest.json",
@@ -6955,18 +7662,6 @@
   ],
   "types": [
    "movie"
-  ]
- },
- {
-  "name": "🕒 Clockrr (Top Right)",
-  "description": "Digital clock overlay via subtitles - flashes current time briefly, then disappears. Perfect for checking time when pausing.",
-  "url": "https://8e53c55af949-clockrr.baby-beamup.club/manifest.json",
-  "resources": [
-   "subtitles"
-  ],
-  "types": [
-   "movie",
-   "series"
   ]
  },
  {

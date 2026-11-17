@@ -358,6 +358,18 @@ def main():
     unique = {}
     for entry in out:
         unique.setdefault(entry["url"].rstrip("/").lower(), entry)
+
+    # What the last snapshot had and no source lists any more is carried over and checked like the
+    # rest: a source that stops listing an addon (the site stopped listing adult ones) has not
+    # taken it down. Only the check below removes an addon.
+    previous = json.loads(ASSET.read_text(encoding="utf8")) if ASSET.exists() else []
+    carried = 0
+    for entry in previous:
+        key = entry["url"].rstrip("/").lower()
+        if key not in unique:
+            unique[key] = entry
+            carried += 1
+    print(f"  {carried} carried over from the last snapshot")
     listed = sorted(unique.values(), key=lambda e: e["name"].lower())
 
     # Which of them have actually been taken down. See is_gone().
