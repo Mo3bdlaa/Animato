@@ -30,6 +30,7 @@ Run from anywhere: `python3 docs/stremio/build-addon-directory.py`
 import gzip
 import json
 import re
+import socket
 import time
 import urllib.error
 import urllib.request
@@ -71,12 +72,23 @@ ACCEPTABLE_SHRINK = 0.66
 # under load.
 VALIDATION_WORKERS = 16
 VALIDATION_TIMEOUT_SECONDS = 20
-VALIDATION_ATTEMPTS = 2
+VALIDATION_ATTEMPTS = 3
 VALIDATION_RETRY_SECONDS = 1.5
 
 # The only replies that mean the addon itself is gone rather than that this machine could not get
 # to it. See is_gone().
-GONE_CODES = {404, 410}
+GONE_CODES = {402, 404, 410, 451, 521, 522, 523, 525, 526, 530}
+
+# Server errors are only counted as gone when every attempt gets one: a host that is down for all
+# three tries, seconds apart, is a free tier that has been switched off, not a blip.
+DOWN_CODES = {500, 502, 503, 504}
+
+# Stremio's own lists, read alongside the site: the community catalog Stremio itself shows, and the
+# official addons. Each entry carries its manifest, so nothing has to be scraped.
+STREMIO_CATALOGS = (
+    "https://v3-cinemeta.strem.io/addon_catalog/all/community.json",
+    "https://v3-cinemeta.strem.io/addon_catalog/all/official.json",
+)
 
 
 def get(url, timeout=45):
@@ -116,18 +128,35 @@ def is_gone(entry):
     Everything else is kept and reported, because the cost of the two mistakes is not symmetric: a
     dead entry costs one failed tap, and a wrongly deleted one costs a source somebody wanted and
     has no way to discover is missing.
+
+    Since then it also counts as gone what no machine can get past: a reply that is not a manifest
+    (a parked domain, an error page), a name that no longer resolves, a refused connection, and a
+    server error on every attempt. Timeouts, TLS failures, resets, 401, 403 and 429 are still kept.
     """
     for attempt in range(VALIDATION_ATTEMPTS):
+        last = attempt + 1 == VALIDATION_ATTEMPTS
         try:
-            get(entry["url"], timeout=VALIDATION_TIMEOUT_SECONDS)
-            return False
-        except urllib.error.HTTPError as error:
-            if error.code not in GONE_CODES:
-                return False
-            # Confirmed only on the last attempt: a 404 from a server that is mid-deploy is a
-            # 404 that will not be one in ten seconds.
-            if attempt + 1 == VALIDATION_ATTEMPTS:
+            body = get(entry["url"], timeout=VALIDATION_TIMEOUT_SECONDS)
+            try:
+                manifest = json.loads(body)
+            except ValueError:
                 return True
+            return not (isinstance(manifest, dict) and manifest.get("id"))
+        except urllib.error.HTTPError as error:
+            if error.code in GONE_CODES or error.code in DOWN_CODES:
+                # Confirmed only on the last attempt: a server mid-deploy answers differently a
+                # few seconds later.
+                if last:
+                    return True
+            else:
+                return False
+        except urllib.error.URLError as error:
+            reason = error.reason
+            if isinstance(reason, (socket.gaierror, ConnectionRefusedError)):
+                if last:
+                    return True
+            else:
+                return False
         except Exception:  # noqa: BLE001 - anything else is about this machine, not the addon
             return False
         time.sleep(VALIDATION_RETRY_SECONDS)
@@ -226,18 +255,48 @@ def addon(slug):
     if not (resources & USEFUL):
         return None
 
-    name = manifest.get("name") or slug
+    return entry_from(manifest, url.group(1), fallback_name=slug, resources=resources)
+
+
+def entry_from(manifest, url, fallback_name, resources=None):
+    """The directory's shape of one addon, or None when it offers nothing the app can use."""
+    if resources is None:
+        resources = {
+            (r if isinstance(r, str) else r.get("name", "")).lower()
+            for r in manifest.get("resources", [])
+        } - {""}
+    if not (resources & USEFUL):
+        return None
+    name = manifest.get("name") or fallback_name
     description = clean_description(manifest.get("description") or "")
     entry = {
         "name": name,
         "description": description,
-        "url": url.group(1),
+        "url": url,
         "resources": sorted(resources),
         "types": [str(t) for t in manifest.get("types", [])],
     }
     if any(marker in f"{name} {description}".lower() for marker in ADULT_MARKERS):
         entry["adult"] = True
     return entry
+
+
+def stremio_catalog_entries():
+    """Stremio's own community and official lists. A list that cannot be read adds nothing."""
+    entries = []
+    for catalog in STREMIO_CATALOGS:
+        try:
+            listed = json.loads(get(catalog)).get("addons", [])
+        except Exception as error:  # noqa: BLE001 - the site's list still stands without this one
+            print(f"  {catalog}: {error}")
+            continue
+        for item in listed:
+            url, manifest = item.get("transportUrl"), item.get("manifest") or {}
+            if url and url.startswith("http"):
+                entry = entry_from(manifest, url, fallback_name=manifest.get("id", url))
+                if entry:
+                    entries.append(entry)
+    return entries
 
 
 def main():
@@ -259,6 +318,11 @@ def main():
         if index % 50 == 0:
             print(f"  {index}/{len(every)} — {len(out)} kept, {skipped} skipped")
         time.sleep(POLITE_DELAY_SECONDS)
+
+    print("\nreading Stremio's own lists")
+    extra = stremio_catalog_entries()
+    print(f"  {len(extra)} addons")
+    out.extend(extra)
 
     # Same address twice is the same addon, and the site does carry a few.
     unique = {}
