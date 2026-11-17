@@ -1,5 +1,6 @@
 package animato.app.stremio
 
+import animato.anime.stremio.StremioManifest
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -109,7 +110,8 @@ class StremioAddonsScreen(
         var kind by remember { mutableStateOf<AddonKind?>(null) }
         var type by remember { mutableStateOf<String?>(null) }
         // Only offered when the NSFW setting allows adult sources at all; the setting stays the limit
-        var includeAdult by remember { mutableStateOf(screenModel.showAdult) }
+        // The NSFW chip narrows the community list to adult addons; off, they are left out
+        var adultOnly by remember { mutableStateOf(false) }
         // Which field the one dialog is showing. A playlist and an addon are both an address in a
         // box, and two dialogs that look identical would be two places to maintain the same
         // keyboard handling and the same error line.
@@ -207,16 +209,15 @@ class StremioAddonsScreen(
                 }
                 addonStore(
                     addons = addons,
-                    // The curated lists are for alphas; see ReleaseChannel
-                    directory = if (ReleaseChannel.isAlpha) directory else emptyList(),
+                    directory = directory,
                     query = query.orEmpty(),
                     kind = kind,
                     onKindChange = { kind = it },
                     type = type,
                     onTypeChange = { type = it },
                     adultAllowed = screenModel.showAdult,
-                    showAdult = screenModel.showAdult && includeAdult,
-                    onShowAdultChange = { includeAdult = it },
+                    showAdult = screenModel.showAdult && adultOnly,
+                    onShowAdultChange = { adultOnly = it },
                     liveTvOnly = liveTvOnly,
                     onOpen = { addon ->
                         navigator.push(SourceBrowseScreen(StremioSource.idFor(addon.url), ContentType.ANIME))
@@ -298,7 +299,7 @@ internal fun LazyListScope.addonStore(
     onTypeChange: (String?) -> Unit,
     /** Whether the NSFW setting allows adult addons at all — see [StremioAddonsScreenModel.showAdult]. */
     adultAllowed: Boolean,
-    /** Whether adult addons are listed right now. */
+    /** Whether the community list shows adult addons only, rather than none. */
     showAdult: Boolean,
     onShowAdultChange: (Boolean) -> Unit,
     /** Narrow everything to addons that publish live channels — see [StremioAddonsScreen]. */
@@ -311,6 +312,8 @@ internal fun LazyListScope.addonStore(
     // Every address the directory calls adult, including the ones already installed — which is
     // the only way an installed addon can be marked at all, since a manifest never says.
     val adultUrls = directory.filter { it.isAdult }.map { StremioUrls.normalizeBase(it.url) }.toSet()
+    // The curated lists are for alphas (see ReleaseChannel); the directory still marks what is adult
+    val listed = if (ReleaseChannel.isAlpha) directory else emptyList()
     val mine = addons
         .filter { !liveTvOnly || it.servesLiveTv }
         .filter { matches(query, it.manifest.name, it.manifest.description, it.url) }
@@ -324,9 +327,9 @@ internal fun LazyListScope.addonStore(
             .filterNot { StremioUrls.normalizeBase(it.url) in installed }
             .filter { matches(query, it.name, null, it.url) }
     }
-    val searched = directory
+    val searched = listed
         .filterNot { StremioUrls.normalizeBase(it.url) in installed }
-        .filter { showAdult || !it.isAdult }
+        .filter { it.isAdult == showAdult }
         .filter { !liveTvOnly || it.types.any { type -> type.equals(TYPE_TV, ignoreCase = true) } }
         .filter { matches(query, it.name, it.description, it.url) }
     // Counted before the kind filter, so a chip can say how many it would leave and an empty one
@@ -368,7 +371,7 @@ internal fun LazyListScope.addonStore(
                 addon = addon,
                 onOpen = if (addon.isBrowsable) ({ onOpen(addon) }) else null,
                 onRemove = { onRemove(addon.url) },
-                isAdult = StremioUrls.normalizeBase(addon.url) in adultUrls,
+                isAdult = StremioUrls.normalizeBase(addon.url) in adultUrls || addon.manifest.looksAdult(),
             )
         }
     }
@@ -986,3 +989,9 @@ private fun PlaylistRow(
         },
     )
 }
+
+private val ADULT_WORDS = listOf("adult", "porn", "xxx", "nsfw", "hentai", "18+", "erotic", "onlyfans")
+
+/** Whether an addon says it is adult, in its manifest's hint or in its own name and description. */
+private fun StremioManifest.looksAdult(): Boolean =
+    behaviorHints.adult || "$name $description".lowercase().let { text -> ADULT_WORDS.any { it in text } }
