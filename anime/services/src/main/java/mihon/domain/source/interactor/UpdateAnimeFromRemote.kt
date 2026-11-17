@@ -85,6 +85,10 @@ class UpdateAnimeFromRemote(
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             Result.failure(e)
+        } catch (e: LinkageError) {
+            // An extension built against API this app lacks; an Error, so it would otherwise crash the app.
+            logcat(LogPriority.ERROR, e)
+            Result.failure(IllegalStateException("This extension needs a newer app: ${e.message}", e))
         }
     }
 
@@ -138,6 +142,10 @@ class UpdateAnimeFromRemote(
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             Result.failure(e)
+        } catch (e: LinkageError) {
+            // An extension built against API this app lacks; an Error, so it would otherwise crash the app.
+            logcat(LogPriority.ERROR, e)
+            Result.failure(IllegalStateException("This extension needs a newer app: ${e.message}", e))
         }
     }
 
