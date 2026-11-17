@@ -7,8 +7,10 @@ import okhttp3.FormBody
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.Response
 import kotlin.time.Duration.Companion.minutes
 
 private val DEFAULT_CACHE_CONTROL = CacheControl.Builder().maxAge(10.minutes).build()
@@ -78,4 +80,36 @@ fun DELETE(
         .headers(headers)
         .cacheControl(cache)
         .build()
+}
+
+// The three helpers below are adapted from https://github.com/aniyomiorg/aniyomi
+// Copyright The Aniyomi Open Source Project, Apache License 2.0
+// Anime extensions built on extensions-lib 16 call them, and they must live in this file's class.
+
+@Deprecated("Source developers should define their own extension functions for more flexibility")
+suspend fun OkHttpClient.get(
+    url: String,
+    headers: Headers = DEFAULT_HEADERS,
+    cache: CacheControl = DEFAULT_CACHE_CONTROL,
+): Response {
+    return newCall(GET(url, headers, cache)).awaitSuccess()
+}
+
+@Deprecated("Source developers should define their own extension functions for more flexibility")
+suspend fun OkHttpClient.get(
+    url: HttpUrl,
+    headers: Headers = DEFAULT_HEADERS,
+    cache: CacheControl = DEFAULT_CACHE_CONTROL,
+): Response {
+    return newCall(GET(url, headers, cache)).awaitSuccess()
+}
+
+@Deprecated("Source developers should define their own extension functions for more flexibility")
+suspend fun OkHttpClient.post(
+    url: String,
+    headers: Headers = DEFAULT_HEADERS,
+    body: RequestBody = DEFAULT_BODY,
+    cache: CacheControl = DEFAULT_CACHE_CONTROL,
+): Response {
+    return newCall(POST(url, headers, body, cache)).awaitSuccess()
 }
