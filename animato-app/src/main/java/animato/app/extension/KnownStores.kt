@@ -2,6 +2,8 @@ package animato.app.extension
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -102,7 +104,8 @@ internal fun KnownStoresDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(stringResource(AYMR.strings.known_stores_title)) },
         text = {
-            Column {
+            // Scrolls: seven stores and their notes do not fit a short screen
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Text(
                     text = stringResource(AYMR.strings.known_stores_summary),
                     style = MaterialTheme.typography.bodyMedium,
