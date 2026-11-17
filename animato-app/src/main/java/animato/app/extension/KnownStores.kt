@@ -8,6 +8,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import animato.anime.ui.stores.AnimeExtensionStoresScreen
@@ -15,11 +17,15 @@ import animato.domain.content.ContentPreferences
 import cafe.adriel.voyager.navigator.Navigator
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
+import kotlinx.coroutines.flow.combine
+import mihon.domain.extension.anime.interactor.GetAnimeExtensionStores
+import mihon.domain.extension.interactor.GetExtensionStores
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.net.URI
 
 /**
  * Store addresses that work, offered rather than typed.
@@ -103,6 +109,14 @@ internal fun KnownStoresDialog(
                 )
                 // Only the anime stores on a build that has no manga to read. See RepositoriesRow.
                 val mangaUnavailable = remember { Injekt.get<ContentPreferences>().lensIsFixed }
+                val added by remember {
+                    combine(
+                        Injekt.get<GetExtensionStores>().subscribe(),
+                        Injekt.get<GetAnimeExtensionStores>().subscribe(),
+                    ) { manga, anime ->
+                        (manga.map { it.indexUrl } + anime.map { it.indexUrl }).mapTo(mutableSetOf(), ::storeKey)
+                    }
+                }.collectAsState(emptySet())
                 KNOWN_STORES.filter { it.isAnime || !mangaUnavailable }.forEach { store ->
                     ListItem(
                         modifier = Modifier.clickable {
@@ -117,6 +131,17 @@ internal fun KnownStoresDialog(
                         },
                         headlineContent = { Text(store.name) },
                         supportingContent = { Text(stringResource(store.note)) },
+                        trailingContent = if (storeKey(store.indexUrl) in added) {
+                            {
+                                Text(
+                                    text = stringResource(AYMR.strings.known_store_added),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
+                            }
+                        } else {
+                            null
+                        },
                     )
                 }
                 Text(
@@ -132,4 +157,19 @@ internal fun KnownStoresDialog(
             }
         },
     )
+}
+
+/**
+ * The repository a store address belongs to, so a store added from one address is recognised under
+ * another: adding one saves its `repo.json` or `index.pb` address rather than the index it was
+ * added by. GitHub addresses reduce to owner and repository, anything else to host and folder.
+ */
+internal fun storeKey(url: String): String {
+    val uri = runCatching { URI(url.trim()) }.getOrNull() ?: return url.trim().lowercase()
+    val host = uri.host?.lowercase().orEmpty()
+    val parts = uri.path.orEmpty().trim('/').split('/')
+    return when (host) {
+        "raw.githubusercontent.com", "github.com" -> parts.take(2).joinToString("/").lowercase()
+        else -> (host + "/" + uri.path.orEmpty().trim('/').substringBeforeLast('/')).lowercase()
+    }
 }

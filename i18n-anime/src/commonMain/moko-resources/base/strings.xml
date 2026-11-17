@@ -1039,4 +1039,5 @@
     <string name="addon_type_series">Series</string>
     <string name="addon_type_tv">Live TV</string>
     <string name="addon_type_channel">Channels</string>
+    <string name="known_store_added">Added</string>
 </resources>

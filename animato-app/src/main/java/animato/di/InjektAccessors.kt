@@ -108,6 +108,7 @@ import mihon.domain.extension.anime.interactor.RemoveAnimeExtensionStore
 import mihon.domain.extension.anime.interactor.UpdateAnimeExtensionStores
 import mihon.domain.extension.anime.repository.AnimeExtensionStoreRepository
 import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow
+import mihon.domain.extension.interactor.GetExtensionStores
 import mihon.domain.items.episode.interactor.FilterEpisodesForDownload
 import mihon.domain.source.interactor.UpdateAnimeFromRemote
 import mihon.domain.source.interactor.UpdateMangaFromRemote
@@ -270,6 +271,7 @@ interface InjektAccessors {
     val getEpisodeByUrlAndAnimeId: GetEpisodeByUrlAndAnimeId
     val getEpisodesByAnimeId: GetEpisodesByAnimeId
     val getExtensionStoreCountAsFlow: GetExtensionStoreCountAsFlow
+    val getExtensionStores: GetExtensionStores
     val getExtensionsByType: GetExtensionsByType
     val getFavorites: GetFavorites
     val getHistory: GetHistory
@@ -456,6 +458,7 @@ internal fun InjektAccessors.injektBindings(): Map<Type, () -> Any> = mapOf(
     GetEpisodeByUrlAndAnimeId::class.java to { getEpisodeByUrlAndAnimeId },
     GetEpisodesByAnimeId::class.java to { getEpisodesByAnimeId },
     GetExtensionStoreCountAsFlow::class.java to { getExtensionStoreCountAsFlow },
+    GetExtensionStores::class.java to { getExtensionStores },
     GetExtensionsByType::class.java to { getExtensionsByType },
     GetFavorites::class.java to { getFavorites },
     GetHistory::class.java to { getHistory },
