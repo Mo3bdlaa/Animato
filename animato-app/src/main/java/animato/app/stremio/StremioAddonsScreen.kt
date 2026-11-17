@@ -1,6 +1,5 @@
 package animato.app.stremio
 
-import animato.anime.stremio.StremioManifest
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +51,7 @@ import animato.anime.iptv.M3uSource
 import animato.anime.stremio.AddonKind
 import animato.anime.stremio.DirectoryAddon
 import animato.anime.stremio.StremioAddon
+import animato.anime.stremio.StremioManifest
 import animato.anime.stremio.StremioSource
 import animato.anime.stremio.StremioUrls
 import animato.app.ReleaseChannel
@@ -202,6 +202,11 @@ class StremioAddonsScreen(
                         onRemove = screenModel::removePlaylist,
                         onAdd = {
                             draftUrl = ""
+                            addingPlaylist = true
+                            dialogOpen = true
+                        },
+                        onPick = { url ->
+                            draftUrl = url
                             addingPlaylist = true
                             dialogOpen = true
                         },
@@ -934,7 +939,9 @@ private fun LazyListScope.playlistSection(
     onOpen: (M3uPlaylist) -> Unit,
     onRemove: (String) -> Unit,
     onAdd: () -> Unit,
+    onPick: (String) -> Unit,
 ) {
+    knownPlaylists(playlists, onPick)
     item(key = "m3u-header") {
         SectionHeader(
             title = stringResource(AYMR.strings.iptv_playlists),
@@ -959,6 +966,20 @@ private fun LazyListScope.playlistSection(
     }
     items(items = playlists, key = { "m3u-" + it.url }) { playlist ->
         PlaylistRow(playlist = playlist, onOpen = { onOpen(playlist) }, onRemove = onRemove)
+    }
+}
+
+/** Public playlists not yet added, offered in alphas only — see ReleaseChannel. */
+private fun LazyListScope.knownPlaylists(playlists: List<M3uPlaylist>, onPick: (String) -> Unit) {
+    if (!ReleaseChannel.isAlpha) return
+    val added = playlists.mapTo(mutableSetOf()) { it.url.trim() }
+    val known = SUGGESTED_PLAYLISTS.filterNot { it.url in added }
+    if (known.isEmpty()) return
+    item(key = "m3u-known-header") {
+        SectionHeader(title = stringResource(AYMR.strings.iptv_known_playlists))
+    }
+    items(items = known, key = { "m3u-known-" + it.url }) { suggestion ->
+        SuggestedAddonItem(suggestion = suggestion, onPick = { onPick(suggestion.url) })
     }
 }
 

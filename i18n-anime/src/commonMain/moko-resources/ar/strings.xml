@@ -803,4 +803,15 @@
     <string name="addon_type_tv">بث مباشر</string>
     <string name="addon_type_channel">قنوات</string>
     <string name="known_store_added">مضاف</string>
+    <string name="iptv_known_playlists">قوايم معروفة</string>
+    <string name="iptv_suggested_arabic">قنوات عربي مجانية، حوالي ٣٥٠</string>
+    <string name="iptv_suggested_egypt">قنوات مصرية مجانية</string>
+    <string name="iptv_suggested_movies">قنوات أفلام مجانية، حوالي ٨٠٠</string>
+    <string name="iptv_suggested_animation">قنوات كرتون وأنيميشن مجانية</string>
+    <string name="iptv_suggested_kids">قنوات أطفال مجانية</string>
+    <string name="iptv_suggested_sports">قنوات رياضة مجانية</string>
+    <string name="iptv_suggested_news">قنوات أخبار مجانية، حوالي ١٠٠٠</string>
+    <string name="iptv_suggested_documentary">قنوات وثائقية مجانية</string>
+    <string name="iptv_suggested_freetv">Free-TV: قنوات مفتوحة حسب الدولة، حوالي ٢٢٠٠</string>
+    <string name="iptv_suggested_all">كل القنوات المجانية في iptv-org، أكتر من ١١٠٠٠. تحميلها بياخد وقت</string>
 </resources>

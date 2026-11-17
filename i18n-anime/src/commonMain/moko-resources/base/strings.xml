@@ -1040,4 +1040,15 @@
     <string name="addon_type_tv">Live TV</string>
     <string name="addon_type_channel">Channels</string>
     <string name="known_store_added">Added</string>
+    <string name="iptv_known_playlists">Known playlists</string>
+    <string name="iptv_suggested_arabic">Free Arabic channels, around 350</string>
+    <string name="iptv_suggested_egypt">Free Egyptian channels</string>
+    <string name="iptv_suggested_movies">Free film channels, around 800</string>
+    <string name="iptv_suggested_animation">Free cartoon and animation channels</string>
+    <string name="iptv_suggested_kids">Free children's channels</string>
+    <string name="iptv_suggested_sports">Free sports channels</string>
+    <string name="iptv_suggested_news">Free news channels, around 1,000</string>
+    <string name="iptv_suggested_documentary">Free documentary channels</string>
+    <string name="iptv_suggested_freetv">Free-TV: free-to-air channels by country, around 2,200</string>
+    <string name="iptv_suggested_all">Every free channel iptv-org lists, over 11,000. A long load</string>
 </resources>

@@ -77,3 +77,61 @@ val SUGGESTED_ADDONS = listOf(
         description = AYMR.strings.stremio_suggested_opensubtitles,
     ),
 )
+
+/**
+ * Public M3U playlists that answered when this list was written, offered under the live-TV heading.
+ * iptv-org's are maintained lists of free channels, split by language, country and category; the
+ * whole of it is there too, for somebody who wants everything and a long load.
+ */
+val SUGGESTED_PLAYLISTS = listOf(
+    SuggestedAddon(
+        name = "iptv-org · Arabic",
+        url = "https://iptv-org.github.io/iptv/languages/ara.m3u",
+        description = AYMR.strings.iptv_suggested_arabic,
+    ),
+    SuggestedAddon(
+        name = "iptv-org · Egypt",
+        url = "https://iptv-org.github.io/iptv/countries/eg.m3u",
+        description = AYMR.strings.iptv_suggested_egypt,
+    ),
+    SuggestedAddon(
+        name = "iptv-org · Movies",
+        url = "https://iptv-org.github.io/iptv/categories/movies.m3u",
+        description = AYMR.strings.iptv_suggested_movies,
+    ),
+    SuggestedAddon(
+        name = "iptv-org · Animation",
+        url = "https://iptv-org.github.io/iptv/categories/animation.m3u",
+        description = AYMR.strings.iptv_suggested_animation,
+    ),
+    SuggestedAddon(
+        name = "iptv-org · Kids",
+        url = "https://iptv-org.github.io/iptv/categories/kids.m3u",
+        description = AYMR.strings.iptv_suggested_kids,
+    ),
+    SuggestedAddon(
+        name = "iptv-org · Sports",
+        url = "https://iptv-org.github.io/iptv/categories/sports.m3u",
+        description = AYMR.strings.iptv_suggested_sports,
+    ),
+    SuggestedAddon(
+        name = "iptv-org · News",
+        url = "https://iptv-org.github.io/iptv/categories/news.m3u",
+        description = AYMR.strings.iptv_suggested_news,
+    ),
+    SuggestedAddon(
+        name = "iptv-org · Documentary",
+        url = "https://iptv-org.github.io/iptv/categories/documentary.m3u",
+        description = AYMR.strings.iptv_suggested_documentary,
+    ),
+    SuggestedAddon(
+        name = "Free-TV",
+        url = "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8",
+        description = AYMR.strings.iptv_suggested_freetv,
+    ),
+    SuggestedAddon(
+        name = "iptv-org · Everything",
+        url = "https://iptv-org.github.io/iptv/index.m3u",
+        description = AYMR.strings.iptv_suggested_all,
+    ),
+)
