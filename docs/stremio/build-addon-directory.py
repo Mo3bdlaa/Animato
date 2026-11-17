@@ -282,7 +282,10 @@ def entry_from(manifest, url, fallback_name, resources=None):
         "resources": sorted(resources),
         "types": [str(t) for t in manifest.get("types", [])],
     }
-    if any(marker in f"{name} {description}".lower() for marker in ADULT_MARKERS):
+    hints = manifest.get("behaviorHints") or {}
+    if (isinstance(hints, dict) and hints.get("adult") is True) or any(
+        marker in f"{name} {description}".lower() for marker in ADULT_MARKERS
+    ):
         entry["adult"] = True
     return entry
 
