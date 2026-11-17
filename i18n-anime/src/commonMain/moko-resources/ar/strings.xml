@@ -798,4 +798,8 @@
     <string name="pref_proxy_xray_server">السيرفر</string>
     <string name="pref_proxy_xray_subscription_update">حدّث السيرفرات دلوقتي</string>
     <string name="pref_proxy_xray_subscription_updated">السيرفرات اتحدّثت</string>
+    <string name="addon_type_movie">أفلام</string>
+    <string name="addon_type_series">مسلسلات</string>
+    <string name="addon_type_tv">بث مباشر</string>
+    <string name="addon_type_channel">قنوات</string>
 </resources>

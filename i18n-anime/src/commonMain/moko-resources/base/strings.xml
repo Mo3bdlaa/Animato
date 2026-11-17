@@ -1035,4 +1035,8 @@
     <string name="pref_proxy_xray_server">Server</string>
     <string name="pref_proxy_xray_subscription_update">Update servers now</string>
     <string name="pref_proxy_xray_subscription_updated">Servers updated</string>
+    <string name="addon_type_movie">Movies</string>
+    <string name="addon_type_series">Series</string>
+    <string name="addon_type_tv">Live TV</string>
+    <string name="addon_type_channel">Channels</string>
 </resources>
