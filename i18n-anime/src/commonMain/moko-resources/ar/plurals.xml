@@ -70,4 +70,12 @@
         <item quantity="many">بعد %d يوم من غير استخدام</item>
         <item quantity="other">بعد %d يوم من غير استخدام</item>
     </plurals>
+    <plurals name="pref_proxy_xray_subscription_servers">
+        <item quantity="zero">%1$d سيرفر · اتحدّث %2$s</item>
+        <item quantity="one">سيرفر واحد · اتحدّث %2$s</item>
+        <item quantity="two">سيرفرين · اتحدّث %2$s</item>
+        <item quantity="few">%1$d سيرفرات · اتحدّث %2$s</item>
+        <item quantity="many">%1$d سيرفر · اتحدّث %2$s</item>
+        <item quantity="other">%1$d سيرفر · اتحدّث %2$s</item>
+    </plurals>
 </resources>

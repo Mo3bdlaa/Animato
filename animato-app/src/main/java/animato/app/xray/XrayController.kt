@@ -1,5 +1,15 @@
 package animato.app.xray
 
+import kotlin.time.Duration.Companion.hours
+import kotlin.coroutines.cancellation.CancellationException
+import java.net.Proxy
+import okhttp3.Headers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
+import eu.kanade.tachiyomi.network.awaitSuccess
+import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.GET
+import animato.anime.net.xray.XraySubscription
 import animato.anime.net.ProxyKind
 import animato.anime.net.ProxyPreferences
 import animato.anime.net.xray.XrayConfig
@@ -49,11 +59,35 @@ object XrayController {
     @Volatile
     private var watching = false
 
+    /** Why the last subscription refresh failed, or null. */
+    private val _subscriptionError = MutableStateFlow<String?>(null)
+    val subscriptionError: StateFlow<String?> = _subscriptionError.asStateFlow()
+
     @Synchronized
     fun watch() {
         if (watching) return
         watching = true
         val preferences = Injekt.get<ProxyPreferences>()
+        scope.launch {
+            // Fetched again when the address changes, and every few hours while it stays the same,
+            // so servers changed on the far end arrive without anything being pasted again
+            combine(
+                preferences.enabled.changes(),
+                preferences.kind.changes(),
+                preferences.xraySubscription.changes(),
+            ) { enabled, kind, address -> address.trim().takeIf { enabled && kind == ProxyKind.Xray } }
+                .distinctUntilChanged()
+                .collectLatest { address ->
+                    if (address.isNullOrBlank()) return@collectLatest
+                    while (true) {
+                        val fresh = preferences.xraySubscriptionSource.get() == address &&
+                            System.currentTimeMillis() - preferences.xraySubscriptionUpdatedAt.get() <
+                            SUBSCRIPTION_REFRESH.inWholeMilliseconds
+                        if (!fresh) refreshSubscription()
+                        delay(SUBSCRIPTION_REFRESH)
+                    }
+                }
+        }
         scope.launch {
             combine(
                 preferences.enabled.changes(),
@@ -62,6 +96,37 @@ object XrayController {
             ) { enabled, kind, link -> link.takeIf { enabled && kind == ProxyKind.Xray && it.isNotBlank() } }
                 .distinctUntilChanged()
                 .collectLatest { link -> apply(link) }
+        }
+    }
+
+    /**
+     * Fetches the subscription's server list and keeps the running server when it is still listed.
+     * Directly, not through the proxy: the proxy may be the thing a stale list has broken.
+     */
+    suspend fun refreshSubscription(): Boolean = withContext(Dispatchers.IO) {
+        val preferences = Injekt.get<ProxyPreferences>()
+        val address = preferences.xraySubscription.get().trim()
+        if (address.isBlank()) return@withContext false
+        try {
+            val client = Injekt.get<NetworkHelper>().client.newBuilder().proxy(Proxy.NO_PROXY).build()
+            // The name subscription servers send the standard share-link list to
+            val request = GET(address, Headers.headersOf("User-Agent", "v2rayNG"))
+            val body = client.newCall(request).awaitSuccess().use { it.body.string() }
+            val links = XraySubscription.parse(body)
+            if (links.isEmpty()) error("The subscription lists no servers this app can use")
+
+            preferences.xraySubscriptionLinks.set(links.joinToString("\n"))
+            preferences.xraySubscriptionSource.set(address)
+            preferences.xraySubscriptionUpdatedAt.set(System.currentTimeMillis())
+            XraySubscription.reselect(preferences.xrayLink.get(), links)?.let(preferences.xrayLink::set)
+            _subscriptionError.value = null
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN, e) { "Subscription refresh failed" }
+            _subscriptionError.value = e.message ?: e.javaClass.simpleName
+            false
         }
     }
 
@@ -85,4 +150,6 @@ object XrayController {
             Status.Failed(e.message ?: e.javaClass.simpleName)
         }
     }
+
+    private val SUBSCRIPTION_REFRESH = 12.hours
 }

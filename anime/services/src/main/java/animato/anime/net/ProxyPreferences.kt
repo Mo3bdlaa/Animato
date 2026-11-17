@@ -87,6 +87,20 @@ class ProxyPreferences(
     val xrayLink = preferenceStore.credentialString("animato_proxy_xray_link")
 
     /**
+     * A subscription address that lists servers, as Hiddify takes it. [xrayLink] is then the one
+     * picked from [xraySubscriptionLinks]. Private: the token in the address is the login.
+     */
+    val xraySubscription = preferenceStore.credentialString("animato_proxy_xray_subscription")
+
+    /** The servers the subscription last listed, one share link per line. */
+    val xraySubscriptionLinks = preferenceStore.credentialString("animato_proxy_xray_subscription_links")
+
+    /** The address [xraySubscriptionLinks] came from, so a changed address is fetched again. */
+    val xraySubscriptionSource = preferenceStore.credentialString("animato_proxy_xray_subscription_source")
+
+    val xraySubscriptionUpdatedAt = preferenceStore.getLong("animato_proxy_xray_subscription_updated_at", 0L)
+
+    /**
      * The proxy as configured, or null when there is not one to use.
      *
      * Null rather than an exception for a half-filled form: the settings screen is where a blank

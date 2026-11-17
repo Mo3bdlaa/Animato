@@ -1,5 +1,11 @@
 package animato.app.settings
 
+import tachiyomi.presentation.core.i18n.pluralStringResource
+import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
+import android.text.format.DateUtils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
@@ -55,6 +61,16 @@ object AnimatoProxyScreen : SearchableSettings {
         val password by preferences.password.collectAsState()
         val xrayLink by preferences.xrayLink.collectAsState()
         val xrayStatus by XrayController.status.collectAsState()
+        val subscription by preferences.xraySubscription.collectAsState()
+        val subscriptionLinks by preferences.xraySubscriptionLinks.collectAsState()
+        val subscriptionUpdatedAt by preferences.xraySubscriptionUpdatedAt.collectAsState()
+        val subscriptionError by XrayController.subscriptionError.collectAsState()
+        val servers = remember(subscriptionLinks) {
+            subscriptionLinks.lines().filter { it.isNotBlank() }
+                .associateWith { link -> runCatching { XrayLink.parse(link).name }.getOrDefault(link.take(24)) }
+        }
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
         val isXray = kind == ProxyKind.Xray
 
         return listOf(
@@ -74,6 +90,42 @@ object AnimatoProxyScreen : SearchableSettings {
                         preference = preferences.kind,
                         entries = persistentMapOfKinds(),
                         title = stringResource(AYMR.strings.pref_proxy_kind),
+                    ),
+                    // A list of servers from one address, as Hiddify takes it. The address carries the
+                    // login, so it is never shown back.
+                    Preference.PreferenceItem.EditTextPreference(
+                        preference = preferences.xraySubscription,
+                        title = stringResource(AYMR.strings.pref_proxy_xray_subscription),
+                        subtitle = when {
+                            subscription.isBlank() -> stringResource(AYMR.strings.pref_proxy_xray_subscription_summary)
+                            subscriptionError != null ->
+                                stringResource(AYMR.strings.pref_proxy_xray_failed, subscriptionError.orEmpty())
+                            servers.isEmpty() -> stringResource(AYMR.strings.pref_proxy_xray_starting)
+                            else -> pluralStringResource(
+                                AYMR.plurals.pref_proxy_xray_subscription_servers,
+                                servers.size,
+                                servers.size,
+                                DateUtils.getRelativeTimeSpanString(subscriptionUpdatedAt).toString(),
+                            )
+                        },
+                        visible = isXray,
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = preferences.xrayLink,
+                        entries = servers,
+                        title = stringResource(AYMR.strings.pref_proxy_xray_server),
+                        visible = isXray && servers.isNotEmpty(),
+                    ),
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(AYMR.strings.pref_proxy_xray_subscription_update),
+                        onClick = {
+                            scope.launch {
+                                if (XrayController.refreshSubscription()) {
+                                    context.toast(AYMR.strings.pref_proxy_xray_subscription_updated)
+                                }
+                            }
+                        },
+                        visible = isXray && subscription.isNotBlank(),
                     ),
                     // Built in: one link instead of an address and a login. See XrayController.
                     Preference.PreferenceItem.EditTextPreference(

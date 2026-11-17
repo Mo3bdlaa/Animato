@@ -1030,4 +1030,9 @@
     <string name="error_log_title">What went wrong</string>
     <string name="pref_proxy_vpn">Proxy &amp; VPN</string>
     <string name="pref_proxy_vpn_summary">Built-in Xray for vless, vmess, trojan and shadowsocks links, or an HTTP or SOCKS proxy</string>
+    <string name="pref_proxy_xray_subscription">Subscription link</string>
+    <string name="pref_proxy_xray_subscription_summary">The link Hiddify or v2rayNG takes. Its servers are listed here and kept up to date</string>
+    <string name="pref_proxy_xray_server">Server</string>
+    <string name="pref_proxy_xray_subscription_update">Update servers now</string>
+    <string name="pref_proxy_xray_subscription_updated">Servers updated</string>
 </resources>

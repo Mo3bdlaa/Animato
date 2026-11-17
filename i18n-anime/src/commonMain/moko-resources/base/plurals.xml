@@ -72,4 +72,8 @@
         <item quantity="one">After %d day without use</item>
         <item quantity="other">After %d days without use</item>
     </plurals>
+    <plurals name="pref_proxy_xray_subscription_servers">
+        <item quantity="one">%1$d server · updated %2$s</item>
+        <item quantity="other">%1$d servers · updated %2$s</item>
+    </plurals>
 </resources>

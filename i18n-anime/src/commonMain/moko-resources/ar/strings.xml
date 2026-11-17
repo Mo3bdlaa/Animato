@@ -793,4 +793,9 @@
     <string name="error_log_title">إيه اللي حصل</string>
     <string name="pref_proxy_vpn">بروكسي و VPN</string>
     <string name="pref_proxy_vpn_summary">Xray مدمج لروابط vless وvmess وtrojan وshadowsocks، أو بروكسي HTTP أو SOCKS</string>
+    <string name="pref_proxy_xray_subscription">لينك الاشتراك</string>
+    <string name="pref_proxy_xray_subscription_summary">اللينك اللي بتحطه في Hiddify أو v2rayNG. سيرفراته بتظهر هنا وبتتحدّث لوحدها</string>
+    <string name="pref_proxy_xray_server">السيرفر</string>
+    <string name="pref_proxy_xray_subscription_update">حدّث السيرفرات دلوقتي</string>
+    <string name="pref_proxy_xray_subscription_updated">السيرفرات اتحدّثت</string>
 </resources>
