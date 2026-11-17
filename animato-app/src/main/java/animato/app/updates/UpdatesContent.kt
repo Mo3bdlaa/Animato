@@ -108,6 +108,7 @@ internal fun UpdatesContent() {
     }
 
     val open: (UpdateItem) -> Unit = { item ->
+        screenModel.dismiss(item)
         when (item.contentType) {
             // The reader and the player are activities in their own right, so this is an intent
             // rather than a navigator push — the same call both halves' own feeds made.

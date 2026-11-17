@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.chapter.interactor.GetChapter
 import tachiyomi.domain.entries.anime.interactor.GetAnime
@@ -110,7 +112,11 @@ class UpdatesScreenModel(
     private val animeSourceManager: AnimeSourceManager = Injekt.get(),
     private val downloadManager: DownloadManager = Injekt.get(),
     private val animeDownloadManager: AnimeDownloadManager = Injekt.get(),
+    preferenceStore: PreferenceStore = Injekt.get(),
 ) : ViewModel() {
+
+    /** Rows opened from this feed, which leave it at once rather than once read to the end. */
+    private val dismissed = preferenceStore.getStringSet("animato_updates_dismissed", emptySet())
 
     val state: StateFlow<UpdatesState>
         field = MutableStateFlow(UpdatesState(lens = contentPreferences.contentFilter.get()))
@@ -135,7 +141,8 @@ class UpdatesScreenModel(
             ),
             getAnimeUpdates.subscribe(instant = sinceLegacy),
             contentPreferences.contentFilter.changes(),
-        ) { mangaUpdates, animeUpdates, lens ->
+            dismissed.changes(),
+        ) { mangaUpdates, animeUpdates, lens, dismissedKeys ->
             val items = buildList {
                 if (lens.includesManga) addAll(mangaUpdates.map { it.toUpdateItem() })
                 if (lens.includesAnime) addAll(animeUpdates.map { it.toUpdateItem() })
@@ -145,8 +152,16 @@ class UpdatesScreenModel(
                 // and a device asked for the other behaviour: marking something opened is how a
                 // row is dismissed, so the feed is a to-do list rather than a diary.
                 .filter { it.isNew }
+            // Forgotten once out of the feed, so the set stays the size of the feed
+            val inFeed = (mangaUpdates.map { it.toUpdateItem() } + animeUpdates.map { it.toUpdateItem() })
+                .mapTo(mutableSetOf()) { it.key }
+            if (!inFeed.containsAll(dismissedKeys)) dismissed.set(dismissedKeys intersect inFeed)
 
-            UpdatesState(isLoading = false, lens = lens, days = items.groupIntoDays())
+            UpdatesState(
+                isLoading = false,
+                lens = lens,
+                days = items.filter { it.key !in dismissedKeys }.groupIntoDays(),
+            )
         }
             .onEach { newState ->
                 val stillThere = newState.allItems.mapTo(mutableSetOf()) { it.key }
@@ -167,6 +182,10 @@ class UpdatesScreenModel(
      * reported as started when either accepted, because one half already working is still the
      * screen doing what was asked.
      */
+    fun dismiss(item: UpdateItem) {
+        dismissed.getAndSet { it + item.key }
+    }
+
     suspend fun refresh(): Boolean {
         val context = Injekt.get<Application>()
         val manga = state.value.lens.includesManga && LibraryUpdateWorker.startNow(context.workManager)
